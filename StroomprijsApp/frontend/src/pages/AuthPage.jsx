@@ -1,0 +1,209 @@
+/**
+ * pages/AuthPage.jsx
+ * Login + Register page — toggles between both modes
+ */
+
+import { useState } from "react";
+import { useAuth }  from "../context/AuthContext";
+
+const C = {
+  navy:  "#0D1B3E",
+  blue:  "#1A56A4",
+  teal:  "#0D9488",
+  white: "#FFFFFF",
+  error: "#EF4444",
+  green: "#059669",
+};
+
+function Input({ label, type = "text", value, onChange, placeholder, autoComplete }) {
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#CBD5E1", marginBottom: 7 }}>
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        style={{
+          width: "100%", padding: "12px 16px", borderRadius: 10, fontSize: 15,
+          background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)",
+          color: C.white, outline: "none", boxSizing: "border-box",
+          transition: "border-color 0.2s",
+        }}
+        onFocus={e => e.target.style.borderColor = C.teal}
+        onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.15)"}
+      />
+    </div>
+  );
+}
+
+export default function AuthPage() {
+  const { login, register } = useAuth();
+  const [mode,     setMode]     = useState("login"); // "login" | "register"
+  const [name,     setName]     = useState("");
+  const [email,    setEmail]    = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm,  setConfirm]  = useState("");
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(false);
+  const [success,  setSuccess]  = useState("");
+
+  const reset = () => { setError(""); setSuccess(""); };
+
+  const handleSubmit = async () => {
+    reset();
+    if (!email || !password) { setError("Please fill in all fields"); return; }
+    if (mode === "register") {
+      if (!name.trim())       { setError("Please enter your name"); return; }
+      if (password.length < 8){ setError("Password must be at least 8 characters"); return; }
+      if (password !== confirm){ setError("Passwords do not match"); return; }
+    }
+
+    setLoading(true);
+    try {
+      if (mode === "login") {
+        await login({ email, password });
+      } else {
+        await register({ name, email, password });
+        setSuccess("Account created! Welcome to StroomSlim 🎉");
+      }
+    } catch (err) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchMode = (m) => {
+    setMode(m); reset();
+    setName(""); setEmail(""); setPassword(""); setConfirm("");
+  };
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "radial-gradient(ellipse at 20% 20%, #0A1628 0%, #060B14 60%, #0A0F1A 100%)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontFamily: "'DM Sans', system-ui, sans-serif", padding: 20,
+    }}>
+      <div style={{ width: "100%", maxWidth: 440 }}>
+
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{ fontSize: 40, marginBottom: 8 }}>🇧🇪</div>
+          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 900, color: C.white, letterSpacing: "-1px" }}>
+            StroomSlim
+          </h1>
+          <div style={{ fontSize: 14, color: "#64748B", marginTop: 6 }}>
+            Belgium Smart Electricity Prices
+          </div>
+        </div>
+
+        {/* Card */}
+        <div style={{
+          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 20, padding: "32px 36px",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
+        }}>
+
+          {/* Tab switcher */}
+          <div style={{
+            display: "flex", background: "rgba(0,0,0,0.3)", borderRadius: 12,
+            padding: 4, marginBottom: 28,
+          }}>
+            {["login", "register"].map(m => (
+              <button key={m} onClick={() => switchMode(m)} style={{
+                flex: 1, padding: "9px 0", borderRadius: 9, fontSize: 14, fontWeight: 600,
+                border: "none", cursor: "pointer", transition: "all 0.2s",
+                background: mode === m ? "rgba(255,255,255,0.1)" : "transparent",
+                color: mode === m ? C.white : "#64748B",
+              }}>
+                {m === "login" ? "Sign In" : "Create Account"}
+              </button>
+            ))}
+          </div>
+
+          {/* Error / success */}
+          {error && (
+            <div style={{
+              background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
+              borderRadius: 10, padding: "10px 14px", marginBottom: 20,
+              fontSize: 13, color: C.error,
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
+          {success && (
+            <div style={{
+              background: "rgba(5,150,105,0.1)", border: "1px solid rgba(5,150,105,0.3)",
+              borderRadius: 10, padding: "10px 14px", marginBottom: 20,
+              fontSize: 13, color: C.green,
+            }}>
+              ✅ {success}
+            </div>
+          )}
+
+          {/* Form fields */}
+          {mode === "register" && (
+            <Input label="Full Name" value={name} onChange={setName}
+              placeholder="Jan Janssen" autoComplete="name" />
+          )}
+          <Input label="Email Address" type="email" value={email} onChange={setEmail}
+            placeholder="jan@example.be" autoComplete="email" />
+          <Input label="Password" type="password" value={password} onChange={setPassword}
+            placeholder={mode === "register" ? "Min. 8 characters" : "Your password"}
+            autoComplete={mode === "login" ? "current-password" : "new-password"} />
+          {mode === "register" && (
+            <Input label="Confirm Password" type="password" value={confirm} onChange={setConfirm}
+              placeholder="Repeat password" autoComplete="new-password" />
+          )}
+
+          {/* Submit button */}
+          <button onClick={handleSubmit} disabled={loading} style={{
+            width: "100%", padding: "14px 0", borderRadius: 12, fontSize: 15,
+            fontWeight: 700, border: "none", cursor: loading ? "not-allowed" : "pointer",
+            background: loading ? "rgba(13,148,136,0.5)" : `linear-gradient(135deg, ${C.teal}, ${C.blue})`,
+            color: C.white, marginTop: 4, transition: "all 0.2s",
+            boxShadow: loading ? "none" : "0 4px 20px rgba(13,148,136,0.35)",
+          }}>
+            {loading ? "Please wait…" : mode === "login" ? "Sign In →" : "Create Account →"}
+          </button>
+
+          {/* Divider — future providers */}
+          <div style={{ position: "relative", textAlign: "center", margin: "24px 0 20px" }}>
+            <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 1, background: "rgba(255,255,255,0.08)" }} />
+            <span style={{ position: "relative", background: "transparent", fontSize: 12, color: "#475569", padding: "0 12px" }}>
+              Coming soon
+            </span>
+          </div>
+
+          {/* Future providers (disabled for now) */}
+          <div style={{ display: "flex", gap: 10 }}>
+            {[
+              { icon: "🔵", label: "itsme",  note: "Partnership pending" },
+              { icon: "🔴", label: "Google", note: "Phase 2" },
+              { icon: "⚫", label: "Apple",  note: "Phase 2" },
+            ].map(p => (
+              <button key={p.label} title={p.note} style={{
+                flex: 1, padding: "10px 8px", borderRadius: 10, fontSize: 12,
+                fontWeight: 600, border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(255,255,255,0.03)", color: "#475569",
+                cursor: "not-allowed", display: "flex", alignItems: "center",
+                justifyContent: "center", gap: 6,
+              }}>
+                <span>{p.icon}</span>{p.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 11, color: "#334155", textAlign: "center", marginTop: 16 }}>
+            🔒 Your data is stored securely · GDPR compliant
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
