@@ -2,14 +2,13 @@
  * App.jsx — StrooomSlim v2 with Authentication
  * Routes:
  *   Not logged in → AuthPage (login/register)
- *   Logged in     → Dashboard (prices) or ProfilePage
+ *   Logged in    → Dashboard (prices) or ProfilePage
  */
-
 import { useState, useEffect } from "react";
-import { useAuth }  from "./context/AuthContext";
-import AuthPage     from "./pages/AuthPage";
-import ProfilePage  from "./pages/ProfilePage";
-import Dashboard    from "./pages/Dashboard";
+import { useAuth } from "./context/AuthContext";
+import AuthPage from "./pages/AuthPage";
+import ProfilePage from "./pages/ProfilePage";
+import Dashboard from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 
@@ -38,12 +37,12 @@ export default function App() {
           // Use history.replaceState for better browser compatibility
           if (window.history && window.history.replaceState) {
             window.history.replaceState({}, document.title, "/");
+            // Force reload to pick up new tokens
+            window.location.reload();
           } else {
+            // Fallback for older browsers
             window.location.replace("/");
           }
-          
-          // Force page reload to pick up new tokens
-          window.location.reload();
         }
       } catch (error) {
         console.error("OAuth callback error:", error);
@@ -56,22 +55,6 @@ export default function App() {
     window.addEventListener("showPrivacy", handler);
     return () => window.removeEventListener("showPrivacy", handler);
   }, []);
-
-  // Loading splash while checking stored session
-  // Show privacy policy modal on top of everything
-  if (showPrivacy) {
-    return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
-  }
-export default function App() {
-  const { user, loading } = useAuth();
-  const [showPrivacy, setShowPrivacy] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setShowPrivacy(true);
-    window.addEventListener("showPrivacy", handler);
-    return () => window.removeEventListener("showPrivacy", handler);
-  }, []);
-  const [page, setPage] = useState("dashboard"); // "dashboard" | "profile"
 
   // Loading splash while checking stored session
   // Show privacy policy modal on top of everything
