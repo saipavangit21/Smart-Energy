@@ -145,8 +145,8 @@ function scheduleCron() {
   const now = new Date();
   const msUntilNextHour = (60 - now.getMinutes()) * 60000 - now.getSeconds() * 1000;
   setTimeout(() => {
-    checkAndSendAlerts();
-    setInterval(checkAndSendAlerts, 60 * 60 * 1000); // every hour
+    checkAndSendAlerts(pool);
+    setInterval(() => checkAndSendAlerts(pool), 60 * 60 * 1000); // every hour
   }, msUntilNextHour);
   console.log(`   Alerts: ⏰ Next check in ${Math.round(msUntilNextHour/60000)} min`);
 }
