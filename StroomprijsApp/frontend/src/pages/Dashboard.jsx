@@ -233,13 +233,23 @@ export default function Dashboard({ onGoProfile }) {
               </div>
             ) : chartData.length === 0 ? (
               <div style={{ textAlign: "center", padding: "50px 0", color: "#556" }}>
-                {tab === "tomorrow" ? "Tomorrow's prices publish at 13:00 CET" : "No data"}
+                {tab === "tomorrow" ? (
+                  <div>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>⏰</div>
+                    <div style={{ fontSize: 15, color: "#778", marginBottom: 8 }}>Tomorrow's prices aren't published yet</div>
+                    <div style={{ fontSize: 13, color: "#445" }}>EPEX Spot publishes Belgium day-ahead prices daily at <strong style={{color:"#0D9488"}}>13:00 CET</strong></div>
+                    <div style={{ fontSize: 12, color: "#334", marginTop: 8 }}>Check back after 13:00 — full 24h prices will appear here automatically</div>
+                  </div>
+                ) : "No data"}
               </div>
             ) : (
               <>
                 <div style={{ paddingLeft: 14, marginBottom: 14 }}>
                   <div style={{ fontSize: 15, fontWeight: 700 }}>{tab === "today" ? "Today's" : "Tomorrow's"} Hourly Prices · Belgium</div>
-                  <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>EPEX Spot · {lastFetched && `Updated ${lastFetched.toLocaleTimeString("nl-BE")}`}</div>
+                  <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>
+                    EPEX Spot · {lastFetched && `Updated ${lastFetched.toLocaleTimeString("nl-BE")}`}
+                    {tab === "tomorrow" && <span style={{ marginLeft: 8, color: "#F59E0B", fontSize: 10 }}>⚠ Preliminary until 13:00 CET</span>}
+                  </div>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
                   <AreaChart data={chartData.map(p => ({ ...p, price: p.price_eur_mwh }))} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
