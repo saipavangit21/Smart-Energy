@@ -142,3 +142,4 @@ const userStore = {
 };
 
 module.exports = userStore;
+module.exports.pool = pool;

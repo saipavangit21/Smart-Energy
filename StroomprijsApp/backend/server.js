@@ -12,6 +12,7 @@ for (const key of required) {
 const authRoutes      = require("./routes/auth");
 const googleRoutes    = require("./routes/google");
 const { checkAndSendAlerts } = require("./email-alerts");
+const pool = require("./db").pool;
 const { requireAuth } = require("./middleware/auth");
 
 const app   = express();
