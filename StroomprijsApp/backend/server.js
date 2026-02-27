@@ -34,10 +34,18 @@ app.use(cors({
 app.use(express.json());
 app.use("/auth", authRoutes);
 
-function toISODate(d) { return d.toISOString().split("T")[0]; }
+// Belgian timezone (Europe/Brussels)
+const TZ = "Europe/Brussels";
+function toLocalISODate(d) {
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(d);
+}
+function getLocalHour(d) {
+  return parseInt(new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "numeric", hour12: false }).format(d));
+}
+function toISODate(d) { return toLocalISODate(d); }
 function todayAndTomorrow() {
-  const t = new Date(), m = new Date(t); m.setDate(t.getDate()+1);
-  return { today: toISODate(t), tomorrow: toISODate(m) };
+  const t = new Date();
+  return { today: toLocalISODate(t), tomorrow: toLocalISODate(new Date(t.getTime() + 86400000)) };
 }
 function getPriceCategory(v) {
   if(v<0) return "negative"; if(v<50) return "very_cheap";
@@ -66,7 +74,14 @@ async function fetchElia(s,e) {
 }
 function enrich(prices) {
   const now=new Date(),ts=toISODate(now);
-  return prices.map(p=>{const d=new Date(p.timestamp),it=toISODate(d)===ts;return{...p,day:it?"today":"tomorrow",hour:d.getHours(),hour_label:`${String(d.getHours()).padStart(2,"0")}:00`,is_current:it&&d.getHours()===now.getHours(),is_negative:p.price_eur_mwh<0,price_category:getPriceCategory(p.price_eur_mwh)};});
+  return prices.map(p=>{
+    const d=new Date(p.timestamp);
+    const localDate=toLocalISODate(d);
+    const localHour=getLocalHour(d);
+    const nowHour=getLocalHour(now);
+    const it=localDate===ts;
+    return{...p,day:it?"today":"tomorrow",hour:localHour,hour_label:`${String(localHour).padStart(2,"0")}:00`,is_current:it&&localHour===nowHour,is_negative:p.price_eur_mwh<0,price_category:getPriceCategory(p.price_eur_mwh)};
+  });
 }
 async function getPrices(s,e) {
   try{return{prices:await fetchEC(s,e),source:"Energy-Charts"};}
