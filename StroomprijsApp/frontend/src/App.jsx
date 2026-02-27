@@ -5,7 +5,7 @@
  *   Logged in     → Dashboard (prices) or ProfilePage
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth }  from "./context/AuthContext";
 import AuthPage     from "./pages/AuthPage";
 import ProfilePage  from "./pages/ProfilePage";
