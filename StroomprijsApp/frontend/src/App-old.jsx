@@ -1,25 +1,28 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "./context/AuthContext";
-import AuthPage from "./pages/AuthPage";
-import ProfilePage from "./pages/ProfilePage";
-import Dashboard from "./pages/Dashboard";
+/**
+ * App.jsx — StroomSlim v2 with Authentication
+ * Routes:
+ *   Not logged in → AuthPage (login/register)
+ *   Logged in     → Dashboard (prices) or ProfilePage
+ */
+
+import { useState } from "react";
+import { useAuth }  from "./context/AuthContext";
+import AuthPage     from "./pages/AuthPage";
+import ProfilePage  from "./pages/ProfilePage";
+import Dashboard    from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
+
 
 export default function App() {
   const { user, loading } = useAuth();
-  const [page, setPage] = useState("dashboard");
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [page, setPage] = useState("dashboard"); // "dashboard" | "profile"
 
-  // Listen for URL changes
-  useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  // Loading splash while checking stored session
+  // Handle Google OAuth callback
+  if (window.location.pathname === "/oauth/callback") {
+    return <AuthCallback />;
+  }
 
-  // Loading splash
   if (loading) {
     return (
       <div style={{
@@ -34,11 +37,6 @@ export default function App() {
         </div>
       </div>
     );
-  }
-
-  // OAuth Callback handler
-  if (currentPath === "/oauth/callback") {
-    return <AuthCallback />;
   }
 
   // Not logged in → show auth page
