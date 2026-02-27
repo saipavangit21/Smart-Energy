@@ -9,9 +9,9 @@ import { useState, useEffect } from "react";
 import { useAuth }  from "./context/AuthContext";
 import AuthPage     from "./pages/AuthPage";
 import ProfilePage  from "./pages/ProfilePage";
-import Dashboard        from "./pages/Dashboard";
-import AuthCallback     from "./pages/AuthCallback";
-import PrivacyPolicy    from "./pages/PrivacyPolicy";
+import Dashboard    from "./pages/Dashboard";
+import AuthCallback from "./pages/AuthCallback";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 // Handle OAuth callback BEFORE anything else loads
 // This prevents AuthContext from redirecting away while tokens are in the URL
@@ -20,8 +20,9 @@ if (window.location.pathname === "/oauth/callback") {
   const accessToken  = params.get("access_token");
   const refreshToken = params.get("refresh_token");
   if (accessToken && refreshToken) {
-    localStorage.setItem("ss_access",  accessToken);
-    localStorage.setItem("ss_refresh", refreshToken);
+   localStorage.setItem("access_token",  accessToken);
+   localStorage.setItem("refresh_token", refreshToken);
+
     window.location.replace("/");
   }
 }
