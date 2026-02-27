@@ -13,6 +13,7 @@ const authRoutes      = require("./routes/auth");
 const { requireAuth } = require("./middleware/auth");
 
 const app   = express();
+app.set("trust proxy", 1); // Required for Railway/Vercel rate limiting
 const PORT  = process.env.PORT || 3001;
 const cache = new NodeCache({ stdTTL: 900 });
 
