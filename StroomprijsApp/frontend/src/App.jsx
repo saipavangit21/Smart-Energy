@@ -1,11 +1,4 @@
-/**
- * App.jsx — StroomSlim v2 with Authentication
- * Routes:
- *   Not logged in → AuthPage (login/register)
- *   Logged in     → Dashboard (prices) or ProfilePage
- */
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth }  from "./context/AuthContext";
 import AuthPage     from "./pages/AuthPage";
 import ProfilePage  from "./pages/ProfilePage";
@@ -13,9 +6,13 @@ import Dashboard    from "./pages/Dashboard";
 
 export default function App() {
   const { user, loading } = useAuth();
-  const [page, setPage] = useState("dashboard"); // "dashboard" | "profile"
+  const [page, setPage] = useState("dashboard");
 
-  // Loading splash while checking stored session
+  // Reset to dashboard whenever user logs in
+  useEffect(() => {
+    if (user) setPage("dashboard");
+  }, [user]);
+
   if (loading) {
     return (
       <div style={{
@@ -32,14 +29,11 @@ export default function App() {
     );
   }
 
-  // Not logged in → show auth page
   if (!user) return <AuthPage />;
 
-  // Profile page
   if (page === "profile") {
     return <ProfilePage onBack={() => setPage("dashboard")} />;
   }
 
-  // Main dashboard
   return <Dashboard onGoProfile={() => setPage("profile")} />;
 }
