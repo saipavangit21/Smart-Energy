@@ -55,7 +55,7 @@ function Stat({ label, value, color }) {
 }
 
 export default function Dashboard({ onGoProfile }) {
-  const { user, updatePreferences } = useAuth();
+  const { user, updatePreferences, logout } = useAuth();
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
   const { current }  = useCurrentPrice();
   const cheapest     = useCheapestHours(5);
