@@ -11,14 +11,14 @@ const API = "/auth";
 
 // Token helpers
 const storage = {
-  getAccess:    ()    => localStorage.getItem("access_token"),      // Changed from ss_access
-  getRefresh:   ()    => localStorage.getItem("refresh_token"),     // Changed from ss_refresh
-  setAccess:    (t)   => localStorage.setItem("access_token", t),   // Changed
-  setRefresh:   (t)   => localStorage.setItem("refresh_token", t),  // Changed
+  getAccess:    ()    => localStorage.getItem("access_token"),
+  getRefresh:   ()    => localStorage.getItem("refresh_token"),
+  setAccess:    (t)   => localStorage.setItem("access_token", t),
+  setRefresh:   (t)   => localStorage.setItem("refresh_token", t),
   clear:        ()    => { localStorage.removeItem("access_token"); localStorage.removeItem("refresh_token"); },
 };
 
-// Safe JSON parse — never throws, returns null if empty/invalid
+// Safe JSON parse
 async function safeJson(res) {
   try {
     const text = await res.text();
@@ -32,6 +32,26 @@ async function safeJson(res) {
 export function AuthProvider({ children }) {
   const [user,    setUser]    = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // ── Try to refresh token ───────────────────────────────────
+  const tryRefresh = useCallback(async () => {
+    const refreshToken = storage.getRefresh();
+    if (!refreshToken) return false;
+    try {
+      const res  = await fetch(`${API}/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) return false;
+      const json = await res.json();
+      storage.setAccess(json.accessToken);
+      storage.setRefresh(json.refreshToken);
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
 
   // ── Authenticated fetch (auto-attaches JWT) ────────────────
   const authFetch = useCallback(async (url, options = {}) => {
@@ -58,46 +78,45 @@ export function AuthProvider({ children }) {
       storage.clear();
     }
     return res;
-  }, []);
-
-  // ── Try to refresh token ───────────────────────────────────
-  const tryRefresh = useCallback(async () => {
-    const refreshToken = storage.getRefresh();
-    if (!refreshToken) return false;
-    try {
-      const res  = await fetch(`${API}/refresh`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
-      });
-      if (!res.ok) return false;
-      const json = await res.json();
-      storage.setAccess(json.accessToken);
-      storage.setRefresh(json.refreshToken);
-      return true;
-    } catch {
-      return false;
-    }
-  }, []);
+  }, [tryRefresh]);
 
   // ── Restore session on page load ───────────────────────────
   useEffect(() => {
     const restore = async () => {
       const token = storage.getAccess();
-      if (!token) { setLoading(false); return; }
+      console.log("🔍 Checking for stored token:", token ? "✅ Found" : "❌ Not found");
+      
+      if (!token) { 
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res  = await authFetch(`${API}/me`);
+        // Use simple fetch, NOT authFetch (avoids circular dependency)
+        const res = await fetch(`${API}/me`, {
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        });
+        
         const json = await res.json();
-        if (json.success) setUser(json.user);
-        else storage.clear();
-      } catch {
+        console.log("📦 /auth/me response:", json);
+        
+        if (json.success) {
+          setUser(json.user);
+          console.log("✅ User restored:", json.user.email);
+        } else {
+          console.warn("⚠️ /auth/me failed:", json.error);
+          storage.clear();
+        }
+      } catch (err) {
+        console.error("❌ Restore error:", err.message);
         storage.clear();
       } finally {
         setLoading(false);
       }
     };
+    
     restore();
-  }, [authFetch]);
+  }, []);
 
   // ── Register ───────────────────────────────────────────────
   const register = async ({ name, email, password }) => {
@@ -109,10 +128,10 @@ export function AuthProvider({ children }) {
         body:    JSON.stringify({ name, email, password }),
       });
     } catch (e) {
-      throw new Error("Cannot reach server. Is the backend running on port 3001?");
+      throw new Error("Cannot reach server. Is the backend running?");
     }
     const json = await safeJson(res);
-    if (!json) throw new Error(`Server returned empty response (status ${res.status}). Check backend terminal for errors.`);
+    if (!json) throw new Error(`Server returned empty response (status ${res.status}).`);
     if (!json.success) throw new Error(json.error || "Registration failed");
     storage.setAccess(json.accessToken);
     storage.setRefresh(json.refreshToken);
@@ -130,10 +149,10 @@ export function AuthProvider({ children }) {
         body:    JSON.stringify({ email, password }),
       });
     } catch (e) {
-      throw new Error("Cannot reach server. Is the backend running on port 3001?");
+      throw new Error("Cannot reach server. Is the backend running?");
     }
     const json = await safeJson(res);
-    if (!json) throw new Error(`Server returned empty response (status ${res.status}). Check backend terminal for errors.`);
+    if (!json) throw new Error(`Server returned empty response (status ${res.status}).`);
     if (!json.success) throw new Error(json.error || "Login failed");
     storage.setAccess(json.accessToken);
     storage.setRefresh(json.refreshToken);
