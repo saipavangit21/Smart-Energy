@@ -13,20 +13,55 @@ import Dashboard    from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 
-// Handle OAuth callback BEFORE anything else loads
-// This prevents AuthContext from redirecting away while tokens are in the URL
-if (window.location.pathname === "/oauth/callback") {
-  const params = new URLSearchParams(window.location.search);
-  const accessToken  = params.get("access_token");
-  const refreshToken = params.get("refresh_token");
-  if (accessToken && refreshToken) {
-   localStorage.setItem("access_token",  accessToken);
-   localStorage.setItem("refresh_token", refreshToken);
+export default function App() {
+  const { user, loading } = useAuth();
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [page, setPage] = useState("dashboard"); // "dashboard" | "profile"
 
-    window.location.replace("/");
+  // Handle OAuth callback with cross-browser compatibility
+  useEffect(() => {
+    if (window.location.pathname === "/oauth/callback") {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        
+        if (accessToken && refreshToken) {
+          // Use try-catch for localStorage in case of privacy mode
+          try {
+            localStorage.setItem("access_token", accessToken);
+            localStorage.setItem("refresh_token", refreshToken);
+          } catch (e) {
+            console.error("Failed to save tokens:", e);
+          }
+          
+          // Use history.replaceState for better browser compatibility
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, "/");
+          } else {
+            window.location.replace("/");
+          }
+          
+          // Force page reload to pick up new tokens
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error("OAuth callback error:", error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setShowPrivacy(true);
+    window.addEventListener("showPrivacy", handler);
+    return () => window.removeEventListener("showPrivacy", handler);
+  }, []);
+
+  // Loading splash while checking stored session
+  // Show privacy policy modal on top of everything
+  if (showPrivacy) {
+    return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
   }
-}
-
 export default function App() {
   const { user, loading } = useAuth();
   const [showPrivacy, setShowPrivacy] = useState(false);
