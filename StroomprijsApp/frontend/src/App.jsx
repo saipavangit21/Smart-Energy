@@ -10,6 +10,8 @@ import { useAuth }  from "./context/AuthContext";
 import AuthPage     from "./pages/AuthPage";
 import ProfilePage  from "./pages/ProfilePage";
 import Dashboard    from "./pages/Dashboard";
+import AuthCallback from "./pages/AuthCallback";
+
 
 export default function App() {
   const { user, loading } = useAuth();
