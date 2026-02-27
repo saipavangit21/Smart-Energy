@@ -142,6 +142,18 @@ export function AuthProvider({ children }) {
   };
 
   // ── Logout ─────────────────────────────────────────────────
+  // Called by AuthCallback page after Google redirect
+  const handleOAuthCallback = async (accessToken, refreshToken) => {
+    localStorage.setItem("access_token",  accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
+    const res  = await fetch("/auth/me", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const data = await res.json();
+    if (data.success) setUser(data.user);
+    else throw new Error("Failed to get user");
+  };
+
   const logout = async () => {
     try {
       await fetch(`${API}/logout`, {
@@ -167,7 +179,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, updatePreferences, authFetch }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, updatePreferences, authFetch, handleOAuthCallback }}>
       {children}
     </AuthContext.Provider>
   );

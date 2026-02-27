@@ -22,6 +22,19 @@ pool.query("SELECT 1").then(() => {
 const userStore = {
 
   // ── Create ──────────────────────────────────────────────────
+  // OAuth registration (no password)
+  async createOAuth({ email, name, provider, googleId }) {
+    const providers = JSON.stringify({
+      email: false, google: provider === "google",
+      apple: false, itsme: false, googleId: googleId || null,
+    });
+    const { rows } = await pool.query(
+      `INSERT INTO users (email, name, providers) VALUES ($1, $2, $3::jsonb) RETURNING *`,
+      [email.toLowerCase().trim(), name || "", providers]
+    );
+    return rows[0];
+  },
+
   async create({ email, passwordHash, name }) {
     const { rows } = await pool.query(
       `INSERT INTO users (email, password_hash, name)

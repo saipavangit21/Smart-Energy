@@ -10,6 +10,7 @@ for (const key of required) {
 }
 
 const authRoutes      = require("./routes/auth");
+const googleRoutes    = require("./routes/google");
 const { checkAndSendAlerts } = require("./email-alerts");
 const { requireAuth } = require("./middleware/auth");
 
@@ -34,6 +35,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use("/auth", authRoutes);
+app.use("/auth/google", googleRoutes);
 
 // Belgian timezone (Europe/Brussels)
 const TZ = "Europe/Brussels";
