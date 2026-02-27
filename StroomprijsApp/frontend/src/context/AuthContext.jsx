@@ -11,11 +11,11 @@ const API = "/auth";
 
 // Token helpers
 const storage = {
-  getAccess:    ()    => localStorage.getItem("ss_access"),
-  getRefresh:   ()    => localStorage.getItem("ss_refresh"),
-  setAccess:    (t)   => localStorage.setItem("ss_access", t),
-  setRefresh:   (t)   => localStorage.setItem("ss_refresh", t),
-  clear:        ()    => { localStorage.removeItem("ss_access"); localStorage.removeItem("ss_refresh"); },
+  getAccess:    ()    => localStorage.getItem("access_token"),      // Changed from ss_access
+  getRefresh:   ()    => localStorage.getItem("refresh_token"),     // Changed from ss_refresh
+  setAccess:    (t)   => localStorage.setItem("access_token", t),   // Changed
+  setRefresh:   (t)   => localStorage.setItem("refresh_token", t),  // Changed
+  clear:        ()    => { localStorage.removeItem("access_token"); localStorage.removeItem("refresh_token"); },
 };
 
 // Safe JSON parse — never throws, returns null if empty/invalid
@@ -142,18 +142,6 @@ export function AuthProvider({ children }) {
   };
 
   // ── Logout ─────────────────────────────────────────────────
-  // Called by AuthCallback page after Google redirect
-  const handleOAuthCallback = async (accessToken, refreshToken) => {
-    localStorage.setItem("access_token",  accessToken);
-    localStorage.setItem("refresh_token", refreshToken);
-    const res  = await fetch("/auth/me", {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const data = await res.json();
-    if (data.success) setUser(data.user);
-    else throw new Error("Failed to get user");
-  };
-
   const logout = async () => {
     try {
       await fetch(`${API}/logout`, {
@@ -179,7 +167,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, updatePreferences, authFetch, handleOAuthCallback }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, updatePreferences, authFetch }}>
       {children}
     </AuthContext.Provider>
   );
