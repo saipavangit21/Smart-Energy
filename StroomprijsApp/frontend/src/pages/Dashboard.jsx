@@ -250,7 +250,7 @@ export default function Dashboard({ onGoProfile }) {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="hour_label" tick={{ fill: "#556", fontSize: 11 }} tickLine={false} interval={2} />
+                    <XAxis dataKey="hour_label" tick={{ fill: "#556", fontSize: 11 }} tickLine={false} interval={Math.max(0, Math.floor(chartData.length / 8) - 1)} />
                     <YAxis tick={{ fill: "#556", fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={v => `€${v}`} domain={["auto", "auto"]} />
                     <Tooltip content={<PriceTooltip supplier={supplier} />} />
                     <ReferenceLine y={0} stroke="rgba(0,229,255,0.3)" strokeDasharray="4 4" />
