@@ -43,14 +43,14 @@ export default function ProfilePage({ onBack }) {
 
   const [supplier,   setSupplier]   = useState(prefs.supplier || "Bolt Energy");
   const [threshold,  setThreshold]  = useState(prefs.alertThreshold || 80);
-  const [alertOn,    setAlertOn]    = useState(prefs.alertEnabled || false);
+  const [alertOn,    setAlertOn]    = useState(prefs.alertsEnabled || false);
   const [saving,     setSaving]     = useState(false);
   const [saved,      setSaved]      = useState(false);
 
   const save = async () => {
     setSaving(true);
     try {
-      await updatePreferences({ supplier, alertThreshold: threshold, alertEnabled: alertOn });
+      await updatePreferences({ supplier, alertThreshold: threshold, alertsEnabled: alertOn });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e) {

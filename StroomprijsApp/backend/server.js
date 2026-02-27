@@ -10,6 +10,7 @@ for (const key of required) {
 }
 
 const authRoutes      = require("./routes/auth");
+const { checkAndSendAlerts } = require("./email-alerts");
 const { requireAuth } = require("./middleware/auth");
 
 const app   = express();
@@ -102,10 +103,58 @@ app.get("/api/cheapest",async(req,res)=>{
   try{const n=parseInt(req.query.hours||"5");const{today,tomorrow}=todayAndTomorrow();const{prices}=await getPrices(today,tomorrow);const now=new Date();const c=[...prices.filter(p=>new Date(p.timestamp)>=now)].sort((a,b)=>a.price_eur_mwh-b.price_eur_mwh).slice(0,n);res.json({success:true,cheapest_hours:c});}
   catch(e){res.status(500).json({success:false,error:e.message});}
 });
+
+app.get("/api/prices/history",async(req,res)=>{
+  try {
+    const days = Math.min(parseInt(req.query.days||7), 30);
+    const now = new Date();
+    const results = [];
+    for (let i = days; i >= 1; i--) {
+      const d = new Date(now.getTime() - i * 86400000);
+      const dateStr = toLocalISODate(d);
+      try {
+        const {prices} = await getPrices(dateStr, dateStr);
+        const dayPrices = prices.map(p => {
+          const pd = new Date(p.timestamp);
+          const localHour = getLocalHour(pd);
+          return { ...p, hour: localHour, hour_label: `${String(localHour).padStart(2,"0")}:00` };
+        });
+        const vals = dayPrices.map(p => p.price_eur_mwh);
+        results.push({
+          date: dateStr,
+          label: d.toLocaleDateString("nl-BE", { weekday:"short", day:"numeric", month:"short", timeZone:"Europe/Brussels" }),
+          prices: dayPrices,
+          avg: +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2),
+          min: +Math.min(...vals).toFixed(2),
+          max: +Math.max(...vals).toFixed(2),
+          negative_hours: dayPrices.filter(p=>p.price_eur_mwh<0).length,
+        });
+      } catch(e2) { /* skip failed days */ }
+    }
+    res.json({ success:true, days: results });
+  } catch(e){res.status(500).json({success:false,error:e.message});}
+});
 app.get("/api/user/dashboard",requireAuth,async(req,res)=>{
   try{const{today,tomorrow}=todayAndTomorrow();const{prices,source}=await getPrices(today,tomorrow);const d=enrich(prices);const c=prices.find(p=>new Date(p.timestamp).getHours()===new Date().getHours())||null;res.json({success:true,user:{name:req.user.name,preferences:req.user.preferences},prices:d,stats:computeStats(d),current:c,source});}
   catch(e){res.status(500).json({success:false,error:e.message});}
 });
+
+// ── Hourly price alert cron ──────────────────────────────────
+// Run at the top of every hour
+function scheduleCron() {
+  const now = new Date();
+  const msUntilNextHour = (60 - now.getMinutes()) * 60000 - now.getSeconds() * 1000;
+  setTimeout(() => {
+    checkAndSendAlerts();
+    setInterval(checkAndSendAlerts, 60 * 60 * 1000); // every hour
+  }, msUntilNextHour);
+  console.log(`   Alerts: ⏰ Next check in ${Math.round(msUntilNextHour/60000)} min`);
+}
+if (process.env.RESEND_API_KEY) {
+  scheduleCron();
+} else {
+  console.log("   Alerts: ⚠ RESEND_API_KEY not set — email alerts disabled");
+}
 
 app.listen(PORT,()=>{
   console.log(`\n⚡ StroomSlim v2 on port ${PORT}`);
