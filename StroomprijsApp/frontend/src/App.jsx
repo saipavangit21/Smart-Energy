@@ -1,25 +1,38 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "./context/AuthContext";
-import AuthPage from "./pages/AuthPage";
-import ProfilePage from "./pages/ProfilePage";
-import Dashboard from "./pages/Dashboard";
-import AuthCallback from "./pages/AuthCallback";
+/**
+ * App.jsx — StrooomSlim v2 with Authentication
+ * Routes:
+ *   Not logged in → AuthPage (login/register)
+ *   Logged in     → Dashboard (prices) or ProfilePage
+ */
+
+import { useState } from "react";
+import { useAuth }  from "./context/AuthContext";
+import AuthPage     from "./pages/AuthPage";
+import ProfilePage  from "./pages/ProfilePage";
+import Dashboard    from "./pages/Dashboard";
 
 export default function App() {
   const { user, loading } = useAuth();
-  const [page, setPage] = useState("dashboard");
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
-  // Listen for URL changes
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    const handler = () => setShowPrivacy(true);
+    window.addEventListener("showPrivacy", handler);
+    return () => window.removeEventListener("showPrivacy", handler);
   }, []);
+  const [page, setPage] = useState("dashboard"); // "dashboard" | "profile"
 
-  // Loading splash
+  // Loading splash while checking stored session
+  // Show privacy policy modal on top of everything
+  if (showPrivacy) {
+    return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
+  }
+
+  // Handle Google OAuth callback
+  if (window.location.pathname === "/oauth/callback") {
+    return <AuthCallback />;
+  }
+
   if (loading) {
     return (
       <div style={{
@@ -30,15 +43,10 @@ export default function App() {
       }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚡</div>
-          <div style={{ color: "#334155", fontSize: 14 }}>Loading StroomSlim…</div>
+          <div style={{ color: "#334155", fontSize: 14 }}>Loading StrooomSlim…</div>
         </div>
       </div>
     );
-  }
-
-  // OAuth Callback handler
-  if (currentPath === "/oauth/callback") {
-    return <AuthCallback />;
   }
 
   // Not logged in → show auth page

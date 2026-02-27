@@ -63,6 +63,7 @@ export default function Dashboard({ onGoProfile }) {
   // Use saved supplier from user preferences
   const [supplier,       setSupplier]       = useState(user?.preferences?.supplier || "Bolt Energy");
   const [tab,            setTab]            = useState("today");
+  const [showMenu,       setShowMenu]       = useState(false);
   const [history,        setHistory]        = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedDay,    setSelectedDay]    = useState(null);
@@ -149,7 +150,7 @@ export default function Dashboard({ onGoProfile }) {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <span style={{ fontSize: 28 }}>🇧🇪</span>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: "-1px" }}>StroomSlim</h1>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: "-1px" }}>StrooomSlim</h1>
               <span style={{ fontSize: 11, color: "#00C896", background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.25)", borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
             </div>
             <div style={{ fontSize: 13, color: "#556" }}>
@@ -177,24 +178,66 @@ export default function Dashboard({ onGoProfile }) {
             </div>
 
             {/* User menu */}
-            <button onClick={onGoProfile} style={{
-              display: "flex", alignItems: "center", gap: 10,
-              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 14, padding: "10px 16px", cursor: "pointer", color: "#E8EDF5",
-            }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: "50%",
-                background: "linear-gradient(135deg,#0D9488,#1A56A4)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 15, fontWeight: 800, color: "#fff",
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setShowMenu(m => !m)} style={{
+                display: "flex", alignItems: "center", gap: 10,
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 14, padding: "10px 16px", cursor: "pointer", color: "#E8EDF5",
               }}>
-                {(user?.name || user?.email || "?")[0].toUpperCase()}
-              </div>
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{user?.name || "My Account"}</div>
-                <div style={{ fontSize: 11, color: "#556" }}>View profile →</div>
-              </div>
-            </button>
+                <div style={{
+                  width: 34, height: 34, borderRadius: "50%",
+                  background: "linear-gradient(135deg,#0D9488,#1A56A4)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 15, fontWeight: 800, color: "#fff",
+                }}>
+                  {(user?.name || user?.email || "?")[0].toUpperCase()}
+                </div>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{user?.name || "My Account"}</div>
+                  <div style={{ fontSize: 11, color: "#556" }}>▾ Menu</div>
+                </div>
+              </button>
+              {showMenu && (
+                <div style={{
+                  position: "absolute", right: 0, top: "calc(100% + 8px)", zIndex: 100,
+                  background: "#0D1626", border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 14, padding: 8, minWidth: 180,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                }}>
+                  <button onClick={() => { setShowMenu(false); onGoProfile(); }} style={{
+                    width: "100%", padding: "10px 14px", borderRadius: 10, textAlign: "left",
+                    background: "transparent", border: "none", color: "#E8EDF5",
+                    fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", gap: 8,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.06)"}
+                  onMouseLeave={e => e.currentTarget.style.background="transparent"}
+                  >
+                    👤 My Profile
+                  </button>
+                  <button onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} style={{
+                    width: "100%", padding: "10px 14px", borderRadius: 10, textAlign: "left",
+                    background: "transparent", border: "none", color: "#E8EDF5",
+                    fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", gap: 8,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.06)"}
+                  onMouseLeave={e => e.currentTarget.style.background="transparent"}
+                  >
+                    🔒 Privacy Policy
+                  </button>
+                  <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "6px 0" }} />
+                  <button onClick={() => { setShowMenu(false); logout(); }} style={{
+                    width: "100%", padding: "10px 14px", borderRadius: 10, textAlign: "left",
+                    background: "transparent", border: "none", color: "#EF4444",
+                    fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", gap: 8,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background="rgba(239,68,68,0.08)"}
+                  onMouseLeave={e => e.currentTarget.style.background="transparent"}
+                  >
+                    🚪 Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

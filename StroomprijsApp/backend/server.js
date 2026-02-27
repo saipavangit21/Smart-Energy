@@ -159,6 +159,20 @@ if (process.env.RESEND_API_KEY) {
   console.log("   Alerts: ⚠ RESEND_API_KEY not set — email alerts disabled");
 }
 
+
+app.delete("/auth/delete-account", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Delete refresh tokens
+    await pool.query("DELETE FROM refresh_tokens WHERE user_id = $1", [userId]);
+    // Delete user
+    await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+    console.log(`Account deleted: ${req.user.email}`);
+    res.json({ success: true, message: "Account deleted" });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
 app.listen(PORT,()=>{
   console.log(`\n⚡ StroomSlim v2 on port ${PORT}`);
   console.log(`   DB: ${process.env.DATABASE_URL?"✅ Supabase":"❌ No DATABASE_URL"}\n`);

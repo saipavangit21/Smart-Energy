@@ -95,7 +95,7 @@ export default function AuthPage() {
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>🇧🇪</div>
           <h1 style={{ margin: 0, fontSize: 28, fontWeight: 900, color: C.white, letterSpacing: "-1px" }}>
-            StroomSlim
+            StrooomSlim
           </h1>
           <div style={{ fontSize: 14, color: "#64748B", marginTop: 6 }}>
             Belgium Smart Electricity Prices
