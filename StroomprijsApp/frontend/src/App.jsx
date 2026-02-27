@@ -13,6 +13,19 @@ import Dashboard        from "./pages/Dashboard";
 import AuthCallback     from "./pages/AuthCallback";
 import PrivacyPolicy    from "./pages/PrivacyPolicy";
 
+// Handle OAuth callback BEFORE anything else loads
+// This prevents AuthContext from redirecting away while tokens are in the URL
+if (window.location.pathname === "/oauth/callback") {
+  const params = new URLSearchParams(window.location.search);
+  const accessToken  = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  if (accessToken && refreshToken) {
+    localStorage.setItem("access_token",  accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
+    window.location.replace("/");
+  }
+}
+
 export default function App() {
   const { user, loading } = useAuth();
   const [showPrivacy, setShowPrivacy] = useState(false);
@@ -28,11 +41,6 @@ export default function App() {
   // Show privacy policy modal on top of everything
   if (showPrivacy) {
     return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
-  }
-
-  // Handle Google OAuth callback
-  if (window.location.pathname === "/oauth/callback") {
-    return <AuthCallback />;
   }
 
   if (loading) {
