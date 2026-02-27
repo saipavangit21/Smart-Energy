@@ -17,7 +17,7 @@ export default function App() {
 
   // Loading splash while checking stored session
   // Handle Google OAuth callback
-  if (window.location.pathname === "/auth/callback") {
+  if (window.location.pathname === "/oauth/callback") {
     return <AuthCallback />;
   }
 

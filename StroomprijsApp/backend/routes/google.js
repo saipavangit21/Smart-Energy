@@ -82,7 +82,7 @@ router.get("/callback", async (req, res) => {
 
     // Redirect to frontend with tokens
     const params = new URLSearchParams({ access_token: accessToken, refresh_token: refreshToken });
-    res.redirect(`${FRONTEND_URL}/auth/callback?${params}`);
+    res.redirect(`${FRONTEND_URL}/oauth/callback?${params}`);
 
   } catch (err) {
     console.error("Google OAuth error:", err.response?.data || err.message);
