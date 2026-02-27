@@ -63,6 +63,9 @@ export default function Dashboard({ onGoProfile }) {
   // Use saved supplier from user preferences
   const [supplier,       setSupplier]       = useState(user?.preferences?.supplier || "Bolt Energy");
   const [tab,            setTab]            = useState("today");
+  const [history,        setHistory]        = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [selectedDay,    setSelectedDay]    = useState(null);
   const [alertThreshold, setAlertThreshold] = useState(user?.preferences?.alertThreshold || 80);
   const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertEnabled || false);
   const [notification,   setNotification]   = useState(null);
@@ -97,6 +100,18 @@ export default function Dashboard({ onGoProfile }) {
   const tomorrowData = prices.filter(p => p.day === "tomorrow");
   const chartData    = tab === "tomorrow" ? tomorrowData : todayData;
   const mwh          = current?.price_eur_mwh ?? null;
+  // Fetch 7-day history when tab is selected
+  useEffect(() => {
+    if (tab !== "history") return;
+    if (history.length > 0) return; // already loaded
+    setHistoryLoading(true);
+    fetch("/api/prices/history?days=7")
+      .then(r => r.json())
+      .then(d => { if (d.success) setHistory(d.days); })
+      .catch(() => {})
+      .finally(() => setHistoryLoading(false));
+  }, [tab]);
+
   const lbl          = mwh != null ? getPriceLabel(mwh) : null;
   const sup          = SUPPLIERS.find(s => s.name === supplier);
   const retailKwh    = mwh != null && sup ? getSupplierPrice(mwh / 1000, sup) : null;
@@ -104,6 +119,7 @@ export default function Dashboard({ onGoProfile }) {
   const tabs = [
     { id: "today",    label: "📈 Today" },
     { id: "tomorrow", label: "⏩ Tomorrow" },
+    { id: "history",  label: "📅 History" },
     { id: "cheapest", label: "💚 Best Hours" },
     { id: "compare",  label: "🏢 Suppliers" },
     { id: "alerts",   label: "🔔 Alerts" },
@@ -284,6 +300,83 @@ export default function Dashboard({ onGoProfile }) {
         )}
 
         {/* ── Cheapest ── */}
+
+        {tab === "history" && (
+          <div style={{ marginBottom: 20 }}>
+            {historyLoading ? (
+              <div style={{ textAlign:"center", padding:"60px 0", color:"#556" }}>⚡ Loading 7-day history…</div>
+            ) : history.length === 0 ? (
+              <div style={{ textAlign:"center", padding:"60px 0", color:"#556" }}>No history data available</div>
+            ) : (
+              <>
+                {/* 7-day overview bar chart */}
+                <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:20, padding:"20px 8px 12px", marginBottom:16 }}>
+                  <div style={{ paddingLeft:14, marginBottom:14 }}>
+                    <div style={{ fontSize:15, fontWeight:700 }}>7-Day Average Prices · Belgium</div>
+                    <div style={{ fontSize:11, color:"#556", marginTop:2 }}>Click a day to see hourly breakdown</div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={history} margin={{ top:0, right:20, left:0, bottom:0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="label" tick={{ fill:"#556", fontSize:11 }} tickLine={false} />
+                      <YAxis tick={{ fill:"#556", fontSize:11 }} tickLine={false} axisLine={false} tickFormatter={v=>`€${v}`} />
+                      <Tooltip
+                        content={({active,payload,label})=>{
+                          if(!active||!payload?.length) return null;
+                          const d = payload[0]?.payload;
+                          return (
+                            <div style={{ background:"rgba(8,12,22,0.97)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:"12px 16px" }}>
+                              <div style={{ color:"#aaa", fontSize:12, marginBottom:4 }}>{label}</div>
+                              <div style={{ color:"#00C896", fontSize:18, fontWeight:800 }}>Avg €{d?.avg}/MWh</div>
+                              <div style={{ color:"#556", fontSize:11, marginTop:4 }}>Min €{d?.min} · Max €{d?.max}</div>
+                              {d?.negative_hours > 0 && <div style={{ color:"#22C55E", fontSize:11 }}>⚡ {d.negative_hours}h negative prices</div>}
+                              <div style={{ color:"#0D9488", fontSize:11, marginTop:4 }}>Click to see hourly detail →</div>
+                            </div>
+                          );
+                        }}
+                      />
+                      <Bar dataKey="avg" radius={[6,6,0,0]} cursor="pointer" onClick={(d)=>setSelectedDay(selectedDay?.date===d.date?null:d)}>
+                        {history.map((d,i)=>(
+                          <Cell key={i} fill={selectedDay?.date===d.date?"#0D9488":d.avg<80?"#00C896":d.avg<130?"#F59E0B":"#EF4444"} opacity={selectedDay&&selectedDay.date!==d.date?0.4:1} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Hourly detail for selected day */}
+                {selectedDay && (
+                  <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(13,148,136,0.3)", borderRadius:20, padding:"20px 8px 12px" }}>
+                    <div style={{ paddingLeft:14, marginBottom:14, display:"flex", justifyContent:"space-between", alignItems:"center", paddingRight:14 }}>
+                      <div>
+                        <div style={{ fontSize:15, fontWeight:700 }}>Hourly Prices · {selectedDay.label}</div>
+                        <div style={{ fontSize:11, color:"#556", marginTop:2 }}>Min €{selectedDay.min} · Avg €{selectedDay.avg} · Max €{selectedDay.max}</div>
+                      </div>
+                      <button onClick={()=>setSelectedDay(null)} style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"#778", borderRadius:8, padding:"4px 12px", cursor:"pointer", fontSize:12 }}>✕ Close</button>
+                    </div>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <AreaChart data={selectedDay.prices.map(p=>({...p,price:p.price_eur_mwh}))} margin={{top:10,right:20,left:0,bottom:0}}>
+                        <defs>
+                          <linearGradient id="gradH" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%"  stopColor="#0D9488" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#0D9488" stopOpacity={0}   />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                        <XAxis dataKey="hour_label" tick={{fill:"#556",fontSize:11}} tickLine={false} interval={Math.max(0,Math.floor(selectedDay.prices.length/8)-1)} />
+                        <YAxis tick={{fill:"#556",fontSize:11}} tickLine={false} axisLine={false} tickFormatter={v=>`€${v}`} domain={["auto","auto"]} />
+                        <Tooltip content={<PriceTooltip supplier={supplier} />} />
+                        <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
+                        <Area type="monotone" dataKey="price" stroke="#0D9488" strokeWidth={2} fill="url(#gradH)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
         {tab === "cheapest" && (
           <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>💚 5 Cheapest Upcoming Hours</div>
