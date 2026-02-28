@@ -71,6 +71,22 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
   const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertsEnabled || false);
   const [notification,   setNotification]   = useState(null);
 
+  // Fetch fresh preferences on mount to avoid stale cached user object
+  const { authFetch } = useAuth();
+  useEffect(() => {
+    authFetch("/auth/me")
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          const p = d.user.preferences || {};
+          if (p.supplier)       setSupplier(p.supplier);
+          if (p.alertThreshold !== undefined) setAlertThreshold(p.alertThreshold);
+          if (p.alertsEnabled  !== undefined) setAlertActive(p.alertsEnabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Auto-save supplier change to backend
   const changeSupplier = async (s) => {
     setSupplier(s);
