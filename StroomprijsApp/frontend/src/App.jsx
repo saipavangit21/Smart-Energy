@@ -2,41 +2,59 @@
  * App.jsx — StrooomSlim v2 with Authentication
  * Routes:
  *   Not logged in → AuthPage (login/register)
- *   Logged in     → Dashboard (prices) or ProfilePage
+ *   Logged in    → Dashboard (prices) or ProfilePage
  */
-
 import { useState, useEffect } from "react";
-import { useAuth }  from "./context/AuthContext";
-import AuthPage     from "./pages/AuthPage";
-import ProfilePage  from "./pages/ProfilePage";
-import Dashboard    from "./pages/Dashboard";
+import { useAuth } from "./context/AuthContext";
+import AuthPage from "./pages/AuthPage";
+import ProfilePage from "./pages/ProfilePage";
+import Dashboard from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-
-// Handle OAuth callback BEFORE anything else loads
-// This prevents AuthContext from redirecting away while tokens are in the URL
-if (window.location.pathname === "/oauth/callback") {
-  const params = new URLSearchParams(window.location.search);
-  const accessToken  = params.get("access_token");
-  const refreshToken = params.get("refresh_token");
-  if (accessToken && refreshToken) {
-   localStorage.setItem("access_token",  accessToken);
-   localStorage.setItem("refresh_token", refreshToken);
-
-    window.location.replace("/");
-  }
-}
 
 export default function App() {
   const { user, loading } = useAuth();
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [page, setPage] = useState("dashboard"); // "dashboard" | "profile"
+
+  // Handle OAuth callback with cross-browser compatibility
+  useEffect(() => {
+    if (window.location.pathname === "/oauth/callback") {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        
+        if (accessToken && refreshToken) {
+          // Use try-catch for localStorage in case of privacy mode
+          try {
+            localStorage.setItem("access_token", accessToken);
+            localStorage.setItem("refresh_token", refreshToken);
+          } catch (e) {
+            console.error("Failed to save tokens:", e);
+          }
+          
+          // Use history.replaceState for better browser compatibility
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, "/");
+            // Force reload to pick up new tokens
+            window.location.reload();
+          } else {
+            // Fallback for older browsers
+            window.location.replace("/");
+          }
+        }
+      } catch (error) {
+        console.error("OAuth callback error:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const handler = () => setShowPrivacy(true);
     window.addEventListener("showPrivacy", handler);
     return () => window.removeEventListener("showPrivacy", handler);
   }, []);
-  const [page, setPage] = useState("dashboard"); // "dashboard" | "profile"
 
   // Loading splash while checking stored session
   // Show privacy policy modal on top of everything
