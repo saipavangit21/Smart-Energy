@@ -40,7 +40,7 @@ function Input({ label, type = "text", value, onChange, placeholder, autoComplet
   );
 }
 
-export default function AuthPage() {
+export default function AuthPage({ onBack }) {
   const { login, register } = useAuth();
   const [mode,     setMode]     = useState("login"); // "login" | "register"
   const [name,     setName]     = useState("");
@@ -90,6 +90,9 @@ export default function AuthPage() {
       fontFamily: "'DM Sans', system-ui, sans-serif", padding: 20,
     }}>
       <div style={{ width: "100%", maxWidth: 440 }}>
+        {onBack && (
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "#556", cursor: "pointer", fontSize: 13, marginBottom: 16, padding: 0, display: "flex", alignItems: "center", gap: 6 }}>← Back to home</button>
+        )}
 
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>

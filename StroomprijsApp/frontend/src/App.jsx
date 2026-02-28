@@ -8,9 +8,10 @@ import ProfilePage    from "./pages/ProfilePage";
 import Dashboard      from "./pages/Dashboard";
 import AuthCallback   from "./pages/AuthCallback";
 import PrivacyPolicy  from "./pages/PrivacyPolicy";
+import LandingPage    from "./pages/LandingPage";
 
-// Save tokens if present — but do NOT redirect here.
-// Let AuthCallback component handle the redirect with proper delay.
+// Save tokens if present — do NOT redirect here.
+// AuthCallback component handles the redirect with proper delay (cross-browser safe).
 if (window.location.pathname === "/oauth/callback") {
   try {
     const p  = new URLSearchParams(window.location.search);
@@ -28,9 +29,10 @@ if (window.location.pathname === "/oauth/callback") {
 
 export default function App() {
   const { user, loading } = useAuth();
-  const [showPrivacy, setShowPrivacy] = useState(false);
-  const [page,        setPage]        = useState("dashboard");
-  const [initialTab,  setInitialTab]  = useState("today");
+  const [showPrivacy,  setShowPrivacy]  = useState(false);
+  const [page,         setPage]         = useState("dashboard");
+  const [initialTab,   setInitialTab]   = useState("today");
+  const [showAuth,     setShowAuth]     = useState(false);
 
   useEffect(() => {
     const handler = () => setShowPrivacy(true);
@@ -39,10 +41,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (user) setPage("dashboard");
+    if (user) { setPage("dashboard"); setShowAuth(false); }
   }, [user]);
 
-  // Always render AuthCallback on this route — handles redirect with delay
+  // Always render AuthCallback on this route
   if (window.location.pathname === "/oauth/callback") {
     return <AuthCallback />;
   }
@@ -58,7 +60,11 @@ export default function App() {
     </div>
   );
 
-  if (!user) return <AuthPage />;
+  // Logged-out flow
+  if (!user) {
+    if (showAuth) return <AuthPage onBack={() => setShowAuth(false)} />;
+    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+  }
 
   if (page === "profile") {
     return <ProfilePage
