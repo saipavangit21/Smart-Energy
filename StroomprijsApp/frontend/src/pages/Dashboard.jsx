@@ -68,7 +68,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedDay,    setSelectedDay]    = useState(null);
   const [alertThreshold, setAlertThreshold] = useState(user?.preferences?.alertThreshold || 80);
-  const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertEnabled || false);
+  const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertsEnabled || false);
   const [notification,   setNotification]   = useState(null);
 
   // Auto-save supplier change to backend
@@ -80,7 +80,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
   const toggleAlert = async () => {
     const next = !alertActive;
     setAlertActive(next);
-    try { await updatePreferences({ alertEnabled: next, alertThreshold }); } catch {}
+    try { await updatePreferences({ alertsEnabled: next, alertThreshold }); } catch {}
   };
 
   const saveAlertThreshold = async (v) => {
