@@ -26,21 +26,24 @@ function Section({ title, children }) {
 export default function ProfilePage({ onBack, onGoAlerts }) {
   const { user, logout, updatePreferences, authFetch } = useAuth();
   const [livePrefs, setLivePrefs] = useState(user?.preferences || {});
+  const [supplier,  setSupplier]  = useState(user?.preferences?.supplier || "Bolt Energy");
+  const [saving,    setSaving]    = useState(false);
+  const [saved,     setSaved]     = useState(false);
+  const [deleting,  setDeleting]  = useState(false);
 
   // Fetch fresh preferences on mount — avoids stale cached user object
   useEffect(() => {
     authFetch("/auth/me")
       .then(r => r.json())
-      .then(d => { if (d.success) setLivePrefs(d.user.preferences || {}); })
+      .then(d => {
+        if (d.success) {
+          const p = d.user.preferences || {};
+          setLivePrefs(p);
+          setSupplier(p.supplier || "Bolt Energy"); // ← also update supplier
+        }
+      })
       .catch(() => {});
   }, []);
-
-  const prefs = livePrefs;
-
-  const [supplier, setSupplier] = useState(prefs.supplier || "Bolt Energy");
-  const [saving,   setSaving]   = useState(false);
-  const [saved,    setSaved]    = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const save = async () => {
     setSaving(true);
@@ -126,7 +129,7 @@ export default function ProfilePage({ onBack, onGoAlerts }) {
           )}
         </Section>
 
-        {/* Supplier — save stays on page */}
+        {/* Supplier */}
         <Section title="⚡ Electricity Supplier">
           <div style={{ fontSize: 13, color: C.gray, marginBottom: 14 }}>
             Used to calculate your retail price from EPEX Spot
@@ -142,31 +145,27 @@ export default function ProfilePage({ onBack, onGoAlerts }) {
               }}>{s.name}</button>
             ))}
           </div>
-          <button
-            onClick={save}
-            disabled={saving}
-            style={{
-              padding: "10px 28px", borderRadius: 10, fontSize: 14,
-              fontWeight: 700, border: "none", cursor: saving ? "not-allowed" : "pointer",
-              background: saved ? C.green : C.teal, color: C.white, transition: "all 0.3s",
-            }}
-          >
+          <button onClick={save} disabled={saving} style={{
+            padding: "10px 28px", borderRadius: 10, fontSize: 14,
+            fontWeight: 700, border: "none", cursor: saving ? "not-allowed" : "pointer",
+            background: saved ? C.green : C.teal, color: C.white, transition: "all 0.3s",
+          }}>
             {saving ? "Saving…" : saved ? "✅ Saved!" : "Save Changes"}
           </button>
         </Section>
 
-        {/* Alerts info */}
+        {/* Alerts info — reads from livePrefs fetched fresh from server */}
         <Section title="🔔 Price Alerts">
           <div style={{ fontSize: 13, color: C.gray, lineHeight: 1.7 }}>
             Set your threshold and toggle alerts from the dashboard.
           </div>
           <div style={{ marginTop: 10, fontSize: 13 }}>
             <span style={{ color: C.gray }}>Threshold: </span>
-            <strong style={{ color: "#F59E0B" }}>€{prefs.alertThreshold ?? 80}/MWh</strong>
+            <strong style={{ color: "#F59E0B" }}>€{livePrefs.alertThreshold ?? 80}/MWh</strong>
             {"  ·  "}
             <span style={{ color: C.gray }}>Status: </span>
-            <strong style={{ color: prefs.alertsEnabled ? C.green : C.gray }}>
-              {prefs.alertsEnabled ? "🟢 On" : "⚫ Off"}
+            <strong style={{ color: livePrefs.alertsEnabled ? C.green : C.gray }}>
+              {livePrefs.alertsEnabled ? "🟢 On" : "⚫ Off"}
             </strong>
           </div>
           <button onClick={onGoAlerts} style={{
