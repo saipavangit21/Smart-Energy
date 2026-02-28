@@ -1,14 +1,14 @@
 /**
- * ProfilePage.jsx — User profile and preferences
+ * ProfilePage.jsx — User profile, supplier preference, alerts info
+ * Save stays on page — no redirect on save
  */
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { SUPPLIERS } from "../utils/priceUtils";
 
 const C = {
-  navy: "#0D1B3E", blue: "#1A56A4", teal: "#0D9488",
-  white: "#FFFFFF", green: "#059669", red: "#DC2626",
-  gray: "#64748B", card: "rgba(255,255,255,0.03)",
+  teal: "#0D9488", white: "#FFFFFF", green: "#059669",
+  red: "#DC2626", gray: "#64748B", card: "rgba(255,255,255,0.03)",
 };
 
 function Section({ title, children }) {
@@ -23,7 +23,7 @@ function Section({ title, children }) {
   );
 }
 
-export default function ProfilePage({ onBack }) {
+export default function ProfilePage({ onBack, onGoAlerts }) {
   const { user, logout, updatePreferences } = useAuth();
   const prefs = user?.preferences || {};
 
@@ -54,13 +54,8 @@ export default function ProfilePage({ onBack }) {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        localStorage.clear();
-        window.location.replace("/");
-      } else {
-        alert("Failed to delete account. Please try again.");
-        setDeleting(false);
-      }
+      if (res.ok) { localStorage.clear(); window.location.replace("/"); }
+      else { alert("Failed to delete account. Please try again."); setDeleting(false); }
     } catch {
       alert("Failed to delete account. Please try again.");
       setDeleting(false);
@@ -121,14 +116,14 @@ export default function ProfilePage({ onBack }) {
           )}
         </Section>
 
-        {/* Supplier */}
+        {/* Supplier — save stays on page */}
         <Section title="⚡ Electricity Supplier">
           <div style={{ fontSize: 13, color: C.gray, marginBottom: 14 }}>
             Used to calculate your retail price from EPEX Spot
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
             {SUPPLIERS.map(s => (
-              <button key={s.name} onClick={() => setSupplier(s.name)} style={{
+              <button key={s.name} onClick={() => { setSupplier(s.name); setSaved(false); }} style={{
                 padding: "8px 16px", borderRadius: 30, fontSize: 13, fontWeight: 600, cursor: "pointer",
                 border:      supplier === s.name ? `1px solid ${s.color}` : "1px solid rgba(255,255,255,0.1)",
                 background:  supplier === s.name ? `${s.color}22` : "rgba(255,255,255,0.03)",
@@ -141,7 +136,7 @@ export default function ProfilePage({ onBack }) {
             onClick={save}
             disabled={saving}
             style={{
-              marginTop: 18, padding: "10px 28px", borderRadius: 10, fontSize: 14,
+              padding: "10px 28px", borderRadius: 10, fontSize: 14,
               fontWeight: 700, border: "none", cursor: saving ? "not-allowed" : "pointer",
               background: saved ? C.green : C.teal, color: C.white, transition: "all 0.3s",
             }}
@@ -153,22 +148,23 @@ export default function ProfilePage({ onBack }) {
         {/* Alerts info */}
         <Section title="🔔 Price Alerts">
           <div style={{ fontSize: 13, color: C.gray, lineHeight: 1.7 }}>
-            Manage your email alert threshold and toggle from the <strong style={{ color: C.white }}>Alerts tab</strong> on the dashboard.
+            Set your threshold and toggle alerts from the dashboard.
           </div>
-          <div style={{ marginTop: 12, fontSize: 13 }}>
-            <span style={{ color: C.gray }}>Current threshold: </span>
+          <div style={{ marginTop: 10, fontSize: 13 }}>
+            <span style={{ color: C.gray }}>Threshold: </span>
             <strong style={{ color: "#F59E0B" }}>€{prefs.alertThreshold ?? 80}/MWh</strong>
-            <span style={{ marginLeft: 12, color: C.gray }}>Status: </span>
+            {"  ·  "}
+            <span style={{ color: C.gray }}>Status: </span>
             <strong style={{ color: prefs.alertsEnabled ? C.green : C.gray }}>
-              {prefs.alertsEnabled ? "🟢 Enabled" : "⚫ Disabled"}
+              {prefs.alertsEnabled ? "🟢 On" : "⚫ Off"}
             </strong>
           </div>
-          <button onClick={onBack} style={{
+          <button onClick={onGoAlerts} style={{
             marginTop: 14, padding: "8px 18px", borderRadius: 10, fontSize: 13,
             fontWeight: 600, border: "1px solid rgba(13,148,136,0.3)",
             background: "rgba(13,148,136,0.08)", color: C.teal, cursor: "pointer",
           }}>
-            Go to Alerts →
+            Manage Alerts →
           </button>
         </Section>
 
@@ -199,10 +195,8 @@ export default function ProfilePage({ onBack }) {
 
         {/* Privacy */}
         <div style={{ textAlign: "center", fontSize: 12, color: "#334", paddingBottom: 32 }}>
-          <span
-            onClick={() => window.dispatchEvent(new CustomEvent("showPrivacy"))}
-            style={{ color: "#556", cursor: "pointer", textDecoration: "underline" }}
-          >
+          <span onClick={() => window.dispatchEvent(new CustomEvent("showPrivacy"))}
+            style={{ color: "#556", cursor: "pointer", textDecoration: "underline" }}>
             Privacy Policy
           </span>
           {" · "}
