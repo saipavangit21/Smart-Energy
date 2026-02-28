@@ -2,7 +2,7 @@
  * ProfilePage.jsx — User profile, supplier preference, alerts info
  * Save stays on page — no redirect on save
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { SUPPLIERS } from "../utils/priceUtils";
 
@@ -24,8 +24,18 @@ function Section({ title, children }) {
 }
 
 export default function ProfilePage({ onBack, onGoAlerts }) {
-  const { user, logout, updatePreferences } = useAuth();
-  const prefs = user?.preferences || {};
+  const { user, logout, updatePreferences, authFetch } = useAuth();
+  const [livePrefs, setLivePrefs] = useState(user?.preferences || {});
+
+  // Fetch fresh preferences on mount — avoids stale cached user object
+  useEffect(() => {
+    authFetch("/auth/me")
+      .then(r => r.json())
+      .then(d => { if (d.success) setLivePrefs(d.user.preferences || {}); })
+      .catch(() => {});
+  }, []);
+
+  const prefs = livePrefs;
 
   const [supplier, setSupplier] = useState(prefs.supplier || "Bolt Energy");
   const [saving,   setSaving]   = useState(false);

@@ -38,6 +38,11 @@ export default function App() {
     return () => window.removeEventListener("showPrivacy", handler);
   }, []);
 
+  // Reset to dashboard when user logs in
+  useEffect(() => {
+    if (user) setPage("dashboard");
+  }, [user]);
+
   // Show OAuth callback page (fallback for browsers that need it)
   if (window.location.pathname === "/oauth/callback") {
     return <AuthCallback />;
