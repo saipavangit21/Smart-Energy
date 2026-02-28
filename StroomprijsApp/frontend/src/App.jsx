@@ -6,22 +6,8 @@ import { useAuth } from "./context/AuthContext";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
 import Dashboard from "./pages/Dashboard";
+import AuthCallback from "./pages/AuthCallback";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-
-// ⚡ MUST be outside the component — runs before useAuth()
-// Saves OAuth tokens to localStorage before AuthContext initializes
-if (window.location.pathname === "/oauth/callback") {
-  try {
-    const p = new URLSearchParams(window.location.search);
-    const at = p.get("access_token");
-    const rt = p.get("refresh_token");
-    if (at && rt) {
-      localStorage.setItem("access_token",  at);
-      localStorage.setItem("refresh_token", rt);
-    }
-  } catch (e) {}
-  window.location.replace("/");
-}
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -35,6 +21,12 @@ export default function App() {
   }, []);
 
   useEffect(() => { if (user) setPage("dashboard"); }, [user]);
+
+  // Show AuthCallback FIRST before any other check
+  // This ensures tokens are saved before AuthContext checks for a user
+  if (window.location.pathname === "/oauth/callback") {
+    return <AuthCallback />;
+  }
 
   if (showPrivacy) return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
