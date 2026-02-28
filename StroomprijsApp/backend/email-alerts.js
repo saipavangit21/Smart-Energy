@@ -98,11 +98,11 @@ async function checkAndSendAlerts(pool) {
     const { rows: users } = await pool.query(`
       SELECT id, email, name,
              (preferences->>'alertThreshold')::float AS threshold,
-             (preferences->>'alertsEnabled')::boolean AS alerts_enabled,
+             (preferences->>'alertEnabled')::boolean AS alerts_enabled,
              preferences->>'supplier' AS supplier,
              preferences->>'lastAlertSent' AS last_alert_sent
       FROM users
-      WHERE (preferences->>'alertsEnabled')::boolean = true
+      WHERE (preferences->>'alertEnabled')::boolean = true
         AND (preferences->>'alertThreshold') IS NOT NULL
     `);
 
