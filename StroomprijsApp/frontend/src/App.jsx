@@ -9,8 +9,8 @@ import Dashboard      from "./pages/Dashboard";
 import AuthCallback   from "./pages/AuthCallback";
 import PrivacyPolicy  from "./pages/PrivacyPolicy";
 
-// ── OAuth callback — runs before React, before AuthContext ────
-// Keys MUST match AuthContext storage keys: access_token / refresh_token
+// Save tokens if present — but do NOT redirect here.
+// Let AuthCallback component handle the redirect with proper delay.
 if (window.location.pathname === "/oauth/callback") {
   try {
     const p  = new URLSearchParams(window.location.search);
@@ -21,9 +21,9 @@ if (window.location.pathname === "/oauth/callback") {
       localStorage.setItem("refresh_token", rt);
     }
   } catch (e) {
-    console.error("OAuth save failed:", e);
+    console.error("OAuth token save failed:", e);
   }
-  window.location.replace("/");
+  // NO window.location.replace here — AuthCallback handles the redirect
 }
 
 export default function App() {
@@ -38,12 +38,11 @@ export default function App() {
     return () => window.removeEventListener("showPrivacy", handler);
   }, []);
 
-  // Reset to dashboard when user logs in
   useEffect(() => {
     if (user) setPage("dashboard");
   }, [user]);
 
-  // Show OAuth callback page (fallback for browsers that need it)
+  // Always render AuthCallback on this route — handles redirect with delay
   if (window.location.pathname === "/oauth/callback") {
     return <AuthCallback />;
   }
