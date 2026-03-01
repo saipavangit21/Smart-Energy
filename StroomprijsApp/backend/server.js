@@ -48,7 +48,17 @@ function toISODate(d) { return toLocalISODate(d); }
 function todayAndTomorrow() { const t = new Date(); return { today: toLocalISODate(t), tomorrow: toLocalISODate(new Date(t.getTime() + 86400000)) }; }
 function getPriceCategory(v) { if(v<0) return "negative"; if(v<50) return "very_cheap"; if(v<90) return "cheap"; if(v<130) return "moderate"; if(v<160) return "expensive"; return "peak"; }
 function computeStats(prices) {
-  const calc = arr => { if(!arr.length) return null; const v = arr.map(p=>p.price_eur_mwh); return { min:Math.min(...v), max:Math.max(...v), avg:+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(2), negative_hours:arr.filter(p=>p.price_eur_mwh<0).length }; };
+  const calc = arr => {
+    if(!arr.length) return null;
+    // Deduplicate to one entry per hour before computing stats
+    const hourly = Object.values(arr.reduce((acc, p) => {
+      const key = p.hour_label || p.hour;
+      if (!acc[key]) acc[key] = p;
+      return acc;
+    }, {}));
+    const v = hourly.map(p=>p.price_eur_mwh);
+    return { min:Math.min(...v), max:Math.max(...v), avg:+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(2), negative_hours:hourly.filter(p=>p.price_eur_mwh<0).length };
+  };
   return { today:calc(prices.filter(p=>p.day==="today")), tomorrow:calc(prices.filter(p=>p.day==="tomorrow")) };
 }
 async function fetchEC(s,e) { const k=`ec-${s}-${e}`; if(cache.has(k)) return cache.get(k); const {data} = await axios.get(`https://api.energy-charts.info/price?bzn=BE&start=${s}&end=${e}`,{timeout:10000}); const prices = data.unix_seconds.map((ts,i)=>({timestamp:new Date(ts*1000).toISOString(),price_eur_mwh:data.price[i],price_eur_kwh:+(data.price[i]/1000).toFixed(6),source:"Energy-Charts"})); cache.set(k,prices); return prices; }
