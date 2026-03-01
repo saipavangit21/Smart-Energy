@@ -360,7 +360,12 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {chartData.map((row, i) => {
+                        {/* Deduplicate to one row per hour */}
+                        {Object.values(chartData.reduce((acc, row) => {
+                          const key = row.hour_label;
+                          if (!acc[key]) acc[key] = row;
+                          return acc;
+                        }, {})).map((row, i) => {
                           const rowMwh = row.price_eur_mwh;
                           const rowLbl = getPriceLabel(rowMwh);
                           const rowCol = getPriceColor(rowMwh);
