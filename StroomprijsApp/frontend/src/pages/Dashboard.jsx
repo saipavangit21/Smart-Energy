@@ -55,7 +55,7 @@ function Stat({ label, value, color }) {
 }
 
 export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
-  const { user, updatePreferences, logout } = useAuth();
+  const { user, updatePreferences, logout, authFetch } = useAuth();
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
   const { current }  = useCurrentPrice();
   const cheapest     = useCheapestHours(5);
@@ -68,20 +68,19 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedDay,    setSelectedDay]    = useState(null);
   const [alertThreshold, setAlertThreshold] = useState(user?.preferences?.alertThreshold || 80);
-  const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertsEnabled || false);
+  const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertEnabled || false);
   const [notification,   setNotification]   = useState(null);
 
-  // Fetch fresh preferences on mount to avoid stale cached user object
-  const { authFetch } = useAuth();
+  // Fetch fresh prefs on mount — user.preferences is stale from login
   useEffect(() => {
     authFetch("/auth/me")
       .then(r => r.json())
       .then(d => {
         if (d.success) {
           const p = d.user.preferences || {};
-          if (p.supplier)       setSupplier(p.supplier);
+          if (p.supplier)                    setSupplier(p.supplier);
           if (p.alertThreshold !== undefined) setAlertThreshold(p.alertThreshold);
-          if (p.alertsEnabled  !== undefined) setAlertActive(p.alertsEnabled);
+          if (p.alertEnabled   !== undefined) setAlertActive(p.alertEnabled);
         }
       })
       .catch(() => {});
@@ -96,7 +95,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
   const toggleAlert = async () => {
     const next = !alertActive;
     setAlertActive(next);
-    try { await updatePreferences({ alertsEnabled: next, alertThreshold }); } catch {}
+    try { await updatePreferences({ alertEnabled: next, alertThreshold }); } catch {}
   };
 
   const saveAlertThreshold = async (v) => {
@@ -166,7 +165,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <span style={{ fontSize: 28 }}>🇧🇪</span>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: "-1px" }}>StrooomSlim</h1>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: "-1px" }}>SmartPrice</h1>
               <span style={{ fontSize: 11, color: "#00C896", background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.25)", borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
             </div>
             <div style={{ fontSize: 13, color: "#556" }}>
