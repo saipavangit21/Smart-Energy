@@ -203,8 +203,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
               {retailKwh && <div style={{ fontSize: 12, color: "#556", marginTop: 2 }}>{supplier}: €{retailKwh.toFixed(4)}/kWh</div>}
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, color: "#445", marginBottom: 8 }}>{new Date().toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}</div>
-              {lastFetched && <div style={{ fontSize: 10, color: "#334" }}>Updated {lastFetched.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}</div>}
+              <div style={{ fontSize: 11, color: "#445", marginBottom: 8 }}>{new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>
+              {lastFetched && <div style={{ fontSize: 10, color: "#334" }}>Updated {lastFetched.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>}
             </div>
           </div>
         )}
@@ -311,7 +311,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
                   <div style={{ paddingLeft: 14, marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: 14 }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700 }}>{tab === "today" ? "Today's" : "Tomorrow's"} Hourly Prices · Belgium</div>
-                      <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>EPEX Spot · {lastFetched && `Updated ${lastFetched.toLocaleTimeString("nl-BE")}`}</div>
+                      <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>EPEX Spot · {lastFetched && `Updated ${lastFetched.toLocaleTimeString("en-GB")}`}</div>
                     </div>
                     <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3, gap: 2 }}>
                       {["graph", "table"].map(v => (
@@ -456,8 +456,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <div style={{ width:30, height:30, borderRadius:"50%", background:`rgba(0,200,150,${0.25-i*0.04})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:900, color:C.green }}>{i+1}</div>
                     <div>
-                      <div style={{ fontWeight:700, fontSize:15 }}>{ts.toLocaleTimeString("nl-BE",{hour:"2-digit",minute:"2-digit"})} – {new Date(ts.getTime()+3600000).toLocaleTimeString("nl-BE",{hour:"2-digit",minute:"2-digit"})}</div>
-                      <div style={{ fontSize:10, color:"#445" }}>{ts.toLocaleDateString("nl-BE",{weekday:"short",day:"numeric",month:"short"})}</div>
+                      <div style={{ fontWeight:700, fontSize:15 }}>{ts.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} – {new Date(ts.getTime()+3600000).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>
+                      <div style={{ fontSize:10, color:"#445" }}>{ts.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}</div>
                     </div>
                   </div>
                   <div style={{ textAlign:"right" }}>
