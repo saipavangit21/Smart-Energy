@@ -5,8 +5,8 @@
 const axios = require("axios");
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL     = process.env.FROM_EMAIL || "onboarding@resend.dev";
-const APP_URL        = process.env.FRONTEND_URL || "https://smart-energy-six.vercel.app";
+const FROM_EMAIL     = process.env.FROM_EMAIL || "alerts@smartprice.be";
+const APP_URL        = process.env.FRONTEND_URL || "https://smartprice.be";
 
 const TZ = "Europe/Brussels";
 function toLocalISODate(d) {
@@ -36,7 +36,7 @@ async function sendAlertEmail({ to, name, currentPrice, threshold, supplier }) {
 <div style="max-width:560px;margin:0 auto;padding:32px 16px;">
   <div style="text-align:center;margin-bottom:32px;">
     <div style="font-size:40px;">⚡</div>
-    <div style="color:#00C896;font-size:24px;font-weight:800;">StroomSlim</div>
+    <div style="color:#00C896;font-size:24px;font-weight:800;">SmartPrice.be</div>
     <div style="color:#445;font-size:13px;">Belgium Real-Time Electricity Prices</div>
   </div>
   <div style="background:linear-gradient(135deg,#0A1628,#0D2040);border:1px solid ${priceColor}44;border-radius:20px;padding:28px;margin-bottom:24px;">
@@ -56,12 +56,12 @@ async function sendAlertEmail({ to, name, currentPrice, threshold, supplier }) {
         <div style="color:#fff;font-size:18px;font-weight:700;">€${threshold}</div>
       </div>
       <div style="flex:1;background:rgba(0,200,150,0.1);border-radius:10px;padding:12px;text-align:center;">
-        <div style="color:#556;font-size:11px;">SAVING</div>
+        <div style="color:#556;font-size:11px;">SAVING vs THRESHOLD</div>
         <div style="color:#00C896;font-size:18px;font-weight:700;">€${saving}</div>
       </div>
     </div>
     <a href="${APP_URL}" style="display:block;background:linear-gradient(135deg,#0D9488,#1A56A4);color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:12px;font-weight:700;">
-      View Live Prices →
+      View Live Prices on SmartPrice.be →
     </a>
   </div>
   <div style="background:rgba(255,255,255,0.03);border-radius:14px;padding:16px;margin-bottom:24px;">
@@ -73,8 +73,9 @@ async function sendAlertEmail({ to, name, currentPrice, threshold, supplier }) {
     </div>
   </div>
   <div style="text-align:center;color:#334;font-size:11px;line-height:1.8;">
-    <div>You receive this because you enabled price alerts in StroomSlim</div>
+    <div>You receive this because you enabled price alerts on SmartPrice.be</div>
     <div>Threshold: €${threshold}/MWh · Supplier: ${supplier || "Not set"}</div>
+    <div style="margin-top:8px;">© SmartPrice.be · Belgium · GDPR Compliant</div>
   </div>
 </div>
 </body></html>`;
