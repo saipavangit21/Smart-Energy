@@ -1,214 +1,291 @@
-# ⚡ StroomSlim — Belgium Real-Time Electricity Price App
+# ⚡ SmartPrice.be — Belgium Real-Time Electricity Prices
 
-A full-stack web app showing real EPEX Spot prices for Belgium in real-time.  
-Built with: **React + Vite** (frontend) + **Node.js/Express** (proxy backend)
+> Real-time EPEX Spot prices for Belgium. Built for dynamic contract holders who want to know the cheapest hours to run appliances, charge EVs, and save money.
+
+🌐 **Live at:** [smartprice.be](https://smartprice.be)
+
+Built with: **React + Vite** (frontend) · **Node.js/Express** (backend) · **PostgreSQL/Supabase** (database) · **Railway** (backend hosting) · **Vercel** (frontend hosting)
 
 ---
 
 ## 🗂 Project Structure
 
 ```
-stroomslim/
+smartprice/
 ├── backend/
-│   ├── server.js          ← Proxy server (fetches Elia + Energy-Charts + ENTSO-E)
-│   ├── package.json
-│   └── .env.example       ← Copy to .env and fill in your API keys
+│   ├── server.js              ← Express API + CORS + price cron
+│   ├── email-alerts.js        ← Hourly alert checker (Resend)
+│   ├── db.js                  ← Supabase PostgreSQL pool
+│   ├── routes/
+│   │   ├── auth.js            ← JWT login/register/refresh
+│   │   └── google.js          ← Google OAuth flow
+│   ├── middleware/
+│   │   └── auth.js            ← requireAuth middleware
+│   └── .env.example
 └── frontend/
+    ├── public/
+    │   ├── manifest.json      ← PWA manifest
+    │   └── icons/             ← PWA icons (192 + 512px)
     ├── src/
-    │   ├── App.jsx         ← Main dashboard UI
+    │   ├── App.jsx            ← Routing + auth flow
+    │   ├── pages/
+    │   │   ├── LandingPage.jsx    ← Public homepage
+    │   │   ├── Dashboard.jsx      ← Main app (prices, alerts, history)
+    │   │   ├── AuthPage.jsx       ← Login / Register
+    │   │   └── PrivacyPolicy.jsx  ← GDPR privacy policy
+    │   ├── context/
+    │   │   └── AuthContext.jsx    ← JWT auth state + refresh
     │   ├── hooks/
-    │   │   └── usePrices.js   ← Data fetching hooks
+    │   │   └── usePrices.js       ← Data fetching hooks
     │   └── utils/
-    │       └── priceUtils.js  ← Price formatting & supplier formulas
-    ├── index.html
-    ├── vite.config.js
-    └── package.json
+    │       └── priceUtils.js      ← Price colours, labels, supplier formulas
+    ├── index.html             ← PWA meta tags + SEO
+    └── vite.config.js
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Backend
-
+### Backend
 ```bash
 cd backend
 npm install
-cp .env.example .env        # Fill in your keys (see below)
-npm run dev                 # Starts on http://localhost:3001
+cp .env.example .env
+npm run dev                   # http://localhost:3001
 ```
 
-### 2. Frontend
-
+### Frontend
 ```bash
 cd frontend
 npm install
-npm run dev                 # Starts on http://localhost:5173
+npm run dev                   # http://localhost:5173
 ```
 
-The Vite dev server automatically proxies `/api/*` to the backend.
+Vite proxies `/api/*` to the backend automatically.
 
 ---
 
-## 🔑 API Keys & Registration
+## 🔑 Environment Variables
 
-### Source 1: Energy-Charts (Fraunhofer ISE) — NO KEY NEEDED ✅
-- **URL**: `https://api.energy-charts.info/`
-- **Coverage**: EPEX Spot Belgium, hourly, day-ahead and some intraday
-- **Rate limit**: ~100 req/hour (be polite!)
-- **License**: Free for commercial use with attribution
+### Backend `.env`
+```env
+# Database
+DATABASE_URL=postgresql://...          # Supabase connection string
 
-### Source 2: Elia Open Data — NO KEY NEEDED ✅
-- **URL**: `https://opendata.elia.be/api/explore/v2.1/`
-- **Coverage**: Belgium grid data, day-ahead prices, balancing, generation
-- **License**: Creative Commons Attribution 4.0 (CC BY 4.0) — free, commercial OK
-- **Attribution required**: "Source: Elia Open Data (elia.be)"
+# Auth
+JWT_SECRET=your_secret
+JWT_REFRESH_SECRET=your_refresh_secret
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
 
-### Source 3: ENTSO-E Transparency Platform — FREE, requires registration
-1. Register at: https://transparency.entsoe.eu/
-2. Email: transparency@entsoe.eu
-   - Subject: **"Restful API access"**
-   - Body: include your registered email address
-3. Receive your security token within **1-2 business days**
-4. Add to `.env`: `ENTSOE_API_KEY=your_token_here`
+# Google OAuth
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_CALLBACK_URL=https://your-backend.railway.app/auth/google/callback
 
----
+# Email alerts (Resend)
+RESEND_API_KEY=re_...
+FROM_EMAIL=alerts@smartprice.be
 
-## 📜 Terms & Conditions Summary
-
-| Source | Commercial use | Attribution | Rate limits | Notes |
-|---|---|---|---|---|
-| **Energy-Charts** (Fraunhofer ISE) | ✅ Free | Required | ~100/hr | Best source for EPEX Spot |
-| **Elia Open Data** | ✅ Free (CC BY 4.0) | Required | No hard limit | Belgian grid operator |
-| **ENTSO-E** | ✅ Free with token | Required | 400 req/hour | EU-wide, official source |
-| **EPEX SPOT (direct)** | 💰 Paid license | Yes | Per contract | Not needed for day-ahead |
-
-### Full License Links
-- Elia CC BY 4.0: https://www.elia.be/en/grid-data/elia-open-data-license
-- ENTSO-E T&C: https://transparency.entsoe.eu/content/static_content/Static%20content/terms%20and%20conditions/terms%20and%20conditions.html
-- Energy-Charts: https://www.energy-charts.info (Fraunhofer ISE, open data)
-
-### What you MUST do in your app:
-```
-✅ Attribute "Source: Elia Open Data (elia.be)" in your UI
-✅ Attribute "Data: Energy-Charts.info / Fraunhofer ISE"
-✅ Attribute "Source: ENTSO-E Transparency Platform" if using ENTSO-E
-✅ Don't claim data is more accurate than it is
-✅ Don't re-sell raw API data without a separate commercial agreement
-✅ Include "Not financial advice" disclaimer
+# App
+FRONTEND_URL=https://smartprice.be
+BACKEND_URL=https://your-backend.railway.app
+NODE_ENV=production
+PORT=3000
 ```
 
 ---
 
-## 📡 API Endpoints (Proxy Server)
+## 📡 API Endpoints
 
-| Endpoint | Description |
-|---|---|
-| `GET /api/health` | Server health + cache status |
-| `GET /api/prices/today` | Today + tomorrow hourly prices (auto-source) |
-| `GET /api/prices/range?start=YYYY-MM-DD&end=YYYY-MM-DD` | Historical range |
-| `GET /api/prices/entsoe` | ENTSO-E day-ahead (needs API key) |
-| `GET /api/current` | Current hour only (for live polling) |
-| `GET /api/cheapest?hours=5` | N cheapest upcoming hours |
+| Endpoint | Auth | Description |
+|---|---|---|
+| `GET /api/health` | — | Server health check |
+| `GET /api/prices/today` | — | Today + tomorrow hourly EPEX prices |
+| `GET /api/current` | — | Current hour price |
+| `GET /api/cheapest?hours=5` | — | N cheapest upcoming hours |
+| `GET /api/prices/history?days=7` | — | 7-day historical averages |
+| `GET /api/user/dashboard` | ✅ JWT | Prices + user preferences |
+| `POST /auth/register` | — | Email/password register |
+| `POST /auth/login` | — | Email/password login |
+| `POST /auth/refresh` | — | Refresh JWT token |
+| `GET /auth/me` | ✅ JWT | Current user + preferences |
+| `PATCH /auth/preferences` | ✅ JWT | Save supplier, alert settings |
+| `GET /auth/google` | — | Start Google OAuth |
+| `GET /auth/google/callback` | — | Google OAuth callback |
+| `DELETE /auth/delete-account` | ✅ JWT | GDPR account deletion |
+
+---
+
+## 🗄 Database Schema (Supabase PostgreSQL)
+
+```sql
+CREATE TABLE users (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email       TEXT UNIQUE NOT NULL,
+  name        TEXT,
+  password    TEXT,                          -- null for Google OAuth users
+  google_id   TEXT UNIQUE,
+  preferences JSONB DEFAULT '{}',           -- supplier, alertEnabled, alertThreshold, lastAlertSent
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE refresh_tokens (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID REFERENCES users(id) ON DELETE CASCADE,
+  token      TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+## 📊 Data Sources
+
+| Source | Auth needed | Coverage | License |
+|---|---|---|---|
+| **Energy-Charts** (Fraunhofer ISE) | ❌ None | EPEX Spot BE hourly | Free, attribution required |
+| **Elia Open Data** | ❌ None | Belgium grid, day-ahead | CC BY 4.0 |
+| **ENTSO-E** | ✅ Free token | EU-wide day-ahead | Free with registration |
+
+### Data flow
+```
+Browser → React Frontend
+            ↓ /api/prices/today
+         Node.js Backend (Railway)
+            ↓ picks fastest source with auto-fallback
+    ┌──────────────────────────────────┐
+    │ 1. Energy-Charts (primary)       │
+    │ 2. Elia Open Data (fallback)     │
+    │ 3. ENTSO-E (backup, needs key)   │
+    └──────────────────────────────────┘
+            ↓ cached 15 min (NodeCache)
+         JSON → Recharts renders graph
+```
+
+**Attribution required in UI:**
+```
+Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E
+Not financial advice
+```
+
+---
+
+## 🔔 Email Alerts
+
+Powered by **Resend** from `alerts@smartprice.be`:
+- Checks prices at the top of every hour
+- Emails users whose alert threshold is exceeded
+- Skips re-alerting within the same hour (`lastAlertSent` in preferences)
+- Fully branded SmartPrice.be email template
+
+---
+
+## 📱 PWA (Progressive Web App)
+
+SmartPrice is installable as a native-like app:
+- `manifest.json` with `display: standalone`
+- 192×192 and 512×512 icons
+- Theme colour: `#0D9488` (teal)
+- Android Chrome shows "Add to Home Screen" automatically
 
 ---
 
 ## 🏗 Production Deployment
 
-### Option A: Simple (single server)
+| Layer | Service | Notes |
+|---|---|---|
+| Frontend | Vercel | Auto-deploy from `main` branch |
+| Backend | Railway (EU West) | Auto-deploy, env vars in dashboard |
+| Database | Supabase (PostgreSQL) | Free tier, EU region |
+| Email | Resend | `smartprice.be` domain verified |
+| Domain | Nomeo.be | DNS → Vercel A record + CNAME |
+| Auth | Google OAuth 2.0 | Consent screen pending Google review |
+
+### DNS Records (Nomeo → Vercel)
 ```
-AWS EC2 t3.small or Hetzner VPS (€4/month)
-├── nginx reverse proxy (port 80/443)
-├── PM2 for Node.js backend
-└── Vite build served as static files
+A     @    76.76.21.21  (or Vercel's assigned IP)
+CNAME www  cname.vercel-dns.com
 ```
 
-### Option B: Serverless
+### CORS allowed origins (server.js)
 ```
-Vercel (frontend) + Railway or Render (backend proxy)
-Cost: ~€0–10/month depending on traffic
-```
-
-### Option C: Docker
-```dockerfile
-# Both services can be containerized
-# docker-compose.yml included below
-```
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  backend:
-    build: ./backend
-    ports: ["3001:3001"]
-    env_file: ./backend/.env
-    restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    ports: ["80:80"]
-    depends_on: [backend]
-    restart: unless-stopped
+https://smartprice.be
+https://www.smartprice.be
+https://smart-energy-six.vercel.app   ← keep during transition
+http://localhost:5173
+http://localhost:4173
 ```
 
 ---
 
-## 🔐 itsme Integration (Phase 2)
+## ✅ What's Live (March 2026)
 
-To add Belgian digital identity login (for Fluvius smart meter access):
-
-1. **Apply** at: https://www.itsme-id.com/business
-2. **Protocol**: OpenID Connect (OIDC) — standard OAuth2 flow
-3. **Timeline**: ~8-12 weeks for partnership agreement
-4. **Use case**: Let users connect their Fluvius EAN number to auto-fetch personal consumption data
-
-```javascript
-// itsme OIDC config (add to your auth provider)
-{
-  issuer: 'https://idp.itsme.services/v2',
-  authorization_endpoint: 'https://idp.itsme.services/v2/authorization',
-  clientId: 'YOUR_ITSME_CLIENT_ID',
-  scope: 'openid profile email service:YOUR_SERVICE_CODE',
-}
-```
+- [x] Real-time EPEX Spot price chart (hourly + 15-min data deduplicated)
+- [x] Today / Tomorrow / History / Best Hours / Suppliers / Alerts tabs
+- [x] Graph + Table toggle on price chart
+- [x] Email + Google OAuth login
+- [x] Price alerts by email (Resend, `alerts@smartprice.be`)
+- [x] Supplier comparison (Bolt, Engie, TotalEnergies, EDF Luminus, Lampiris)
+- [x] 7-day history with clickable daily breakdown
+- [x] Mobile-first UI with bottom navigation
+- [x] PWA — installable on Android/iOS
+- [x] GDPR: Privacy policy + delete account
+- [x] Public landing page (logged-out visitors)
+- [x] Full rebrand: StroomSlim → SmartPrice.be
 
 ---
 
-## 📊 Data Flow
+## 🗺 Roadmap
 
-```
-Browser → Your Frontend (React)
-              ↓ fetch /api/prices/today
-         Your Backend Proxy (Node.js)
-              ↓ (picks fastest source with fallback)
-    ┌─────────────────────────────────┐
-    │  1. Energy-Charts API (no auth) │  ← Primary
-    │  2. Elia Open Data API (no auth)│  ← Fallback
-    │  3. ENTSO-E API (API key)       │  ← Day-ahead backup
-    └─────────────────────────────────┘
-              ↓ cached in memory (15 min)
-         JSON response to browser
-              ↓
-         Recharts renders real graph
-```
+### Phase 2 — Real Bill Calculator (next)
+- Postcode input → Fluvius/ORES/RESA network costs per region
+- Show total estimated bill = EPEX spot + grid tariff + taxes
+- Unique value vs Mijnenergie.be (they don't cover dynamic contracts)
 
----
+### Phase 3 — Affiliate Monetisation
+- "Switch to supplier" referral links (€30–80 commission per switch)
+- Bolt Energy, Engie, TotalEnergies affiliate programmes
+- No CREG registration needed for referral model
 
-## 🇧🇪 CREG Compliance (for price comparison features)
+### Phase 4 — Expansion
+- Gas price tracking
+- Web push notifications (no app store needed)
+- French language toggle (NL/FR)
+- itsme auth + Fluvius smart meter sync (EAN-based personal consumption)
 
-If you show supplier price comparisons and want official recognition:
-- Apply for CREG certification: https://www.creg.be
-- This is **free** and makes your app an officially recognized comparator
-- Required if you want to be listed on government energy portals
-- Improves consumer trust significantly
+### Phase 5 — Full Comparator (Mijnenergie-style)
+- Fixed vs dynamic contract comparison
+- CREG registration as official energy comparator
+- Multi-country: Netherlands, France
 
 ---
 
-## 📈 Roadmap
+## 🇧🇪 CREG Compliance
 
-- [x] Phase 1: Real-time EPEX spot price chart (this app)
-- [ ] Phase 2: itsme auth + Fluvius smart meter sync
-- [ ] Phase 3: Push notifications (Expo / FCM)
-- [ ] Phase 4: EV charger API integration (OCPP)
-- [ ] Phase 5: AI scheduling assistant (MCP-powered)
+Current status: **No registration needed** — SmartPrice displays public price data and is not a regulated energy advisor or broker.
+
+If adding supplier switching (Phase 5), CREG registration is recommended:
+- Free registration: [creg.be](https://www.creg.be)
+- Makes SmartPrice an officially recognised comparator
+- Required to be listed on government energy portals
+
+---
+
+## 🔐 itsme Integration (Phase 4)
+
+For Belgian digital identity login + Fluvius smart meter access:
+1. Apply at: [itsme-id.com/business](https://www.itsme-id.com/business)
+2. Protocol: OpenID Connect (OIDC)
+3. Timeline: ~8–12 weeks for partnership agreement
+4. Enables: personal consumption data via EAN code
+
+---
+
+## 📜 License & Attribution
+
+- **Code**: Private / proprietary
+- **Data**: See sources above — all require attribution
+- **Contact**: hello@smartprice.be
