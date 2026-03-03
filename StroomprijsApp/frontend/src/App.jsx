@@ -62,7 +62,7 @@ export default function App() {
 
   // Logged-out flow
   if (!user) {
-    if (showAuth) return <AuthPage onBack={() => setShowAuth(false)} />;
+    if (showAuth) return <AuthPage onBack={() => setShowAuth(false)} onSkip={() => { setShowAuth(false); setPage("dashboard"); }} />;
     return <LandingPage onGetStarted={() => setShowAuth(true)} />;
   }
 

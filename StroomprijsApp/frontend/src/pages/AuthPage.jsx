@@ -38,7 +38,7 @@ function Input({ label, type = "text", value, onChange, placeholder, autoComplet
   );
 }
 
-export default function AuthPage({ onBack }) {
+export default function AuthPage({ onBack, onSkip }) {
   const { login, register } = useAuth();
   const [mode,      setMode]      = useState("login");
   const [name,      setName]      = useState("");
@@ -195,6 +195,19 @@ export default function AuthPage({ onBack }) {
           }}>
             🔵 itsme — coming soon
           </button>
+
+          {/* Skip login — go straight to dashboard */}
+          {onSkip && (
+            <button onClick={onSkip} style={{
+              width: "100%", padding: "11px 0", borderRadius: 12, fontSize: 14, fontWeight: 600,
+              border: "1px solid rgba(255,255,255,0.08)", background: "transparent",
+              color: "#556", cursor: "pointer", marginTop: 8, transition: "all 0.2s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = "#aaa"}
+            onMouseLeave={e => e.currentTarget.style.color = "#556"}>
+              👀 Browse without account
+            </button>
+          )}
 
           <div style={{ fontSize: 11, color: "#334155", textAlign: "center", marginTop: 16 }}>
             🔒 No email required · GDPR compliant · Belgium
