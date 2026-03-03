@@ -38,7 +38,7 @@ const NAV_ITEMS = [
   { id: "alerts",   icon: "🔔", label: "Alerts" },
 ];
 
-export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
+export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn }) {
   const { user, updatePreferences, logout, authFetch } = useAuth();
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
   const { current } = useCurrentPrice();
@@ -120,7 +120,15 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
         </div>
       )}
 
-      {/* ── MOBILE HEADER ── */}
+      {/* Guest banner */}
+      {isGuest && (
+        <div style={{ background: "rgba(13,148,136,0.12)", borderBottom: "1px solid rgba(13,148,136,0.25)", padding: "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 13, color: "#94A3B8" }}>👀 Browsing as guest — <strong style={{ color: "#0D9488" }}>sign in</strong> to save preferences & get price alerts</span>
+          <button onClick={onSignIn} style={{ padding: "6px 16px", borderRadius: 20, fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", background: "rgba(13,148,136,0.3)", color: "#0D9488" }}>
+            Sign In →
+          </button>
+        </div>
+      )}
       {isMobile && (
         <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}`, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

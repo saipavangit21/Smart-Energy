@@ -1,5 +1,5 @@
 /**
- * App.jsx — StrooomSlim v2
+ * App.jsx — SmartPrice.be
  */
 import { useState, useEffect } from "react";
 import { useAuth }    from "./context/AuthContext";
@@ -10,8 +10,6 @@ import AuthCallback   from "./pages/AuthCallback";
 import PrivacyPolicy  from "./pages/PrivacyPolicy";
 import LandingPage    from "./pages/LandingPage";
 
-// Save tokens if present — do NOT redirect here.
-// AuthCallback component handles the redirect with proper delay (cross-browser safe).
 if (window.location.pathname === "/oauth/callback") {
   try {
     const p  = new URLSearchParams(window.location.search);
@@ -24,15 +22,15 @@ if (window.location.pathname === "/oauth/callback") {
   } catch (e) {
     console.error("OAuth token save failed:", e);
   }
-  // NO window.location.replace here — AuthCallback handles the redirect
 }
 
 export default function App() {
   const { user, loading } = useAuth();
-  const [showPrivacy,  setShowPrivacy]  = useState(false);
-  const [page,         setPage]         = useState("dashboard");
-  const [initialTab,   setInitialTab]   = useState("today");
-  const [showAuth,     setShowAuth]     = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [page,        setPage]        = useState("dashboard");
+  const [initialTab,  setInitialTab]  = useState("today");
+  const [showAuth,    setShowAuth]    = useState(false);
+  const [guestMode,   setGuestMode]   = useState(false); // browse without account
 
   useEffect(() => {
     const handler = () => setShowPrivacy(true);
@@ -41,41 +39,46 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (user) { setPage("dashboard"); setShowAuth(false); }
+    if (user) { setPage("dashboard"); setShowAuth(false); setGuestMode(false); }
   }, [user]);
 
-  // Always render AuthCallback on this route
-  if (window.location.pathname === "/oauth/callback") {
-    return <AuthCallback />;
-  }
-
+  if (window.location.pathname === "/oauth/callback") return <AuthCallback />;
   if (showPrivacy) return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#060B14", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>⚡</div>
-        <div style={{ color: "#334155", fontSize: 14 }}>Loading StrooomSlim…</div>
+        <div style={{ color: "#334155", fontSize: 14 }}>Loading SmartPrice…</div>
       </div>
     </div>
   );
 
   // Logged-out flow
-  if (!user) {
-    if (showAuth) return <AuthPage onBack={() => setShowAuth(false)} onSkip={() => { setShowAuth(false); setPage("dashboard"); }} />;
+  if (!user && !guestMode) {
+    if (showAuth) return (
+      <AuthPage
+        onBack={() => setShowAuth(false)}
+        onSkip={() => { setShowAuth(false); setGuestMode(true); }}
+      />
+    );
     return <LandingPage onGetStarted={() => setShowAuth(true)} />;
   }
 
-  if (page === "profile") {
+  // Profile page (only for logged-in users)
+  if (page === "profile" && user) {
     return <ProfilePage
       onBack={() => setPage("dashboard")}
       onGoAlerts={() => { setInitialTab("alerts"); setPage("dashboard"); }}
     />;
   }
 
+  // Dashboard — works for both logged-in and guest users
   return <Dashboard
-    onGoProfile={() => setPage("profile")}
+    onGoProfile={user ? () => setPage("profile") : () => setShowAuth(true)}
     initialTab={initialTab}
     onTabConsumed={() => setInitialTab("today")}
+    isGuest={!user}
+    onSignIn={() => { setGuestMode(false); setShowAuth(true); }}
   />;
 }
