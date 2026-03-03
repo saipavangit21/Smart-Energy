@@ -125,6 +125,14 @@ router.put("/preferences", requireAuth, async (req, res) => {
     const updates = {};
     for (const k of allowed) if (req.body[k] !== undefined) updates[k] = req.body[k];
 
+    // If saving a new alertEmail, check it's not already used by another account
+    if (updates.alertEmail) {
+      const existing = await userStore.findByEmail(updates.alertEmail);
+      if (existing && existing.id !== req.user.id) {
+        return res.status(409).json({ success: false, error: "This email is already linked to another account" });
+      }
+    }
+
     // If enabling alerts, alertEmail is required
     if (updates.alertEnabled === true) {
       const currentPrefs = req.user.preferences || {};
