@@ -552,8 +552,9 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 }
 
 function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAlert, user, updatePreferences, C, isMobile }) {
-  const [alertEmail, setAlertEmail] = useState(user?.preferences?.alertEmail || user?.email || "");
-  const [emailSaved, setEmailSaved] = useState(!!alertEmail);
+  const existingEmail = user?.preferences?.alertEmail || user?.email || "";
+  const [alertEmail, setAlertEmail] = useState(existingEmail);
+  const [emailSaved, setEmailSaved] = useState(existingEmail.length > 0);
   const [saving,     setSaving]     = useState(false);
   const [emailError, setEmailError] = useState("");
 
@@ -571,8 +572,15 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
   };
 
   const handleToggle = async () => {
-    if (!alertActive && !emailSaved) { setEmailError("Please save your email first"); return; }
-    if (!alertActive && !isValidEmail(alertEmail)) { setEmailError("Please enter a valid email first"); return; }
+    if (!alertActive) {
+      if (!isValidEmail(alertEmail)) { setEmailError("Please enter a valid email first"); return; }
+      // Auto-save email if not yet saved
+      if (!emailSaved) {
+        setSaving(true);
+        try { await updatePreferences({ alertEmail }); setEmailSaved(true); } catch {}
+        setSaving(false);
+      }
+    }
     await toggleAlert();
   };
 
