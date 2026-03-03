@@ -1,17 +1,14 @@
 /**
  * db.js — PostgreSQL Database Layer (Supabase)
- * Drop-in replacement for the in-memory store.
- * Same API surface — nothing else in the app changes.
  */
 
 const { Pool } = require("pg");
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // required for Supabase
+  ssl: { rejectUnauthorized: false },
 });
 
-// Test connection on startup
 pool.query("SELECT 1").then(() => {
   console.log("✅ Connected to Supabase PostgreSQL");
 }).catch(err => {
@@ -21,8 +18,7 @@ pool.query("SELECT 1").then(() => {
 
 const userStore = {
 
-  // ── Create ──────────────────────────────────────────────────
-  // OAuth registration (no password)
+  // ── Create (OAuth) ───────────────────────────────────────────
   async createOAuth({ email, name, provider, googleId }) {
     const providers = JSON.stringify({
       email: false, google: provider === "google",
@@ -30,17 +26,18 @@ const userStore = {
     });
     const { rows } = await pool.query(
       `INSERT INTO users (email, name, providers) VALUES ($1, $2, $3::jsonb) RETURNING *`,
-      [email.toLowerCase().trim(), name || "", providers]
+      [email ? email.toLowerCase().trim() : null, name || "", providers]
     );
     return rows[0];
   },
 
+  // ── Create (email/password — email now optional) ─────────────
   async create({ email, passwordHash, name }) {
     const { rows } = await pool.query(
       `INSERT INTO users (email, password_hash, name)
        VALUES ($1, $2, $3)
        RETURNING *`,
-      [email.toLowerCase().trim(), passwordHash, name || ""]
+      [email ? email.toLowerCase().trim() : null, passwordHash, name || ""]
     );
     return rows[0];
   },
@@ -48,8 +45,7 @@ const userStore = {
   // ── Find by ID ───────────────────────────────────────────────
   async findById(id) {
     const { rows } = await pool.query(
-      "SELECT * FROM users WHERE id = $1",
-      [id]
+      "SELECT * FROM users WHERE id = $1", [id]
     );
     return rows[0] || null;
   },
@@ -63,6 +59,15 @@ const userStore = {
     return rows[0] || null;
   },
 
+  // ── Find by name (for email-free login) ──────────────────────
+  async findByName(name) {
+    const { rows } = await pool.query(
+      "SELECT * FROM users WHERE LOWER(name) = LOWER($1) LIMIT 1",
+      [name.trim()]
+    );
+    return rows[0] || null;
+  },
+
   // ── Update ───────────────────────────────────────────────────
   async update(id, changes) {
     const fields = [];
@@ -70,9 +75,8 @@ const userStore = {
     let i = 1;
 
     if (changes.name          !== undefined) { fields.push(`name = $${i++}`);          values.push(changes.name); }
-    if (changes.email         !== undefined) { fields.push(`email = $${i++}`);         values.push(changes.email.toLowerCase().trim()); }
+    if (changes.email         !== undefined) { fields.push(`email = $${i++}`);         values.push(changes.email ? changes.email.toLowerCase().trim() : null); }
     if (changes.password_hash !== undefined) { fields.push(`password_hash = $${i++}`); values.push(changes.password_hash); }
-    // Accept both camelCase and snake_case for passwordHash
     if (changes.passwordHash  !== undefined) { fields.push(`password_hash = $${i++}`); values.push(changes.passwordHash); }
 
     if (!fields.length) return this.findById(id);
@@ -88,10 +92,7 @@ const userStore = {
   // ── Update preferences ───────────────────────────────────────
   async updatePreferences(id, prefs) {
     const { rows } = await pool.query(
-      `UPDATE users
-       SET preferences = preferences || $1::jsonb
-       WHERE id = $2
-       RETURNING *`,
+      `UPDATE users SET preferences = preferences || $1::jsonb WHERE id = $2 RETURNING *`,
       [JSON.stringify(prefs), id]
     );
     return rows[0] || null;
@@ -99,7 +100,7 @@ const userStore = {
 
   // ── Refresh tokens ───────────────────────────────────────────
   async saveRefreshToken(token, userId) {
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await pool.query(
       "INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
       [token, userId, expiresAt]
@@ -108,8 +109,7 @@ const userStore = {
 
   async isValidRefreshToken(token) {
     const { rows } = await pool.query(
-      "SELECT 1 FROM refresh_tokens WHERE token = $1 AND expires_at > NOW()",
-      [token]
+      "SELECT 1 FROM refresh_tokens WHERE token = $1 AND expires_at > NOW()", [token]
     );
     return rows.length > 0;
   },
@@ -122,11 +122,9 @@ const userStore = {
   safeUser(user) {
     if (!user) return null;
     const { password_hash, passwordHash, ...safe } = user;
-
-    // Normalize DB column names to camelCase for frontend
     return {
       id:          safe.id,
-      email:       safe.email,
+      email:       safe.email || null,
       name:        safe.name,
       createdAt:   safe.created_at || safe.createdAt,
       preferences: safe.preferences || {},
