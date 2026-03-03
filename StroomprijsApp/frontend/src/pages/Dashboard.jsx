@@ -508,24 +508,12 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
 
         {/* ── Alerts ── */}
         {tab === "alerts" && (
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>🔔 Price Alerts</div>
-            <div style={{ fontSize: 12, color: "#556", marginBottom: 20 }}>Get emailed when prices drop below your threshold</div>
-            <div style={{ marginBottom: 22 }}>
-              <div style={{ fontSize: 13, color: "#aaa", marginBottom: 10 }}>Alert when below: <strong style={{ color: C.yellow }}>€{alertThreshold}/MWh</strong></div>
-              <input type="range" min={-20} max={200} step={5} value={alertThreshold} onChange={e=>saveAlertThreshold(+e.target.value)} style={{ width:"100%", accentColor:C.yellow, cursor:"pointer" }} />
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#445", marginTop:4 }}><span>€-20</span><span>€200/MWh</span></div>
-            </div>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 16px", background:alertActive?"rgba(0,200,150,0.08)":C.card, border:`1px solid ${alertActive?"rgba(0,200,150,0.3)":C.border}`, borderRadius:14 }}>
-              <div>
-                <div style={{ fontWeight:600, fontSize:14 }}>Alert {alertActive?"🟢 Active":"⚫ Inactive"}</div>
-                <div style={{ fontSize:11, color:"#556", marginTop:2 }}>Email: {user?.email}</div>
-              </div>
-              <button onClick={toggleAlert} style={{ padding:"8px 18px", borderRadius:30, fontWeight:700, fontSize:13, border:"none", cursor:"pointer", background:alertActive?"rgba(239,68,68,0.2)":"rgba(0,200,150,0.2)", color:alertActive?C.red:C.green }}>
-                {alertActive?"Disable":"Enable"}
-              </button>
-            </div>
-          </div>
+          <AlertsTab
+            alertActive={alertActive} alertThreshold={alertThreshold}
+            saveAlertThreshold={saveAlertThreshold} toggleAlert={toggleAlert}
+            user={user} updatePreferences={updatePreferences}
+            C={C} isMobile={isMobile}
+          />
         )}
 
         {/* Footer */}
@@ -551,6 +539,98 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed }) {
       )}
 
       <style>{`* { box-sizing: border-box; } button { font-family: inherit; } ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }`}</style>
+    </div>
+  );
+}
+
+function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAlert, user, updatePreferences, C, isMobile }) {
+  const [alertEmail, setAlertEmail] = useState(user?.preferences?.alertEmail || user?.email || "");
+  const [emailSaved, setEmailSaved] = useState(!!alertEmail);
+  const [saving,     setSaving]     = useState(false);
+  const [emailError, setEmailError] = useState("");
+
+  const isValidEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  const saveEmail = async () => {
+    if (!isValidEmail(alertEmail)) { setEmailError("Please enter a valid email"); return; }
+    setEmailError("");
+    setSaving(true);
+    try {
+      await updatePreferences({ alertEmail });
+      setEmailSaved(true);
+    } catch {}
+    setSaving(false);
+  };
+
+  const handleToggle = async () => {
+    if (!alertActive && !emailSaved) { setEmailError("Please save your email first"); return; }
+    if (!alertActive && !isValidEmail(alertEmail)) { setEmailError("Please enter a valid email first"); return; }
+    await toggleAlert();
+  };
+
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>🔔 Price Alerts</div>
+      <div style={{ fontSize: 12, color: "#556", marginBottom: 20 }}>Get emailed when electricity drops below your threshold</div>
+
+      {/* Threshold slider */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 13, color: "#aaa", marginBottom: 10 }}>
+          Alert when below: <strong style={{ color: C.yellow }}>€{alertThreshold}/MWh</strong>
+        </div>
+        <input type="range" min={-20} max={200} step={5} value={alertThreshold}
+          onChange={e => saveAlertThreshold(+e.target.value)}
+          style={{ width: "100%", accentColor: C.yellow, cursor: "pointer" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#445", marginTop: 4 }}>
+          <span>€-20</span><span>€200/MWh</span>
+        </div>
+      </div>
+
+      {/* Email input — only shown here */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: "#778", marginBottom: 8 }}>
+          📧 Alert email <span style={{ color: "#445" }}>(required to receive notifications)</span>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            type="email" value={alertEmail} onChange={e => { setAlertEmail(e.target.value); setEmailSaved(false); setEmailError(""); }}
+            placeholder="your@email.be"
+            style={{
+              flex: 1, padding: "10px 14px", borderRadius: 10, fontSize: 14,
+              background: "rgba(255,255,255,0.06)", border: `1px solid ${emailError ? C.red : emailSaved ? C.green : "rgba(255,255,255,0.12)"}`,
+              color: "#fff", outline: "none", fontFamily: "inherit",
+            }}
+          />
+          <button onClick={saveEmail} disabled={saving || emailSaved} style={{
+            padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700,
+            border: "none", cursor: emailSaved ? "default" : "pointer",
+            background: emailSaved ? "rgba(0,200,150,0.2)" : "rgba(13,148,136,0.3)",
+            color: emailSaved ? C.green : "#0D9488", whiteSpace: "nowrap",
+          }}>
+            {emailSaved ? "✓ Saved" : saving ? "…" : "Save"}
+          </button>
+        </div>
+        {emailError && <div style={{ fontSize: 11, color: C.red, marginTop: 6 }}>⚠ {emailError}</div>}
+        {emailSaved && <div style={{ fontSize: 11, color: C.green, marginTop: 6 }}>✓ Alerts will be sent to {alertEmail}</div>}
+      </div>
+
+      {/* Enable/disable toggle */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", background: alertActive ? "rgba(0,200,150,0.08)" : C.card, border: `1px solid ${alertActive ? "rgba(0,200,150,0.3)" : C.border}`, borderRadius: 14 }}>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>Alert {alertActive ? "🟢 Active" : "⚫ Inactive"}</div>
+          <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>
+            {alertActive ? `Monitoring prices · email: ${alertEmail}` : "Enable to start receiving alerts"}
+          </div>
+        </div>
+        <button onClick={handleToggle} style={{
+          padding: "8px 18px", borderRadius: 30, fontWeight: 700, fontSize: 13,
+          border: "none", cursor: "pointer",
+          background: alertActive ? "rgba(239,68,68,0.2)" : "rgba(0,200,150,0.2)",
+          color: alertActive ? C.red : C.green,
+        }}>
+          {alertActive ? "Disable" : "Enable"}
+        </button>
+      </div>
     </div>
   );
 }

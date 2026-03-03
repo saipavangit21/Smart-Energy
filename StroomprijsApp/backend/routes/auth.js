@@ -1,6 +1,6 @@
 /**
- * routes/auth.js — Authentication Routes (PostgreSQL version)
- * All userStore calls are now async (database queries)
+ * routes/auth.js — Authentication Routes
+ * Email is optional — only required when enabling price alerts
  */
 
 const express    = require("express");
@@ -25,16 +25,22 @@ function generateTokens(userId) {
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
 // ── POST /auth/register ───────────────────────────────────────
+// Email is OPTIONAL — only name + password required
 router.post("/register", registerLimiter, async (req, res) => {
   try {
     const { email, password, name } = req.body;
-    if (!email || !password)          return res.status(400).json({ success: false, error: "Email and password required" });
-    if (!isValidEmail(email))         return res.status(400).json({ success: false, error: "Invalid email address" });
-    if (password.length < 8)          return res.status(400).json({ success: false, error: "Password must be at least 8 characters" });
-    if (await userStore.findByEmail(email)) return res.status(409).json({ success: false, error: "Email already registered" });
+    if (!name || !name.trim())  return res.status(400).json({ success: false, error: "Name is required" });
+    if (!password)              return res.status(400).json({ success: false, error: "Password is required" });
+    if (password.length < 8)   return res.status(400).json({ success: false, error: "Password must be at least 8 characters" });
+
+    // Only validate email if provided
+    if (email) {
+      if (!isValidEmail(email)) return res.status(400).json({ success: false, error: "Invalid email address" });
+      if (await userStore.findByEmail(email)) return res.status(409).json({ success: false, error: "Email already registered" });
+    }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await userStore.create({ email, passwordHash, name });
+    const user = await userStore.create({ email: email || null, passwordHash, name });
     const { accessToken, refreshToken } = generateTokens(user.id);
     await userStore.saveRefreshToken(refreshToken, user.id);
 
@@ -52,24 +58,27 @@ router.post("/register", registerLimiter, async (req, res) => {
 });
 
 // ── POST /auth/login ──────────────────────────────────────────
+// Login by email OR name
 router.post("/login", loginLimiter, async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ success: false, error: "Email and password required" });
+    const { email, password, name } = req.body;
+    if (!password) return res.status(400).json({ success: false, error: "Password is required" });
+    if (!email && !name) return res.status(400).json({ success: false, error: "Email or name is required" });
 
-    const user = await userStore.findByEmail(email);
+    let user;
+    if (email) {
+      user = await userStore.findByEmail(email);
+    } else {
+      user = await userStore.findByName(name);
+    }
+
     if (!user || !(await bcrypt.compare(password, user.password_hash)))
-      return res.status(401).json({ success: false, error: "Invalid email or password" });
+      return res.status(401).json({ success: false, error: "Invalid credentials" });
 
     const { accessToken, refreshToken } = generateTokens(user.id);
     await userStore.saveRefreshToken(refreshToken, user.id);
 
-    res.json({
-      success: true,
-      user:    userStore.safeUser(user),
-      accessToken,
-      refreshToken,
-    });
+    res.json({ success: true, user: userStore.safeUser(user), accessToken, refreshToken });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ success: false, error: "Login failed: " + err.message });
@@ -109,12 +118,21 @@ router.get("/me", requireAuth, (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
-// ── PUT /auth/preferences ─────────────────────────────────────
+// ── PATCH /auth/preferences ───────────────────────────────────
 router.put("/preferences", requireAuth, async (req, res) => {
   try {
-    const allowed = ["supplier","alertThreshold","alertEnabled","alertChannels","language"];
+    const allowed = ["supplier","alertThreshold","alertEnabled","alertEmail","alertChannels","language"];
     const updates = {};
     for (const k of allowed) if (req.body[k] !== undefined) updates[k] = req.body[k];
+
+    // If enabling alerts, alertEmail is required
+    if (updates.alertEnabled === true) {
+      const currentPrefs = req.user.preferences || {};
+      const alertEmail = updates.alertEmail || currentPrefs.alertEmail;
+      if (!alertEmail || !isValidEmail(alertEmail))
+        return res.status(400).json({ success: false, error: "A valid email is required to enable alerts" });
+    }
+
     const updated = await userStore.updatePreferences(req.user.id, updates);
     res.json({ success: true, preferences: updated.preferences });
   } catch (err) {
@@ -128,12 +146,16 @@ router.put("/profile", requireAuth, async (req, res) => {
     const { name, email } = req.body;
     const changes = {};
     if (name) changes.name = name;
-    if (email) {
-      if (!isValidEmail(email)) return res.status(400).json({ success: false, error: "Invalid email" });
-      const existing = await userStore.findByEmail(email);
-      if (existing && existing.id !== req.user.id)
-        return res.status(409).json({ success: false, error: "Email already in use" });
-      changes.email = email;
+    if (email !== undefined) {
+      if (email === "") {
+        changes.email = null; // allow clearing email
+      } else {
+        if (!isValidEmail(email)) return res.status(400).json({ success: false, error: "Invalid email" });
+        const existing = await userStore.findByEmail(email);
+        if (existing && existing.id !== req.user.id)
+          return res.status(409).json({ success: false, error: "Email already in use" });
+        changes.email = email;
+      }
     }
     const updated = await userStore.update(req.user.id, changes);
     res.json({ success: true, user: userStore.safeUser(updated) });
