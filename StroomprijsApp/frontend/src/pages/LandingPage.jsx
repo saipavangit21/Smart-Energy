@@ -179,7 +179,7 @@ export default function LandingPage({ onGetStarted }) {
           </div>
           <div style={{ fontSize: 12, color: "#334", lineHeight: 2 }}>
             Price data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E · EPEX Spot Belgium<br />
-            <span onClick={() => window.dispatchEvent(new CustomEvent("showPrivacy"))} style={{ color: "#445", cursor: "pointer", textDecoration: "underline" }}>Privacy Policy</span>
+            <a href="/privacy" style={{ color: "#445", textDecoration: "underline" }}>Privacy Policy</a>
             {" · "}GDPR Compliant · All data stored in EU · Not financial advice
           </div>
         </div>

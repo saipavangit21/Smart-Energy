@@ -32,6 +32,7 @@ export default function App() {
   }, [user]);
 
   if (window.location.pathname === "/oauth/callback") return <AuthCallback />;
+  if (window.location.pathname === "/privacy") return <PrivacyPolicy onClose={() => window.location.href = "/"} />;
   if (showPrivacy) return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   if (loading) return (
