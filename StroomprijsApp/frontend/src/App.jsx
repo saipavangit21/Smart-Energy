@@ -10,19 +10,8 @@ import AuthCallback   from "./pages/AuthCallback";
 import PrivacyPolicy  from "./pages/PrivacyPolicy";
 import LandingPage    from "./pages/LandingPage";
 
-if (window.location.pathname === "/oauth/callback") {
-  try {
-    const p  = new URLSearchParams(window.location.search);
-    const at = p.get("access_token");
-    const rt = p.get("refresh_token");
-    if (at && rt) {
-      localStorage.setItem("access_token",  at);
-      localStorage.setItem("refresh_token", rt);
-    }
-  } catch (e) {
-    console.error("OAuth token save failed:", e);
-  }
-}
+// OAuth tokens are now set as httpOnly cookies by the backend
+// No localStorage handling needed here
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -30,7 +19,7 @@ export default function App() {
   const [page,        setPage]        = useState("dashboard");
   const [initialTab,  setInitialTab]  = useState("today");
   const [showAuth,    setShowAuth]    = useState(false);
-  const [guestMode,   setGuestMode]   = useState(false); // browse without account
+  const [guestMode,   setGuestMode]   = useState(false); // ← key fix
 
   useEffect(() => {
     const handler = () => setShowPrivacy(true);
@@ -54,7 +43,7 @@ export default function App() {
     </div>
   );
 
-  // Logged-out flow
+  // Logged-out — guestMode bypasses this entire block
   if (!user && !guestMode) {
     if (showAuth) return (
       <AuthPage
@@ -65,7 +54,6 @@ export default function App() {
     return <LandingPage onGetStarted={() => setShowAuth(true)} />;
   }
 
-  // Profile page (only for logged-in users)
   if (page === "profile" && user) {
     return <ProfilePage
       onBack={() => setPage("dashboard")}
@@ -73,9 +61,8 @@ export default function App() {
     />;
   }
 
-  // Dashboard — works for both logged-in and guest users
   return <Dashboard
-    onGoProfile={user ? () => setPage("profile") : () => setShowAuth(true)}
+    onGoProfile={user ? () => setPage("profile") : () => { setGuestMode(false); setShowAuth(true); }}
     initialTab={initialTab}
     onTabConsumed={() => setInitialTab("today")}
     isGuest={!user}
