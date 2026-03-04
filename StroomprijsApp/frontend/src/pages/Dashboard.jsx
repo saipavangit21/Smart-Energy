@@ -169,16 +169,24 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                 </div>
               )}
               <div style={{ position: "relative" }}>
-                <button onClick={() => setShowMenu(m => !m)} style={{ display: "flex", alignItems: "center", gap: 8, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "9px 14px", cursor: "pointer", color: "#E8EDF5" }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
-                    {(user?.name || user?.email || "?")[0].toUpperCase()}
-                  </div>
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ fontSize: 12, fontWeight: 600 }}>{user?.name || "Account"}</div>
-                    <div style={{ fontSize: 10, color: "#556" }}>▾ Menu</div>
-                  </div>
-                </button>
-                {showMenu && <DropMenu onProfile={() => { setShowMenu(false); onGoProfile(); }} onLogout={() => { setShowMenu(false); logout(); }} onPrivacy={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />}
+                {isGuest ? (
+                  <button onClick={onSignIn} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(13,148,136,0.15)", border: "1px solid rgba(13,148,136,0.3)", borderRadius: 12, padding: "9px 18px", cursor: "pointer", color: "#0D9488", fontWeight: 700, fontSize: 13 }}>
+                    Sign In →
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => setShowMenu(m => !m)} style={{ display: "flex", alignItems: "center", gap: 8, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "9px 14px", cursor: "pointer", color: "#E8EDF5" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
+                        {(user?.name || user?.email || "?")[0].toUpperCase()}
+                      </div>
+                      <div style={{ textAlign: "left" }}>
+                        <div style={{ fontSize: 12, fontWeight: 600 }}>{user?.name || "Account"}</div>
+                        <div style={{ fontSize: 10, color: "#556" }}>▾ Menu</div>
+                      </div>
+                    </button>
+                    {showMenu && <DropMenu onProfile={() => { setShowMenu(false); onGoProfile(); }} onLogout={() => { setShowMenu(false); logout(); }} onPrivacy={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -189,12 +197,24 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
       {isMobile && showMenu && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)" }} onClick={() => setShowMenu(false)}>
           <div style={{ position: "absolute", top: 60, right: 16, background: "#0D1626", border: `1px solid ${C.border}`, borderRadius: 16, padding: 8, minWidth: 200 }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>{user?.email}</div>
-            <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-            <MenuBtn icon="👤" label="My Profile" onClick={() => { setShowMenu(false); onGoProfile(); }} />
-            <MenuBtn icon="🔒" label="Privacy Policy" onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
-            <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-            <MenuBtn icon="🚪" label="Sign Out" onClick={() => { setShowMenu(false); logout(); }} danger />
+            {isGuest ? (
+              <>
+                <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>Browsing as guest</div>
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="🔒" label="Privacy Policy" onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="👤" label="Sign In / Register" onClick={() => { setShowMenu(false); onSignIn(); }} />
+              </>
+            ) : (
+              <>
+                <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>{user?.email || user?.name}</div>
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="👤" label="My Profile" onClick={() => { setShowMenu(false); onGoProfile(); }} />
+                <MenuBtn icon="🔒" label="Privacy Policy" onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="🚪" label="Sign Out" onClick={() => { setShowMenu(false); logout(); }} danger />
+              </>
+            )}
           </div>
         </div>
       )}
@@ -565,19 +585,29 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
     setEmailError("");
     setSaving(true);
     try {
-      await updatePreferences({ alertEmail });
-      setEmailSaved(true);
-    } catch {}
+      const res = await updatePreferences({ alertEmail });
+      if (res?.error) { setEmailError(res.error); }
+      else { setEmailSaved(true); }
+    } catch (err) {
+      setEmailError(err.message || "Failed to save email");
+    }
     setSaving(false);
   };
 
   const handleToggle = async () => {
     if (!alertActive) {
       if (!isValidEmail(alertEmail)) { setEmailError("Please enter a valid email first"); return; }
-      // Auto-save email if not yet saved
       if (!emailSaved) {
         setSaving(true);
-        try { await updatePreferences({ alertEmail }); setEmailSaved(true); } catch {}
+        try {
+          const res = await updatePreferences({ alertEmail });
+          if (res?.error) { setEmailError(res.error); setSaving(false); return; }
+          setEmailSaved(true);
+        } catch (err) {
+          setEmailError(err.message || "Failed to save email");
+          setSaving(false);
+          return;
+        }
         setSaving(false);
       }
     }

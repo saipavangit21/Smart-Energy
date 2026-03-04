@@ -127,8 +127,14 @@ router.put("/preferences", requireAuth, async (req, res) => {
 
     // If saving a new alertEmail, check it's not already used by another account
     if (updates.alertEmail) {
-      const existing = await userStore.findByEmail(updates.alertEmail);
-      if (existing && existing.id !== req.user.id) {
+      // Check main email column
+      const existingByEmail = await userStore.findByEmail(updates.alertEmail);
+      if (existingByEmail && existingByEmail.id !== req.user.id) {
+        return res.status(409).json({ success: false, error: "This email is already linked to another account" });
+      }
+      // Check alertEmail in preferences of other users
+      const existingByAlertEmail = await userStore.findByAlertEmail(updates.alertEmail);
+      if (existingByAlertEmail && existingByAlertEmail.id !== req.user.id) {
         return res.status(409).json({ success: false, error: "This email is already linked to another account" });
       }
     }

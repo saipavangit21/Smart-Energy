@@ -59,6 +59,15 @@ const userStore = {
     return rows[0] || null;
   },
 
+  // ── Find by alert email (stored in preferences JSON) ────────
+  async findByAlertEmail(email) {
+    const { rows } = await pool.query(
+      `SELECT * FROM users WHERE preferences->>'alertEmail' = $1 LIMIT 1`,
+      [email.toLowerCase().trim()]
+    );
+    return rows[0] || null;
+  },
+
   // ── Find by name (for email-free login) ──────────────────────
   async findByName(name) {
     const { rows } = await pool.query(
