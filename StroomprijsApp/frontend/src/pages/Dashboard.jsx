@@ -314,8 +314,6 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
 {energyType === "electricity" && (
-        <div>
-        {/* ── Supplier selector ── */}
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 10, color: "#445", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Your Supplier</div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -326,8 +324,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             ))}
           </div>
         </div>
-
-)}
+        )}
 
         {/* ── Gas dashboard ── */}
         {energyType === "gas" && (
@@ -346,10 +343,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── Electricity content ── */}
-        {energyType === "electricity" && (
-        <div>
         {/* ── MOBILE Tab header for current tab ── */}
-        {isMobile && (
+        {energyType === "electricity" && isMobile && (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={{ fontSize: 15, fontWeight: 700 }}>
               {tab === "today" && "📈 Today's Prices"}
@@ -359,7 +354,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               {tab === "alerts" && "🔔 Alerts"}
           {tab === "history" && "📅 History"}
             </div>
-            {(tab === "today" || tab === "tomorrow") && (
+            {energyType === "electricity" && (tab === "today" || tab === "tomorrow") && (
               <div style={{ display: "flex", background: C.card, borderRadius: 8, padding: 3, gap: 2 }}>
                 {["graph", "table"].map(v => (
                   <button key={v} onClick={() => setViewMode(v)} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", background: viewMode === v ? "rgba(255,255,255,0.12)" : "transparent", color: viewMode === v ? "#fff" : "#556" }}>
@@ -472,7 +467,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── History ── */}
-          {tab === "history" && (
+          {energyType === "electricity" && tab === "history" && (
           <div style={{ marginBottom: 16 }}>
             {historyLoading ? <div style={{ textAlign:"center", padding:"60px 0", color:"#556" }}>⚡ Loading history…</div>
             : history.length === 0 ? <div style={{ textAlign:"center", padding:"60px 0", color:"#556" }}>No history data</div>
@@ -524,7 +519,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── Best Hours ── */}
-        {tab === "cheapest" && (
+        {energyType === "electricity" && tab === "cheapest" && (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>💚 5 Cheapest Upcoming Hours</div>
             <div style={{ fontSize: 12, color: "#556", marginBottom: 16 }}>Best windows for EV charging, washing machine, dishwasher</div>
@@ -557,7 +552,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── Compare ── */}
-        {tab === "compare" && mwh != null && (
+        {energyType === "electricity" && tab === "compare" && mwh != null && (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>🏢 Supplier Comparison</div>
             <div style={{ fontSize: 12, color: "#556", marginBottom: 16 }}>At current spot €{mwh.toFixed(1)}/MWh</div>
@@ -588,7 +583,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── Alerts ── */}
-        {tab === "alerts" && (
+        {energyType === "electricity" && tab === "alerts" && (
           <AlertsTab
             alertActive={alertActive} alertThreshold={alertThreshold}
             saveAlertThreshold={saveAlertThreshold} toggleAlert={toggleAlert}
@@ -598,7 +593,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* Footer */}
-        {!isMobile && (
+        {energyType === "electricity" && !isMobile && (
           <div style={{ marginTop:20, display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:8, fontSize:11, color:"#334" }}>
             <span>Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E</span>
             <span>Prices refresh every 15 min · Not financial advice</span>
