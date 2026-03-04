@@ -182,6 +182,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               {(user?.name || user?.email || "?")[0].toUpperCase()}
             </button>
           </div>
+          </div>
           {/* Energy toggle row */}
           <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 10px" }}>
             <EnergyToggle type={energyType} onChange={switchType} />
@@ -201,7 +202,6 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             </div>
             <EnergyToggle type={energyType} onChange={switchType} />
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            </div>
               {mwh != null && (
                 <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
                   <div style={{ fontSize: 10, color: "#556", marginBottom: 1 }}>NOW · EPEX Spot</div>
