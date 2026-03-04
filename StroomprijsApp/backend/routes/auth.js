@@ -52,6 +52,28 @@ function clearAuthCookies(res) {
 
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
+// ── POST /auth/exchange ───────────────────────────────────────
+// Called by AuthCallback after Google OAuth redirect
+// Exchanges URL tokens for httpOnly cookies (safe cross-origin)
+router.post("/exchange", async (req, res) => {
+  try {
+    const { accessToken, refreshToken } = req.body;
+    if (!accessToken || !refreshToken)
+      return res.status(400).json({ success: false, error: "Tokens required" });
+
+    // Verify the access token is legitimate
+    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+    const user = await userStore.findById(decoded.userId);
+    if (!user) return res.status(401).json({ success: false, error: "User not found" });
+
+    // Set as httpOnly cookies — tokens leave URL, enter safe cookie storage
+    setAuthCookies(res, { accessToken, refreshToken });
+    res.json({ success: true, user: userStore.safeUser(user) });
+  } catch (err) {
+    res.status(401).json({ success: false, error: "Invalid tokens" });
+  }
+});
+
 // ── POST /auth/register ───────────────────────────────────────
 router.post("/register", registerLimiter, async (req, res) => {
   try {

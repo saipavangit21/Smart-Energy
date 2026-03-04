@@ -1,4 +1,5 @@
-const express   = require("express");
+const express      = require("express");
+const cookieParser = require("cookie-parser");
 const cors      = require("cors");
 const NodeCache = require("node-cache");
 const axios     = require("axios");
@@ -32,12 +33,15 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
+    // Allow all Vercel preview deployments for this project
+    if (origin.endsWith(".vercel.app")) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
 }));
 app.use(express.json());
+app.use(cookieParser());
 app.use("/auth", authRoutes);
 app.use("/auth/google", googleRoutes);
 

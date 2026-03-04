@@ -1,6 +1,7 @@
 /**
  * routes/google.js — Google OAuth 2.0
- * Now sets httpOnly cookies instead of passing tokens in URL params
+ * Cross-origin safe: tokens passed via URL to frontend, then stored in httpOnly cookies
+ * via /auth/exchange endpoint
  */
 
 const express   = require("express");
@@ -14,19 +15,12 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const BACKEND_URL          = process.env.BACKEND_URL || "https://smart-energy-production-aef3.up.railway.app";
 const FRONTEND_URL         = process.env.FRONTEND_URL || "http://localhost:5173";
 const REDIRECT_URI         = `${BACKEND_URL}/auth/google/callback`;
-const IS_PROD              = process.env.NODE_ENV === "production";
 
 function generateTokens(userId) {
   return {
     accessToken:  jwt.sign({ userId }, process.env.JWT_SECRET,         { expiresIn: "15m" }),
     refreshToken: jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d"  }),
   };
-}
-
-function setAuthCookies(res, { accessToken, refreshToken }) {
-  const base = { httpOnly: true, secure: IS_PROD, sameSite: IS_PROD ? "none" : "lax", path: "/" };
-  res.cookie("sp_access",  accessToken,  { ...base, maxAge: 15 * 60 * 1000 });
-  res.cookie("sp_refresh", refreshToken, { ...base, maxAge: 7 * 24 * 60 * 60 * 1000 });
 }
 
 // Step 1: Redirect to Google
@@ -42,7 +36,8 @@ router.get("/", (req, res) => {
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
 });
 
-// Step 2: Handle Google callback — set cookies, redirect home
+// Step 2: Exchange code, redirect to frontend with tokens in URL
+// Frontend AuthCallback will POST them to /auth/exchange to get httpOnly cookies
 router.get("/callback", async (req, res) => {
   const { code, error } = req.query;
   if (error || !code) return res.redirect(`${FRONTEND_URL}?auth_error=google_cancelled`);
@@ -73,10 +68,13 @@ router.get("/callback", async (req, res) => {
     const tokens = generateTokens(user.id);
     await userStore.saveRefreshToken(tokens.refreshToken, user.id);
 
-    // Set httpOnly cookies — no tokens in URL anymore
-    setAuthCookies(res, tokens);
-    console.log("[Google OAuth] Cookies set, redirecting to frontend");
-    res.redirect(FRONTEND_URL);
+    // Pass tokens in URL — frontend exchanges them for httpOnly cookies
+    const params = new URLSearchParams({
+      access_token:  tokens.accessToken,
+      refresh_token: tokens.refreshToken,
+    });
+    console.log("[Google OAuth] Redirecting with tokens for cookie exchange");
+    res.redirect(`${FRONTEND_URL}/oauth/callback?${params}`);
 
   } catch (err) {
     console.error("[Google OAuth] ERROR:", err.response?.data || err.message);
