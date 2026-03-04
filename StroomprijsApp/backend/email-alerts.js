@@ -135,3 +135,90 @@ async function checkAndSendAlerts(pool) {
 }
 
 module.exports = { checkAndSendAlerts };
+
+// ── Gas alert email ───────────────────────────────────────────
+async function sendGasAlertEmail({ to, name, currentPrice, threshold }) {
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#060B14;font-family:'Segoe UI',Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-size:40px;">🔥</div>
+    <div style="color:#00C896;font-size:24px;font-weight:800;">SmartPrice.be</div>
+    <div style="color:#445;font-size:13px;">Belgium Gas Price Alert</div>
+  </div>
+  <div style="background:linear-gradient(135deg,#0A1628,#0D2040);border:1px solid #F9730644;border-radius:20px;padding:28px;margin-bottom:24px;">
+    <div style="color:#778;font-size:13px;margin-bottom:8px;">🔥 GAS PRICE ALERT</div>
+    <div style="color:#fff;font-size:22px;font-weight:700;margin-bottom:4px;">Hi ${name || "there"}!</div>
+    <div style="color:#aaa;font-size:15px;line-height:1.6;margin-bottom:20px;">
+      TTF gas price dropped below your threshold of <strong style="color:#fff">€${threshold}/MWh</strong>.
+    </div>
+    <div style="background:rgba(0,0,0,0.3);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px;">
+      <div style="color:#556;font-size:12px;">CURRENT TTF PRICE</div>
+      <div style="color:#F97316;font-size:48px;font-weight:900;font-family:monospace;">€${currentPrice.toFixed(1)}</div>
+      <div style="color:#556;font-size:13px;">per MWh · today's market rate</div>
+    </div>
+    <a href="${APP_URL}?tab=gas" style="display:block;background:linear-gradient(135deg,#F97316,#EF4444);color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:12px;font-weight:700;">
+      View Gas Prices on SmartPrice.be →
+    </a>
+  </div>
+  <div style="text-align:center;color:#334;font-size:11px;line-height:1.8;">
+    <div>You receive this because you enabled gas price alerts on SmartPrice.be</div>
+    <div style="margin-top:8px;">© SmartPrice.be · Belgium · GDPR Compliant</div>
+  </div>
+</div>
+</body></html>`;
+
+  await axios.post("https://api.resend.com/emails", {
+    from: FROM_EMAIL, to,
+    subject: `🔥 Gas Alert: TTF €${currentPrice.toFixed(0)}/MWh — below your €${threshold} threshold`,
+    html,
+  }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" } });
+}
+
+async function checkAndSendGasAlerts(pool) {
+  console.log(`[${new Date().toISOString()}] Checking gas price alerts...`);
+  try {
+    const { fetchTTFPrice } = require("./routes/gas");
+    const ttf = await fetchTTFPrice();
+    const currentPrice = ttf.price;
+    console.log(`TTF gas price: €${currentPrice}/MWh`);
+
+    const { rows: users } = await pool.query(`
+      SELECT id, email, name,
+             (preferences->>'gasAlertThreshold')::float AS threshold,
+             (preferences->>'gasAlertEnabled')::boolean  AS alerts_enabled,
+             preferences->>'alertEmail'                  AS alert_email,
+             preferences->>'gasLastAlertSent'            AS last_alert_sent
+      FROM users
+      WHERE (preferences->>'gasAlertEnabled')::boolean = true
+        AND (preferences->>'gasAlertThreshold') IS NOT NULL
+    `);
+
+    console.log(`Found ${users.length} users with gas alerts enabled`);
+
+    for (const user of users) {
+      if (!user.threshold || currentPrice >= user.threshold) continue;
+      const emailTo = user.alert_email || user.email;
+      if (!emailTo) continue;
+      if (user.last_alert_sent) {
+        const lastSent = new Date(user.last_alert_sent);
+        // Gas is daily — don't re-alert within 6 hours
+        if (lastSent > new Date(Date.now() - 6 * 60 * 60 * 1000)) continue;
+      }
+      try {
+        await sendGasAlertEmail({ to: emailTo, name: user.name, currentPrice, threshold: user.threshold });
+        await pool.query(
+          `UPDATE users SET preferences = preferences || $1::jsonb WHERE id = $2`,
+          [JSON.stringify({ gasLastAlertSent: new Date().toISOString() }), user.id]
+        );
+        console.log(`✅ Gas alert sent to ${emailTo}`);
+      } catch (err) {
+        console.error(`❌ Gas alert failed for ${emailTo}:`, err.message);
+      }
+    }
+  } catch (err) {
+    console.error("Gas alert check failed:", err.message);
+  }
+}
+
+module.exports = { checkAndSendAlerts, checkAndSendGasAlerts };

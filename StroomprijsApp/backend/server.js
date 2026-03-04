@@ -12,7 +12,8 @@ for (const key of required) {
 
 const authRoutes      = require("./routes/auth");
 const googleRoutes    = require("./routes/google");
-const { checkAndSendAlerts } = require("./email-alerts");
+const { checkAndSendAlerts, checkAndSendGasAlerts } = require("./email-alerts");
+const { router: gasRoutes } = require("./routes/gas");
 const pool = require("./db").pool;
 const { requireAuth } = require("./middleware/auth");
 
@@ -44,6 +45,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/auth", authRoutes);
 app.use("/auth/google", googleRoutes);
+app.use("/api/gas", gasRoutes);
 
 const TZ = "Europe/Brussels";
 function toLocalISODate(d) { return new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(d); }
@@ -101,7 +103,7 @@ app.delete("/auth/delete-account", requireAuth, async (req, res) => {
 
 function scheduleCron() {
   const now = new Date(); const msUntilNextHour = (60 - now.getMinutes()) * 60000 - now.getSeconds() * 1000;
-  setTimeout(() => { checkAndSendAlerts(pool); setInterval(() => checkAndSendAlerts(pool), 60 * 60 * 1000); }, msUntilNextHour);
+  setTimeout(() => { checkAndSendAlerts(pool); checkAndSendGasAlerts(pool); setInterval(() => { checkAndSendAlerts(pool); checkAndSendGasAlerts(pool); }, 60 * 60 * 1000); }, msUntilNextHour);
   console.log(`   Alerts: ⏰ Next check in ${Math.round(msUntilNextHour/60000)} min`);
 }
 if (process.env.RESEND_API_KEY) { scheduleCron(); }

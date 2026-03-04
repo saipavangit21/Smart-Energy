@@ -12,6 +12,7 @@ import {
 import { useAuth }       from "../context/AuthContext";
 import { usePrices, useCurrentPrice, useCheapestHours } from "../hooks/usePrices";
 import { SUPPLIERS, getSupplierPrice, getPriceColor, getPriceLabel } from "../utils/priceUtils";
+import GasTab from "./GasTab";
 
 function PriceTooltip({ active, payload, label, supplier }) {
   if (!active || !payload?.length) return null;
@@ -38,6 +39,25 @@ const NAV_ITEMS = [
   { id: "alerts",   icon: "🔔", label: "Alerts" },
 ];
 
+
+// ── Energy Type Toggle ────────────────────────────────────────
+function EnergyToggle({ type, onChange }) {
+  const active = { border: "none", fontWeight: 700, fontSize: 13, padding: "7px 18px", borderRadius: 8, cursor: "pointer", transition: "all 0.15s" };
+  const inactive = { border: "none", fontWeight: 600, fontSize: 13, padding: "7px 18px", borderRadius: 8, cursor: "pointer", transition: "all 0.15s", background: "transparent", color: "#556" };
+  return (
+    <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 10, padding: 3, gap: 2 }}>
+      <button onClick={() => onChange("electricity")}
+        style={{ ...( type === "electricity" ? { ...active, background: "#0D9488", color: "#fff" } : inactive ) }}>
+        ⚡ Electricity
+      </button>
+      <button onClick={() => onChange("gas")}
+        style={{ ...( type === "gas" ? { ...active, background: "#F97316", color: "#fff" } : inactive ) }}>
+        🔥 Gas
+      </button>
+    </div>
+  );
+}
+
 export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn }) {
   const { user, updatePreferences, logout, authFetch } = useAuth();
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
@@ -55,6 +75,20 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   const [notification,   setNotification]   = useState(null);
   const [viewMode,       setViewMode]       = useState("graph"); // "graph" | "table"
   const [isMobile,       setIsMobile]       = useState(window.innerWidth < 768);
+
+  // ── Energy type toggle + URL sync ─────────────────────────
+  const getInitialType = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("type") === "gas" ? "gas" : "electricity";
+  };
+  const [energyType, setEnergyType] = useState(getInitialType);
+
+  const switchType = (type) => {
+    setEnergyType(type);
+    const url = new URL(window.location.href);
+    url.searchParams.set("type", type);
+    window.history.pushState({}, "", url.toString());
+  };
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
@@ -130,7 +164,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         </div>
       )}
       {isMobile && (
-        <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}`, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 20 }}>🇧🇪</span>
             <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
@@ -147,6 +182,10 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               {(user?.name || user?.email || "?")[0].toUpperCase()}
             </button>
           </div>
+          {/* Energy toggle row */}
+          <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 10px" }}>
+            <EnergyToggle type={energyType} onChange={switchType} />
+          </div>
         </div>
       )}
 
@@ -160,7 +199,9 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               <span style={{ fontSize: 11, color: C.green, background: "rgba(0,200,150,0.1)", border: `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
               <span style={{ fontSize: 12, color: "#445" }}>{source || "Energy-Charts"} · Belgium</span>
             </div>
+            <EnergyToggle type={energyType} onChange={switchType} />
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            </div>
               {mwh != null && (
                 <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
                   <div style={{ fontSize: 10, color: "#556", marginBottom: 1 }}>NOW · EPEX Spot</div>
@@ -272,6 +313,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           </div>
         )}
 
+{energyType === "electricity" && (
+        <div>
         {/* ── Supplier selector ── */}
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 10, color: "#445", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Your Supplier</div>
@@ -284,8 +327,15 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           </div>
         </div>
 
+)}
+
+        {/* ── Gas dashboard ── */}
+        {energyType === "gas" && (
+          <GasTab user={user} isGuest={isGuest} onSignIn={onSignIn} mobileTab={tab} setMobileTab={setTab} />
+        )}
+
         {/* ── DESKTOP Tabs ── */}
-        {!isMobile && (
+        {energyType === "electricity" && !isMobile && (
           <div style={{ display: "flex", gap: 4, marginBottom: 16, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 4, width: "fit-content", flexWrap: "wrap" }}>
             {[...NAV_ITEMS, { id: "history", icon: "📅", label: "History" }].map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "7px 13px", borderRadius: 9, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.15s", background: tab === t.id ? "rgba(255,255,255,0.1)" : "transparent", color: tab === t.id ? "#fff" : "#667" }}>
@@ -295,6 +345,9 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           </div>
         )}
 
+        {/* ── Electricity content ── */}
+        {energyType === "electricity" && (
+        <div>
         {/* ── MOBILE Tab header for current tab ── */}
         {isMobile && (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -304,7 +357,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               {tab === "cheapest" && "💚 Best Hours"}
               {tab === "compare" && "🏢 Suppliers"}
               {tab === "alerts" && "🔔 Alerts"}
-              {tab === "history" && "📅 History"}
+          {tab === "history" && "📅 History"}
             </div>
             {(tab === "today" || tab === "tomorrow") && (
               <div style={{ display: "flex", background: C.card, borderRadius: 8, padding: 3, gap: 2 }}>
@@ -419,7 +472,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── History ── */}
-        {tab === "history" && (
+          {tab === "history" && (
           <div style={{ marginBottom: 16 }}>
             {historyLoading ? <div style={{ textAlign:"center", padding:"60px 0", color:"#556" }}>⚡ Loading history…</div>
             : history.length === 0 ? <div style={{ textAlign:"center", padding:"60px 0", color:"#556" }}>No history data</div>
@@ -556,13 +609,23 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
       {/* ── MOBILE BOTTOM NAV ── */}
       {isMobile && (
         <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:50, background:"rgba(6,11,20,0.97)", backdropFilter:"blur(20px)", borderTop:`1px solid ${C.border}`, display:"flex", padding:"8px 0 12px" }}>
-          {[...NAV_ITEMS, { id:"history", icon:"📅", label:"History" }].map(t => (
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? C.green : "#445" }}>
-              <span style={{ fontSize:18 }}>{t.icon}</span>
-              <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
-              {tab===t.id && <div style={{ width:16, height:2, background:C.green, borderRadius:2 }} />}
-            </button>
-          ))}
+          {energyType === "electricity" ? (
+            [...NAV_ITEMS, { id:"history", icon:"📅", label:"History" }].map(t => (
+              <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? C.green : "#445" }}>
+                <span style={{ fontSize:18 }}>{t.icon}</span>
+                <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
+                {tab===t.id && <div style={{ width:16, height:2, background:C.green, borderRadius:2 }} />}
+              </button>
+            ))
+          ) : (
+            [{id:"today",icon:"🔥",label:"TTF"},{id:"suppliers",icon:"🏢",label:"Suppliers"},{id:"history",icon:"📅",label:"History"},{id:"alerts",icon:"🔔",label:"Alerts"},{id:"combined",icon:"⚡🔥",label:"Combined"}].map(t => (
+              <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? "#F97316" : "#445" }}>
+                <span style={{ fontSize:18 }}>{t.icon}</span>
+                <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
+                {tab===t.id && <div style={{ width:16, height:2, background:"#F97316", borderRadius:2 }} />}
+              </button>
+            ))
+          )}
         </div>
       )}
 
