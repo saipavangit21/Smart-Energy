@@ -42,18 +42,90 @@ const NAV_ITEMS = [
 
 // ── Energy Type Toggle ────────────────────────────────────────
 function EnergyToggle({ type, onChange }) {
-  const active = { border: "none", fontWeight: 700, fontSize: 13, padding: "7px 18px", borderRadius: 8, cursor: "pointer", transition: "all 0.15s" };
-  const inactive = { border: "none", fontWeight: 600, fontSize: 13, padding: "7px 18px", borderRadius: 8, cursor: "pointer", transition: "all 0.15s", background: "transparent", color: "#556" };
   return (
-    <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 10, padding: 3, gap: 2 }}>
-      <button onClick={() => onChange("electricity")}
-        style={{ ...( type === "electricity" ? { ...active, background: "#0D9488", color: "#fff" } : inactive ) }}>
-        ⚡ Electricity
+    <div style={{
+      display: "flex",
+      background: "rgba(0,0,0,0.35)",
+      borderRadius: 14,
+      padding: 4,
+      gap: 4,
+      border: "1px solid rgba(255,255,255,0.07)",
+      boxShadow: "inset 0 1px 3px rgba(0,0,0,0.4)",
+    }}>
+      {/* Electricity button */}
+      <button onClick={() => onChange("electricity")} style={{
+        display: "flex", alignItems: "center", gap: 7,
+        padding: "8px 18px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: type === "electricity" ? "1px solid rgba(0,230,180,0.45)" : "1px solid transparent",
+        background: type === "electricity"
+          ? "linear-gradient(135deg, #0A2E2A 0%, #0D3D35 100%)"
+          : "transparent",
+        color: type === "electricity" ? "#00E5B4" : "#4A6070",
+        boxShadow: type === "electricity"
+          ? "0 0 16px rgba(0,200,150,0.25), inset 0 1px 0 rgba(0,230,180,0.15)"
+          : "none",
+      }}>
+        <span style={{
+          fontSize: 15,
+          filter: type === "electricity" ? "drop-shadow(0 0 6px rgba(0,230,180,0.8))" : "none",
+          transition: "filter 0.2s",
+        }}>⚡</span>
+        <span>Electricity</span>
+        {type === "electricity" && (
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: "#00E5B4",
+            boxShadow: "0 0 8px #00E5B4",
+            marginLeft: 2,
+            animation: "pulse-elec 2s infinite",
+          }} />
+        )}
       </button>
-      <button onClick={() => onChange("gas")}
-        style={{ ...( type === "gas" ? { ...active, background: "#F97316", color: "#fff" } : inactive ) }}>
-        🔥 Gas
+
+      {/* Gas button */}
+      <button onClick={() => onChange("gas")} style={{
+        display: "flex", alignItems: "center", gap: 7,
+        padding: "8px 18px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: type === "gas" ? "1px solid rgba(249,115,22,0.45)" : "1px solid transparent",
+        background: type === "gas"
+          ? "linear-gradient(135deg, #2E1A08 0%, #3D220A 100%)"
+          : "transparent",
+        color: type === "gas" ? "#FF8C42" : "#4A6070",
+        boxShadow: type === "gas"
+          ? "0 0 16px rgba(249,115,22,0.25), inset 0 1px 0 rgba(255,140,66,0.15)"
+          : "none",
+      }}>
+        <span style={{
+          fontSize: 15,
+          filter: type === "gas" ? "drop-shadow(0 0 6px rgba(255,140,66,0.8))" : "none",
+          transition: "filter 0.2s",
+        }}>🔥</span>
+        <span>Gas</span>
+        {type === "gas" && (
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: "#FF8C42",
+            boxShadow: "0 0 8px #FF8C42",
+            marginLeft: 2,
+            animation: "pulse-gas 2s infinite",
+          }} />
+        )}
       </button>
+
+      <style>{`
+        @keyframes pulse-elec {
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px #00E5B4; }
+          50%       { opacity: 0.5; box-shadow: 0 0 3px #00E5B4; }
+        }
+        @keyframes pulse-gas {
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px #FF8C42; }
+          50%       { opacity: 0.5; box-shadow: 0 0 3px #FF8C42; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -169,7 +241,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 20 }}>🇧🇪</span>
             <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
-            <span style={{ fontSize: 9, color: C.green, background: "rgba(0,200,150,0.1)", border: `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
+            <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {mwh != null && (
@@ -197,8 +269,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 28 }}>🇧🇪</span>
               <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: "-1px" }}>SmartPrice</h1>
-              <span style={{ fontSize: 11, color: C.green, background: "rgba(0,200,150,0.1)", border: `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
-              <span style={{ fontSize: 12, color: "#445" }}>{source || "Energy-Charts"} · Belgium</span>
+              <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
+              <span style={{ fontSize: 12, color: "#445" }}>{energyType === "gas" ? "TTF · ICE EEX" : (source || "Energy-Charts")} · Belgium</span>
             </div>
             <EnergyToggle type={energyType} onChange={switchType} />
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
