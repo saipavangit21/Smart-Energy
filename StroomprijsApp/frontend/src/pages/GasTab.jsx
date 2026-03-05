@@ -85,9 +85,9 @@ function TodayTab({ current, history }) {
       {/* Stats row */}
       {stats && (
         <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-          <StatCard label="30-day Low"  value={`€${stats.min}`}    color={C.green}  />
-          <StatCard label="30-day Avg"  value={`€${stats.avg}`}    color={C.yellow} />
-          <StatCard label="30-day High" value={`€${stats.max}`}    color={C.orange} />
+          <StatCard label="30-day Low"  value={stats.min != null ? `€${stats.min}` : "—"}    color={C.green}  />
+          <StatCard label="30-day Avg"  value={stats.avg != null ? `€${stats.avg}` : "—"}    color={C.yellow} />
+          <StatCard label="30-day High" value={stats.max != null ? `€${stats.max}` : "—"}    color={C.orange} />
         </div>
       )}
 
@@ -294,9 +294,9 @@ function HistoryTab() {
 
       {/* Stats */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <StatCard label="Period Low"  value={`€${stats.min}`}    color={C.green}  sub="€/MWh" />
-        <StatCard label="Period Avg"  value={`€${stats.avg}`}    color={C.yellow} sub="€/MWh" />
-        <StatCard label="Period High" value={`€${stats.max}`}    color={C.orange} sub="€/MWh" />
+        <StatCard label="Period Low"  value={stats.min != null ? `€${stats.min}` : "—"}    color={C.green}  sub="€/MWh" />
+        <StatCard label="Period Avg"  value={stats.avg != null ? `€${stats.avg}` : "—"}    color={C.yellow} sub="€/MWh" />
+        <StatCard label="Period High" value={stats.max != null ? `€${stats.max}` : "—"}    color={C.orange} sub="€/MWh" />
       </div>
 
       {/* Chart */}
@@ -611,8 +611,8 @@ export default function GasTab({ user, isGuest, onSignIn, mobileTab, setMobileTa
 
   return (
     <div>
-      {/* Sub-tab bar — hidden on mobile (bottom nav handles it) */}
-      <div style={{ display: mobileTab ? "none" : "flex", gap: 4, marginBottom: 20, overflowX: "auto", paddingBottom: 2 }}>
+      {/* Sub-tab bar — hidden on mobile (bottom nav handles it), shown on desktop */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 20, overflowX: "auto", paddingBottom: 2 }}>
         {SUB_TABS.map(t => (
           <button key={t.id} onClick={() => setSubTab(t.id)}
             style={{ flex: "0 0 auto", padding: "7px 13px", borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: "pointer", border: `1px solid ${subTab === t.id ? C.orange : C.border}`, background: subTab === t.id ? `${C.orange}22` : C.card, color: subTab === t.id ? C.orange : C.muted, transition: "all 0.15s", whiteSpace: "nowrap" }}>

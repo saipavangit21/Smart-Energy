@@ -297,7 +297,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── DESKTOP: Stats row ── */}
-        {!isMobile && !loading && !error && stats?.today && (
+        {energyType === "electricity" && !isMobile && !loading && !error && stats?.today && (
           <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
             {[
               { label: "Today Min", value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
