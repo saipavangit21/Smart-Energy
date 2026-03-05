@@ -263,7 +263,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: isMobile ? "16px 14px" : "0 18px 24px" }}>
 
         {/* ── MOBILE: Big current price card ── */}
-        {isMobile && mwh != null && (
+        {energyType === "electricity" && isMobile && mwh != null && (
           <div style={{ background: `linear-gradient(135deg, ${getPriceColor(mwh)}18, ${getPriceColor(mwh)}08)`, border: `1px solid ${getPriceColor(mwh)}33`, borderRadius: 20, padding: "20px 20px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div style={{ fontSize: 11, color: "#556", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>Right Now · EPEX Spot</div>
@@ -279,7 +279,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── MOBILE: Min/Max cards ── */}
-        {isMobile && stats?.today && (
+        {energyType === "electricity" && isMobile && stats?.today && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
             {[
               { label: "Min", value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
@@ -328,7 +328,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 
         {/* ── Gas dashboard ── */}
         {energyType === "gas" && (
-          <GasTab user={user} isGuest={isGuest} onSignIn={onSignIn} mobileTab={tab} setMobileTab={setTab} />
+          <GasTab user={user} isGuest={isGuest} onSignIn={onSignIn} isMobile={isMobile} mobileTab={tab} setMobileTab={setTab} />
         )}
 
         {/* ── DESKTOP Tabs ── */}
@@ -613,7 +613,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               </button>
             ))
           ) : (
-            [{id:"today",icon:"🔥",label:"TTF"},{id:"suppliers",icon:"🏢",label:"Suppliers"},{id:"history",icon:"📅",label:"History"},{id:"alerts",icon:"🔔",label:"Alerts"},{id:"combined",icon:"⚡🔥",label:"Combined"}].map(t => (
+            [{id:"today",icon:"🔥",label:"Today"},{id:"tomorrow",icon:"⏩",label:"Tomorrow"},{id:"week",icon:"📅",label:"7 Days"},{id:"suppliers",icon:"🏢",label:"Suppliers"},{id:"alerts",icon:"🔔",label:"Alerts"}].map(t => (
               <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? "#F97316" : "#445" }}>
                 <span style={{ fontSize:18 }}>{t.icon}</span>
                 <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
