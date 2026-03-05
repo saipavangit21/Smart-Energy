@@ -1,0 +1,345 @@
+{
+  "_meta": {
+    "source": "Supplier tariff cards + VREG V-test Q1 2026",
+    "updated": "2026-03-05",
+    "next_scrape": "2026-03-12",
+    "currency": "EUR",
+    "vat_rate": 0.06,
+    "notes": "Energy component excl. VAT. Grid costs added separately per region."
+  },
+
+  "grid_costs": {
+    "flanders": {
+      "operator": "Fluvius",
+      "distribution_kWh": 0.0487,
+      "capacity_kW_monthly": 53.90,
+      "transport_kWh": 0.0089,
+      "levies_kWh": 0.0312,
+      "prosument_kW_monthly": 12.44,
+      "note": "Capacity tariff applies. Min 2.5 kW billed."
+    },
+    "wallonia": {
+      "operator": "ORES / REW / Resa / AIEG / AILE",
+      "distribution_kWh": 0.0521,
+      "transport_kWh": 0.0089,
+      "levies_kWh": 0.0289,
+      "note": "Classic kWh-based, no capacity tariff."
+    },
+    "brussels": {
+      "operator": "Sibelga",
+      "distribution_kWh": 0.0498,
+      "transport_kWh": 0.0089,
+      "levies_kWh": 0.0341,
+      "note": "Classic kWh-based."
+    }
+  },
+
+  "suppliers": {
+    "engie": {
+      "id": "engie",
+      "name": "Engie",
+      "logo": "🔵",
+      "color": "#009DE0",
+      "url": "https://www.engie.be",
+      "tariff_url": "https://www.engie.be/nl/prive/elektriciteit-en-gas/tariefkaarten/",
+      "scrape_selector": null,
+      "plans": [
+        {
+          "id": "engie-comfort",
+          "name": "Comfort",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.1021,
+          "standing_charge_year": 96.00,
+          "green": true,
+          "highlights": ["Monthly indexed on EPEX", "No exit fee", "100% renewable"],
+          "formula": "EPEX_SPP × 1.02 + 2.1",
+          "last_verified": "2026-02-01"
+        },
+        {
+          "id": "engie-fix-12",
+          "name": "Fix 12",
+          "type": "fixed",
+          "energy_type": "electricity",
+          "duration": "12 months",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.1089,
+          "standing_charge_year": 96.00,
+          "green": true,
+          "highlights": ["Price guarantee 12 months", "100% renewable", "Early exit €75"],
+          "formula": null,
+          "last_verified": "2026-02-01"
+        }
+      ]
+    },
+
+    "luminus": {
+      "id": "luminus",
+      "name": "Luminus",
+      "logo": "🟡",
+      "color": "#FFD100",
+      "url": "https://www.luminus.be",
+      "tariff_url": "https://www.luminus.be/nl/prive/elektriciteit/tarieven",
+      "scrape_selector": null,
+      "plans": [
+        {
+          "id": "luminus-green",
+          "name": "Green Flex",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.0998,
+          "standing_charge_year": 89.00,
+          "green": true,
+          "highlights": ["EDF Group", "100% Belgian wind & solar", "Monthly billing"],
+          "formula": "EPEX_SPP × 0.98 + 1.8",
+          "last_verified": "2026-02-01"
+        },
+        {
+          "id": "luminus-fix-24",
+          "name": "Fix 24",
+          "type": "fixed",
+          "energy_type": "electricity",
+          "duration": "24 months",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.1045,
+          "standing_charge_year": 89.00,
+          "green": true,
+          "highlights": ["Price locked 2 years", "Early exit €150", "Digital meter discount"],
+          "formula": null,
+          "last_verified": "2026-02-01"
+        }
+      ]
+    },
+
+    "bolt": {
+      "id": "bolt",
+      "name": "Bolt Energy",
+      "logo": "⚡",
+      "color": "#00C896",
+      "url": "https://www.bolt.eu/en-be/energy",
+      "tariff_url": "https://www.bolt.eu/en-be/energy/electricity/",
+      "scrape_selector": ".pricing-table",
+      "plans": [
+        {
+          "id": "bolt-dynamic",
+          "name": "Dynamic",
+          "type": "dynamic",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": null,
+          "markup_cEkWh": 0.3,
+          "standing_charge_year": 72.00,
+          "green": true,
+          "highlights": ["EPEX hourly prices", "Lowest markup (0.3 c€/kWh)", "App-controlled", "Best for smart home / EV"],
+          "formula": "EPEX_hour + 0.3 c€/kWh",
+          "last_verified": "2026-02-01"
+        },
+        {
+          "id": "bolt-flex",
+          "name": "Flex",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.0965,
+          "standing_charge_year": 72.00,
+          "green": true,
+          "highlights": ["Monthly EPEX average", "No exit fee", "Transparent pricing"],
+          "formula": "EPEX_SPP + 0.5",
+          "last_verified": "2026-02-01"
+        }
+      ]
+    },
+
+    "totalenergies": {
+      "id": "totalenergies",
+      "name": "TotalEnergies",
+      "logo": "🔴",
+      "color": "#F04E23",
+      "url": "https://www.totalenergies.be",
+      "tariff_url": "https://www.totalenergies.be/nl/prive/elektriciteit/tariefkaarten",
+      "scrape_selector": null,
+      "plans": [
+        {
+          "id": "total-comfort",
+          "name": "Comfort",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.1034,
+          "standing_charge_year": 84.00,
+          "green": false,
+          "highlights": ["Monthly indexed", "Large network", "Combined gas+elec discount"],
+          "formula": "EPEX_SPP × 1.01 + 1.9",
+          "last_verified": "2026-02-01"
+        },
+        {
+          "id": "total-fix-12",
+          "name": "Fix 12",
+          "type": "fixed",
+          "energy_type": "electricity",
+          "duration": "12 months",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.1098,
+          "standing_charge_year": 84.00,
+          "green": false,
+          "highlights": ["12-month price guarantee", "Combined discount available"],
+          "formula": null,
+          "last_verified": "2026-02-01"
+        },
+        {
+          "id": "total-green",
+          "name": "Green Comfort",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.1052,
+          "standing_charge_year": 84.00,
+          "green": true,
+          "highlights": ["100% renewable", "Monthly indexed", "GO certificates"],
+          "formula": "EPEX_SPP × 1.01 + 2.1",
+          "last_verified": "2026-02-01"
+        }
+      ]
+    },
+
+    "eneco": {
+      "id": "eneco",
+      "name": "Eneco",
+      "logo": "🟢",
+      "color": "#00A651",
+      "url": "https://www.eneco.be",
+      "tariff_url": "https://www.eneco.be/nl/energie/tarieven",
+      "scrape_selector": null,
+      "plans": [
+        {
+          "id": "eneco-stroom",
+          "name": "Stroom",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.0989,
+          "standing_charge_year": 99.00,
+          "green": true,
+          "highlights": ["100% wind energy", "Dutch parent company", "Digital tools"],
+          "formula": "EPEX_SPP × 0.97 + 1.6",
+          "last_verified": "2026-02-01"
+        },
+        {
+          "id": "eneco-vast",
+          "name": "Vast 1 jaar",
+          "type": "fixed",
+          "energy_type": "electricity",
+          "duration": "12 months",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.1041,
+          "standing_charge_year": 99.00,
+          "green": true,
+          "highlights": ["Price certainty", "100% wind", "Exit fee €95"],
+          "formula": null,
+          "last_verified": "2026-02-01"
+        }
+      ]
+    },
+
+    "mega": {
+      "id": "mega",
+      "name": "Mega",
+      "logo": "🟣",
+      "color": "#7C3AED",
+      "url": "https://www.mega.be",
+      "tariff_url": "https://www.mega.be/nl/energie/tariefkaarten",
+      "scrape_selector": ".tariff-card",
+      "plans": [
+        {
+          "id": "mega-online",
+          "name": "Online",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.0887,
+          "standing_charge_year": 108.00,
+          "green": false,
+          "highlights": ["Lowest energy rate", "Online-only management", "EPEX_SPP × 0.91 - 2.5"],
+          "formula": "EPEX_SPP × 0.91 - 2.5",
+          "last_verified": "2026-02-01"
+        },
+        {
+          "id": "mega-online-green",
+          "name": "Online Green",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.0912,
+          "standing_charge_year": 108.00,
+          "green": true,
+          "highlights": ["100% renewable", "Low rate", "Online management"],
+          "formula": "EPEX_SPP × 0.91 - 2.2",
+          "last_verified": "2026-02-01"
+        }
+      ]
+    },
+
+    "octaplus": {
+      "id": "octaplus",
+      "name": "Octa+",
+      "logo": "🟠",
+      "color": "#F97316",
+      "url": "https://www.octaplus.be",
+      "tariff_url": "https://www.octaplus.be/nl/prive/elektriciteit/tarieven",
+      "scrape_selector": null,
+      "plans": [
+        {
+          "id": "octa-flex",
+          "name": "Flex",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.1008,
+          "standing_charge_year": 91.20,
+          "green": false,
+          "highlights": ["Belgian independent", "Monthly EPEX index", "No exit fee"],
+          "formula": "EPEX_SPP + 1.4",
+          "last_verified": "2026-02-01"
+        },
+        {
+          "id": "octa-green",
+          "name": "Green Flex",
+          "type": "variable",
+          "energy_type": "electricity",
+          "duration": "indefinite",
+          "regions": ["flanders", "wallonia", "brussels"],
+          "energy_rate_excl_vat": 0.1029,
+          "standing_charge_year": 91.20,
+          "green": true,
+          "highlights": ["100% Belgian green energy", "Monthly indexed", "No exit fee"],
+          "formula": "EPEX_SPP + 1.6",
+          "last_verified": "2026-02-01"
+        }
+      ]
+    }
+  },
+
+  "appliances": {
+    "washing_machine":  { "label": "Washing machine",  "icon": "👕", "kwh_per_use": 0.9,  "default_uses_per_week": 4,  "peak_kw": 2.0, "tip": "Run at 30°C or off-peak (night/midday) to save" },
+    "dryer":            { "label": "Dryer",             "icon": "🌀", "kwh_per_use": 2.5,  "default_uses_per_week": 2,  "peak_kw": 2.5, "tip": "Air-dry when possible — biggest household drain" },
+    "dishwasher":       { "label": "Dishwasher",        "icon": "🍽️", "kwh_per_use": 1.05, "default_uses_per_week": 7,  "peak_kw": 1.8, "tip": "Use eco mode & run at off-peak hours" },
+    "ev_charging":      { "label": "EV charging",       "icon": "🚗", "kwh_per_use": 15.0, "default_uses_per_week": 3,  "peak_kw": 7.4, "tip": "Schedule overnight charging — biggest peak impact on capacity tariff" },
+    "heat_pump":        { "label": "Heat pump / boiler","icon": "🌡️", "kwh_per_use": 8.0,  "default_uses_per_week": 7,  "peak_kw": 3.5, "tip": "Program heating schedules to avoid simultaneous peaks" },
+    "fridge_freezer":   { "label": "Fridge/freezer",   "icon": "🧊", "kwh_per_use": 1.2,  "default_uses_per_week": 7,  "peak_kw": 0.15,"tip": "Always on — maintain proper temp, check door seals" },
+    "oven":             { "label": "Oven / hob",        "icon": "🍳", "kwh_per_use": 1.5,  "default_uses_per_week": 5,  "peak_kw": 2.2, "tip": "Use residual heat and batch cooking to reduce usage" },
+    "lighting":         { "label": "Lighting",          "icon": "💡", "kwh_per_use": 0.5,  "default_uses_per_week": 7,  "peak_kw": 0.3, "tip": "Switch to LED if not already — 80% savings" },
+    "tv_electronics":   { "label": "TV / electronics",  "icon": "📺", "kwh_per_use": 0.3,  "default_uses_per_week": 7,  "peak_kw": 0.2, "tip": "Enable standby-kill or smart plugs" }
+  }
+}

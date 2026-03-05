@@ -9,6 +9,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
 } from "recharts";
+import SupplierCompare from "./SupplierCompare";
 import { useAuth }       from "../context/AuthContext";
 import { usePrices, useCurrentPrice, useCheapestHours } from "../hooks/usePrices";
 import { SUPPLIERS, getSupplierPrice, getPriceColor, getPriceLabel } from "../utils/priceUtils";
@@ -624,34 +625,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── Compare ── */}
-        {energyType === "electricity" && tab === "compare" && mwh != null && (
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>🏢 Supplier Comparison</div>
-            <div style={{ fontSize: 12, color: "#556", marginBottom: 16 }}>At current spot €{mwh.toFixed(1)}/MWh</div>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={SUPPLIERS.map(s => ({ name: s.name, price: getSupplierPrice(mwh/1000, s), color: s.color }))} margin={{ top:0, right:12, left:0, bottom:0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill:"#778", fontSize:10 }} tickLine={false} />
-                <YAxis tick={{ fill:"#445", fontSize:9 }} tickLine={false} axisLine={false} tickFormatter={v=>`€${v.toFixed(3)}`} domain={["auto","auto"]} width={42} />
-                <Tooltip formatter={v=>[`€${v.toFixed(4)}/kWh`,"Retail"]} contentStyle={{ background:"rgba(8,12,22,0.97)", border:`1px solid ${C.border}`, borderRadius:10 }} labelStyle={{ color:"#fff" }} />
-                <Bar dataKey="price" radius={[5,5,0,0]}>
-                  {SUPPLIERS.map((s,i)=><Cell key={i} fill={s.color} opacity={supplier===s.name?1:0.4} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            <div style={{ marginTop:14 }}>
-              {[...SUPPLIERS].sort((a,b)=>getSupplierPrice(mwh/1000,a)-getSupplierPrice(mwh/1000,b)).map((s,i)=>(
-                <div key={s.name} onClick={()=>changeSupplier(s.name)} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 12px", marginBottom:5, cursor:"pointer", borderRadius:10, background:supplier===s.name?`${s.color}12`:C.card, border:`1px solid ${supplier===s.name?s.color+"44":C.border}` }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:7 }}>
-                    <div style={{ width:8, height:8, borderRadius:"50%", background:s.color }} />
-                    <span style={{ fontWeight:600, fontSize:13 }}>{s.name}</span>
-                    {i===0&&<span style={{ fontSize:9, color:C.green, background:"rgba(0,200,150,0.1)", padding:"2px 6px", borderRadius:6 }}>Cheapest</span>}
-                  </div>
-                  <span style={{ fontFamily:"monospace", color:s.color, fontWeight:700, fontSize:13 }}>€{getSupplierPrice(mwh/1000,s).toFixed(4)}/kWh</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        {energyType === "electricity" && tab === "compare" && (
+          <SupplierCompare currentMwh={mwh} isMobile={isMobile} />
         )}
 
         {/* ── Alerts ── */}

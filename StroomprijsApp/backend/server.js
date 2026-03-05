@@ -14,6 +14,7 @@ const authRoutes      = require("./routes/auth");
 const googleRoutes    = require("./routes/google");
 const { checkAndSendAlerts, checkAndSendGasAlerts } = require("./email-alerts");
 const { router: gasRoutes } = require("./routes/gas");
+const { router: suppliersRoutes, runWeeklyScrape } = require("./routes/suppliers");
 const pool = require("./db").pool;
 const { requireAuth } = require("./middleware/auth");
 
@@ -46,6 +47,7 @@ app.use(cookieParser());
 app.use("/auth", authRoutes);
 app.use("/auth/google", googleRoutes);
 app.use("/api/gas", gasRoutes);
+app.use("/api/suppliers", suppliersRoutes);
 
 const TZ = "Europe/Brussels";
 function toLocalISODate(d) { return new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(d); }
@@ -107,6 +109,10 @@ function scheduleCron() {
   console.log(`   Alerts: ⏰ Next check in ${Math.round(msUntilNextHour/60000)} min`);
 }
 if (process.env.RESEND_API_KEY) { scheduleCron(); }
+
+// Weekly tariff scrape — runs at startup then every 7 days
+runWeeklyScrape().catch(e => console.warn("[startup] Initial scrape failed:", e.message));
+setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape failed:", e.message)); }, 7 * 24 * 3600 * 1000);
 else { console.log("   Alerts: ⚠ RESEND_API_KEY not set — email alerts disabled"); }
 
 app.listen(PORT,()=>{
