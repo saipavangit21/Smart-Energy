@@ -167,7 +167,18 @@ function WeekTab() {
 
   useEffect(() => {
     setHistory(null);
-    fetch(`/api/gas/history?days=${days}`).then(r => r.json()).then(d => { if (d.success) setHistory(d); });
+    fetch(`/api/gas/history?days=${days}`).then(r => r.json()).then(d => {
+      if (d.success) {
+        const prices = (d.history || []).map(h => h.price).filter(p => p != null && !isNaN(p));
+        if (prices.length > 0 && (d.stats?.avg == null || d.stats?.min == null)) {
+          const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+          const latest = prices[prices.length - 1];
+          const prev   = prices[prices.length - 2];
+          d.stats = { avg: parseFloat(avg.toFixed(2)), min: parseFloat(Math.min(...prices).toFixed(2)), max: parseFloat(Math.max(...prices).toFixed(2)), latest, change: prev ? parseFloat(((latest - prev) / prev * 100).toFixed(1)) : 0, days };
+        }
+        setHistory(d);
+      }
+    });
   }, [days]);
 
   if (!history) return <Loading />;
@@ -461,7 +472,26 @@ export default function GasTab({ user, isGuest, onSignIn, isMobile, mobileTab, s
 
   useEffect(() => {
     fetch("/api/gas/current").then(r => r.json()).then(d => { if (d.success) setCurrent(d); }).catch(() => {});
-    fetch("/api/gas/history?days=30").then(r => r.json()).then(d => { if (d.success) setHistory(d); }).catch(() => {});
+    fetch("/api/gas/history?days=30").then(r => r.json()).then(d => {
+      if (d.success) {
+        // Compute stats client-side if backend returned nulls (fallback mode)
+        const prices = (d.history || []).map(h => h.price).filter(p => p != null && !isNaN(p));
+        if (prices.length > 0 && (d.stats?.avg == null || d.stats?.min == null)) {
+          const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+          const latest = prices[prices.length - 1];
+          const prev   = prices[prices.length - 2];
+          d.stats = {
+            avg:    parseFloat(avg.toFixed(2)),
+            min:    parseFloat(Math.min(...prices).toFixed(2)),
+            max:    parseFloat(Math.max(...prices).toFixed(2)),
+            latest,
+            change: prev ? parseFloat(((latest - prev) / prev * 100).toFixed(1)) : 0,
+            days:   30,
+          };
+        }
+        setHistory(d);
+      }
+    }).catch(() => {});
   }, []);
 
   return (

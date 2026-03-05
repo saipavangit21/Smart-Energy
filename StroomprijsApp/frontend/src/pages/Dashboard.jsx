@@ -367,7 +367,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── Chart + Table ── */}
-        {(tab === "today" || tab === "tomorrow") && (
+        {energyType === "electricity" && (tab === "today" || tab === "tomorrow") && (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? "16px 8px 12px" : "20px 8px 12px", marginBottom: 16 }}>
             {loading ? (
               <div style={{ textAlign: "center", padding: "50px 0", color: "#556" }}>⚡ Loading prices…</div>
