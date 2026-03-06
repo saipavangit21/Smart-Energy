@@ -57,39 +57,7 @@ const C = {
   cyan:   "#06B6D4",
 };
 
-const REGIONS = [
-  { id: "flanders",  label: "Flanders",       flag: "🔶", note: "Fluvius · Capacity tariff" },
-  { id: "wallonia",  label: "Wallonia",        flag: "🔷", note: "ORES/RESA · kWh tariff" },
-  { id: "brussels",  label: "Brussels",        flag: "🏙️", note: "Sibelga · kWh tariff" },
-];
 
-const TYPE_COLORS = {
-  variable: C.teal,
-  fixed:    C.cyan,
-  dynamic:  C.green,
-};
-
-const TYPE_LABELS = {
-  variable: "Variable",
-  fixed:    "Fixed",
-  dynamic:  "Dynamic",
-};
-
-function Badge({ children, color }) {
-  return (
-    <span style={{ background: `${color}22`, color, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6, whiteSpace: "nowrap" }}>
-      {children}
-    </span>
-  );
-}
-
-function Card({ children, style = {}, highlight = false }) {
-  return (
-    <div style={{ background: C.card, border: `1px solid ${highlight ? C.green : C.border}`, borderRadius: 16, padding: 16, ...style }}>
-      {children}
-    </div>
-  );
-}
 
 // ══════════════════════════════════════════════════════════════════
 // SUPPLIER COMPARE + APPLIANCE CALCULATOR
