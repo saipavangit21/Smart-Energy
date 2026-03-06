@@ -193,6 +193,23 @@ async function fetchTTFPrice() {
   }
 }
 
+// ── Mock TTF history generator ───────────────────────────────
+function generateMockHistory(days) {
+  const history = [];
+  const base = 34.50;
+  for (let i = days; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    const noise = (Math.random() - 0.5) * 8;
+    history.push({
+      date:  d.toISOString().split("T")[0],
+      price: Math.max(15, parseFloat((base + noise).toFixed(2))),
+    });
+  }
+  return history;
+}
+
 // ── Fetch TTF history ─────────────────────────────────────────
 async function fetchTTFHistory(days = 30) {
   const key = `ttf_history_${days}`;
@@ -200,20 +217,7 @@ async function fetchTTFHistory(days = 30) {
   if (cached) return cached;
 
   if (!OIL_API_KEY) {
-    // Generate realistic mock history for development
-    const history = [];
-    const base = 34.50;
-    for (let i = days; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      // Skip weekends (gas markets closed)
-      if (d.getDay() === 0 || d.getDay() === 6) continue;
-      const noise = (Math.random() - 0.5) * 8;
-      history.push({
-        date:  d.toISOString().split("T")[0],
-        price: Math.max(15, parseFloat((base + noise).toFixed(2))),
-      });
-    }
+    const history = generateMockHistory(days);
     cache.set(key, history, 3600);
     return history;
   }
@@ -238,11 +242,17 @@ async function fetchTTFHistory(days = 30) {
       price: parseFloat(p.price),
     })).filter(p => !isNaN(p.price));
 
+    if (history.length === 0) {
+      console.warn("[Gas] API returned empty — using mock");
+      const mock = generateMockHistory(days);
+      cache.set(key, mock, 3600);
+      return mock;
+    }
     cache.set(key, history, 3600);
     return history;
   } catch (err) {
     console.error("[Gas] History fetch error:", err.message);
-    return [];
+    return generateMockHistory(days);
   }
 }
 

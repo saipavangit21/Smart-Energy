@@ -470,4 +470,72 @@ router.get("/meta", (req, res) => {
   });
 });
 
+
+// ── GET /api/suppliers/gas ────────────────────────────────────
+router.get("/gas", (req, res) => {
+  const data = getTariffs();
+  if (!data) return res.status(500).json({ success: false, error: "Tariff data unavailable" });
+
+  const consumption = parseFloat(req.query.consumption) || 1700; // avg Belgian gas kWh/yr
+  const region      = req.query.region || "flanders";
+  const epexAvg     = parseFloat(req.query.ttf) || 35;           // TTF €/MWh
+
+  const gasGrid = (data.gas_grid_costs || {})[region] || { distribution_kWh: 0.0285, transport_kWh: 0.0042, levies_kWh: 0.0089 };
+  const VAT = 0.21; // gas VAT is 21% in Belgium
+
+  const results = [];
+  for (const [supplierId, supplier] of Object.entries(data.suppliers)) {
+    for (const plan of supplier.plans) {
+      if (plan.energy_type !== "gas") continue;
+      if (!plan.regions.includes(region)) continue;
+
+      let energyRate = plan.energy_rate_excl_vat;
+      if (!energyRate && plan.markup_cEkWh != null) {
+        energyRate = (epexAvg / 1000) + (plan.markup_cEkWh / 100);
+      }
+      if (!energyRate) continue;
+
+      const energyCost  = energyRate * consumption;
+      const gridCost    = (gasGrid.distribution_kWh + gasGrid.transport_kWh + gasGrid.levies_kWh) * consumption;
+      const subtotal    = energyCost + gridCost + plan.standing_charge_year;
+      const vat         = subtotal * VAT;
+      const total       = subtotal + vat;
+
+      results.push({
+        supplier_id:    supplierId,
+        supplier_name:  supplier.name,
+        supplier_logo:  supplier.logo,
+        supplier_color: supplier.color,
+        supplier_url:   supplier.url,
+        plan_id:        plan.id,
+        plan_name:      plan.name,
+        type:           plan.type,
+        green:          plan.green,
+        duration:       plan.duration,
+        highlights:     plan.highlights,
+        formula:        plan.formula,
+        energy_rate:    plan.energy_rate_excl_vat,
+        markup_cEkWh:   plan.markup_cEkWh,
+        standing_charge: plan.standing_charge_year,
+        costs: {
+          energy:   Math.round(energyCost),
+          grid:     Math.round(gridCost),
+          standing: Math.round(plan.standing_charge_year),
+          vat:      Math.round(vat),
+          total:    Math.round(total),
+          monthly:  Math.round(total / 12),
+          perKwh:   parseFloat((total / consumption * 100).toFixed(3)),
+        },
+      });
+    }
+  }
+
+  results.sort((a, b) => a.costs.total - b.costs.total);
+  if (results.length > 0) results[0].cheapest = true;
+  const cheapestTotal = results[0]?.costs.total || 0;
+  results.forEach((r, i) => { r.rank = i + 1; r.savings_vs_cheapest = i === 0 ? 0 : r.costs.total - cheapestTotal; });
+
+  res.json({ success: true, region, consumption, ttf_avg: epexAvg, count: results.length, results });
+});
+
 module.exports = { router, runWeeklyScrape };

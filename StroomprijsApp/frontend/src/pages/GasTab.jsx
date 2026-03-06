@@ -255,20 +255,35 @@ function calcCost(rate, standing, consumption) {
 function SuppliersTab({ ttfPrice }) {
   const [consumption, setConsumption] = useState(13000);
   const [inputVal,    setInputVal]    = useState("13000");
+  const [region,      setRegion]      = useState("flanders");
+  const [results,     setResults]     = useState([]);
+  const [loading,     setLoading]     = useState(false);
   const [expanded,    setExpanded]    = useState(null);
-  const ttf_cEkWh = ttfPrice ? ttfPrice / 10 : 3.45;
 
-  const list = SUPPLIERS_DATA.map(s => {
-    const rate  = s.type === "dynamic" ? ttf_cEkWh + (s.surcharge || 0) : s.tariff;
-    const costs = calcCost(rate, s.standing, consumption);
-    return { ...s, effectiveRate: parseFloat(rate.toFixed(3)), costs };
-  }).sort((a, b) => a.costs.total - b.costs.total);
-  if (list.length) list[0].cheapest = true;
+  const REGIONS = [
+    { id: "flanders", label: "Flanders", flag: "🔶" },
+    { id: "wallonia", label: "Wallonia",  flag: "🔷" },
+    { id: "brussels", label: "Brussels",  flag: "🏙️" },
+  ];
+
+  useEffect(() => {
+    setLoading(true);
+    const ttf = ttfPrice || 35;
+    fetch(`/api/suppliers/gas?consumption=${consumption}&region=${region}&ttf=${ttf}`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setResults(d.results); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [consumption, region, ttfPrice]);
+
+  const cheapest = results[0];
 
   return (
     <div>
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 16 }}>
-        <div style={{ color: C.light, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Your annual gas consumption</div>
+      {/* Consumption input */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
+        <div style={{ color: C.light, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>⚙️ Your situation</div>
+        <div style={{ color: C.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Annual gas consumption</div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
           <input type="number" value={inputVal}
             onChange={e => setInputVal(e.target.value)}
@@ -276,81 +291,128 @@ function SuppliersTab({ ttfPrice }) {
             style={{ flex: 1, background: "#0A2040", border: `1px solid ${C.border}`, borderRadius: 8, color: C.light, fontSize: 16, padding: "10px 12px", outline: "none" }} />
           <div style={{ color: C.muted, fontSize: 13, whiteSpace: "nowrap" }}>kWh/year</div>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
           {[5000, 10000, 13000, 20000].map(v => (
             <button key={v} onClick={() => { setConsumption(v); setInputVal(String(v)); }}
-              style={{ flex: 1, padding: "6px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${consumption === v ? C.teal : C.border}`, background: consumption === v ? `${C.teal}22` : "transparent", color: consumption === v ? C.teal : C.muted }}>
-              {v >= 1000 ? `${v / 1000}k` : v}
+              style={{ flex: 1, padding: "6px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${consumption === v ? C.orange : C.border}`, background: consumption === v ? `${C.orange}22` : "transparent", color: consumption === v ? C.orange : C.muted }}>
+              {v >= 1000 ? `${v/1000}k` : v}
             </button>
           ))}
         </div>
-        <div style={{ color: C.muted, fontSize: 11, marginTop: 6 }}>🏠 Avg Belgian house: ~13,000 kWh/yr · Flat: ~5,000</div>
+        <div style={{ color: C.muted, fontSize: 11, marginBottom: 12 }}>🏠 Avg Belgian house: ~13,000 kWh/yr · Flat: ~5,000 · With heat pump: 20,000+</div>
+
+        {/* Region */}
+        <div style={{ color: C.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Region</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {REGIONS.map(r => (
+            <button key={r.id} onClick={() => setRegion(r.id)}
+              style={{ flex: 1, padding: "7px 4px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${region === r.id ? C.orange : C.border}`, background: region === r.id ? `${C.orange}22` : "#0A2040", color: region === r.id ? C.orange : C.muted }}>
+              {r.flag} {r.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {list[0] && (
-        <div style={{ background: "linear-gradient(135deg,#0A2040,#0D2A1A)", border: `1px solid ${C.green}44`, borderRadius: 14, padding: 16, marginBottom: 16 }}>
-          <div style={{ color: C.green, fontSize: 11, fontWeight: 700, marginBottom: 4 }}>🏆 CHEAPEST FOR {consumption.toLocaleString()} kWh/yr</div>
-          <div style={{ color: C.light, fontSize: 18, fontWeight: 800 }}>{list[0].name}</div>
-          <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
-            <div><div style={{ color: C.muted, fontSize: 11 }}>Annual (all-in)</div><div style={{ color: C.green, fontSize: 22, fontWeight: 800 }}>€{list[0].costs.total}</div></div>
-            <div><div style={{ color: C.muted, fontSize: 11 }}>Monthly</div><div style={{ color: C.light, fontSize: 22, fontWeight: 800 }}>€{list[0].costs.monthly}</div></div>
-            <div><div style={{ color: C.muted, fontSize: 11 }}>All-in</div><div style={{ color: C.light, fontSize: 15, fontWeight: 700 }}>{list[0].costs.perKwh} c€/kWh</div></div>
-          </div>
+      {/* TTF context */}
+      {ttfPrice && (
+        <div style={{ background: `${C.orange}11`, border: `1px solid ${C.orange}33`, borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 12, color: C.muted }}>
+          🔥 Calculations use current TTF: <strong style={{ color: C.orange }}>€{ttfPrice?.toFixed(2)}/MWh</strong>
         </div>
       )}
 
-      {list.map((s, i) => (
-        <div key={s.id} onClick={() => setExpanded(expanded === s.id ? null : s.id)}
-          style={{ background: C.card, border: `1px solid ${s.cheapest ? C.green : C.border}`, borderRadius: 14, padding: 16, marginBottom: 8, cursor: "pointer" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 9, background: `${s.color}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>{s.logo}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                <span style={{ color: C.light, fontSize: 14, fontWeight: 700 }}>{s.name}</span>
-                {s.cheapest && <span style={{ background: `${C.green}22`, color: C.green, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>CHEAPEST</span>}
-                <span style={{ background: `${s.color}22`, color: s.color, fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 6 }}>{s.typeLabel}</span>
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 30, color: C.muted }}>Loading gas plans…</div>
+      ) : (
+        <>
+          {/* Cheapest banner */}
+          {cheapest && (
+            <div style={{ background: "linear-gradient(135deg,#0A2040,#1A2A10)", border: `1px solid ${C.green}44`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
+              <div style={{ color: C.green, fontSize: 11, fontWeight: 700, marginBottom: 4 }}>🏆 CHEAPEST FOR {consumption.toLocaleString()} kWh/yr</div>
+              <div style={{ color: C.light, fontSize: 18, fontWeight: 800 }}>{cheapest.supplier_name} — {cheapest.plan_name}</div>
+              <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
+                <div><div style={{ color: C.muted, fontSize: 11 }}>Annual all-in</div><div style={{ color: C.green, fontSize: 22, fontWeight: 800 }}>€{cheapest.costs.total}</div></div>
+                <div><div style={{ color: C.muted, fontSize: 11 }}>Monthly</div><div style={{ color: C.light, fontSize: 22, fontWeight: 800 }}>€{cheapest.costs.monthly}</div></div>
+                <div><div style={{ color: C.muted, fontSize: 11 }}>All-in rate</div><div style={{ color: C.light, fontSize: 15, fontWeight: 700 }}>{cheapest.costs.perKwh} c€/kWh</div></div>
               </div>
-              <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>{s.effectiveRate.toFixed(2)} c€/kWh · €{s.standing}/yr standing</div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ color: s.cheapest ? C.green : C.light, fontSize: 17, fontWeight: 800 }}>€{s.costs.total}</div>
-              <div style={{ color: C.muted, fontSize: 11 }}>€{s.costs.monthly}/mo</div>
-            </div>
-            <div style={{ color: C.muted }}>{expanded === s.id ? "▲" : "▼"}</div>
-          </div>
-          {expanded === s.id && (
-            <div style={{ marginTop: 14, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
-              <div style={{ color: C.muted, fontSize: 12, marginBottom: 12 }}>{s.note}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-                {[["Energy cost", `€${s.costs.energy}`], ["Grid costs", `€${s.costs.grid}`], ["Standing charge", `€${s.costs.standing}`], ["VAT (21%)", `€${s.costs.vat}`]].map(([l, v]) => (
-                  <div key={l} style={{ background: "#0A2040", borderRadius: 8, padding: "8px 12px" }}>
-                    <div style={{ color: C.muted, fontSize: 11 }}>{l}</div>
-                    <div style={{ color: C.light, fontSize: 14, fontWeight: 600 }}>{v}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                <div style={{ flex: 1, background: "#0A2040", borderRadius: 8, padding: "8px 12px" }}>
-                  <div style={{ color: C.muted, fontSize: 11 }}>All-in tariff</div>
-                  <div style={{ color: C.orange, fontSize: 15, fontWeight: 700 }}>{s.costs.perKwh} c€/kWh</div>
-                </div>
-                <div style={{ flex: 1, background: "#0A2040", borderRadius: 8, padding: "8px 12px" }}>
-                  <div style={{ color: C.muted, fontSize: 11 }}>Contract</div>
-                  <div style={{ color: C.light, fontSize: 14, fontWeight: 600 }}>{s.contract}</div>
-                </div>
-              </div>
-              <a href={s.url} target="_blank" rel="noopener noreferrer"
-                style={{ display: "block", background: `${s.color}22`, border: `1px solid ${s.color}55`, color: s.color, borderRadius: 9, padding: "10px 0", textAlign: "center", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-                View tariff at {s.name} →
-              </a>
-              {i > 0 && <div style={{ marginTop: 10, color: C.muted, fontSize: 12, textAlign: "center" }}>€{s.costs.total - list[0].costs.total} more per year than {list[0].name}</div>}
             </div>
           )}
-        </div>
-      ))}
-      <div style={{ color: C.muted, fontSize: 11, textAlign: "center", marginTop: 8, lineHeight: 1.6 }}>
-        Includes energy + Fluxys + Fluvius/ORES (avg) + levies + 21% VAT.<br />Estimates only — verify on supplier websites before switching.
-      </div>
+
+          {/* Plan list */}
+          {results.map((plan, i) => (
+            <div key={plan.plan_id} onClick={() => setExpanded(expanded === plan.plan_id ? null : plan.plan_id)}
+              style={{ background: C.card, border: `1px solid ${plan.cheapest ? C.green : C.border}`, borderRadius: 14, padding: 16, marginBottom: 8, cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, background: `${plan.supplier_color}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+                  {plan.supplier_logo}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ color: C.light, fontSize: 14, fontWeight: 700 }}>{plan.supplier_name}</span>
+                    <span style={{ color: C.muted, fontSize: 12 }}>{plan.plan_name}</span>
+                    {plan.cheapest && <span style={{ background: `${C.green}22`, color: C.green, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>CHEAPEST</span>}
+                    <span style={{ background: `${plan.supplier_color}22`, color: plan.supplier_color, fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 6 }}>
+                      {plan.type === "dynamic" ? "Dynamic" : plan.type === "fixed" ? "Fixed" : "Variable"}
+                    </span>
+                  </div>
+                  <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>
+                    {plan.energy_rate ? `${(plan.energy_rate * 100).toFixed(3)} c€/kWh` : `TTF + ${plan.markup_cEkWh}c€/kWh`}
+                    {" · "}€{plan.standing_charge}/yr standing
+                  </div>
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ color: plan.cheapest ? C.green : C.light, fontSize: 17, fontWeight: 800 }}>€{plan.costs.total}</div>
+                  <div style={{ color: C.muted, fontSize: 11 }}>€{plan.costs.monthly}/mo</div>
+                  {i > 0 && <div style={{ color: C.red, fontSize: 10 }}>+€{plan.savings_vs_cheapest}/yr</div>}
+                </div>
+                <div style={{ color: C.muted }}>{expanded === plan.plan_id ? "▲" : "▼"}</div>
+              </div>
+
+              {expanded === plan.plan_id && (
+                <div style={{ marginTop: 14, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                    {[
+                      ["Energy cost",    `€${plan.costs.energy}`,   C.orange],
+                      ["Grid / network", `€${plan.costs.grid}`,     C.yellow],
+                      ["Standing charge",`€${plan.costs.standing}`, C.muted],
+                      ["VAT (21%)",      `€${plan.costs.vat}`,      C.muted],
+                    ].map(([l, v, col]) => (
+                      <div key={l} style={{ background: "#0A2040", borderRadius: 8, padding: "8px 12px" }}>
+                        <div style={{ color: C.muted, fontSize: 11 }}>{l}</div>
+                        <div style={{ color: col, fontSize: 14, fontWeight: 700 }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                    <div style={{ flex: 1, background: "#0A2040", borderRadius: 8, padding: "8px 12px" }}>
+                      <div style={{ color: C.muted, fontSize: 11 }}>All-in tariff</div>
+                      <div style={{ color: C.orange, fontSize: 15, fontWeight: 700 }}>{plan.costs.perKwh} c€/kWh</div>
+                    </div>
+                    <div style={{ flex: 1, background: "#0A2040", borderRadius: 8, padding: "8px 12px" }}>
+                      <div style={{ color: C.muted, fontSize: 11 }}>Contract</div>
+                      <div style={{ color: C.light, fontSize: 14, fontWeight: 600 }}>{plan.duration}</div>
+                    </div>
+                  </div>
+                  {plan.highlights?.map(h => <div key={h} style={{ color: C.muted, fontSize: 12, marginBottom: 3 }}>✓ {h}</div>)}
+                  {plan.formula && (
+                    <div style={{ background: "#0A1830", borderRadius: 8, padding: "6px 10px", margin: "8px 0", color: C.cyan, fontSize: 12, fontFamily: "monospace" }}>
+                      {plan.formula}
+                    </div>
+                  )}
+                  <a href={plan.supplier_url} target="_blank" rel="noopener noreferrer"
+                    style={{ display: "block", background: `${plan.supplier_color}22`, border: `1px solid ${plan.supplier_color}55`, color: plan.supplier_color, borderRadius: 9, padding: "10px 0", textAlign: "center", fontSize: 13, fontWeight: 700, textDecoration: "none", marginTop: 10 }}>
+                    View gas tariff at {plan.supplier_name} →
+                  </a>
+                  {i > 0 && <div style={{ marginTop: 10, color: C.muted, fontSize: 12, textAlign: "center" }}>€{plan.savings_vs_cheapest} more per year than {cheapest.supplier_name}</div>}
+                </div>
+              )}
+            </div>
+          ))}
+          <div style={{ color: C.muted, fontSize: 11, textAlign: "center", marginTop: 8, lineHeight: 1.6 }}>
+            Includes energy + Fluxys + Fluvius/ORES (avg) + levies + 21% VAT.<br />
+            Tariff data updated weekly · Always verify on supplier website before switching.
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -511,7 +573,7 @@ export default function GasTab({ user, isGuest, onSignIn, isMobile, mobileTab, s
       {activeTab === "today"     && <TodayTab     current={current} history={history} />}
       {activeTab === "tomorrow"  && <TomorrowTab  history={history} />}
       {activeTab === "week"      && <WeekTab />}
-      {activeTab === "suppliers" && <SuppliersTab ttfPrice={current?.ttf?.price} />}
+      {activeTab === "suppliers" && <SuppliersTab ttfPrice={current?.price} />}
       {activeTab === "alerts"    && <AlertsTab    user={user} isGuest={isGuest} onSignIn={onSignIn} />}
     </div>
   );
