@@ -1,223 +1,237 @@
 /**
- * routes/suppliers.js
- * 
- * Supplier tariff scraping + appliance-based consumption calculator
- * Scrapes publicly accessible tariff pages weekly, falls back to seed data
- * 
+ * routes/suppliers.js — SmartPrice.be
+ *
+ * SCRAPING STRATEGY (3-tier, most reliable first):
+ *  1. VREG tariff database — official Flemish regulator, monthly XML/CSV
+ *  2. CallMePower.be       — aggregator with clean HTML price tables
+ *  3. Individual supplier pages — Bolt, Mega, Octa+ (have public tariff cards)
+ *
  * Endpoints:
- *   GET /api/suppliers/electricity?region=flanders&consumption=3500&region=flanders
- *   GET /api/suppliers/appliances          — appliance metadata
- *   POST /api/suppliers/calculate          — body: { appliances: [{id, uses_per_week}], region }
- *   GET /api/suppliers/plans/:supplierId   — all plans for one supplier
- *   GET /api/suppliers/compare             — ranked comparison for given consumption
+ *   GET  /api/suppliers/electricity   ?consumption=3500&region=flanders&green=true&epex=100
+ *   GET  /api/suppliers/gas           ?consumption=13000&region=flanders&ttf=35
+ *   GET  /api/suppliers/appliances                — electricity appliance metadata
+ *   GET  /api/suppliers/gas-appliances            — gas appliance metadata
+ *   POST /api/suppliers/calculate                 — electricity: {appliances, region, epex_avg}
+ *   POST /api/suppliers/calculate-gas             — gas: {appliances, region, ttf_avg}
+ *   GET  /api/suppliers/meta                      — data freshness + supplier list
+ *   GET  /api/suppliers/scrape                    — manual trigger (admin)
  */
 
 const express   = require("express");
+const axios     = require("axios");
 const router    = express.Router();
 const NodeCache = require("node-cache");
 const fs        = require("fs");
 const path      = require("path");
 
-const cache    = new NodeCache({ stdTTL: 3600 * 6 }); // 6hr cache
+const cache    = new NodeCache({ stdTTL: 3600 * 6 });
 const SEED_FILE = path.join(__dirname, "../data/tariffs.json");
+const SCRAPE_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
 
-
-// ── Embedded seed data (fallback if tariffs.json not deployed) ─────────────
+// ─────────────────────────────────────────────────────────────
+// EMBEDDED SEED DATA  (deployed with the app, always available)
+// ─────────────────────────────────────────────────────────────
 const EMBEDDED_TARIFFS = {
-  "_meta": { "source": "Embedded seed Q1 2026", "updated": "2026-03-05", "next_scrape": "2026-03-12", "currency": "EUR", "vat_rate": 0.06 },
+  "_meta": {
+    "source":      "SmartPrice seed Q1 2026",
+    "updated":     "2026-03-06",
+    "next_scrape": "2026-03-13",
+    "currency":    "EUR",
+    "vat_elec":    0.06,
+    "vat_gas":     0.21
+  },
+
+  // ── Electricity grid costs (excl VAT) ──────────────────────
   "grid_costs": {
-    "flanders":  { "distribution_kWh": 0.0487, "capacity_kW_monthly": 53.90, "transport_kWh": 0.0089, "levies_kWh": 0.0312 },
-    "wallonia":  { "distribution_kWh": 0.0521, "transport_kWh": 0.0089, "levies_kWh": 0.0289 },
-    "brussels":  { "distribution_kWh": 0.0498, "transport_kWh": 0.0089, "levies_kWh": 0.0341 }
+    "flanders": {
+      "distribution_kWh":  0.0487,
+      "capacity_kW_monthly": 53.90,   // Flanders capacity tariff €/kW/month
+      "transport_kWh":     0.0089,
+      "levies_kWh":        0.0312,
+      "prosumer_kWh":      0.0          // 0 if no solar
+    },
+    "wallonia": {
+      "distribution_kWh":  0.0521,
+      "transport_kWh":     0.0089,
+      "levies_kWh":        0.0289
+    },
+    "brussels": {
+      "distribution_kWh":  0.0498,
+      "transport_kWh":     0.0089,
+      "levies_kWh":        0.0341
+    }
   },
+
+  // ── Gas grid costs (excl VAT) ───────────────────────────────
+  "gas_grid_costs": {
+    "flanders": { "distribution_kWh": 0.0285, "transport_kWh": 0.0042, "levies_kWh": 0.0089, "excise_kWh": 0.0028 },
+    "wallonia":  { "distribution_kWh": 0.0312, "transport_kWh": 0.0042, "levies_kWh": 0.0076, "excise_kWh": 0.0028 },
+    "brussels":  { "distribution_kWh": 0.0298, "transport_kWh": 0.0042, "levies_kWh": 0.0081, "excise_kWh": 0.0028 }
+  },
+
+  // ── Supplier plans ─────────────────────────────────────────
   "suppliers": {
-    "engie":         { "id":"engie",         "name":"Engie",         "logo":"🔵","color":"#009DE0","url":"https://www.engie.be",         "plans": [{ "id":"engie-comfort",   "name":"Comfort",      "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1021,"standing_charge_year":96.00, "green":true, "highlights":["Monthly indexed","No exit fee","100% renewable"],"formula":"EPEX_SPP × 1.02 + 2.1","last_verified":"2026-02-01"},{"id":"engie-fix-12","name":"Fix 12","type":"fixed","energy_type":"electricity","duration":"12 months","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1089,"standing_charge_year":96.00,"green":true,"highlights":["Price guarantee 12 months","Early exit €75"],"formula":null,"last_verified":"2026-02-01"}] },
-    "luminus":       { "id":"luminus",       "name":"Luminus",       "logo":"🟡","color":"#FFD100","url":"https://www.luminus.be",       "plans": [{ "id":"luminus-green",   "name":"Green Flex",   "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0998,"standing_charge_year":89.00, "green":true, "highlights":["EDF Group","100% Belgian wind & solar"],"formula":"EPEX_SPP × 0.98 + 1.8","last_verified":"2026-02-01"},{"id":"luminus-fix-24","name":"Fix 24","type":"fixed","energy_type":"electricity","duration":"24 months","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1045,"standing_charge_year":89.00,"green":true,"highlights":["Price locked 2 years","Early exit €150"],"formula":null,"last_verified":"2026-02-01"}] },
-    "bolt":          { "id":"bolt",          "name":"Bolt Energy",   "logo":"⚡","color":"#00C896","url":"https://www.bolt.eu/en-be/energy","plans": [{ "id":"bolt-dynamic",    "name":"Dynamic",      "type":"dynamic", "energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":null,"markup_cEkWh":0.3,"standing_charge_year":72.00,"green":true,"highlights":["EPEX hourly prices","Lowest markup 0.3 c€/kWh","Best for EV"],"formula":"EPEX_hour + 0.3 c€/kWh","last_verified":"2026-02-01"},{"id":"bolt-flex","name":"Flex","type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0965,"standing_charge_year":72.00,"green":true,"highlights":["Monthly EPEX average","No exit fee"],"formula":"EPEX_SPP + 0.5","last_verified":"2026-02-01"}] },
-    "totalenergies": { "id":"totalenergies", "name":"TotalEnergies", "logo":"🔴","color":"#F04E23","url":"https://www.totalenergies.be",  "plans": [{ "id":"total-comfort",   "name":"Comfort",      "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1034,"standing_charge_year":84.00,"green":false,"highlights":["Monthly indexed","Combined gas+elec discount"],"formula":"EPEX_SPP × 1.01 + 1.9","last_verified":"2026-02-01"},{"id":"total-fix-12","name":"Fix 12","type":"fixed","energy_type":"electricity","duration":"12 months","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1098,"standing_charge_year":84.00,"green":false,"highlights":["12-month price guarantee"],"formula":null,"last_verified":"2026-02-01"},{"id":"total-green","name":"Green Comfort","type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1052,"standing_charge_year":84.00,"green":true,"highlights":["100% renewable","Monthly indexed"],"formula":"EPEX_SPP × 1.01 + 2.1","last_verified":"2026-02-01"}] },
-    "eneco":         { "id":"eneco",         "name":"Eneco",         "logo":"🟢","color":"#00A651","url":"https://www.eneco.be",         "plans": [{ "id":"eneco-stroom",    "name":"Stroom",       "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0989,"standing_charge_year":99.00, "green":true, "highlights":["100% wind energy","Dutch parent company"],"formula":"EPEX_SPP × 0.97 + 1.6","last_verified":"2026-02-01"},{"id":"eneco-vast","name":"Vast 1 jaar","type":"fixed","energy_type":"electricity","duration":"12 months","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1041,"standing_charge_year":99.00,"green":true,"highlights":["Price certainty","Exit fee €95"],"formula":null,"last_verified":"2026-02-01"}] },
-    "mega":          { "id":"mega",          "name":"Mega",          "logo":"🟣","color":"#7C3AED","url":"https://www.mega.be",          "plans": [{ "id":"mega-online",     "name":"Online",       "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0887,"standing_charge_year":108.00,"green":false,"highlights":["Lowest energy rate","Online-only management"],"formula":"EPEX_SPP × 0.91 - 2.5","last_verified":"2026-02-01"},{"id":"mega-online-green","name":"Online Green","type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0912,"standing_charge_year":108.00,"green":true,"highlights":["100% renewable","Low rate"],"formula":"EPEX_SPP × 0.91 - 2.2","last_verified":"2026-02-01"}] },
-    "octaplus":      { "id":"octaplus",      "name":"Octa+",         "logo":"🟠","color":"#F97316","url":"https://www.octaplus.be",      "plans": [{ "id":"octa-flex",       "name":"Flex",         "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1008,"standing_charge_year":91.20, "green":false,"highlights":["Belgian independent","No exit fee"],"formula":"EPEX_SPP + 1.4","last_verified":"2026-02-01"},{"id":"octa-green","name":"Green Flex","type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1029,"standing_charge_year":91.20,"green":true,"highlights":["100% Belgian green energy","No exit fee"],"formula":"EPEX_SPP + 1.6","last_verified":"2026-02-01"}] }
+    "engie": {
+      "id": "engie", "name": "Engie", "logo": "🔵", "color": "#009DE0",
+      "url": "https://www.engie.be", "scrape_url": "https://www.engie.be/nl/thuis/elektriciteit-en-gas/tarieven/",
+      "plans": [
+        { "id":"engie-elec-comfort",    "name":"Comfort",       "type":"variable", "energy_type":"electricity", "duration":"indefinite",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1021, "standing_charge_year":96.00,  "green":true,  "highlights":["Monthly TTF/EPEX indexed","No exit fee","100% renewable"], "formula":"EPEX_SPP × 1.02 + 2.1 c€", "last_verified":"2026-03-01" },
+        { "id":"engie-elec-fix12",      "name":"Fix 12",        "type":"fixed",    "energy_type":"electricity", "duration":"12 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1089, "standing_charge_year":96.00,  "green":true,  "highlights":["Guaranteed rate 12 months","Early exit €75"],               "formula":null,                   "last_verified":"2026-03-01" },
+        { "id":"engie-elec-fix24",      "name":"Fix 24",        "type":"fixed",    "energy_type":"electricity", "duration":"24 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1105, "standing_charge_year":96.00,  "green":true,  "highlights":["Guaranteed rate 24 months","Early exit €130"],              "formula":null,                   "last_verified":"2026-03-01" },
+        { "id":"engie-gas-comfort",     "name":"Gas Comfort",   "type":"variable", "energy_type":"gas",         "duration":"indefinite",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0821, "standing_charge_year":85.20,  "green":false, "highlights":["Monthly TTF-indexed","No exit fee","Combined elec+gas discount"], "formula":"TTF_monthly + 2.1 c€", "last_verified":"2026-03-01" },
+        { "id":"engie-gas-fix12",       "name":"Gas Fix 12",    "type":"fixed",    "energy_type":"gas",         "duration":"12 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0879, "standing_charge_year":85.20,  "green":false, "highlights":["Price locked 12 months","Exit fee €75"],                   "formula":null,                   "last_verified":"2026-03-01" }
+      ]
+    },
+    "luminus": {
+      "id": "luminus", "name": "Luminus", "logo": "🟡", "color": "#FFD100",
+      "url": "https://www.luminus.be", "scrape_url": "https://www.luminus.be/nl/prive/elektriciteit-gas/tarieven",
+      "plans": [
+        { "id":"luminus-elec-greenflex", "name":"Green Flex",   "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0998, "standing_charge_year":89.00, "green":true,  "highlights":["EDF Group","100% Belgian wind & solar","Monthly indexed"], "formula":"EPEX_SPP × 0.98 + 1.8 c€", "last_verified":"2026-03-01" },
+        { "id":"luminus-elec-fix24",     "name":"Fix 24",       "type":"fixed",    "energy_type":"electricity", "duration":"24 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1045, "standing_charge_year":89.00, "green":true,  "highlights":["Price locked 24 months","Early exit €150"],                "formula":null,                       "last_verified":"2026-03-01" },
+        { "id":"luminus-gas-flex",       "name":"Gas Flex",     "type":"variable", "energy_type":"gas",         "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0805, "standing_charge_year":79.00, "green":false, "highlights":["EDF Group","Monthly TTF indexed","Online management"],      "formula":"TTF_monthly + 1.8 c€",     "last_verified":"2026-03-01" },
+        { "id":"luminus-gas-fix24",      "name":"Gas Fix 24",   "type":"fixed",    "energy_type":"gas",         "duration":"24 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0869, "standing_charge_year":79.00, "green":false, "highlights":["Price certainty 24 months","Exit fee €150"],                "formula":null,                       "last_verified":"2026-03-01" }
+      ]
+    },
+    "bolt": {
+      "id": "bolt", "name": "Bolt Energy", "logo": "⚡", "color": "#00C896",
+      "url": "https://www.bolt.eu/en-be/energy", "scrape_url": "https://www.bolt.eu/en-be/energy/electricity/",
+      "plans": [
+        { "id":"bolt-elec-dynamic", "name":"Dynamic",   "type":"dynamic",  "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":null,   "markup_cEkWh":0.3,  "standing_charge_year":72.00, "green":true,  "highlights":["EPEX hourly pricing","Lowest markup 0.3 c€/kWh","Best for EV owners","Smart charging support"], "formula":"EPEX_hour + 0.3 c€/kWh", "last_verified":"2026-03-01" },
+        { "id":"bolt-elec-flex",    "name":"Flex",       "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0965, "markup_cEkWh":null, "standing_charge_year":72.00, "green":true,  "highlights":["Monthly EPEX average","No exit fee","100% renewable"],                                           "formula":"EPEX_SPP + 0.5 c€/kWh",  "last_verified":"2026-03-01" },
+        { "id":"bolt-gas-dynamic",  "name":"Gas Dynamic","type":"dynamic",  "energy_type":"gas",         "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":null,   "markup_cEkWh":0.5,  "standing_charge_year":65.00, "green":false, "highlights":["TTF daily price + 0.5 c€/kWh","Lowest standing charge","Flexible month-to-month"],              "formula":"TTF_daily + 0.5 c€/kWh", "last_verified":"2026-03-01" }
+      ]
+    },
+    "totalenergies": {
+      "id": "totalenergies", "name": "TotalEnergies", "logo": "🔴", "color": "#F04E23",
+      "url": "https://www.totalenergies.be", "scrape_url": "https://www.totalenergies.be/nl/prive/energie/elektriciteit/tarieven",
+      "plans": [
+        { "id":"total-elec-comfort", "name":"Comfort",       "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1034, "standing_charge_year":84.00, "green":false, "highlights":["Monthly EPEX indexed","Combined gas+elec discount","5% multi-energy discount"], "formula":"EPEX_SPP × 1.01 + 1.9 c€", "last_verified":"2026-03-01" },
+        { "id":"total-elec-fix12",   "name":"Fix 12",        "type":"fixed",    "energy_type":"electricity", "duration":"12 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1098, "standing_charge_year":84.00, "green":false, "highlights":["12-month price guarantee","No price surprises"],                                  "formula":null,                       "last_verified":"2026-03-01" },
+        { "id":"total-elec-green",   "name":"Green Comfort", "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1052, "standing_charge_year":84.00, "green":true,  "highlights":["100% certified renewable","Monthly indexed"],                                     "formula":"EPEX_SPP × 1.01 + 2.1 c€", "last_verified":"2026-03-01" },
+        { "id":"total-gas-comfort",  "name":"Gas Comfort",   "type":"variable", "energy_type":"gas",         "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0849, "standing_charge_year":72.00, "green":false, "highlights":["Monthly TTF indexed","Combined discount available"],                              "formula":"TTF_monthly + 1.9 c€",     "last_verified":"2026-03-01" },
+        { "id":"total-gas-fix12",    "name":"Gas Fix 12",    "type":"fixed",    "energy_type":"gas",         "duration":"12 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0899, "standing_charge_year":72.00, "green":false, "highlights":["12-month price guarantee","Early exit €75"],                                       "formula":null,                       "last_verified":"2026-03-01" }
+      ]
+    },
+    "eneco": {
+      "id": "eneco", "name": "Eneco", "logo": "🟢", "color": "#00A651",
+      "url": "https://www.eneco.be", "scrape_url": "https://www.eneco.be/nl/energie/stroom-en-gas/tarieven/",
+      "plans": [
+        { "id":"eneco-elec-stroom",  "name":"Stroom",       "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0989, "standing_charge_year":99.00, "green":true,  "highlights":["100% wind energy","Dutch parent company","Monthly EPEX indexed"], "formula":"EPEX_SPP × 0.97 + 1.6 c€", "last_verified":"2026-03-01" },
+        { "id":"eneco-elec-vast",    "name":"Vast 1 jaar",  "type":"fixed",    "energy_type":"electricity", "duration":"12 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1041, "standing_charge_year":99.00, "green":true,  "highlights":["Price certainty","100% renewable","Exit fee €95"],               "formula":null,                       "last_verified":"2026-03-01" },
+        { "id":"eneco-gas-flex",     "name":"Gas Flex",     "type":"variable", "energy_type":"gas",         "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0792, "standing_charge_year":90.00, "green":false, "highlights":["Dutch parent company","Monthly TTF indexed"],                     "formula":"TTF_monthly + 1.5 c€",     "last_verified":"2026-03-01" },
+        { "id":"eneco-gas-vast",     "name":"Gas Vast",     "type":"fixed",    "energy_type":"gas",         "duration":"12 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0845, "standing_charge_year":90.00, "green":false, "highlights":["12-month fixed rate","Exit fee €95"],                            "formula":null,                       "last_verified":"2026-03-01" }
+      ]
+    },
+    "mega": {
+      "id": "mega", "name": "Mega", "logo": "🟣", "color": "#7C3AED",
+      "url": "https://www.mega.be", "scrape_url": "https://www.mega.be/nl/energie/tariefkaarten",
+      "plans": [
+        { "id":"mega-elec-online",      "name":"Online",       "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0887, "standing_charge_year":108.00, "green":false, "highlights":["Lowest energy rate","Online-only management","EPEX-linked"], "formula":"EPEX_SPP × 0.91 − 2.5 c€", "last_verified":"2026-03-01" },
+        { "id":"mega-elec-online-green","name":"Online Green", "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0912, "standing_charge_year":108.00, "green":true,  "highlights":["100% renewable","Low rate","EPEX-linked"],                 "formula":"EPEX_SPP × 0.91 − 2.2 c€", "last_verified":"2026-03-01" },
+        { "id":"mega-gas-online",       "name":"Gas Online",   "type":"variable", "energy_type":"gas",         "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0713, "standing_charge_year":95.40,  "green":false, "highlights":["Lowest gas rate","Online-only","TTF × 0.91"],               "formula":"TTF_monthly × 0.91 − 1.5 c€","last_verified":"2026-03-01" }
+      ]
+    },
+    "octaplus": {
+      "id": "octaplus", "name": "Octa+", "logo": "🟠", "color": "#F97316",
+      "url": "https://www.octaplus.be", "scrape_url": "https://www.octaplus.be/nl/tarieven",
+      "plans": [
+        { "id":"octa-elec-flex",   "name":"Flex",       "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1008, "standing_charge_year":91.20, "green":false, "highlights":["Belgian independent","No exit fee","Monthly indexed"],           "formula":"EPEX_SPP + 1.4 c€",     "last_verified":"2026-03-01" },
+        { "id":"octa-elec-green",  "name":"Green Flex", "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1029, "standing_charge_year":91.20, "green":true,  "highlights":["100% Belgian green","No exit fee","Monthly indexed"],            "formula":"EPEX_SPP + 1.6 c€",     "last_verified":"2026-03-01" },
+        { "id":"octa-elec-fix12",  "name":"Fix 12",     "type":"fixed",    "energy_type":"electricity", "duration":"12 months",  "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1065, "standing_charge_year":91.20, "green":false, "highlights":["12-month fixed price","Belgian independent","Exit fee €50"],   "formula":null,                     "last_verified":"2026-03-01" },
+        { "id":"octa-gas-flex",    "name":"Gas Flex",   "type":"variable", "energy_type":"gas",         "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0810, "standing_charge_year":80.00, "green":false, "highlights":["Belgian independent","Monthly TTF indexed","No exit fee"],     "formula":"TTF_monthly + 1.6 c€",   "last_verified":"2026-03-01" }
+      ]
+    }
   },
+
+  // ── Electricity appliances ─────────────────────────────────
   "appliances": {
-    "washing_machine": {"label":"Washing machine","icon":"👕","kwh_per_use":0.9, "default_uses_per_week":4,"peak_kw":2.0,"tip":"Run at 30°C or off-peak to save"},
-    "dryer":           {"label":"Dryer",           "icon":"🌀","kwh_per_use":2.5, "default_uses_per_week":2,"peak_kw":2.5,"tip":"Air-dry when possible"},
-    "dishwasher":      {"label":"Dishwasher",      "icon":"🍽️","kwh_per_use":1.05,"default_uses_per_week":7,"peak_kw":1.8,"tip":"Use eco mode & run off-peak"},
-    "ev_charging":     {"label":"EV charging",     "icon":"🚗","kwh_per_use":15.0,"default_uses_per_week":3,"peak_kw":7.4,"tip":"Schedule overnight charging"},
-    "heat_pump":       {"label":"Heat pump / boiler","icon":"🌡️","kwh_per_use":8.0,"default_uses_per_week":7,"peak_kw":3.5,"tip":"Program heating schedules"},
-    "fridge_freezer":  {"label":"Fridge/freezer",  "icon":"🧊","kwh_per_use":1.2, "default_uses_per_week":7,"peak_kw":0.15,"tip":"Check door seals regularly"},
-    "oven":            {"label":"Oven / hob",       "icon":"🍳","kwh_per_use":1.5, "default_uses_per_week":5,"peak_kw":2.2,"tip":"Use residual heat & batch cook"},
-    "lighting":        {"label":"Lighting",         "icon":"💡","kwh_per_use":0.5, "default_uses_per_week":7,"peak_kw":0.3,"tip":"Switch to LED — 80% savings"},
-    "tv_electronics":  {"label":"TV / electronics", "icon":"📺","kwh_per_use":0.3, "default_uses_per_week":7,"peak_kw":0.2,"tip":"Use smart plugs to kill standby"}
+    "washing_machine":   { "label":"Washing machine",        "icon":"👕", "kwh_per_use":0.9,  "default_uses_per_week":4, "peak_kw":2.0,  "tip":"Run at 30°C and off-peak hours to cut costs by up to 40%" },
+    "dishwasher":        { "label":"Dishwasher",              "icon":"🍽️", "kwh_per_use":1.05, "default_uses_per_week":7, "peak_kw":1.8,  "tip":"Use eco-mode and only run full loads off-peak" },
+    "dryer":             { "label":"Tumble dryer",            "icon":"🌀", "kwh_per_use":2.5,  "default_uses_per_week":2, "peak_kw":2.5,  "tip":"Biggest single load after EV — air-dry when possible" },
+    "ev_charging":       { "label":"EV charging (7.4kW)",     "icon":"🚗", "kwh_per_use":15.0, "default_uses_per_week":3, "peak_kw":7.4,  "tip":"Schedule overnight (00:00–06:00) to benefit from low EPEX prices" },
+    "ev_charging_fast":  { "label":"EV fast charge (22kW)",   "icon":"⚡", "kwh_per_use":40.0, "default_uses_per_week":1, "peak_kw":22.0, "tip":"High peak load — use slower overnight charging to avoid high capacity tariff (Flanders)" },
+    "heat_pump":         { "label":"Heat pump / boiler",      "icon":"🌡️", "kwh_per_use":8.0,  "default_uses_per_week":7, "peak_kw":3.5,  "tip":"Programme heating schedule; 1°C lower = ~7% savings" },
+    "fridge_freezer":    { "label":"Fridge/freezer",          "icon":"🧊", "kwh_per_use":1.2,  "default_uses_per_week":7, "peak_kw":0.15, "tip":"Always-on load — check door seals and keep coils clean" },
+    "oven":              { "label":"Oven / hob",              "icon":"🍳", "kwh_per_use":1.5,  "default_uses_per_week":5, "peak_kw":2.2,  "tip":"Use residual heat for last 10 min and batch-cook where possible" },
+    "lighting":          { "label":"Lighting",                "icon":"💡", "kwh_per_use":0.5,  "default_uses_per_week":7, "peak_kw":0.3,  "tip":"LED bulbs use 80% less — replace any remaining halogen/incandescent" },
+    "tv_electronics":    { "label":"TV / home electronics",   "icon":"📺", "kwh_per_use":0.3,  "default_uses_per_week":7, "peak_kw":0.2,  "tip":"Smart plugs eliminate standby — ~80 kWh/yr saved per device cluster" },
+    "pc_office":         { "label":"PC / home office",        "icon":"💻", "kwh_per_use":0.4,  "default_uses_per_week":5, "peak_kw":0.35, "tip":"Enable power-save mode; a laptop uses 5× less than a desktop+monitor" },
+    "pool_pump":         { "label":"Pool pump",               "icon":"🏊", "kwh_per_use":1.2,  "default_uses_per_week":7, "peak_kw":0.75, "tip":"Timer-control to run during cheapest EPEX hours (usually 01:00–06:00)" },
+    "sauna":             { "label":"Sauna",                   "icon":"🧖", "kwh_per_use":3.5,  "default_uses_per_week":1, "peak_kw":6.0,  "tip":"High peak load — never run simultaneously with EV or heat pump" }
+  },
+
+  // ── Gas appliances ─────────────────────────────────────────
+  "appliances_gas": {
+    "gas_heating":   { "label":"Central heating (gas)",  "icon":"🔥", "kwh_per_use":45.0, "default_uses_per_week":7, "tip":"Lower thermostat 1°C = ~7% less gas. Night setback saves 10–15%." },
+    "gas_boiler":    { "label":"Hot water (gas boiler)",  "icon":"🚿", "kwh_per_use":8.0,  "default_uses_per_week":7, "tip":"Set to 55°C; insulate hot water pipes and cylinder" },
+    "gas_cooking":   { "label":"Gas hob / oven",          "icon":"🍲", "kwh_per_use":0.6,  "default_uses_per_week":10,"tip":"Use lids on pots; match burner size to pan; batch-cook" },
+    "gas_dryer":     { "label":"Gas tumble dryer",        "icon":"🌀", "kwh_per_use":1.2,  "default_uses_per_week":2, "tip":"More efficient per cycle than electric; only run full loads" },
+    "gas_fireplace": { "label":"Gas fireplace",           "icon":"🕯️", "kwh_per_use":3.5,  "default_uses_per_week":3, "tip":"Zone heating — great for supplementing central heating in one room" }
   }
 };
 
-// ── Load seed data ────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// SEED DATA I/O
+// ─────────────────────────────────────────────────────────────
 function loadSeedData() {
   try {
-    // Auto-create data dir + seed file if missing (e.g. first Railway deploy)
     const dir = path.dirname(SEED_FILE);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     if (!fs.existsSync(SEED_FILE)) {
-      console.log("[suppliers] tariffs.json not found — writing embedded seed data");
       fs.writeFileSync(SEED_FILE, JSON.stringify(EMBEDDED_TARIFFS, null, 2), "utf8");
     }
     return JSON.parse(fs.readFileSync(SEED_FILE, "utf8"));
   } catch (e) {
-    console.error("[suppliers] Failed to load seed data:", e.message);
-    // Last resort: return embedded data directly
-    return EMBEDDED_TARIFFS;
+    console.error("[suppliers] loadSeedData:", e.message);
+    return JSON.parse(JSON.stringify(EMBEDDED_TARIFFS)); // deep clone
   }
 }
 
 function saveSeedData(data) {
   try {
-    data._meta.updated = new Date().toISOString().split("T")[0];
-    const nextWeek = new Date(Date.now() + 7 * 24 * 3600 * 1000);
-    data._meta.next_scrape = nextWeek.toISOString().split("T")[0];
+    data._meta.updated     = new Date().toISOString().split("T")[0];
+    data._meta.next_scrape = new Date(Date.now() + 7*24*3600*1000).toISOString().split("T")[0];
     fs.writeFileSync(SEED_FILE, JSON.stringify(data, null, 2), "utf8");
   } catch (e) {
-    console.error("[suppliers] Failed to save tariff data:", e.message);
+    console.error("[suppliers] saveSeedData:", e.message);
   }
 }
 
-// ── Scraper: try to fetch latest energy rates from supplier pages ──
-// We can only scrape publicly available tariff card PDFs/pages
-// Each supplier that publishes machine-readable data gets a scraper
-// Others fall back to seed data with a staleness warning
-
-async function scrapeBolt() {
-  try {
-    // Bolt publishes tariffs on a simple page we can parse
-    const res = await fetch("https://www.bolt.eu/en-be/energy/electricity/", {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; SmartPrice/1.0; +https://smartprice.be)" },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-
-    // Look for markup value pattern like "0.3 c€/kWh" or "€0.003/kWh"
-    const markupMatch = html.match(/(\d+\.?\d*)\s*c[€e]\/kWh\s*markup/i);
-    const standingMatch = html.match(/(\d+)[,.]?\d*\s*€\s*\/\s*year/i);
-
-    const result = {};
-    if (markupMatch) result.markup_cEkWh = parseFloat(markupMatch[1]);
-    if (standingMatch) result.standing_charge_year = parseFloat(standingMatch[1]);
-    return result;
-  } catch (e) {
-    console.warn("[suppliers] Bolt scrape failed:", e.message);
-    return null;
-  }
-}
-
-async function scrapeMega() {
-  try {
-    // Mega publishes a tariff card PDF — parse the URL pattern
-    const res = await fetch("https://www.mega.be/nl/energie/tariefkaarten", {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; SmartPrice/1.0; +https://smartprice.be)" },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    // Look for energy rate patterns
-    const rateMatch = html.match(/(\d+,\d+)\s*c[€e]\/kWh/);
-    if (rateMatch) {
-      const rate = parseFloat(rateMatch[1].replace(",", ".")) / 100;
-      return { energy_rate_excl_vat: rate };
-    }
-    return null;
-  } catch (e) {
-    console.warn("[suppliers] Mega scrape failed:", e.message);
-    return null;
-  }
-}
-
-// ── Full weekly scrape ────────────────────────────────────────
-async function runWeeklyScrape() {
-  console.log("[suppliers] Starting weekly tariff scrape...");
-  const data = loadSeedData();
-  if (!data) return;
-
-  let updated = 0;
-
-  // Bolt
-  const boltData = await scrapeBolt();
-  if (boltData) {
-    const dynPlan = data.suppliers.bolt.plans.find(p => p.id === "bolt-dynamic");
-    if (dynPlan) {
-      if (boltData.markup_cEkWh)       dynPlan.markup_cEkWh = boltData.markup_cEkWh;
-      if (boltData.standing_charge_year) dynPlan.standing_charge_year = boltData.standing_charge_year;
-      dynPlan.last_verified = new Date().toISOString().split("T")[0];
-      updated++;
-      console.log("[suppliers] Bolt tariff updated from scrape");
-    }
-  }
-
-  // Mega
-  const megaData = await scrapeMega();
-  if (megaData) {
-    const onlinePlan = data.suppliers.mega.plans.find(p => p.id === "mega-online");
-    if (onlinePlan && megaData.energy_rate_excl_vat) {
-      onlinePlan.energy_rate_excl_vat = megaData.energy_rate_excl_vat;
-      onlinePlan.last_verified = new Date().toISOString().split("T")[0];
-      updated++;
-      console.log("[suppliers] Mega tariff updated from scrape");
-    }
-  }
-
-  // Save updated data
-  saveSeedData(data);
-  cache.del("tariffs");
-  console.log(`[suppliers] Weekly scrape complete. ${updated} supplier(s) auto-updated. ${Object.keys(data.suppliers).length - updated} use seed data.`);
-}
-
-// ── Get tariff data (cached) ──────────────────────────────────
 function getTariffs() {
   const cached = cache.get("tariffs");
   if (cached) return cached;
   const data = loadSeedData();
-  if (data) cache.set("tariffs", data);
+  cache.set("tariffs", data, 3600 * 6);
   return data;
 }
 
-// ── Cost calculation engine ───────────────────────────────────
-// Uses Belgian bill breakdown:
-// Total = (energy + grid + levies) × (1 + VAT)
-// Flanders: grid = capacity-based (kW peak) + small kWh component
-// Wallonia/Brussels: grid = pure kWh-based
-
-function calcAnnualCost({ energyRate, markupCEkWh, standingCharge, consumption, region, peakKw, epexAvg }) {
-  const grid = getTariffs()?.grid_costs?.[region] || getTariffs()?.grid_costs?.flanders;
-  const VAT = 0.06;
-
-  // Energy component (excl VAT)
-  let energyCost;
-  if (energyRate) {
-    energyCost = energyRate * consumption;
-  } else if (markupCEkWh !== undefined && epexAvg) {
-    // Dynamic: EPEX average + markup
-    energyCost = ((epexAvg / 1000) + (markupCEkWh / 100)) * consumption;
-  } else {
-    return null;
+// ─────────────────────────────────────────────────────────────
+// COST CALCULATION ENGINE
+// ─────────────────────────────────────────────────────────────
+function calcAnnualCostElec({ energyRate, markupCEkWh, standingCharge, consumption, region, peakKw, epexAvg }) {
+  let rate = energyRate;
+  if (rate == null && markupCEkWh != null) {
+    rate = (epexAvg / 1000) + (markupCEkWh / 100); // EPEX €/MWh → €/kWh + markup
   }
+  if (rate == null) return null;
 
-  // Grid cost
+  const grid   = getTariffs().grid_costs[region] || getTariffs().grid_costs.flanders;
+  const VAT    = 0.06;
+
   let gridCost;
   if (region === "flanders") {
-    // Flanders: capacity tariff (monthly peak kW × rate × 12) + small kWh component + transport
-    const peak = Math.max(peakKw || 2.5, 2.5); // min 2.5 kW
-    const capacityCost = peak * grid.capacity_kW_monthly * 12;
-    const distribCost  = grid.distribution_kWh * consumption;
-    const transportCost = grid.transport_kWh * consumption;
-    const leviesCost   = grid.levies_kWh * consumption;
-    gridCost = capacityCost + distribCost + transportCost + leviesCost;
+    // Capacity tariff: peak kW × €53.90/kW/month × 12
+    const capacityAnnual = (peakKw || 2.5) * (grid.capacity_kW_monthly || 53.90) * 12;
+    const kWhPart        = (grid.transport_kWh + grid.levies_kWh) * consumption;
+    gridCost = capacityAnnual + kWhPart;
   } else {
     gridCost = (grid.distribution_kWh + grid.transport_kWh + grid.levies_kWh) * consumption;
   }
 
-  const subtotal = energyCost + gridCost + standingCharge;
-  const vat      = subtotal * VAT;
-  const total    = subtotal + vat;
+  const energyCost = rate * consumption;
+  const subtotal   = energyCost + gridCost + standingCharge;
+  const vat        = subtotal * VAT;
+  const total      = subtotal + vat;
 
   return {
     energy:   Math.round(energyCost),
@@ -230,312 +244,443 @@ function calcAnnualCost({ energyRate, markupCEkWh, standingCharge, consumption, 
   };
 }
 
-// ── Consumption from appliances ───────────────────────────────
-function calcConsumptionFromAppliances(applianceInputs) {
-  const data = getTariffs();
-  if (!data) return null;
+function calcAnnualCostGas({ energyRate, markupCEkWh, standingCharge, consumption, region, ttfAvg }) {
+  let rate = energyRate;
+  if (rate == null && markupCEkWh != null) rate = (ttfAvg / 1000) + (markupCEkWh / 100);
+  if (rate == null) return null;
 
-  let totalAnnualKwh = 0;
-  let peakKw = 0;
-  const breakdown = [];
+  const data   = getTariffs();
+  const grid   = data.gas_grid_costs[region] || data.gas_grid_costs.flanders;
+  const VAT    = 0.21;
 
-  for (const input of applianceInputs) {
-    const appliance = data.appliances[input.id];
-    if (!appliance) continue;
-
-    const usesPerWeek = input.uses_per_week ?? appliance.default_uses_per_week;
-    const annualUses  = usesPerWeek * 52;
-    const annualKwh   = appliance.kwh_per_use * annualUses;
-    totalAnnualKwh   += annualKwh;
-
-    // Estimate peak (simplified: assume worst-case concurrent usage contributes to peak)
-    if (appliance.peak_kw > peakKw) peakKw = appliance.peak_kw;
-
-    breakdown.push({
-      id:          input.id,
-      label:       appliance.label,
-      icon:        appliance.icon,
-      uses_per_week: usesPerWeek,
-      kwh_per_use: appliance.kwh_per_use,
-      annual_kwh:  Math.round(annualKwh),
-      pct:         0, // filled below
-      tip:         appliance.tip,
-    });
-  }
-
-  // Add base consumption (always-on devices not listed)
-  const baseKwh = 600; // ~600 kWh/yr baseline (network equipment, chargers, etc.)
-  totalAnnualKwh += baseKwh;
-
-  // Fill percentages
-  breakdown.forEach(b => {
-    b.pct = Math.round((b.annual_kwh / totalAnnualKwh) * 100);
-  });
+  const energyCost = rate * consumption;
+  const gridCost   = (grid.distribution_kWh + grid.transport_kWh + grid.levies_kWh + (grid.excise_kWh || 0)) * consumption;
+  const subtotal   = energyCost + gridCost + standingCharge;
+  const vat        = subtotal * VAT;
+  const total      = subtotal + vat;
 
   return {
-    total_kwh: Math.round(totalAnnualKwh),
-    peak_kw:   parseFloat(peakKw.toFixed(1)),
-    breakdown,
-    household_size: estimateHouseholdSize(totalAnnualKwh),
+    energy:   Math.round(energyCost),
+    grid:     Math.round(gridCost),
+    standing: Math.round(standingCharge),
+    vat:      Math.round(vat),
+    total:    Math.round(total),
+    monthly:  Math.round(total / 12),
+    perKwh:   parseFloat((total / consumption * 100).toFixed(3)),
   };
 }
 
-function estimateHouseholdSize(kwh) {
-  if (kwh < 2000) return "Studio / 1 person";
-  if (kwh < 3500) return "1–2 persons";
-  if (kwh < 5000) return "Family (3–4 persons)";
-  if (kwh < 8000) return "Large family or EV";
-  return "Large household with EV / heat pump";
+// ─────────────────────────────────────────────────────────────
+// APPLIANCE CONSUMPTION CALCULATOR
+// ─────────────────────────────────────────────────────────────
+function calcConsumptionFromAppliances(inputs, energyType = "electricity") {
+  const data = getTariffs();
+  const apps = energyType === "gas" ? (data.appliances_gas || {}) : (data.appliances || {});
+
+  // Baseline: always-on loads not in the list
+  let totalKwh = energyType === "gas" ? 500 : 300;
+  let peakKw   = 0;
+  const breakdown = [];
+
+  for (const inp of inputs) {
+    const a = apps[inp.id];
+    if (!a) continue;
+    const uses   = inp.uses_per_week ?? a.default_uses_per_week;
+    const annual = a.kwh_per_use * uses * 52;
+    totalKwh += annual;
+    if (a.peak_kw && a.peak_kw > peakKw) peakKw = a.peak_kw;
+    breakdown.push({
+      id: inp.id, label: a.label, icon: a.icon,
+      uses_per_week: uses, kwh_per_use: a.kwh_per_use,
+      annual_kwh: Math.round(annual), pct: 0, tip: a.tip,
+    });
+  }
+
+  breakdown.forEach(b => { b.pct = Math.round((b.annual_kwh / totalKwh) * 100); });
+  breakdown.sort((a, b) => b.annual_kwh - a.annual_kwh);
+
+  const householdLabel = energyType === "gas"
+    ? (totalKwh < 5000 ? "Flat / studio" : totalKwh < 10000 ? "Flat with gas heating" : totalKwh < 15000 ? "Average house" : totalKwh < 20000 ? "Large house" : "Large house with extras")
+    : (totalKwh < 1500 ? "Studio" : totalKwh < 3000 ? "1–2 person flat" : totalKwh < 5000 ? "Family home" : totalKwh < 8000 ? "Large home" : "Large home + EV/heat pump");
+
+  return {
+    total_kwh:      Math.round(totalKwh),
+    peak_kw:        parseFloat(peakKw.toFixed(1)),
+    household_size: householdLabel,
+    breakdown,
+  };
 }
 
-// ── GET /api/suppliers/electricity ───────────────────────────
-router.get("/electricity", (req, res) => {
-  const data = getTariffs();
-  if (!data) return res.status(500).json({ success: false, error: "Tariff data unavailable" });
+// ─────────────────────────────────────────────────────────────
+// SCRAPING (3-tier)
+// ─────────────────────────────────────────────────────────────
 
-  const consumption = parseInt(req.query.consumption) || 3500;
-  const region      = req.query.region || "flanders";
-  const greenOnly   = req.query.green === "true";
-  const epexAvg     = parseFloat(req.query.epex) || 100; // €/MWh current average
-  const peakKw      = parseFloat(req.query.peak_kw) || 2.5;
+// Tier 1: VREG open data — official Flemish regulator tariff database
+async function scrapeVREG() {
+  const updates = {};
+  try {
+    // VREG publishes a public JSON/XML API for approved tariffs
+    const urls = [
+      "https://www.vreg.be/nl/tools/tariefscanner/api/products?productType=ELECTRICITY&region=FLEMISH",
+      "https://www.vreg.be/nl/tools/tariefscanner/api/products?productType=GAS&region=FLEMISH",
+    ];
+    for (const url of urls) {
+      const energyType = url.includes("GAS") ? "gas" : "electricity";
+      const { data } = await axios.get(url, { headers: { "User-Agent": SCRAPE_UA, "Accept": "application/json" }, timeout: 10000 });
+      const products = Array.isArray(data) ? data : (data.products || data.items || []);
+      for (const p of products) {
+        const name  = (p.supplier || p.supplierName || p.name || "").toLowerCase().replace(/\s+/g, "");
+        const price = parseFloat(p.energyRate || p.rate || p.price || 0);
+        if (name && price > 0.03 && price < 0.5) {
+          const key = `${name}_${energyType}`;
+          updates[key] = { rate: price, type: p.contractType || "variable", name: p.productName || p.name };
+        }
+      }
+    }
+    console.log(`[VREG] Got ${Object.keys(updates).length} tariff entries`);
+  } catch (e) {
+    console.warn("[VREG] scrape failed:", e.message);
+  }
+  return updates;
+}
 
+// Tier 2: CallMePower — Belgian comparison site with clean HTML tables
+async function scrapeCallMePower() {
+  const updates = {};
+  const urls = [
+    { url: "https://callmepower.be/en/energy/tariffs",     type: "electricity" },
+    { url: "https://callmepower.be/en/gas/tariffs",        type: "gas" },
+  ];
+  const KNOWN_SUPPLIERS = [
+    { key: "engie",         aliases: ["engie"] },
+    { key: "luminus",       aliases: ["luminus"] },
+    { key: "bolt",          aliases: ["bolt", "bolt energy"] },
+    { key: "totalenergies", aliases: ["totalenergies", "total energies", "total"] },
+    { key: "eneco",         aliases: ["eneco"] },
+    { key: "mega",          aliases: ["mega"] },
+    { key: "octaplus",      aliases: ["octa+", "octaplus", "octa"] },
+  ];
+
+  for (const { url, type } of urls) {
+    try {
+      const { data: html } = await axios.get(url, {
+        headers: { "User-Agent": SCRAPE_UA, "Accept": "text/html", "Accept-Language": "nl-BE,nl;q=0.9" },
+        timeout: 12000,
+      });
+
+      // Parse HTML table rows
+      const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+      let m;
+      while ((m = rowRegex.exec(html)) !== null) {
+        const row = m[1].toLowerCase();
+        for (const sup of KNOWN_SUPPLIERS) {
+          const nameFound = sup.aliases.some(a => row.includes(a));
+          if (!nameFound) continue;
+          // Extract price: look for patterns like 10.19 c€/kWh or 0.1019 €/kWh
+          const priceMatch =
+            row.match(/(\d{1,2}[.,]\d{2,4})\s*c[€e]/i) ||
+            row.match(/0\.(\d{4})\s*€\/kwh/i);
+          if (!priceMatch) continue;
+          let price = parseFloat(priceMatch[1].replace(",", "."));
+          if (price > 5) price = price / 100; // c€ → €
+          if (price < 0.03 || price > 0.5) continue;
+          updates[`${sup.key}_${type}`] = { rate: price, source: "callmepower" };
+        }
+      }
+
+      // Fallback: scan full page for supplier name near price
+      if (Object.keys(updates).filter(k => k.endsWith(type)).length === 0) {
+        for (const sup of KNOWN_SUPPLIERS) {
+          for (const alias of sup.aliases) {
+            const re = new RegExp(`${alias}[\\s\\S]{0,300}?(\\d{1,2}[.,]\\d{2,4})\\s*c[€e]`, "i");
+            const found = html.match(re);
+            if (found) {
+              let price = parseFloat(found[1].replace(",", "."));
+              if (price > 5) price = price / 100;
+              if (price >= 0.03 && price <= 0.5) {
+                updates[`${sup.key}_${type}`] = { rate: price, source: "callmepower_fallback" };
+              }
+            }
+          }
+        }
+      }
+      console.log(`[CallMePower] ${type}: ${Object.keys(updates).filter(k => k.endsWith(type)).length} rates found`);
+    } catch (e) {
+      console.warn(`[CallMePower] ${type} failed:`, e.message);
+    }
+  }
+  return updates;
+}
+
+// Tier 3: Individual supplier pages (Bolt, Mega, Octa+ have public tariff cards)
+async function scrapeSupplierPages() {
+  const updates = {};
+  const targets = [
+    {
+      key: "bolt_electricity",
+      url: "https://www.bolt.eu/en-be/energy/electricity/",
+      pattern: /markup[^€\d]*([0-9][.,][0-9]{1,2})\s*c[€e]|([0-9][.,][0-9]{1,2})\s*c[€e]\/kWh\s*markup/i,
+    },
+    {
+      key: "bolt_gas",
+      url: "https://www.bolt.eu/en-be/energy/gas/",
+      pattern: /markup[^€\d]*([0-9][.,][0-9]{1,2})\s*c[€e]|([0-9][.,][0-9]{1,2})\s*c[€e]\/kWh\s*markup/i,
+    },
+    {
+      key: "mega_electricity",
+      url: "https://www.mega.be/nl/energie/tariefkaarten",
+      pattern: /elektriciteit[^€\d]{0,200}(\d{1,2}[.,]\d{2,4})\s*c[€e]|\b(\d{1,2}[.,]\d{2,4})\s*c[€e]\/kWh/i,
+    },
+    {
+      key: "mega_gas",
+      url: "https://www.mega.be/nl/energie/tariefkaarten",
+      pattern: /aardgas[^€\d]{0,200}(\d{1,2}[.,]\d{2,4})\s*c[€e]|gas[^€\d]{0,100}(\d{1,2}[.,]\d{2,4})\s*c[€e]/i,
+    },
+    {
+      key: "octaplus_electricity",
+      url: "https://www.octaplus.be/nl/tarieven",
+      pattern: /(\d{1,2}[.,]\d{2,4})\s*c[€e]\/kWh|(\d{1,2}[.,]\d{2,4})\s*euro(?:cent)?\/kWh/i,
+    },
+  ];
+
+  for (const t of targets) {
+    try {
+      const { data: html } = await axios.get(t.url, {
+        headers: { "User-Agent": SCRAPE_UA, "Accept": "text/html" },
+        timeout: 10000,
+      });
+      const m = html.match(t.pattern);
+      if (m) {
+        const raw   = (m[1] || m[2]).replace(",", ".");
+        let price = parseFloat(raw);
+        if (price > 5) price = price / 100;
+        if (price >= 0.03 && price <= 0.5) {
+          updates[t.key] = { rate: price, source: "supplier_page" };
+          console.log(`[Supplier] ${t.key}: ${price} €/kWh`);
+        }
+      }
+    } catch (e) {
+      console.warn(`[Supplier] ${t.key} failed:`, e.message);
+    }
+  }
+  return updates;
+}
+
+// ── Apply scraped updates to seed data ────────────────────────
+function applyScrapedUpdates(data, allUpdates) {
+  let count = 0;
+  const today = new Date().toISOString().split("T")[0];
+
+  for (const [key, update] of Object.entries(allUpdates)) {
+    const [supplierKey, energyType] = key.split("_", 2);
+    const supplier = data.suppliers[supplierKey];
+    if (!supplier) continue;
+
+    // Find variable plan for this energy type
+    const plan = supplier.plans.find(p => p.energy_type === energyType && p.type === "variable");
+    if (!plan) continue;
+
+    // For dynamic plans (Bolt), update markup not rate
+    if (plan.type === "dynamic" && update.markup != null) {
+      const prev = plan.markup_cEkWh;
+      if (Math.abs(prev - update.markup) > 0.05) {
+        console.log(`[update] ${supplier.name} ${energyType} markup: ${prev} → ${update.markup}`);
+        plan.markup_cEkWh   = update.markup;
+        plan.last_verified  = today;
+        plan.scrape_source  = update.source;
+        count++;
+      }
+    } else if (update.rate != null && plan.energy_rate_excl_vat != null) {
+      const prev = plan.energy_rate_excl_vat;
+      const diff = Math.abs(prev - update.rate);
+      // Only update if meaningful change (>0.5 c€) and plausible range
+      if (diff > 0.005 && update.rate > 0.03 && update.rate < 0.5) {
+        console.log(`[update] ${supplier.name} ${energyType}: ${(prev*100).toFixed(3)} → ${(update.rate*100).toFixed(3)} c€/kWh (${update.source})`);
+        plan.energy_rate_excl_vat = parseFloat(update.rate.toFixed(4));
+        plan.last_verified        = today;
+        plan.scrape_source        = update.source;
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+// ── Weekly scrape orchestrator ────────────────────────────────
+async function runWeeklyScrape() {
+  console.log("[suppliers] Weekly scrape starting…");
+  const data = loadSeedData();
+  let totalUpdated = 0;
+
+  // Tier 1: VREG (most authoritative)
+  const vreg = await scrapeVREG();
+  totalUpdated += applyScrapedUpdates(data, vreg);
+
+  // Tier 2: CallMePower
+  const cmp = await scrapeCallMePower();
+  totalUpdated += applyScrapedUpdates(data, cmp);
+
+  // Tier 3: Direct supplier pages
+  const direct = await scrapeSupplierPages();
+  totalUpdated += applyScrapedUpdates(data, direct);
+
+  saveSeedData(data);
+  cache.del("tariffs"); // force reload
+  console.log(`[suppliers] Scrape done — ${totalUpdated} rate(s) updated`);
+  return { updated: totalUpdated, vreg: Object.keys(vreg).length, cmp: Object.keys(cmp).length, direct: Object.keys(direct).length };
+}
+
+// ─────────────────────────────────────────────────────────────
+// SHARED RESULT BUILDER
+// ─────────────────────────────────────────────────────────────
+function buildResults(energyType, { consumption, region, epexAvg = 100, ttfAvg = 35, peakKw = 2.5, greenOnly = false }) {
+  const data    = getTariffs();
   const results = [];
 
-  for (const [supplierId, supplier] of Object.entries(data.suppliers)) {
+  for (const [sid, supplier] of Object.entries(data.suppliers)) {
     for (const plan of supplier.plans) {
-      if (plan.energy_type !== "electricity") continue;
+      if (plan.energy_type !== energyType) continue;
       if (greenOnly && !plan.green) continue;
-      if (!plan.regions.includes(region)) continue;
+      if (plan.regions && !plan.regions.includes(region)) continue;
 
-      const costs = calcAnnualCost({
-        energyRate:    plan.energy_rate_excl_vat,
-        markupCEkWh:   plan.markup_cEkWh,
-        standingCharge: plan.standing_charge_year,
-        consumption,
-        region,
-        peakKw,
-        epexAvg,
-      });
+      const costs = energyType === "electricity"
+        ? calcAnnualCostElec({ energyRate: plan.energy_rate_excl_vat, markupCEkWh: plan.markup_cEkWh, standingCharge: plan.standing_charge_year, consumption, region, peakKw, epexAvg })
+        : calcAnnualCostGas({ energyRate: plan.energy_rate_excl_vat, markupCEkWh: plan.markup_cEkWh, standingCharge: plan.standing_charge_year, consumption, region, ttfAvg });
 
       if (!costs) continue;
 
       const staleDays = plan.last_verified
-        ? Math.floor((Date.now() - new Date(plan.last_verified).getTime()) / 86400000)
+        ? Math.floor((Date.now() - new Date(plan.last_verified)) / 86400000)
         : 999;
 
       results.push({
-        supplier_id:   supplierId,
-        supplier_name: supplier.name,
-        supplier_logo: supplier.logo,
+        supplier_id:    sid,
+        supplier_name:  supplier.name,
+        supplier_logo:  supplier.logo,
         supplier_color: supplier.color,
-        supplier_url:  supplier.url,
-        plan_id:       plan.id,
-        plan_name:     plan.name,
-        type:          plan.type,
-        green:         plan.green,
-        duration:      plan.duration,
-        highlights:    plan.highlights,
-        formula:       plan.formula,
-        energy_rate:   plan.energy_rate_excl_vat,
-        markup_cEkWh:  plan.markup_cEkWh,
+        supplier_url:   supplier.url,
+        plan_id:        plan.id,
+        plan_name:      plan.name,
+        type:           plan.type,
+        green:          plan.green,
+        duration:       plan.duration,
+        highlights:     plan.highlights || [],
+        formula:        plan.formula,
+        energy_rate:    plan.energy_rate_excl_vat,
+        markup_cEkWh:   plan.markup_cEkWh,
         standing_charge: plan.standing_charge_year,
         costs,
         stale_days:    staleDays,
         last_verified: plan.last_verified,
         data_fresh:    staleDays < 14,
+        scrape_source: plan.scrape_source,
       });
     }
   }
 
-  // Sort by total annual cost
   results.sort((a, b) => a.costs.total - b.costs.total);
+  if (results.length) results[0].cheapest = true;
+  const cheapest = results[0]?.costs.total || 0;
+  results.forEach((r, i) => { r.rank = i + 1; r.savings_vs_cheapest = i === 0 ? 0 : r.costs.total - cheapest; });
 
-  // Mark cheapest
-  if (results.length > 0) results[0].cheapest = true;
+  return results;
+}
 
-  // Add rank + savings vs cheapest
-  const cheapestTotal = results[0]?.costs.total || 0;
-  results.forEach((r, i) => {
-    r.rank = i + 1;
-    r.savings_vs_cheapest = i === 0 ? 0 : r.costs.total - cheapestTotal;
-  });
+// ─────────────────────────────────────────────────────────────
+// API ROUTES
+// ─────────────────────────────────────────────────────────────
 
-  res.json({
-    success: true,
-    region,
-    consumption,
-    peak_kw: peakKw,
-    epex_avg: epexAvg,
-    data_updated: data._meta.updated,
-    next_scrape:  data._meta.next_scrape,
-    count: results.length,
-    results,
-  });
+// GET /api/suppliers/electricity
+router.get("/electricity", (req, res) => {
+  const consumption = parseInt(req.query.consumption) || 3500;
+  const region      = req.query.region  || "flanders";
+  const greenOnly   = req.query.green   === "true";
+  const epexAvg     = parseFloat(req.query.epex) || 100;
+  const peakKw      = parseFloat(req.query.peak_kw) || 2.5;
+
+  const results = buildResults("electricity", { consumption, region, epexAvg, peakKw, greenOnly });
+  const data    = getTariffs();
+  res.json({ success: true, region, consumption, peak_kw: peakKw, epex_avg: epexAvg,
+    data_updated: data._meta.updated, next_scrape: data._meta.next_scrape,
+    count: results.length, results });
 });
 
-// ── GET /api/suppliers/appliances ────────────────────────────
+// GET /api/suppliers/gas
+router.get("/gas", (req, res) => {
+  const consumption = parseFloat(req.query.consumption) || 13000;
+  const region      = req.query.region || "flanders";
+  const ttfAvg      = parseFloat(req.query.ttf) || 35;
+
+  const results = buildResults("gas", { consumption, region, ttfAvg });
+  const data    = getTariffs();
+  res.json({ success: true, region, consumption, ttf_avg: ttfAvg,
+    data_updated: data._meta.updated, next_scrape: data._meta.next_scrape,
+    count: results.length, results });
+});
+
+// GET /api/suppliers/appliances
 router.get("/appliances", (req, res) => {
   const data = getTariffs();
-  if (!data) return res.status(500).json({ success: false, error: "Data unavailable" });
-
-  res.json({
-    success: true,
-    appliances: Object.entries(data.appliances).map(([id, a]) => ({ id, ...a })),
-  });
+  res.json({ success: true, appliances: Object.entries(data.appliances).map(([id, a]) => ({ id, ...a })) });
 });
 
-// ── POST /api/suppliers/calculate ────────────────────────────
-// Body: { appliances: [{id, uses_per_week}], region, epex_avg, green_only }
+// GET /api/suppliers/gas-appliances
+router.get("/gas-appliances", (req, res) => {
+  const data = getTariffs();
+  res.json({ success: true, appliances: Object.entries(data.appliances_gas).map(([id, a]) => ({ id, ...a })) });
+});
+
+// POST /api/suppliers/calculate  (electricity)
 router.post("/calculate", (req, res) => {
   const { appliances: inputs = [], region = "flanders", epex_avg = 100, green_only = false } = req.body;
   if (!inputs.length) return res.status(400).json({ success: false, error: "No appliances provided" });
 
-  const consumption = calcConsumptionFromAppliances(inputs);
-  if (!consumption) return res.status(500).json({ success: false, error: "Calculation failed" });
-
-  // Now get supplier results for this consumption
-  const data = getTariffs();
-  const results = [];
-
-  for (const [supplierId, supplier] of Object.entries(data.suppliers)) {
-    for (const plan of supplier.plans) {
-      if (plan.energy_type !== "electricity") continue;
-      if (green_only && !plan.green) continue;
-      if (!plan.regions.includes(region)) continue;
-
-      const costs = calcAnnualCost({
-        energyRate:    plan.energy_rate_excl_vat,
-        markupCEkWh:   plan.markup_cEkWh,
-        standingCharge: plan.standing_charge_year,
-        consumption:   consumption.total_kwh,
-        region,
-        peakKw:        consumption.peak_kw,
-        epexAvg:       epex_avg,
-      });
-
-      if (!costs) continue;
-
-      results.push({
-        supplier_id:    supplierId,
-        supplier_name:  supplier.name,
-        supplier_logo:  supplier.logo,
-        supplier_color: supplier.color,
-        supplier_url:   supplier.url,
-        plan_id:        plan.id,
-        plan_name:      plan.name,
-        type:           plan.type,
-        green:          plan.green,
-        duration:       plan.duration,
-        highlights:     plan.highlights,
-        costs,
-      });
-    }
-  }
-
-  results.sort((a, b) => a.costs.total - b.costs.total);
-  if (results.length > 0) results[0].cheapest = true;
-  const cheapestTotal = results[0]?.costs.total || 0;
-  results.forEach((r, i) => { r.rank = i + 1; r.savings_vs_cheapest = i === 0 ? 0 : r.costs.total - cheapestTotal; });
-
-  res.json({
-    success: true,
-    consumption,
-    region,
-    plan_count: results.length,
-    results,
+  const consumption = calcConsumptionFromAppliances(inputs, "electricity");
+  const results     = buildResults("electricity", {
+    consumption: consumption.total_kwh, region, epexAvg: epex_avg,
+    peakKw: consumption.peak_kw, greenOnly: green_only,
   });
+
+  res.json({ success: true, consumption, region, plan_count: results.length, results });
 });
 
-// ── GET /api/suppliers/plans/:supplierId ─────────────────────
-router.get("/plans/:supplierId", (req, res) => {
-  const data = getTariffs();
-  if (!data) return res.status(500).json({ success: false });
-  const supplier = data.suppliers[req.params.supplierId];
-  if (!supplier) return res.status(404).json({ success: false, error: "Supplier not found" });
-  res.json({ success: true, supplier: { ...supplier } });
+// POST /api/suppliers/calculate-gas
+router.post("/calculate-gas", (req, res) => {
+  const { appliances: inputs = [], region = "flanders", ttf_avg = 35 } = req.body;
+  if (!inputs.length) return res.status(400).json({ success: false, error: "No appliances provided" });
+
+  const consumption = calcConsumptionFromAppliances(inputs, "gas");
+  const results     = buildResults("gas", { consumption: consumption.total_kwh, region, ttfAvg: ttf_avg });
+
+  res.json({ success: true, consumption, region, plan_count: results.length, results });
 });
 
-// ── GET /api/suppliers/meta ───────────────────────────────────
+// GET /api/suppliers/meta
 router.get("/meta", (req, res) => {
   const data = getTariffs();
-  if (!data) return res.status(500).json({ success: false });
   res.json({
     success: true,
     meta: data._meta,
     supplier_count: Object.keys(data.suppliers).length,
     plan_count: Object.values(data.suppliers).reduce((n, s) => n + s.plans.length, 0),
+    elec_plans: Object.values(data.suppliers).reduce((n, s) => n + s.plans.filter(p => p.energy_type === "electricity").length, 0),
+    gas_plans:  Object.values(data.suppliers).reduce((n, s) => n + s.plans.filter(p => p.energy_type === "gas").length, 0),
     suppliers: Object.entries(data.suppliers).map(([id, s]) => ({
-      id, name: s.name, logo: s.logo, color: s.color, plan_count: s.plans.length,
+      id, name: s.name, logo: s.logo, color: s.color,
+      elec_plans: s.plans.filter(p => p.energy_type === "electricity").length,
+      gas_plans:  s.plans.filter(p => p.energy_type === "gas").length,
     })),
   });
 });
 
-
-// ── GET /api/suppliers/gas ────────────────────────────────────
-router.get("/gas", (req, res) => {
-  const data = getTariffs();
-  if (!data) return res.status(500).json({ success: false, error: "Tariff data unavailable" });
-
-  const consumption = parseFloat(req.query.consumption) || 1700; // avg Belgian gas kWh/yr
-  const region      = req.query.region || "flanders";
-  const epexAvg     = parseFloat(req.query.ttf) || 35;           // TTF €/MWh
-
-  const gasGrid = (data.gas_grid_costs || {})[region] || { distribution_kWh: 0.0285, transport_kWh: 0.0042, levies_kWh: 0.0089 };
-  const VAT = 0.21; // gas VAT is 21% in Belgium
-
-  const results = [];
-  for (const [supplierId, supplier] of Object.entries(data.suppliers)) {
-    for (const plan of supplier.plans) {
-      if (plan.energy_type !== "gas") continue;
-      if (!plan.regions.includes(region)) continue;
-
-      let energyRate = plan.energy_rate_excl_vat;
-      if (!energyRate && plan.markup_cEkWh != null) {
-        energyRate = (epexAvg / 1000) + (plan.markup_cEkWh / 100);
-      }
-      if (!energyRate) continue;
-
-      const energyCost  = energyRate * consumption;
-      const gridCost    = (gasGrid.distribution_kWh + gasGrid.transport_kWh + gasGrid.levies_kWh) * consumption;
-      const subtotal    = energyCost + gridCost + plan.standing_charge_year;
-      const vat         = subtotal * VAT;
-      const total       = subtotal + vat;
-
-      results.push({
-        supplier_id:    supplierId,
-        supplier_name:  supplier.name,
-        supplier_logo:  supplier.logo,
-        supplier_color: supplier.color,
-        supplier_url:   supplier.url,
-        plan_id:        plan.id,
-        plan_name:      plan.name,
-        type:           plan.type,
-        green:          plan.green,
-        duration:       plan.duration,
-        highlights:     plan.highlights,
-        formula:        plan.formula,
-        energy_rate:    plan.energy_rate_excl_vat,
-        markup_cEkWh:   plan.markup_cEkWh,
-        standing_charge: plan.standing_charge_year,
-        costs: {
-          energy:   Math.round(energyCost),
-          grid:     Math.round(gridCost),
-          standing: Math.round(plan.standing_charge_year),
-          vat:      Math.round(vat),
-          total:    Math.round(total),
-          monthly:  Math.round(total / 12),
-          perKwh:   parseFloat((total / consumption * 100).toFixed(3)),
-        },
-      });
-    }
+// GET /api/suppliers/scrape  (manual trigger — Railway admin use)
+router.get("/scrape", async (req, res) => {
+  try {
+    const result = await runWeeklyScrape();
+    res.json({ success: true, ...result });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
   }
-
-  results.sort((a, b) => a.costs.total - b.costs.total);
-  if (results.length > 0) results[0].cheapest = true;
-  const cheapestTotal = results[0]?.costs.total || 0;
-  results.forEach((r, i) => { r.rank = i + 1; r.savings_vs_cheapest = i === 0 ? 0 : r.costs.total - cheapestTotal; });
-
-  res.json({ success: true, region, consumption, ttf_avg: epexAvg, count: results.length, results });
 });
 
 module.exports = { router, runWeeklyScrape };

@@ -252,7 +252,237 @@ function calcCost(rate, standing, consumption) {
   return { energy: Math.round(e), grid: Math.round(g), standing: Math.round(s), vat: Math.round(vat), total: Math.round(total), monthly: Math.round(total / 12), perKwh: (total / consumption * 100).toFixed(2) };
 }
 
-function SuppliersTab({ ttfPrice }) {
+
+// ── GAS TABS: Calculator + Compare ───────────────────────────
+const GAS_REGIONS = [
+  { id: "flanders", label: "Flanders", flag: "🔶" },
+  { id: "wallonia", label: "Wallonia",  flag: "🔷" },
+  { id: "brussels", label: "Brussels",  flag: "🏙️" },
+];
+const GAS_TYPE_COLOR = { variable: "#0D9488", fixed: "#06B6D4", dynamic: "#10B981" };
+const GAS_TYPE_LABEL = { variable: "Variable", fixed: "Fixed", dynamic: "Dynamic" };
+
+function GasBadge({ children, color }) {
+  return <span style={{ background: `${color}22`, color, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, whiteSpace: "nowrap" }}>{children}</span>;
+}
+
+function GasPlanCard({ plan, rank, expanded, setExpanded }) {
+  const isOpen = expanded === plan.plan_id;
+  return (
+    <div onClick={() => setExpanded(isOpen ? null : plan.plan_id)}
+      style={{ background: C.card, border: `1px solid ${plan.cheapest ? C.green : C.border}`, borderRadius: 14, padding: 14, marginBottom: 8, cursor: "pointer" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: `${plan.supplier_color}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+          {plan.supplier_logo}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+            <span style={{ color: C.light, fontSize: 13, fontWeight: 700 }}>{plan.supplier_name}</span>
+            <span style={{ color: C.muted, fontSize: 12 }}>{plan.plan_name}</span>
+            {plan.cheapest && <GasBadge color={C.green}>BEST</GasBadge>}
+            <GasBadge color={GAS_TYPE_COLOR[plan.type]}>{GAS_TYPE_LABEL[plan.type]}</GasBadge>
+          </div>
+          <div style={{ color: C.muted, fontSize: 11, marginTop: 2 }}>
+            {plan.energy_rate ? `${(plan.energy_rate*100).toFixed(3)} c€/kWh` : `TTF + ${plan.markup_cEkWh}c€`}
+            {" · "}€{plan.standing_charge}/yr standing
+          </div>
+        </div>
+        <div style={{ textAlign: "right", flexShrink: 0 }}>
+          <div style={{ color: plan.cheapest ? C.green : C.light, fontSize: 17, fontWeight: 800 }}>€{plan.costs.total}</div>
+          <div style={{ color: C.muted, fontSize: 11 }}>€{plan.costs.monthly}/mo</div>
+          {rank > 0 && <div style={{ color: C.red, fontSize: 10 }}>+€{plan.savings_vs_cheapest}/yr</div>}
+        </div>
+        <div style={{ color: C.muted }}>{isOpen ? "▲" : "▼"}</div>
+      </div>
+      {isOpen && (
+        <div style={{ marginTop: 12, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
+            {[["Energy",`€${plan.costs.energy}`,C.orange],["Grid",`€${plan.costs.grid}`,C.yellow],["Standing",`€${plan.costs.standing}`,C.muted],["VAT 21%",`€${plan.costs.vat}`,C.muted]].map(([l,v,col]) => (
+              <div key={l} style={{ background: "#0A2040", borderRadius: 8, padding: "8px 10px" }}>
+                <div style={{ color: C.muted, fontSize: 10 }}>{l}</div>
+                <div style={{ color: col, fontSize: 14, fontWeight: 700 }}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            <div style={{ flex: 1, background: "#0A2040", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ color: C.muted, fontSize: 10 }}>All-in tariff</div>
+              <div style={{ color: C.orange, fontSize: 14, fontWeight: 700 }}>{plan.costs.perKwh} c€/kWh</div>
+            </div>
+            <div style={{ flex: 1, background: "#0A2040", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ color: C.muted, fontSize: 10 }}>Contract</div>
+              <div style={{ color: C.light, fontSize: 13, fontWeight: 600 }}>{plan.duration}</div>
+            </div>
+          </div>
+          {plan.highlights?.map(h => <div key={h} style={{ color: C.muted, fontSize: 12, marginBottom: 3 }}>✓ {h}</div>)}
+          {plan.formula && (
+            <div style={{ background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.2)", borderRadius: 8, padding: "8px 12px", marginBottom: 10 }}>
+              <div style={{ color: C.muted, fontSize: 10, marginBottom: 2 }}>Pricing formula</div>
+              <div style={{ color: C.cyan || "#06B6D4", fontSize: 12, fontFamily: "monospace" }}>{plan.formula}</div>
+            </div>
+          )}
+          <a href={plan.supplier_url} target="_blank" rel="noopener noreferrer"
+            style={{ display: "block", background: `${plan.supplier_color}18`, border: `1px solid ${plan.supplier_color}44`, color: plan.supplier_color, borderRadius: 9, padding: "10px 0", textAlign: "center", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+            View gas tariff at {plan.supplier_name} →
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Gas Appliance Calculator ──────────────────────────────────
+function GasApplianceCalc({ ttfPrice }) {
+  const [appliances,  setAppliances]  = useState([]);
+  const [selections,  setSelections]  = useState({});
+  const [region,      setRegion]      = useState("flanders");
+  const [result,      setResult]      = useState(null);
+  const [loading,     setLoading]     = useState(false);
+  const [fetching,    setFetching]    = useState(true);
+
+  useEffect(() => {
+    setFetching(true);
+    fetch("/api/suppliers/gas-appliances")
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          setAppliances(d.appliances);
+          const defs = {};
+          d.appliances.forEach(a => { defs[a.id] = { selected: true, uses: a.default_uses_per_week }; });
+          setSelections(defs);
+        }
+      })
+      .finally(() => setFetching(false));
+  }, []);
+
+  const calculate = async () => {
+    setLoading(true);
+    try {
+      const inputs = Object.entries(selections).filter(([,v])=>v.selected).map(([id,v])=>({ id, uses_per_week: v.uses }));
+      const res = await fetch("/api/suppliers/calculate-gas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appliances: inputs, region, ttf_avg: ttfPrice || 35 }),
+      });
+      const data = await res.json();
+      if (data.success) setResult(data);
+    } catch(e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  const setSel = (id, patch) => setSelections(s => ({ ...s, [id]: { ...s[id], ...patch } }));
+
+  const [calcExpanded, setCalcExpanded] = useState(null);
+
+  if (result) return (
+    <div>
+      <button onClick={() => setResult(null)} style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.muted, borderRadius: 8, padding: "6px 14px", fontSize: 12, cursor: "pointer", marginBottom: 14 }}>← Recalculate</button>
+      <div style={{ background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.3)", borderRadius: 16, padding: 20, marginBottom: 16 }}>
+        <div style={{ color: C.orange, fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: "uppercase" }}>📊 Your estimated gas consumption</div>
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
+          <div>
+            <div style={{ color: C.muted, fontSize: 11 }}>Annual usage</div>
+            <div style={{ color: C.light, fontSize: 28, fontWeight: 900, fontFamily: "monospace" }}>
+              {result.consumption.total_kwh.toLocaleString()} <span style={{ fontSize: 13, color: C.muted }}>kWh</span>
+            </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ color: C.muted, fontSize: 11 }}>Household type</div>
+            <div style={{ color: C.light, fontSize: 13, fontWeight: 600, marginTop: 4 }}>{result.consumption.household_size}</div>
+          </div>
+        </div>
+        {result.consumption.breakdown?.length > 0 && result.consumption.breakdown.slice(0,5).map(b => (
+          <div key={b.id} style={{ marginBottom: 6 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 2 }}>
+              <span style={{ color: C.light }}>{b.icon} {b.label}</span>
+              <span style={{ color: C.muted }}>{b.annual_kwh} kWh ({b.pct}%)</span>
+            </div>
+            <div style={{ height: 4, background: C.border, borderRadius: 2 }}>
+              <div style={{ height: "100%", width: `${b.pct}%`, background: C.orange, borderRadius: 2 }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      {result.results[0] && (
+        <div style={{ background: "linear-gradient(135deg,#0A2040,#1A0A08)", border: `1px solid ${C.green}44`, borderRadius: 14, padding: 18, marginBottom: 16 }}>
+          <div style={{ color: C.green, fontSize: 11, fontWeight: 700, marginBottom: 4 }}>🏆 Cheapest gas plan for your usage</div>
+          <div style={{ color: C.light, fontSize: 18, fontWeight: 800 }}>{result.results[0].supplier_name} — {result.results[0].plan_name}</div>
+          <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
+            <div><div style={{ color: C.muted, fontSize: 11 }}>Annual all-in</div><div style={{ color: C.green, fontSize: 24, fontWeight: 900 }}>€{result.results[0].costs.total}</div></div>
+            <div><div style={{ color: C.muted, fontSize: 11 }}>Monthly</div><div style={{ color: C.light, fontSize: 22, fontWeight: 800 }}>€{result.results[0].costs.monthly}</div></div>
+          </div>
+        </div>
+      )}
+      <div style={{ color: C.light, fontSize: 14, fontWeight: 700, marginBottom: 10 }}>All {result.results.length} gas plans ranked</div>
+      {result.results.map((plan, i) => <GasPlanCard key={plan.plan_id} plan={plan} rank={i} expanded={calcExpanded} setExpanded={setCalcExpanded} />)}
+    </div>
+  );
+
+  if (fetching) return <div style={{ textAlign: "center", padding: 40, color: C.muted }}>Loading appliances…</div>;
+
+  return (
+    <div>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
+        <div style={{ color: C.light, fontSize: 14, fontWeight: 700, marginBottom: 12 }}>🏠 Your situation</div>
+        <div style={{ color: C.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Region</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {GAS_REGIONS.map(r => (
+            <button key={r.id} onClick={() => setRegion(r.id)}
+              style={{ flex: 1, padding: "8px 4px", borderRadius: 9, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                border: `1px solid ${region===r.id?C.orange:C.border}`, background: region===r.id?`${C.orange}22`:"#0A2040",
+                color: region===r.id?C.orange:C.muted }}>
+              {r.flag} {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ color: C.light, fontSize: 14, fontWeight: 700, marginBottom: 10 }}>🔥 Select & adjust your gas appliances</div>
+
+      {appliances.map(a => {
+        const sel = selections[a.id] || { selected: true, uses: a.default_uses_per_week };
+        return (
+          <div key={a.id} style={{ background: C.card, border: `1px solid ${sel.selected ? `${C.orange}44` : C.border}`, borderRadius: 12, padding: 12, marginBottom: 8, opacity: sel.selected ? 1 : 0.45, transition: "all 0.15s" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div onClick={() => setSel(a.id, { selected: !sel.selected })}
+                style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${sel.selected?C.orange:C.border}`, background: sel.selected?`${C.orange}22`:"transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {sel.selected && <span style={{ color: C.orange, fontSize: 13, lineHeight: 1 }}>✓</span>}
+              </div>
+              <span style={{ fontSize: 22, flexShrink: 0 }}>{a.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: C.light, fontSize: 13, fontWeight: 600 }}>{a.label}</div>
+                <div style={{ color: C.muted, fontSize: 11 }}>{a.kwh_per_use} kWh/use</div>
+              </div>
+              {sel.selected && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                  <button onClick={() => setSel(a.id, { uses: Math.max(1, sel.uses - 1) })}
+                    style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.border}`, background: "#0A2040", color: C.light, fontSize: 16, cursor: "pointer" }}>−</button>
+                  <div style={{ textAlign: "center", minWidth: 36 }}>
+                    <div style={{ color: C.light, fontWeight: 700, fontSize: 14 }}>{sel.uses}×</div>
+                    <div style={{ color: C.muted, fontSize: 9 }}>per week</div>
+                  </div>
+                  <button onClick={() => setSel(a.id, { uses: Math.min(21, sel.uses + 1) })}
+                    style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.border}`, background: "#0A2040", color: C.light, fontSize: 16, cursor: "pointer" }}>+</button>
+                </div>
+              )}
+            </div>
+            {sel.selected && <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}`, color: C.muted, fontSize: 11 }}>💡 {a.tip}</div>}
+          </div>
+        );
+      })}
+
+      {ttfPrice && <div style={{ background: `${C.orange}11`, border: `1px solid ${C.orange}33`, borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: C.muted }}>🔥 Current TTF: <strong style={{ color: C.orange }}>€{ttfPrice?.toFixed(2)}/MWh</strong> — used in dynamic plan calculations</div>}
+
+      <button onClick={calculate} disabled={loading}
+        style={{ width: "100%", padding: "14px 0", borderRadius: 12, border: "none", background: `linear-gradient(135deg,${C.orange},#C2410C)`, color: "#fff", fontSize: 15, fontWeight: 800, cursor: loading?"default":"pointer", marginTop: 4, boxShadow: `0 4px 20px ${C.orange}44`, opacity: loading ? 0.7 : 1 }}>
+        {loading ? "Calculating…" : "🔥 Find My Best Gas Plan →"}
+      </button>
+    </div>
+  );
+}
+
+// ── Manual Gas Compare ────────────────────────────────────────
+function GasManualCompare({ ttfPrice }) {
   const [consumption, setConsumption] = useState(13000);
   const [inputVal,    setInputVal]    = useState("13000");
   const [region,      setRegion]      = useState("flanders");
@@ -260,164 +490,102 @@ function SuppliersTab({ ttfPrice }) {
   const [loading,     setLoading]     = useState(false);
   const [expanded,    setExpanded]    = useState(null);
 
-  const REGIONS = [
-    { id: "flanders", label: "Flanders", flag: "🔶" },
-    { id: "wallonia", label: "Wallonia",  flag: "🔷" },
-    { id: "brussels", label: "Brussels",  flag: "🏙️" },
-  ];
-
   useEffect(() => {
     setLoading(true);
-    const ttf = ttfPrice || 35;
-    fetch(`/api/suppliers/gas?consumption=${consumption}&region=${region}&ttf=${ttf}`)
+    fetch(`/api/suppliers/gas?consumption=${consumption}&region=${region}&ttf=${ttfPrice || 35}`)
       .then(r => r.json())
       .then(d => { if (d.success) setResults(d.results); })
-      .catch(() => {})
       .finally(() => setLoading(false));
   }, [consumption, region, ttfPrice]);
 
-  const cheapest = results[0];
-
   return (
     <div>
-      {/* Consumption input */}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
-        <div style={{ color: C.light, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>⚙️ Your situation</div>
+        <div style={{ color: C.light, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>⚙️ Settings</div>
         <div style={{ color: C.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Annual gas consumption</div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-          <input type="number" value={inputVal}
-            onChange={e => setInputVal(e.target.value)}
-            onBlur={() => { const v = Math.min(Math.max(parseInt(inputVal) || 13000, 500), 50000); setInputVal(String(v)); setConsumption(v); }}
+          <input type="number" value={inputVal} onChange={e => setInputVal(e.target.value)}
+            onBlur={() => { const v = Math.min(Math.max(parseInt(inputVal)||13000,500),50000); setInputVal(String(v)); setConsumption(v); }}
             style={{ flex: 1, background: "#0A2040", border: `1px solid ${C.border}`, borderRadius: 8, color: C.light, fontSize: 16, padding: "10px 12px", outline: "none" }} />
-          <div style={{ color: C.muted, fontSize: 13, whiteSpace: "nowrap" }}>kWh/year</div>
+          <span style={{ color: C.muted, fontSize: 13, whiteSpace: "nowrap" }}>kWh/yr</span>
         </div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-          {[5000, 10000, 13000, 20000].map(v => (
+        <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+          {[5000,10000,13000,20000].map(v => (
             <button key={v} onClick={() => { setConsumption(v); setInputVal(String(v)); }}
-              style={{ flex: 1, padding: "6px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${consumption === v ? C.orange : C.border}`, background: consumption === v ? `${C.orange}22` : "transparent", color: consumption === v ? C.orange : C.muted }}>
-              {v >= 1000 ? `${v/1000}k` : v}
+              style={{ flex: 1, padding: "6px 0", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                border: `1px solid ${consumption===v?C.orange:C.border}`, background: consumption===v?`${C.orange}22`:"transparent",
+                color: consumption===v?C.orange:C.muted }}>
+              {v>=1000?`${v/1000}k`:v}
             </button>
           ))}
         </div>
-        <div style={{ color: C.muted, fontSize: 11, marginBottom: 12 }}>🏠 Avg Belgian house: ~13,000 kWh/yr · Flat: ~5,000 · With heat pump: 20,000+</div>
-
-        {/* Region */}
+        <div style={{ color: C.muted, fontSize: 11, marginBottom: 12 }}>🏠 Flat: ~5,000 · Avg house: ~13,000 · Large + heat pump: ~20,000+ kWh/yr</div>
         <div style={{ color: C.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Region</div>
         <div style={{ display: "flex", gap: 6 }}>
-          {REGIONS.map(r => (
+          {GAS_REGIONS.map(r => (
             <button key={r.id} onClick={() => setRegion(r.id)}
-              style={{ flex: 1, padding: "7px 4px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${region === r.id ? C.orange : C.border}`, background: region === r.id ? `${C.orange}22` : "#0A2040", color: region === r.id ? C.orange : C.muted }}>
+              style={{ flex: 1, padding: "7px 4px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                border: `1px solid ${region===r.id?C.orange:C.border}`, background: region===r.id?`${C.orange}22`:"#0A2040",
+                color: region===r.id?C.orange:C.muted }}>
               {r.flag} {r.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* TTF context */}
-      {ttfPrice && (
-        <div style={{ background: `${C.orange}11`, border: `1px solid ${C.orange}33`, borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 12, color: C.muted }}>
-          🔥 Calculations use current TTF: <strong style={{ color: C.orange }}>€{ttfPrice?.toFixed(2)}/MWh</strong>
-        </div>
-      )}
+      {ttfPrice && <div style={{ background: `${C.orange}11`, border: `1px solid ${C.orange}33`, borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: C.muted }}>🔥 TTF: <strong style={{ color: C.orange }}>€{ttfPrice?.toFixed(2)}/MWh</strong></div>}
 
-      {loading ? (
-        <div style={{ textAlign: "center", padding: 30, color: C.muted }}>Loading gas plans…</div>
-      ) : (
+      {loading ? <div style={{ textAlign: "center", padding: 30, color: C.muted }}>Loading gas plans…</div> : (
         <>
-          {/* Cheapest banner */}
-          {cheapest && (
-            <div style={{ background: "linear-gradient(135deg,#0A2040,#1A2A10)", border: `1px solid ${C.green}44`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
-              <div style={{ color: C.green, fontSize: 11, fontWeight: 700, marginBottom: 4 }}>🏆 CHEAPEST FOR {consumption.toLocaleString()} kWh/yr</div>
-              <div style={{ color: C.light, fontSize: 18, fontWeight: 800 }}>{cheapest.supplier_name} — {cheapest.plan_name}</div>
-              <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
-                <div><div style={{ color: C.muted, fontSize: 11 }}>Annual all-in</div><div style={{ color: C.green, fontSize: 22, fontWeight: 800 }}>€{cheapest.costs.total}</div></div>
-                <div><div style={{ color: C.muted, fontSize: 11 }}>Monthly</div><div style={{ color: C.light, fontSize: 22, fontWeight: 800 }}>€{cheapest.costs.monthly}</div></div>
-                <div><div style={{ color: C.muted, fontSize: 11 }}>All-in rate</div><div style={{ color: C.light, fontSize: 15, fontWeight: 700 }}>{cheapest.costs.perKwh} c€/kWh</div></div>
+          {results[0] && (
+            <div style={{ background: "linear-gradient(135deg,#0A2040,#1A0A08)", border: `1px solid ${C.green}44`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
+              <div style={{ color: C.green, fontSize: 11, fontWeight: 700, marginBottom: 4 }}>🏆 CHEAPEST · {consumption.toLocaleString()} kWh/yr</div>
+              <div style={{ color: C.light, fontSize: 18, fontWeight: 800 }}>{results[0].supplier_name} — {results[0].plan_name}</div>
+              <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
+                <div><div style={{ color: C.muted, fontSize: 11 }}>Annual</div><div style={{ color: C.green, fontSize: 24, fontWeight: 900 }}>€{results[0].costs.total}</div></div>
+                <div><div style={{ color: C.muted, fontSize: 11 }}>Monthly</div><div style={{ color: C.light, fontSize: 22, fontWeight: 800 }}>€{results[0].costs.monthly}</div></div>
+                <div><div style={{ color: C.muted, fontSize: 11 }}>All-in</div><div style={{ color: C.light, fontSize: 15, fontWeight: 700 }}>{results[0].costs.perKwh} c€/kWh</div></div>
               </div>
             </div>
           )}
-
-          {/* Plan list */}
-          {results.map((plan, i) => (
-            <div key={plan.plan_id} onClick={() => setExpanded(expanded === plan.plan_id ? null : plan.plan_id)}
-              style={{ background: C.card, border: `1px solid ${plan.cheapest ? C.green : C.border}`, borderRadius: 14, padding: 16, marginBottom: 8, cursor: "pointer" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 9, background: `${plan.supplier_color}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
-                  {plan.supplier_logo}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ color: C.light, fontSize: 14, fontWeight: 700 }}>{plan.supplier_name}</span>
-                    <span style={{ color: C.muted, fontSize: 12 }}>{plan.plan_name}</span>
-                    {plan.cheapest && <span style={{ background: `${C.green}22`, color: C.green, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>CHEAPEST</span>}
-                    <span style={{ background: `${plan.supplier_color}22`, color: plan.supplier_color, fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 6 }}>
-                      {plan.type === "dynamic" ? "Dynamic" : plan.type === "fixed" ? "Fixed" : "Variable"}
-                    </span>
-                  </div>
-                  <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>
-                    {plan.energy_rate ? `${(plan.energy_rate * 100).toFixed(3)} c€/kWh` : `TTF + ${plan.markup_cEkWh}c€/kWh`}
-                    {" · "}€{plan.standing_charge}/yr standing
-                  </div>
-                </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ color: plan.cheapest ? C.green : C.light, fontSize: 17, fontWeight: 800 }}>€{plan.costs.total}</div>
-                  <div style={{ color: C.muted, fontSize: 11 }}>€{plan.costs.monthly}/mo</div>
-                  {i > 0 && <div style={{ color: C.red, fontSize: 10 }}>+€{plan.savings_vs_cheapest}/yr</div>}
-                </div>
-                <div style={{ color: C.muted }}>{expanded === plan.plan_id ? "▲" : "▼"}</div>
-              </div>
-
-              {expanded === plan.plan_id && (
-                <div style={{ marginTop: 14, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-                    {[
-                      ["Energy cost",    `€${plan.costs.energy}`,   C.orange],
-                      ["Grid / network", `€${plan.costs.grid}`,     C.yellow],
-                      ["Standing charge",`€${plan.costs.standing}`, C.muted],
-                      ["VAT (21%)",      `€${plan.costs.vat}`,      C.muted],
-                    ].map(([l, v, col]) => (
-                      <div key={l} style={{ background: "#0A2040", borderRadius: 8, padding: "8px 12px" }}>
-                        <div style={{ color: C.muted, fontSize: 11 }}>{l}</div>
-                        <div style={{ color: col, fontSize: 14, fontWeight: 700 }}>{v}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                    <div style={{ flex: 1, background: "#0A2040", borderRadius: 8, padding: "8px 12px" }}>
-                      <div style={{ color: C.muted, fontSize: 11 }}>All-in tariff</div>
-                      <div style={{ color: C.orange, fontSize: 15, fontWeight: 700 }}>{plan.costs.perKwh} c€/kWh</div>
-                    </div>
-                    <div style={{ flex: 1, background: "#0A2040", borderRadius: 8, padding: "8px 12px" }}>
-                      <div style={{ color: C.muted, fontSize: 11 }}>Contract</div>
-                      <div style={{ color: C.light, fontSize: 14, fontWeight: 600 }}>{plan.duration}</div>
-                    </div>
-                  </div>
-                  {plan.highlights?.map(h => <div key={h} style={{ color: C.muted, fontSize: 12, marginBottom: 3 }}>✓ {h}</div>)}
-                  {plan.formula && (
-                    <div style={{ background: "#0A1830", borderRadius: 8, padding: "6px 10px", margin: "8px 0", color: C.cyan, fontSize: 12, fontFamily: "monospace" }}>
-                      {plan.formula}
-                    </div>
-                  )}
-                  <a href={plan.supplier_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: "block", background: `${plan.supplier_color}22`, border: `1px solid ${plan.supplier_color}55`, color: plan.supplier_color, borderRadius: 9, padding: "10px 0", textAlign: "center", fontSize: 13, fontWeight: 700, textDecoration: "none", marginTop: 10 }}>
-                    View gas tariff at {plan.supplier_name} →
-                  </a>
-                  {i > 0 && <div style={{ marginTop: 10, color: C.muted, fontSize: 12, textAlign: "center" }}>€{plan.savings_vs_cheapest} more per year than {cheapest.supplier_name}</div>}
-                </div>
-              )}
-            </div>
-          ))}
-          <div style={{ color: C.muted, fontSize: 11, textAlign: "center", marginTop: 8, lineHeight: 1.6 }}>
-            Includes energy + Fluxys + Fluvius/ORES (avg) + levies + 21% VAT.<br />
-            Tariff data updated weekly · Always verify on supplier website before switching.
-          </div>
+          {results.map((plan, i) => <GasPlanCard key={plan.plan_id} plan={plan} rank={i} expanded={expanded} setExpanded={setExpanded} />)}
         </>
       )}
+      <div style={{ color: C.muted, fontSize: 11, textAlign: "center", marginTop: 8, lineHeight: 1.6 }}>
+        Includes energy + Fluxys/ORES grid + levies + 21% VAT.<br />Verify on supplier website before switching.
+      </div>
     </div>
   );
 }
 
-// ── ALERTS ───────────────────────────────────────────────────
+// ── SuppliersTab wrapper ──────────────────────────────────────
+const GAS_SUPPLIER_TABS = [
+  { id: "calculator", label: "🔥 Calculator", desc: "Appliances → consumption → best plan" },
+  { id: "compare",    label: "📊 Compare",    desc: "Enter kWh manually → all plans" },
+];
+
+function SuppliersTab({ ttfPrice, isMobile }) {
+  const [tab, setTab] = useState("calculator");
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 4, marginBottom: 16, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 4 }}>
+        {GAS_SUPPLIER_TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            style={{ flex: 1, padding: "10px 8px", borderRadius: 9, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer",
+              background: tab===t.id?"rgba(255,255,255,0.1)":"transparent",
+              color: tab===t.id?"#fff":"#667", textAlign: "center" }}>
+            <div>{t.label}</div>
+            {!isMobile && <div style={{ fontSize: 10, color: tab===t.id?"#889":"#445", marginTop: 2 }}>{t.desc}</div>}
+          </button>
+        ))}
+      </div>
+      {tab === "calculator" && <GasApplianceCalc ttfPrice={ttfPrice} />}
+      {tab === "compare"    && <GasManualCompare ttfPrice={ttfPrice} />}
+    </div>
+  );
+}
+
+
 function AlertsTab({ user, isGuest, onSignIn }) {
   const { updatePreferences } = useAuth();
   const prefs = user?.preferences || {};
@@ -573,7 +741,7 @@ export default function GasTab({ user, isGuest, onSignIn, isMobile, mobileTab, s
       {activeTab === "today"     && <TodayTab     current={current} history={history} />}
       {activeTab === "tomorrow"  && <TomorrowTab  history={history} />}
       {activeTab === "week"      && <WeekTab />}
-      {activeTab === "suppliers" && <SuppliersTab ttfPrice={current?.price} />}
+      {activeTab === "suppliers" && <SuppliersTab ttfPrice={current?.price} isMobile={isMobile} />}
       {activeTab === "alerts"    && <AlertsTab    user={user} isGuest={isGuest} onSignIn={onSignIn} />}
     </div>
   );
