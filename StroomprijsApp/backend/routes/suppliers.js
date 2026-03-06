@@ -21,13 +21,52 @@ const path      = require("path");
 const cache    = new NodeCache({ stdTTL: 3600 * 6 }); // 6hr cache
 const SEED_FILE = path.join(__dirname, "../data/tariffs.json");
 
+
+// ── Embedded seed data (fallback if tariffs.json not deployed) ─────────────
+const EMBEDDED_TARIFFS = {
+  "_meta": { "source": "Embedded seed Q1 2026", "updated": "2026-03-05", "next_scrape": "2026-03-12", "currency": "EUR", "vat_rate": 0.06 },
+  "grid_costs": {
+    "flanders":  { "distribution_kWh": 0.0487, "capacity_kW_monthly": 53.90, "transport_kWh": 0.0089, "levies_kWh": 0.0312 },
+    "wallonia":  { "distribution_kWh": 0.0521, "transport_kWh": 0.0089, "levies_kWh": 0.0289 },
+    "brussels":  { "distribution_kWh": 0.0498, "transport_kWh": 0.0089, "levies_kWh": 0.0341 }
+  },
+  "suppliers": {
+    "engie":         { "id":"engie",         "name":"Engie",         "logo":"🔵","color":"#009DE0","url":"https://www.engie.be",         "plans": [{ "id":"engie-comfort",   "name":"Comfort",      "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1021,"standing_charge_year":96.00, "green":true, "highlights":["Monthly indexed","No exit fee","100% renewable"],"formula":"EPEX_SPP × 1.02 + 2.1","last_verified":"2026-02-01"},{"id":"engie-fix-12","name":"Fix 12","type":"fixed","energy_type":"electricity","duration":"12 months","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1089,"standing_charge_year":96.00,"green":true,"highlights":["Price guarantee 12 months","Early exit €75"],"formula":null,"last_verified":"2026-02-01"}] },
+    "luminus":       { "id":"luminus",       "name":"Luminus",       "logo":"🟡","color":"#FFD100","url":"https://www.luminus.be",       "plans": [{ "id":"luminus-green",   "name":"Green Flex",   "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0998,"standing_charge_year":89.00, "green":true, "highlights":["EDF Group","100% Belgian wind & solar"],"formula":"EPEX_SPP × 0.98 + 1.8","last_verified":"2026-02-01"},{"id":"luminus-fix-24","name":"Fix 24","type":"fixed","energy_type":"electricity","duration":"24 months","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1045,"standing_charge_year":89.00,"green":true,"highlights":["Price locked 2 years","Early exit €150"],"formula":null,"last_verified":"2026-02-01"}] },
+    "bolt":          { "id":"bolt",          "name":"Bolt Energy",   "logo":"⚡","color":"#00C896","url":"https://www.bolt.eu/en-be/energy","plans": [{ "id":"bolt-dynamic",    "name":"Dynamic",      "type":"dynamic", "energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":null,"markup_cEkWh":0.3,"standing_charge_year":72.00,"green":true,"highlights":["EPEX hourly prices","Lowest markup 0.3 c€/kWh","Best for EV"],"formula":"EPEX_hour + 0.3 c€/kWh","last_verified":"2026-02-01"},{"id":"bolt-flex","name":"Flex","type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0965,"standing_charge_year":72.00,"green":true,"highlights":["Monthly EPEX average","No exit fee"],"formula":"EPEX_SPP + 0.5","last_verified":"2026-02-01"}] },
+    "totalenergies": { "id":"totalenergies", "name":"TotalEnergies", "logo":"🔴","color":"#F04E23","url":"https://www.totalenergies.be",  "plans": [{ "id":"total-comfort",   "name":"Comfort",      "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1034,"standing_charge_year":84.00,"green":false,"highlights":["Monthly indexed","Combined gas+elec discount"],"formula":"EPEX_SPP × 1.01 + 1.9","last_verified":"2026-02-01"},{"id":"total-fix-12","name":"Fix 12","type":"fixed","energy_type":"electricity","duration":"12 months","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1098,"standing_charge_year":84.00,"green":false,"highlights":["12-month price guarantee"],"formula":null,"last_verified":"2026-02-01"},{"id":"total-green","name":"Green Comfort","type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1052,"standing_charge_year":84.00,"green":true,"highlights":["100% renewable","Monthly indexed"],"formula":"EPEX_SPP × 1.01 + 2.1","last_verified":"2026-02-01"}] },
+    "eneco":         { "id":"eneco",         "name":"Eneco",         "logo":"🟢","color":"#00A651","url":"https://www.eneco.be",         "plans": [{ "id":"eneco-stroom",    "name":"Stroom",       "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0989,"standing_charge_year":99.00, "green":true, "highlights":["100% wind energy","Dutch parent company"],"formula":"EPEX_SPP × 0.97 + 1.6","last_verified":"2026-02-01"},{"id":"eneco-vast","name":"Vast 1 jaar","type":"fixed","energy_type":"electricity","duration":"12 months","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1041,"standing_charge_year":99.00,"green":true,"highlights":["Price certainty","Exit fee €95"],"formula":null,"last_verified":"2026-02-01"}] },
+    "mega":          { "id":"mega",          "name":"Mega",          "logo":"🟣","color":"#7C3AED","url":"https://www.mega.be",          "plans": [{ "id":"mega-online",     "name":"Online",       "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0887,"standing_charge_year":108.00,"green":false,"highlights":["Lowest energy rate","Online-only management"],"formula":"EPEX_SPP × 0.91 - 2.5","last_verified":"2026-02-01"},{"id":"mega-online-green","name":"Online Green","type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.0912,"standing_charge_year":108.00,"green":true,"highlights":["100% renewable","Low rate"],"formula":"EPEX_SPP × 0.91 - 2.2","last_verified":"2026-02-01"}] },
+    "octaplus":      { "id":"octaplus",      "name":"Octa+",         "logo":"🟠","color":"#F97316","url":"https://www.octaplus.be",      "plans": [{ "id":"octa-flex",       "name":"Flex",         "type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1008,"standing_charge_year":91.20, "green":false,"highlights":["Belgian independent","No exit fee"],"formula":"EPEX_SPP + 1.4","last_verified":"2026-02-01"},{"id":"octa-green","name":"Green Flex","type":"variable","energy_type":"electricity","duration":"indefinite","regions":["flanders","wallonia","brussels"],"energy_rate_excl_vat":0.1029,"standing_charge_year":91.20,"green":true,"highlights":["100% Belgian green energy","No exit fee"],"formula":"EPEX_SPP + 1.6","last_verified":"2026-02-01"}] }
+  },
+  "appliances": {
+    "washing_machine": {"label":"Washing machine","icon":"👕","kwh_per_use":0.9, "default_uses_per_week":4,"peak_kw":2.0,"tip":"Run at 30°C or off-peak to save"},
+    "dryer":           {"label":"Dryer",           "icon":"🌀","kwh_per_use":2.5, "default_uses_per_week":2,"peak_kw":2.5,"tip":"Air-dry when possible"},
+    "dishwasher":      {"label":"Dishwasher",      "icon":"🍽️","kwh_per_use":1.05,"default_uses_per_week":7,"peak_kw":1.8,"tip":"Use eco mode & run off-peak"},
+    "ev_charging":     {"label":"EV charging",     "icon":"🚗","kwh_per_use":15.0,"default_uses_per_week":3,"peak_kw":7.4,"tip":"Schedule overnight charging"},
+    "heat_pump":       {"label":"Heat pump / boiler","icon":"🌡️","kwh_per_use":8.0,"default_uses_per_week":7,"peak_kw":3.5,"tip":"Program heating schedules"},
+    "fridge_freezer":  {"label":"Fridge/freezer",  "icon":"🧊","kwh_per_use":1.2, "default_uses_per_week":7,"peak_kw":0.15,"tip":"Check door seals regularly"},
+    "oven":            {"label":"Oven / hob",       "icon":"🍳","kwh_per_use":1.5, "default_uses_per_week":5,"peak_kw":2.2,"tip":"Use residual heat & batch cook"},
+    "lighting":        {"label":"Lighting",         "icon":"💡","kwh_per_use":0.5, "default_uses_per_week":7,"peak_kw":0.3,"tip":"Switch to LED — 80% savings"},
+    "tv_electronics":  {"label":"TV / electronics", "icon":"📺","kwh_per_use":0.3, "default_uses_per_week":7,"peak_kw":0.2,"tip":"Use smart plugs to kill standby"}
+  }
+};
+
 // ── Load seed data ────────────────────────────────────────────
 function loadSeedData() {
   try {
+    // Auto-create data dir + seed file if missing (e.g. first Railway deploy)
+    const dir = path.dirname(SEED_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(SEED_FILE)) {
+      console.log("[suppliers] tariffs.json not found — writing embedded seed data");
+      fs.writeFileSync(SEED_FILE, JSON.stringify(EMBEDDED_TARIFFS, null, 2), "utf8");
+    }
     return JSON.parse(fs.readFileSync(SEED_FILE, "utf8"));
   } catch (e) {
     console.error("[suppliers] Failed to load seed data:", e.message);
-    return null;
+    // Last resort: return embedded data directly
+    return EMBEDDED_TARIFFS;
   }
 }
 
