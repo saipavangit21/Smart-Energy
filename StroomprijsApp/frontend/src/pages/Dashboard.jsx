@@ -4,7 +4,7 @@
  * Bottom navigation on mobile, full header on desktop
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
@@ -41,14 +41,6 @@ const NAV_ITEMS = [
 
 
 // ── Energy Type Toggle ────────────────────────────────────────
-/**
- * SupplierCompare.jsx
- * 
- * Full supplier comparison with appliance-based consumption calculator
- * Tabs: Calculator · Compare · Plans
- */
-import { useState, useEffect, useCallback } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const C = {
   bg:     "#060B14",
