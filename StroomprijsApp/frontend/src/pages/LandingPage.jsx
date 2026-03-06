@@ -19,7 +19,7 @@ const faqs = [
   { q: "Is my data safe?", a: "All data is stored in the EU (GDPR compliant). We never sell your data or show ads. You can delete your account at any time." },
 ];
 
-export default function LandingPage({ onGetStarted }) {
+export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   return (
     <div style={{ minHeight: "100vh", background: "#060B14", color: "#E8EDF5", fontFamily: "'DM Sans', system-ui, sans-serif", overflowX: "hidden" }}>
 
@@ -53,6 +53,12 @@ export default function LandingPage({ onGetStarted }) {
             onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(13,148,136,0.5)"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(13,148,136,0.4)"; }}>
             Start for Free →
+          </button>
+          <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
+            style={{ padding: "16px 36px", borderRadius: 50, fontSize: 16, fontWeight: 700, background: "rgba(13,148,136,0.12)", border: "1px solid rgba(13,148,136,0.35)", color: "#0D9488", cursor: "pointer", transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.22)"; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.12)"; e.currentTarget.style.color = "#0D9488"; }}>
+            ⚡ Try Calculator
           </button>
           <button onClick={onGetStarted} style={{ padding: "16px 36px", borderRadius: 50, fontSize: 16, fontWeight: 700, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#aaa", cursor: "pointer", transition: "all 0.2s" }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "#fff"; }}

@@ -591,7 +591,7 @@ function EnergyToggle({ type, onChange }) {
   );
 }
 
-export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn }) {
+export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn, onOpenCalculator }) {
   const { user, updatePreferences, logout, authFetch } = useAuth();
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
   const { current } = useCurrentPrice();
@@ -711,6 +711,10 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                 <div style={{ fontSize: 9, color: "#556" }}>NOW /MWh</div>
               </div>
             )}
+            <button onClick={() => onOpenCalculator && onOpenCalculator(energyType)}
+              style={{ padding: "6px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "1px solid rgba(13,148,136,0.35)", background: "rgba(13,148,136,0.12)", color: "#0D9488", cursor: "pointer", whiteSpace: "nowrap" }}>
+              🔌 Calculator
+            </button>
             <button onClick={() => setShowMenu(m => !m)} style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
               {(user?.name || user?.email || "?")[0].toUpperCase()}
             </button>
@@ -742,6 +746,12 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                   <div style={{ fontSize: 11, color: "#778" }}>{lbl?.emoji} {lbl?.text}{retailKwh ? ` · ${supplier}: €${retailKwh.toFixed(4)}/kWh` : ""}</div>
                 </div>
               )}
+              <button onClick={() => onOpenCalculator && onOpenCalculator(energyType)}
+                style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, border: "1px solid rgba(13,148,136,0.35)", background: "rgba(13,148,136,0.1)", color: "#0D9488", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.2)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.1)"; }}>
+                🔌 Plan Calculator
+              </button>
               <div style={{ position: "relative" }}>
                 {isGuest ? (
                   <button onClick={onSignIn} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(13,148,136,0.15)", border: "1px solid rgba(13,148,136,0.3)", borderRadius: 12, padding: "9px 18px", cursor: "pointer", color: "#0D9488", fontWeight: 700, fontSize: 13 }}>
