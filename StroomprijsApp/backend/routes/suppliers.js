@@ -216,7 +216,7 @@ function calcAnnualCostElec({ energyRate, markupCEkWh, standingCharge, consumpti
   if (rate == null) return null;
 
   const grid   = getTariffs().grid_costs[region] || getTariffs().grid_costs.flanders;
-  const VAT    = 0.21; // Belgian electricity VAT
+  const VAT    = 0.06; // Belgian electricity VAT — permanently 6% since April 2023 (excise duties raised to compensate)
 
   let gridCost;
   if (region === "flanders") {
@@ -251,7 +251,7 @@ function calcAnnualCostGas({ energyRate, markupCEkWh, standingCharge, consumptio
 
   const data   = getTariffs();
   const grid   = data.gas_grid_costs[region] || data.gas_grid_costs.flanders;
-  const VAT    = 0.21;
+  const VAT    = 0.06; // Belgian gas VAT — permanently 6% since April 2023, no increase until 2030
 
   const energyCost = rate * consumption;
   const gridCost   = (grid.distribution_kWh + grid.transport_kWh + grid.levies_kWh + (grid.excise_kWh || 0)) * consumption;
