@@ -91,13 +91,7 @@ export default function App() {
 
     return (
       <CalculatorPage
-        energyType={energyType}
         isGuest={!user}
-        onRequestSignIn={(cb) => {
-          setPostSignInCb(() => cb);
-          setShowAuth(true);
-        }}
-        onSwitchType={(type) => navigate(`/calculator/${type}`)}
         onBack={() => navigate("/")}
       />
     );
