@@ -502,7 +502,7 @@ function SupplierCompare({ currentMwh, isMobile }) {
 }
 
 
-function EnergyToggle({ type, onChange }) {
+function EnergyToggle({ type, onChange, onOpenCalculator }) {
   return (
     <div style={{
       display: "flex",
@@ -575,6 +575,21 @@ function EnergyToggle({ type, onChange }) {
             animation: "pulse-gas 2s infinite",
           }} />
         )}
+      </button>
+
+      {/* Calculator button */}
+      <button onClick={() => onOpenCalculator && onOpenCalculator(type)} style={{
+        display: "flex", alignItems: "center", gap: 7,
+        padding: "8px 16px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "transparent",
+        color: "#4A6070",
+      }}
+        onMouseEnter={e => { e.currentTarget.style.color = "#0D9488"; e.currentTarget.style.border = "1px solid rgba(13,148,136,0.35)"; e.currentTarget.style.background = "rgba(13,148,136,0.08)"; }}
+        onMouseLeave={e => { e.currentTarget.style.color = "#4A6070"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}>
+        🔌 Calculator
       </button>
 
       <style>{`
@@ -722,7 +737,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           </div>
           {/* Energy toggle row */}
           <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 10px" }}>
-            <EnergyToggle type={energyType} onChange={switchType} />
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={onOpenCalculator} />
           </div>
         </div>
       )}
@@ -737,7 +752,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
               <span style={{ fontSize: 12, color: "#445" }}>{energyType === "gas" ? "TTF · ICE EEX" : (source || "Energy-Charts")} · Belgium</span>
             </div>
-            <EnergyToggle type={energyType} onChange={switchType} />
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={onOpenCalculator} />
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {mwh != null && (
                 <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
