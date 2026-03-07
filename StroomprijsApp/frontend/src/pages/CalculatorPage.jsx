@@ -696,7 +696,9 @@ function Results({ results, data, onRestart }) {
   const [expanded, setExpanded] = useState(null);
   const hasElec = results.electricity?.success;
   const hasGas  = results.gas?.success;
-  const annualBill = data.currentBill ? parseFloat(data.currentBill) * 12 : null;
+  const annualBill = (data.currentBill && parseFloat(data.currentBill) > 0)
+    ? parseFloat(data.currentBill) * 12
+    : null;
 
   const ConsumptionCard = ({ cons, isGas }) => {
     const accent = isGas ? C.orange : C.teal;

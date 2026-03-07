@@ -45,7 +45,7 @@ const EMBEDDED_TARIFFS = {
   "grid_costs": {
     "flanders": {
       "distribution_kWh":  0.0487,
-      "capacity_kW_monthly": 53.90,   // Flanders capacity tariff €/kW/month
+      "capacity_kW_monthly": 4.48,    // Flanders capacity tariff €/kW/month (CREG 2024)
       "transport_kWh":     0.0089,
       "levies_kWh":        0.0312,
       "prosumer_kWh":      0.0          // 0 if no solar
@@ -216,7 +216,7 @@ function calcAnnualCostElec({ energyRate, markupCEkWh, standingCharge, consumpti
   if (rate == null) return null;
 
   const grid   = getTariffs().grid_costs[region] || getTariffs().grid_costs.flanders;
-  const VAT    = 0.06;
+  const VAT    = 0.21; // Belgian electricity VAT
 
   let gridCost;
   if (region === "flanders") {
