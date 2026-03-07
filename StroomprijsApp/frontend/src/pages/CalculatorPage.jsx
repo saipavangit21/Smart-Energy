@@ -385,7 +385,7 @@ function ElecCalculator({ isGuest, onRequestSignIn }) {
               </div>
               {sel.selected && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                  <button onClick={() => setSel(a.id, { uses: Math.max(1, sel.uses - 1) })}
+                  <button onClick={() => { const n = Math.max(0, sel.uses - 1); setSel(a.id, n === 0 ? { uses: 0, selected: false } : { uses: n }); }}
                     style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.border}`, background: C.card2, color: C.light, fontSize: 16, cursor: "pointer", lineHeight: 1 }}>−</button>
                   <div style={{ textAlign: "center", minWidth: 36 }}>
                     <div style={{ color: C.light, fontWeight: 700, fontSize: 14 }}>{sel.uses}×</div>
@@ -526,7 +526,7 @@ function GasCalculator({ isGuest, onRequestSignIn }) {
               </div>
               {sel.selected && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                  <button onClick={() => setSel(a.id, { uses: Math.max(1, sel.uses - 1) })}
+                  <button onClick={() => { const n = Math.max(0, sel.uses - 1); setSel(a.id, n === 0 ? { uses: 0, selected: false } : { uses: n }); }}
                     style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.border}`, background: C.card2, color: C.light, fontSize: 16, cursor: "pointer", lineHeight: 1 }}>−</button>
                   <div style={{ textAlign: "center", minWidth: 36 }}>
                     <div style={{ color: C.light, fontWeight: 700, fontSize: 14 }}>{sel.uses}×</div>

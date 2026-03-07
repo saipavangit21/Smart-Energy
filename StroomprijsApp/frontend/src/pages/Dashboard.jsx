@@ -173,7 +173,7 @@ function ApplianceCalculator({ currentMwh, isMobile }) {
               </div>
               {sel.selected && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                  <button onClick={() => setSel(a.id, { uses: Math.max(1, sel.uses - 1) })}
+                  <button onClick={() => { const n = Math.max(0, sel.uses - 1); setSel(a.id, n === 0 ? { uses: 0, selected: false } : { uses: n }); }}
                     style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#E2E8F0", fontSize: 16, cursor: "pointer" }}>−</button>
                   <div style={{ textAlign: "center", minWidth: 36 }}>
                     <div style={{ color: "#E2E8F0", fontWeight: 700, fontSize: 14 }}>{sel.uses}×</div>
