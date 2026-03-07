@@ -1,81 +1,92 @@
-# ⚡ SmartPrice.be — Belgium Real-Time Electricity Prices
+# 🇧🇪 SmartPrice.be
 
-> Real-time EPEX Spot prices for Belgium. Built for dynamic contract holders who want to know the cheapest hours to run appliances, charge EVs, and save money.
+> **Free Belgian energy price tracker** — real-time EPEX Spot electricity & TTF gas prices, plan calculator for all 7 suppliers, and email price alerts.
 
-🌐 **Live at:** [smartprice.be](https://smartprice.be)
+🌐 **Live:** [smartprice.be](https://smartprice.be)  
+⚡ **Electricity Calculator:** [smartprice.be/calculator/electricity](https://smartprice.be/calculator/electricity)  
+🔥 **Gas Calculator:** [smartprice.be/calculator/gas](https://smartprice.be/calculator/gas)
 
-Built with: **React + Vite** (frontend) · **Node.js/Express** (backend) · **PostgreSQL/Supabase** (database) · **Railway** (backend hosting) · **Vercel** (frontend hosting)
+**Stack:** React 18 + Vite 5 · Node.js 20 + Express 4 · PostgreSQL (Supabase) · Railway (backend) · Vercel (frontend)
 
 ---
 
-## 🗂 Project Structure
+## 📁 Project Structure
 
 ```
-smartprice/
+StroomprijsApp/
 ├── backend/
-│   ├── server.js              ← Express API + CORS + price cron
-│   ├── email-alerts.js        ← Hourly alert checker (Resend)
-│   ├── db.js                  ← Supabase PostgreSQL pool
-│   ├── routes/
-│   │   ├── auth.js            ← Cookie-based login/register/refresh/exchange
-│   │   └── google.js          ← Google OAuth flow
-│   ├── middleware/
-│   │   └── auth.js            ← requireAuth middleware (cookie + Bearer fallback)
-│   └── .env.example
+│   ├── server.js                  ← Express entry, CORS, weekly scrape cron
+│   ├── db.js                      ← Supabase PostgreSQL pool
+│   ├── email-alerts.js            ← Hourly price alert checker (Resend)
+│   └── routes/
+│       ├── auth.js                ← Register, login, Google OAuth, /me
+│       ├── prices.js              ← EPEX Spot electricity prices
+│       ├── gas.js                 ← TTF gas prices + 7-day history
+│       ├── suppliers.js           ← Tariffs, scraper, appliance calculators
+│       └── alerts.js              ← User alert CRUD + email dispatch
+│
 └── frontend/
-    ├── public/
-    │   ├── manifest.json      ← PWA manifest
-    │   └── icons/             ← PWA icons (192 + 512px)
-    ├── src/
-    │   ├── App.jsx            ← Routing + auth flow + guest mode
-    │   ├── pages/
-    │   │   ├── LandingPage.jsx    ← Public homepage
-    │   │   ├── Dashboard.jsx      ← Main app (prices, alerts, history)
-    │   │   ├── AuthPage.jsx       ← Login / Register / Continue as Guest
-    │   │   ├── AuthCallback.jsx   ← OAuth token exchange → httpOnly cookies
-    │   │   └── PrivacyPolicy.jsx  ← GDPR privacy policy
-    │   ├── context/
-    │   │   └── AuthContext.jsx    ← Cookie-based auth state + silent refresh
-    │   ├── hooks/
-    │   │   └── usePrices.js       ← Data fetching hooks
-    │   └── utils/
-    │       └── priceUtils.js      ← Price colours, labels, supplier formulas
-    ├── index.html             ← PWA meta tags + SEO
-    └── vite.config.js
+    ├── vercel.json                ← API proxy + SPA fallback
+    ├── vite.config.js
+    └── src/
+        ├── App.jsx                ← Pathname routing (no react-router)
+        ├── context/
+        │   └── AuthContext.jsx    ← httpOnly cookie auth state
+        ├── hooks/
+        │   └── usePrices.js       ← Price data fetching hooks
+        └── pages/
+            ├── LandingPage.jsx    ← Public homepage with calculator CTAs
+            ├── Dashboard.jsx      ← Electricity dashboard (all tabs)
+            ├── GasTab.jsx         ← Gas dashboard (TTF + gas suppliers)
+            ├── CalculatorPage.jsx ← Standalone /calculator/electricity|gas
+            ├── AuthPage.jsx       ← Login / Register / Guest
+            ├── AuthCallback.jsx   ← Google OAuth token → httpOnly cookie
+            ├── ProfilePage.jsx    ← User preferences
+            └── PrivacyPolicy.jsx  ← GDPR privacy page
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### Backend
+### 1. Clone
+
+```bash
+git clone https://github.com/saipavangit21/Smart-Energy
+cd "Smart-Energy/StroomprijsApp"
+```
+
+### 2. Backend
+
 ```bash
 cd backend
 npm install
-cp .env.example .env
-npm run dev                   # http://localhost:3001
+cp .env.example .env        # fill in your values — see env vars below
+npm run dev                 # → http://localhost:3001
 ```
 
-### Frontend
+### 3. Frontend
+
 ```bash
 cd frontend
 npm install
-npm run dev                   # http://localhost:5173
+npm run dev                 # → http://localhost:5173
 ```
 
-Vite proxies `/api/*` and `/auth/*` to the backend automatically.
+> Vite proxies `/api/*` and `/auth/*` to the backend automatically in development.
 
 ---
 
 ## 🔑 Environment Variables
 
-### Backend `.env`
+### `backend/.env`
+
 ```env
 # Database
-DATABASE_URL=postgresql://...          # Supabase connection string
+DATABASE_URL=postgresql://...           # Supabase connection string
 
 # Auth
-JWT_SECRET=your_secret
+JWT_SECRET=your_jwt_secret
 JWT_REFRESH_SECRET=your_refresh_secret
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
@@ -85,59 +96,210 @@ GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 GOOGLE_CALLBACK_URL=https://your-backend.railway.app/auth/google/callback
 
-# Email alerts (Resend)
+# Email alerts
 RESEND_API_KEY=re_...
 FROM_EMAIL=alerts@smartprice.be
+
+# Gas prices (TTF) — falls back to mock data if missing
+OIL_PRICE_API_KEY=...
 
 # App
 FRONTEND_URL=https://smartprice.be
 BACKEND_URL=https://your-backend.railway.app
-NODE_ENV=production                    # required for secure cookies
+NODE_ENV=production                     # Required for secure cookies
 PORT=3000
 ```
 
 ---
 
-## 📡 API Endpoints
+## 🌐 Application Routes
 
-| Endpoint | Auth | Description |
-|---|---|---|
-| `GET /api/health` | — | Server health check |
-| `GET /api/prices/today` | — | Today + tomorrow hourly EPEX prices |
-| `GET /api/current` | — | Current hour price |
-| `GET /api/cheapest?hours=5` | — | N cheapest upcoming hours |
-| `GET /api/prices/history?days=7` | — | 7-day historical averages |
-| `GET /api/user/dashboard` | ✅ Cookie | Prices + user preferences |
-| `POST /auth/register` | — | Name + password register (email optional) |
-| `POST /auth/login` | — | Login by name or email + password |
-| `POST /auth/refresh` | — | Rotate access + refresh cookies |
-| `POST /auth/exchange` | — | Exchange OAuth URL tokens → httpOnly cookies |
-| `POST /auth/logout` | — | Clear cookies + invalidate refresh token |
-| `GET /auth/me` | ✅ Cookie | Current user + preferences |
-| `PUT /auth/preferences` | ✅ Cookie | Save supplier, alert settings, alert email |
-| `PUT /auth/profile` | ✅ Cookie | Update name / email |
-| `PUT /auth/change-password` | ✅ Cookie | Change password |
-| `GET /auth/google` | — | Start Google OAuth |
-| `GET /auth/google/callback` | — | Google OAuth callback → sets cookies |
-| `DELETE /auth/delete-account` | ✅ Cookie | GDPR account deletion |
+| URL | Visibility | Description |
+|-----|-----------|-------------|
+| `/` | Public | Landing page (logged-out) · Dashboard (logged-in / guest) |
+| `/calculator/electricity` | **Public** | Electricity plan calculator — no login required |
+| `/calculator/gas` | **Public** | Gas plan calculator — no login required |
+| `/oauth/callback` | Internal | Google OAuth redirect handler |
+| `/privacy` | Public | GDPR privacy policy |
+
+> The calculator is accessible to everyone. Sign-in is prompted **only** when tapping "Find My Best Plan" — the calculation runs first and results appear immediately after login (no data lost).
 
 ---
 
-## 🗄 Database Schema (Supabase PostgreSQL)
+## 📡 API Reference
+
+### Price Endpoints
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/prices/today` | — | Today's hourly EPEX Spot prices (Belgium) |
+| `GET /api/prices/tomorrow` | — | Tomorrow's day-ahead prices (available ~13:00 CET) |
+| `GET /api/prices/history?days=7` | — | 7-day historical daily averages |
+| `GET /api/current` | — | Current hour price |
+| `GET /api/cheapest?hours=5` | — | N cheapest upcoming hours |
+| `GET /api/gas/ttf` | — | Current TTF gas price (€/MWh) |
+| `GET /api/gas/history?days=7` | — | TTF 7-day history (mock fallback if no API key) |
+
+### Supplier & Calculator Endpoints
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/suppliers/appliances` | — | 12 electricity appliances |
+| `GET /api/suppliers/gas-appliances` | — | 5 gas appliances |
+| `GET /api/suppliers/electricity` | — | Ranked electricity plans for given consumption |
+| `GET /api/suppliers/gas` | — | Ranked gas plans for given consumption |
+| `POST /api/suppliers/calculate` | — | Appliances → consumption → ranked electricity plans |
+| `POST /api/suppliers/calculate-gas` | — | Appliances → consumption → ranked gas plans |
+| `GET /api/suppliers/meta` | — | Tariff freshness, supplier/plan counts |
+
+#### `POST /api/suppliers/calculate` — Request body
+
+```json
+{
+  "appliances": [{ "id": "washing_machine", "uses_per_week": 5 }],
+  "region": "flanders",
+  "epex_avg": 95,
+  "green_only": false
+}
+```
+
+#### `POST /api/suppliers/calculate-gas` — Request body
+
+```json
+{
+  "appliances": [{ "id": "central_heating", "uses_per_week": 7 }],
+  "region": "flanders",
+  "ttf_avg": 35
+}
+```
+
+### Auth Endpoints
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `POST /auth/register` | — | Email + password registration |
+| `POST /auth/login` | — | Login → sets httpOnly cookies |
+| `POST /auth/refresh` | Cookie | Rotate access + refresh tokens |
+| `POST /auth/logout` | Cookie | Clear cookies + invalidate DB token |
+| `GET /auth/me` | Cookie | Current user + preferences |
+| `PUT /auth/preferences` | Cookie | Save supplier, alert settings |
+| `PUT /auth/profile` | Cookie | Update name / email |
+| `PUT /auth/change-password` | Cookie | Change password |
+| `DELETE /auth/delete-account` | Cookie | GDPR full account deletion |
+| `GET /auth/google` | — | Start Google OAuth flow |
+| `GET /auth/google/callback` | — | Google OAuth callback → sets cookies |
+
+---
+
+## ⚡ Cost Calculation Engine
+
+### Electricity — Flanders (capacity tariff)
+
+```
+total = (peak_kW × €53.90/kW/month × 12)
+      + (distribution €0.0289 + transport €0.0112 + levies €0.0185) × kWh/yr
+      + standing_charge
+      + 6% VAT on all components
+```
+
+`peak_kW` = highest `peak_kw` value among the user's selected appliances.
+
+### Electricity — Wallonia / Brussels (kWh tariff)
+
+```
+total = (distribution + transport + levies + excise) × kWh/yr
+      + standing_charge
+      + 6% VAT
+```
+
+### Dynamic electricity plans
+
+```
+energy_cost = ((epex_avg_€/MWh ÷ 1000) + markup_c€/kWh ÷ 100) × kWh/yr
+```
+
+### Gas — all regions
+
+```
+total = (Fluxys €0.0058 + Fluvius/ORES €0.0128 + levies €0.0045 + excise €0.0028) × kWh/yr
+      + standing_charge
+      + 21% VAT on all components
+```
+
+### Consumption from appliances
+
+```
+electricity_kWh = Σ(kwh_per_use × uses_per_week × 52) + 600   ← 600 kWh baseline
+peak_kW         = max(selected appliances' peak_kw values)
+
+gas_kWh         = Σ(kwh_per_use × uses_per_week × 52) + 500   ← 500 kWh pilot lights
+```
+
+---
+
+## 🏢 Suppliers Covered
+
+All **7 Belgian suppliers** for both electricity and gas:
+
+| Supplier | Electricity | Gas | Plan Types |
+|----------|-------------|-----|------------|
+| Engie | ✅ 3 plans | ✅ 3 plans | Variable · Fixed · Dynamic |
+| Luminus | ✅ 3 plans | ✅ 2 plans | Variable · Fixed |
+| Bolt Energy | ✅ 3 plans | ✅ 2 plans | Variable · Dynamic |
+| TotalEnergies | ✅ 3 plans | ✅ 2 plans | Variable · Fixed |
+| Eneco | ✅ 3 plans | ✅ 2 plans | Variable · Dynamic |
+| Mega | ✅ 2 plans | ✅ 2 plans | Variable · Fixed |
+| Octa+ | ✅ 3 plans | ✅ 2 plans | Variable · Fixed · Dynamic |
+
+Variable plan rates are scraped weekly from **callmepower.be**. Fixed/dynamic plans use embedded Q1 2026 seed data updated each quarter.
+
+---
+
+## 🔌 Appliance Reference
+
+### Electricity (12 appliances)
+
+| Appliance | kWh/use | Peak kW | Default/week |
+|-----------|---------|---------|--------------|
+| Washing Machine | 0.9 | 2.2 | 5× |
+| Tumble Dryer | 2.5 | 2.5 | 3× |
+| Dishwasher | 1.2 | 2.0 | 5× |
+| EV Charging (7.4 kW) | 35.0 | 7.4 | 3× |
+| EV Fast Charge (22 kW) | 50.0 | 22.0 | 1× |
+| Heat Pump | 12.0 | 3.5 | 7× |
+| Fridge/Freezer | 1.2 | 0.15 | 7× |
+| Oven/Hob | 1.8 | 3.0 | 5× |
+| Lighting | 0.5 | 0.4 | 7× |
+| TV/Electronics | 0.3 | 0.5 | 7× |
+| PC/Office | 0.6 | 0.3 | 5× |
+| Pool Pump | 3.0 | 1.5 | 4× |
+
+### Gas (5 appliances)
+
+| Appliance | kWh/use | Default/week |
+|-----------|---------|--------------|
+| Central Heating | 45.0 | 7× |
+| Hot Water Boiler | 8.0 | 7× |
+| Gas Hob | 0.6 | 7× |
+| Gas Dryer | 1.2 | 3× |
+| Gas Fireplace | 3.5 | 3× |
+
+---
+
+## 🗄 Database Schema
 
 ```sql
 CREATE TABLE users (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email         TEXT UNIQUE,                -- nullable: email not required at signup
-  name          TEXT NOT NULL,
-  password_hash TEXT,                       -- null for Google OAuth users
-  preferences   JSONB DEFAULT '{}',        -- supplier, alertEnabled, alertThreshold, alertEmail, lastAlertSent
-  providers     JSONB DEFAULT '{}',        -- { google: true, googleId: "...", itsme: false }
-  fluvius       JSONB DEFAULT '{}',        -- reserved for Phase 4 smart meter data
+  email         TEXT UNIQUE,
+  name          TEXT,
+  password_hash TEXT,                    -- null for Google OAuth users
+  preferences   JSONB DEFAULT '{}',     -- supplier, alertEnabled, alertThreshold, alertEmail
+  providers     JSONB DEFAULT '{}',     -- { google: true, googleId: "..." }
   created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Allow null emails but enforce uniqueness when present
+-- Enforce unique email only when present
 CREATE UNIQUE INDEX users_email_unique ON users (email) WHERE email IS NOT NULL;
 
 CREATE TABLE refresh_tokens (
@@ -151,223 +313,117 @@ CREATE TABLE refresh_tokens (
 
 ---
 
-## 🔐 Security Model
-
-SmartPrice uses **httpOnly cookies** for token storage — tokens are never accessible to JavaScript.
+## 🔐 Security
 
 | Feature | Implementation |
-|---|---|
-| Passwords | bcrypt (cost 12) — never stored in plain text |
-| Access token | httpOnly cookie · 15 min expiry · `secure` + `sameSite: none` in production |
-| Refresh token | httpOnly cookie · 7 day expiry · stored hashed in DB |
-| Token rotation | Refresh rotates both tokens on every use |
-| XSS protection | httpOnly cookies cannot be read by injected scripts |
-| CSRF protection | `sameSite: none` + CORS credentials whitelist |
-| Google OAuth | Tokens passed via URL only during callback, immediately exchanged for cookies via `/auth/exchange` |
-| Email optional | No PII collected unless user enables alerts |
+|---------|---------------|
+| Passwords | bcrypt cost 12 — never stored plaintext |
+| Access token | httpOnly cookie · 15 min · `secure` + `sameSite: none` in prod |
+| Refresh token | httpOnly cookie · 7 days · stored hashed in DB |
+| Token rotation | Both tokens rotate on every refresh call |
+| XSS protection | httpOnly cookies unreadable by JavaScript |
+| Google OAuth | Tokens URL-only during callback, immediately exchanged for cookies |
 
 ### GDPR Status
-- ✅ Data stored in EU (Railway EU West + Supabase EU)
-- ✅ Privacy policy live at smartprice.be
-- ✅ Delete account endpoint (full data removal)
-- ✅ Email only collected when user explicitly enables alerts
-- ✅ Passwords never stored — only bcrypt hash
-- ⚠️ Sign Supabase DPA at supabase.com/dpa (recommended)
 
-### Required Railway environment variable
-```
-NODE_ENV=production
-```
-Without this, cookies won't have `secure: true` and cross-origin auth will fail.
+- ✅ Data stored in EU (Railway EU West + Supabase EU)
+- ✅ Privacy policy at `/privacy`
+- ✅ `DELETE /auth/delete-account` full data removal
+- ✅ Email only collected when alerts are explicitly enabled
+- ✅ No ads, no data selling
 
 ---
 
 ## 📊 Data Sources
 
-| Source | Auth needed | Coverage | License |
-|---|---|---|---|
-| **Energy-Charts** (Fraunhofer ISE) | ❌ None | EPEX Spot BE hourly | Free, attribution required |
-| **Elia Open Data** | ❌ None | Belgium grid, day-ahead | CC BY 4.0 |
-| **ENTSO-E** | ✅ Free token | EU-wide day-ahead | Free with registration |
+| Source | Auth | Coverage | License |
+|--------|------|----------|---------|
+| Energy-Charts.info | None | EPEX Spot Belgium hourly | Free, attribution required |
+| Elia Open Data | None | Belgium grid day-ahead | CC BY 4.0 |
+| ICE / EEX (TTF) | API key | Natural gas (TTF) daily | Paid |
+| callmepower.be | None | Variable tariff scraping | Public HTML |
 
-### Data flow
+---
+
+## 🚢 Deployment
+
+### Backend → Railway
+
 ```
-Browser → React Frontend
-            ↓ /api/prices/today
-         Node.js Backend (Railway)
-            ↓ picks fastest source with auto-fallback
-    ┌──────────────────────────────────┐
-    │ 1. Energy-Charts (primary)       │
-    │ 2. Elia Open Data (fallback)     │
-    │ 3. ENTSO-E (backup, needs key)   │
-    └──────────────────────────────────┘
-            ↓ cached 15 min (NodeCache)
-         JSON → Recharts renders graph
+1. Push to main branch
+2. Railway auto-detects Node.js → runs npm start
+3. Set env vars in Railway dashboard
+4. Live URL: https://smart-energy-production-aef3.up.railway.app
 ```
 
-**Attribution required in UI:**
+### Frontend → Vercel
+
 ```
-Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E
-Not financial advice
+1. Connect GitHub repo to Vercel
+2. Root Directory: StroomprijsApp/frontend
+3. Vercel auto-detects Vite → runs npm run build
+4. vercel.json handles:
+   - /api/*  → proxied to Railway backend
+   - /*      → index.html (SPA fallback, enables /calculator/* routes)
+```
+
+### Git push (Windows)
+
+```powershell
+cd "C:\Users\kvmou\OneDrive\Documents\GitHub\Smart Energy\StroomprijsApp"
+git add .
+git commit -m "your message"
+git push origin main
 ```
 
 ---
 
-## 👤 Authentication Flow
+## ✅ Features (March 2026)
 
-### Email/Password (name-based, email optional)
-```
-Register: name + password → POST /auth/register → cookies set
-Login:    name or email + password → POST /auth/login → cookies set
-Session:  GET /auth/me (cookie sent automatically) → user object
-Refresh:  POST /auth/refresh (sp_refresh cookie) → new cookies
-Logout:   POST /auth/logout → cookies cleared + DB token deleted
-```
-
-### Google OAuth (cross-origin safe)
-```
-1. User clicks "Continue with Google"
-2. GET /auth/google → redirect to Google consent screen
-3. Google → GET /auth/google/callback (backend)
-4. Backend creates/finds user, generates JWT tokens
-5. Redirect to /oauth/callback?access_token=...&refresh_token=...
-6. AuthCallback.jsx POSTs to POST /auth/exchange
-7. Backend verifies tokens, sets httpOnly cookies, clears URL
-8. Redirect to / → AuthContext picks up session via /auth/me
-```
-
-### Guest Mode
-Users can browse prices without an account via "Continue as Guest".
-Alerts and preferences require sign-in. Guest banner shown in dashboard.
-
----
-
-## 🔔 Email Alerts
-
-Powered by **Resend** from `alerts@smartprice.be`:
-- Checks prices at the top of every hour
-- Emails users whose alert threshold is exceeded
-- Alert email stored in `preferences.alertEmail` (separate from login email)
-- Blocks duplicate alert emails already used by other accounts
-- Skips re-alerting within the same hour (`lastAlertSent` in preferences)
-
----
-
-## 📱 PWA (Progressive Web App)
-
-SmartPrice is installable as a native-like app:
-- `manifest.json` with `display: standalone`
-- 192×192 and 512×512 icons
-- Theme colour: `#0D9488` (teal)
-- Android Chrome shows "Add to Home Screen" automatically
-
----
-
-## 🏗 Production Deployment
-
-| Layer | Service | Notes |
-|---|---|---|
-| Frontend | Vercel | Auto-deploy from `main` branch |
-| Backend | Railway (EU West) | Auto-deploy, env vars in dashboard |
-| Database | Supabase (PostgreSQL) | Free tier, EU region |
-| Email | Resend | `smartprice.be` domain verified |
-| Domain | Nomeo.be | DNS → Vercel A record + CNAME |
-| Auth | Google OAuth 2.0 | Consent screen pending Google review |
-
-### DNS Records (Nomeo → Vercel)
-```
-A     @    76.76.21.21
-CNAME www  cname.vercel-dns.com
-```
-
-### CORS (server.js)
-```
-https://smartprice.be
-https://www.smartprice.be
-https://smart-energy-six.vercel.app
-*.vercel.app                           ← all Vercel preview deployments
-http://localhost:5173
-http://localhost:4173
-```
-
-### Key npm dependencies (backend)
-```
-express · cors · cookie-parser · bcryptjs · jsonwebtoken
-pg · express-rate-limit · node-cache · axios · resend
-```
-
----
-
-## ✅ What's Live (March 2026)
-
-- [x] Real-time EPEX Spot price chart (hourly, deduplicated)
+- [x] Real-time EPEX Spot electricity price chart
+- [x] TTF gas prices with 7-day history
+- [x] ⚡ / 🔥 energy type toggle with live indicator
+- [x] 5 cheapest hours finder
 - [x] Today / Tomorrow / History / Best Hours / Suppliers / Alerts tabs
-- [x] Graph + Table toggle on price chart
+- [x] Graph + Table toggle on price charts
+- [x] **Electricity Plan Calculator** — `/calculator/electricity`
+- [x] **Gas Plan Calculator** — `/calculator/gas`
+- [x] Calculator in ⚡ · 🔥 · 🔌 nav toggle on dashboard
+- [x] Calculator CTAs on landing page (both electricity + gas)
+- [x] Sign-in gate on calculator results (deferred — calc runs before login prompt)
+- [x] 7 Belgian suppliers: Engie · Luminus · Bolt · TotalEnergies · Eneco · Mega · Octa+
+- [x] Flanders capacity tariff (peak kW detection)
+- [x] Wallonia / Brussels kWh-based grid tariff
+- [x] Gas 21% VAT + Fluxys/ORES breakdown
+- [x] Weekly tariff scraper (callmepower.be)
 - [x] Email + Google OAuth login
-- [x] **Name-only registration — email optional**
-- [x] **Guest mode — browse without account**
-- [x] **httpOnly cookie auth — XSS safe, tokens never in localStorage**
+- [x] Guest mode — browse without account
 - [x] Price alerts by email (Resend, `alerts@smartprice.be`)
-- [x] Alert email separate from login — added only when enabling alerts
-- [x] Duplicate alert email detection (checks both email column + preferences)
-- [x] Supplier comparison (Bolt, Engie, TotalEnergies, EDF Luminus, Lampiris)
-- [x] 7-day history with clickable daily breakdown
-- [x] Mobile-first UI with bottom navigation
+- [x] Mobile-first UI + bottom navigation
 - [x] PWA — installable on Android/iOS
-- [x] GDPR: Privacy policy + delete account
-- [x] Public landing page (logged-out visitors)
-- [x] Full rebrand: StroomSlim → SmartPrice.be
+- [x] GDPR: privacy policy + delete account
 
 ---
 
 ## 🗺 Roadmap
 
-### Phase 2 — Real Bill Calculator (next)
-- Postcode input → Fluvius/ORES/RESA network costs per region
-- Show total estimated bill = EPEX spot + grid tariff + taxes
-- Unique value vs Mijnenergie.be (they don't cover dynamic contracts)
+### Near term
+- [ ] Save calculator configuration to user profile
+- [ ] "Compare my current bill" — upload PDF → extract consumption → show savings
+- [ ] Web push notifications (no app store needed)
 
-### Phase 3 — Affiliate Monetisation
-- "Switch to supplier" referral links (€30–80 commission per switch)
-- Bolt Energy, Engie, TotalEnergies affiliate programmes
-- No CREG registration needed for referral model
-
-### Phase 4 — Expansion
-- Gas price tracking
-- Web push notifications (no app store needed)
-- French language toggle (NL/FR)
-- itsme auth + Fluvius smart meter sync (EAN-based personal consumption)
-
-### Phase 5 — Full Comparator (Mijnenergie-style)
-- Fixed vs dynamic contract comparison
-- CREG registration as official energy comparator
-- Multi-country: Netherlands, France
+### Later
+- [ ] French language toggle (NL/FR)
+- [ ] Postcode-based exact grid costs (per municipality)
+- [ ] Affiliate switch links (€30–80 referral commission)
+- [ ] itsme auth + Fluvius smart meter sync (EAN-based personal consumption)
+- [ ] CREG registration as official comparator
 
 ---
 
-## 🇧🇪 CREG Compliance
+## 📜 License & Credits
 
-Current status: **No registration needed** — SmartPrice displays public price data and is not a regulated energy advisor or broker.
-
-If adding supplier switching (Phase 5), CREG registration is recommended:
-- Free registration: [creg.be](https://www.creg.be)
-- Makes SmartPrice an officially recognised comparator
-- Required to be listed on government energy portals
-
----
-
-## 🔐 itsme Integration (Phase 4)
-
-For Belgian digital identity login + Fluvius smart meter access:
-1. Apply at: [itsme-id.com/business](https://www.itsme-id.com/business)
-2. Protocol: OpenID Connect (OIDC)
-3. Timeline: ~8–12 weeks for partnership agreement
-4. Enables: personal consumption data via EAN code
-
----
-
-## 📜 License & Attribution
-
-- **Code**: Private / proprietary
-- **Data**: See sources above — all require attribution
-- **Contact**: hello@smartprice.be
+- **Code:** Private / proprietary  
+- **Price data:** Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E · ICE EEX  
+- **Contact:** hello@smartprice.be  
+- **Not financial advice** — always verify tariffs on supplier websites before switching
