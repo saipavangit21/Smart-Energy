@@ -4,6 +4,7 @@
  * Step 1: Energy types   → Step 2: Appliances → Step 3: Usage & situation → Step 4: Your details → Results
  */
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useAuth } from "../context/AuthContext";
 
 // ─── Design tokens ────────────────────────────────────────────
 const C = {
@@ -481,22 +482,26 @@ function Step3({ data, onChange, onNext, onBack }) {
 }
 
 // ─── STEP 4 · Personal details ────────────────────────────────
-function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
-  const set = (k, v) => onChange({ [k]: v });
-  const canGo = isGuest ? (data.firstName?.trim() && data.email?.trim()) : true;
-
-  const Field = ({ label, required, fieldKey, type = "text", placeholder, hint, prefix }) => (
+// ─── Field — defined OUTSIDE Step4 so it never remounts on re-render ─
+function Field({ label, required, fieldKey, type = "text", placeholder, hint, prefix, value, onChange }) {
+  return (
     <div>
       <div style={{ color: C.muted, fontSize: 11, marginBottom: 5 }}>
         {label} {required && <span style={{ color: C.red }}>*</span>}
       </div>
       <div style={{ position: "relative" }}>
-        {prefix && <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: C.muted, fontSize: 14, pointerEvents: "none" }}>{prefix}</span>}
-        <input type={type} placeholder={placeholder} value={data[fieldKey] || ""}
-          onChange={e => set(fieldKey, e.target.value)}
-          style={{ width: "100%", padding: prefix ? "11px 14px 11px 28px" : "11px 14px", borderRadius: 10,
-            border: `1px solid ${C.border}`, background: C.panel, color: C.light, fontSize: 14,
-            outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
+        {prefix && (
+          <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)",
+            color: C.muted, fontSize: 14, pointerEvents: "none" }}>{prefix}</span>
+        )}
+        <input
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(fieldKey, e.target.value)}
+          style={{ width: "100%", padding: prefix ? "11px 14px 11px 28px" : "11px 14px",
+            borderRadius: 10, border: `1px solid ${C.border}`, background: C.panel,
+            color: C.light, fontSize: 14, outline: "none", boxSizing: "border-box" }}
           onFocus={e => e.target.style.borderColor = C.teal}
           onBlur={e => e.target.style.borderColor = C.border}
         />
@@ -504,6 +509,23 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
       {hint && <div style={{ color: C.muted, fontSize: 11, marginTop: 4, lineHeight: 1.5 }}>{hint}</div>}
     </div>
   );
+}
+
+function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
+  const { user } = useAuth();
+  const set = useCallback((k, v) => onChange({ [k]: v }), [onChange]);
+  const canGo = isGuest ? (data.firstName?.trim() && data.email?.trim()) : true;
+
+  // Auto-fill from logged-in user on first render
+  useEffect(() => {
+    if (!user) return;
+    const patch = {};
+    if (!data.firstName && user.name)  patch.firstName = user.name.split(" ")[0];
+    if (!data.lastName  && user.name && user.name.includes(" "))
+      patch.lastName = user.name.split(" ").slice(1).join(" ");
+    if (!data.email && user.email) patch.email = user.email;
+    if (Object.keys(patch).length) onChange(patch);
+  }, [user]);
 
   // Summary of what they picked
   const chips = [
@@ -539,15 +561,20 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field fieldKey="firstName" label="First name" required={isGuest} placeholder="Jan" />
-          <Field fieldKey="lastName"  label="Last name"  placeholder="Janssen" />
+          <Field fieldKey="firstName" label="First name" required={isGuest} placeholder="Jan"
+            value={data.firstName || ""} onChange={set} />
+          <Field fieldKey="lastName" label="Last name" placeholder="Janssen"
+            value={data.lastName || ""} onChange={set} />
         </div>
         <Field fieldKey="email" type="email" label="Email address" required={isGuest}
-          placeholder="jan@example.be" hint="We'll send your plan comparison here. No spam, ever." />
+          placeholder="jan@example.be" hint="We'll send your plan comparison here. No spam, ever."
+          value={data.email || ""} onChange={set} />
         <Field fieldKey="postcode" label="Postcode" placeholder="e.g. 2000"
-          hint="Optional — improves local grid tariff accuracy." />
+          hint="Optional — improves local grid tariff accuracy."
+          value={data.postcode || ""} onChange={set} />
         <Field fieldKey="currentBill" type="number" label="Current monthly bill"
-          prefix="€" placeholder="e.g. 180" hint="Optional — we'll calculate your potential savings." />
+          prefix="€" placeholder="e.g. 180" hint="Optional — we'll calculate your potential savings."
+          value={data.currentBill || ""} onChange={set} />
       </div>
 
       <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${C.border}`,
