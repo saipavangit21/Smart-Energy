@@ -367,19 +367,9 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 
       {/* ── DESKTOP HEADER ── */}
       {!isMobile && (
-        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "24px 18px 0" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-            {/* LEFT: brand + energy toggle */}
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 28 }}>🇧🇪</span>
-                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: "-1px" }}>SmartPrice</h1>
-                <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
-              </div>
-              <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
-            </div>
-            {/* RIGHT: EPEX price + sign-in / avatar */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "16px 18px 0" }}>
+          {/* TOP ROW: EPEX + sign-in flush right */}
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, marginBottom: 14 }}>
               {mwh != null && (
                 <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
                   <div style={{ fontSize: 10, color: "#556", marginBottom: 1 }}>NOW · EPEX Spot</div>
@@ -410,6 +400,15 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                 )}
               </div>
             </div>
+          </div>
+          {/* BOTTOM ROW: brand left + energy toggle right */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 26 }}>🇧🇪</span>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: "-1px" }}>SmartPrice</h1>
+              <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
+            </div>
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
           </div>
         </div>
       )}
