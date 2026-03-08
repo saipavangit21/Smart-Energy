@@ -541,10 +541,10 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Step 4 of 4</div>
         <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>
-          {isGuest ? "Almost done!" : "Ready to calculate!"}
+          {isGuest ? "Create your free account" : "Ready to calculate!"}
         </h2>
         <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>
-          {isGuest ? "Enter your details to receive your personalised plan comparison by email." : "We already have your details — just hit Calculate."}
+          {isGuest ? "Free account needed to run the calculator and save your results. No spam, ever." : "We already have your details — just hit Calculate."}
         </p>
       </div>
 
@@ -692,7 +692,7 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
 }
 
 // ─── Results page ─────────────────────────────────────────────
-function Results({ results, data, onRestart }) {
+function Results({ results, data, onRestart, isGuest, onSignIn }) {
   const [expanded, setExpanded] = useState(null);
   const hasElec = results.electricity?.success;
   const hasGas  = results.gas?.success;
@@ -767,6 +767,27 @@ function Results({ results, data, onRestart }) {
           </div>
         )}
       </div>
+
+      {/* Sign-in nudge — shown only to guests, after they've seen value */}
+      {isGuest && (
+        <div style={{ background: "linear-gradient(135deg,rgba(13,148,136,0.08),rgba(26,86,164,0.06))",
+          border: "1px solid rgba(13,148,136,0.25)", borderRadius: 14, padding: "16px 18px", marginBottom: 20,
+          display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0", marginBottom: 3 }}>
+              💾 Save your results & get alerts
+            </div>
+            <div style={{ fontSize: 12, color: "#556B82", lineHeight: 1.5 }}>
+              Sign in free to save this comparison, get emailed when prices drop, and revisit anytime.
+            </div>
+          </div>
+          <button onClick={onSignIn} style={{ padding: "10px 22px", borderRadius: 20, fontSize: 13, fontWeight: 700,
+            background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer",
+            whiteSpace: "nowrap", boxShadow: "0 4px 16px rgba(13,148,136,0.35)" }}>
+            Sign In Free →
+          </button>
+        </div>
+      )}
 
       {/* Electricity section */}
       {hasElec && (
@@ -930,7 +951,7 @@ export default function CalculatorPage({ isGuest, onBack }) {
         {step === 1 && <Step2 data={data} onChange={update} onNext={() => go(2)} onBack={() => go(0)} />}
         {step === 2 && <Step3 data={data} onChange={update} onNext={() => go(3)} onBack={() => go(1)} />}
         {step === 3 && <Step4 data={data} onChange={update} onSubmit={submit} onBack={() => go(2)} loading={loading} isGuest={isGuest} />}
-        {step === 4 && results && <Results results={results} data={data} onRestart={restart} />}
+        {step === 4 && results && <Results results={results} data={data} onRestart={restart} isGuest={isGuest} onSignIn={() => window.dispatchEvent(new CustomEvent("openSignIn"))} />}
       </div>
     </div>
   );

@@ -180,7 +180,7 @@ function EnergyToggle({ type, onChange, onOpenCalculator }) {
       </button>
 
       {/* Calculator button */}
-      <button onClick={() => onOpenCalculator && onOpenCalculator(type)} style={{
+      <button onClick={() => openCalculator(type)} style={{
         display: "flex", alignItems: "center", gap: 7,
         padding: "8px 16px", borderRadius: 10, cursor: "pointer",
         fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
@@ -209,8 +209,10 @@ function EnergyToggle({ type, onChange, onOpenCalculator }) {
 }
 
 export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn, onOpenCalculator }) {
+  // Gate: guests clicking the calculator go to sign-in first
   const { user, updatePreferences, logout, authFetch } = useAuth();
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
+  const openCalculator = (type) => isGuest ? onSignIn() : (onOpenCalculator && onOpenCalculator(type));
   const { current } = useCurrentPrice();
   const cheapest    = useCheapestHours(5);
 
@@ -306,10 +308,10 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 
       {/* Guest banner */}
       {isGuest && (
-        <div style={{ background: "rgba(13,148,136,0.12)", borderBottom: "1px solid rgba(13,148,136,0.25)", padding: "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 13, color: "#94A3B8" }}>👀 Browsing as guest — <strong style={{ color: "#0D9488" }}>sign in</strong> to save preferences & get price alerts</span>
-          <button onClick={onSignIn} style={{ padding: "6px 16px", borderRadius: 20, fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", background: "rgba(13,148,136,0.3)", color: "#0D9488" }}>
-            Sign In →
+        <div style={{ background: "rgba(13,148,136,0.08)", borderBottom: "1px solid rgba(13,148,136,0.15)", padding: "8px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: "#556B82" }}>🔌 Want to find your cheapest plan? <strong style={{ color: "#0D9488" }}>Sign in free</strong> to use the calculator, save preferences & get price alerts</span>
+          <button onClick={onSignIn} style={{ padding: "5px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "1px solid rgba(13,148,136,0.35)", cursor: "pointer", background: "transparent", color: "#0D9488" }}>
+            Sign In Free →
           </button>
         </div>
       )}
@@ -328,7 +330,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                 <div style={{ fontSize: 9, color: "#556" }}>NOW /MWh</div>
               </div>
             )}
-            <button onClick={() => onOpenCalculator && onOpenCalculator(energyType)}
+            <button onClick={() => openCalculator(energyType)}
               style={{ padding: "6px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "1px solid rgba(13,148,136,0.35)", background: "rgba(13,148,136,0.12)", color: "#0D9488", cursor: "pointer", whiteSpace: "nowrap" }}>
               🔌 Calculator
             </button>
@@ -339,7 +341,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           </div>
           {/* Energy toggle row */}
           <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 10px" }}>
-            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={onOpenCalculator} />
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} />
           </div>
         </div>
       )}
@@ -354,7 +356,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
               <span style={{ fontSize: 12, color: "#445" }}>{energyType === "gas" ? "TTF · ICE EEX" : (source || "Energy-Charts")} · Belgium</span>
             </div>
-            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={onOpenCalculator} />
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} />
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {mwh != null && (
                 <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
@@ -363,7 +365,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                   <div style={{ fontSize: 11, color: "#778" }}>{lbl?.emoji} {lbl?.text}{retailKwh ? ` · ${supplier}: €${retailKwh.toFixed(4)}/kWh` : ""}</div>
                 </div>
               )}
-              <button onClick={() => onOpenCalculator && onOpenCalculator(energyType)}
+              <button onClick={() => openCalculator(energyType)}
                 style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, border: "1px solid rgba(13,148,136,0.35)", background: "rgba(13,148,136,0.1)", color: "#0D9488", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.2)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.1)"; }}>
@@ -371,8 +373,10 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               </button>
               <div style={{ position: "relative" }}>
                 {isGuest ? (
-                  <button onClick={onSignIn} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(13,148,136,0.15)", border: "1px solid rgba(13,148,136,0.3)", borderRadius: 12, padding: "9px 18px", cursor: "pointer", color: "#0D9488", fontWeight: 700, fontSize: 13 }}>
-                    Sign In →
+                  <button onClick={onSignIn} style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(13,148,136,0.5)", background: "rgba(13,148,136,0.12)", color: "#0D9488", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.22)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.12)"; }}>
+                    Sign In — It's Free →
                   </button>
                 ) : (
                   <>
@@ -713,7 +717,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 
         {/* ── Compare ── */}
         {energyType === "electricity" && tab === "compare" && (
-          <SupplierCompare currentMwh={mwh} isMobile={isMobile} onOpenCalculator={onOpenCalculator} energyType={energyType} />
+          <SupplierCompare currentMwh={mwh} isMobile={isMobile} onOpenCalculator={openCalculator} energyType={energyType} />
         )}
 
         {/* ── Alerts ── */}
