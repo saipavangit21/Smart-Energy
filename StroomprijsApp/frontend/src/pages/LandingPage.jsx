@@ -90,13 +90,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               style={{ padding: "16px 38px", borderRadius: 50, fontSize: 16, fontWeight: 700, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.4)", color: "#0D9488", cursor: "pointer", transition: "all 0.2s" }}
               onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.2)"; e.currentTarget.style.color = "#fff"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.1)"; e.currentTarget.style.color = "#0D9488"; }}>
-              ⚡ Try Electricity Calculator
-            </button>
-            <button onClick={() => onOpenCalculator && onOpenCalculator("gas")}
-              style={{ padding: "16px 38px", borderRadius: 50, fontSize: 16, fontWeight: 700, background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.3)", color: "#F97316", cursor: "pointer", transition: "all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(249,115,22,0.18)"; e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(249,115,22,0.08)"; e.currentTarget.style.color = "#F97316"; }}>
-              🔥 Gas Calculator
+              🔌 Try the Calculator
             </button>
           </div>
           <div style={{ fontSize: 12, color: "#2E3D52" }}>Free forever · No credit card · GDPR compliant · Data stored in EU</div>
@@ -131,25 +125,25 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           <p style={{ color: "#556B82", fontSize: 15, maxWidth: 520, margin: "0 auto" }}>Select appliances → set weekly usage → pick region → see all 7 suppliers ranked by real annual cost.</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
-          {[
-            { type: "electricity", icon: "⚡", title: "Electricity Plans", color: "#0D9488", bg: "rgba(13,148,136,0.08)", border: "rgba(13,148,136,0.25)", hoverBorder: "rgba(13,148,136,0.5)", tags: ["Washing machine", "EV charging", "Heat pump", "Dishwasher", "Oven", "+ 7 more"], desc: "12 appliances · EV charging · heat pumps · Flanders capacity tariff" },
-            { type: "gas",         icon: "🔥", title: "Gas Plans",         color: "#F97316", bg: "rgba(249,115,22,0.08)", border: "rgba(249,115,22,0.22)", hoverBorder: "rgba(249,115,22,0.5)", tags: ["Central heating", "Hot water", "Gas hob", "Gas dryer", "Fireplace"], desc: "5 appliances · central heating · boiler · TTF-linked dynamic plans" },
-          ].map(c => (
-            <div key={c.type}
-              style={{ background: `linear-gradient(135deg, ${c.bg}, transparent)`, border: `1px solid ${c.border}`, borderRadius: 20, padding: "26px 24px", cursor: "pointer", transition: "all 0.2s" }}
-              onClick={() => onOpenCalculator && onOpenCalculator(c.type)}
-              onMouseEnter={e => { e.currentTarget.style.border = `1px solid ${c.hoverBorder}`; e.currentTarget.style.transform = "translateY(-3px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.border = `1px solid ${c.border}`; e.currentTarget.style.transform = "translateY(0)"; }}>
-              <div style={{ fontSize: 34, marginBottom: 12 }}>{c.icon}</div>
-              <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 8, color: c.color }}>{c.title}</div>
-              <div style={{ fontSize: 12, color: "#556B82", lineHeight: 1.7, marginBottom: 16 }}>{c.desc}</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 18 }}>
-                {c.tags.map(t => <span key={t} style={{ fontSize: 10, background: `${c.color}18`, border: `1px solid ${c.color}30`, color: c.color, borderRadius: 20, padding: "3px 9px", fontWeight: 600 }}>{t}</span>)}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ background: "linear-gradient(135deg, rgba(13,148,136,0.08), transparent)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "26px 24px", cursor: "pointer", transition: "all 0.2s" }}
+            onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
+            onMouseEnter={e => { e.currentTarget.style.border = "1px solid rgba(13,148,136,0.5)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.border = "1px solid rgba(13,148,136,0.25)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+              <div style={{ fontSize: 34 }}>🔌</div>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: "#0D9488", marginBottom: 4 }}>Plan Calculator — Electricity &amp; Gas</div>
+                <div style={{ fontSize: 12, color: "#556B82", lineHeight: 1.6 }}>Select your appliances · choose region · see all 7 suppliers ranked by real annual cost including grid fees &amp; VAT</div>
               </div>
-              <div style={{ color: c.color, fontWeight: 700, fontSize: 13 }}>Open Calculator →</div>
             </div>
-          ))}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 16 }}>
+              {["⚡ Electricity", "🔥 Gas", "☀️ Solar aware", "🚗 EV charging", "🌡️ Heat pump", "📍 Flanders / Wallonia / Brussels"].map(t => (
+                <span key={t} style={{ fontSize: 10, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", color: "#0D9488", borderRadius: 20, padding: "3px 9px", fontWeight: 600 }}>{t}</span>
+              ))}
+            </div>
+            <div style={{ color: "#0D9488", fontWeight: 700, fontSize: 13 }}>Start Calculator →</div>
+          </div>
         </div>
 
         {/* Sample results strip */}
@@ -263,8 +257,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 {[
                   { label: "⚡ Electricity Prices", action: onGetStarted },
                   { label: "🔥 Gas Prices", action: onGetStarted },
-                  { label: "🔌 Electricity Calculator", action: () => onOpenCalculator && onOpenCalculator("electricity") },
-                  { label: "🔥 Gas Calculator", action: () => onOpenCalculator && onOpenCalculator("gas") },
+                  { label: "🔌 Plan Calculator", action: () => onOpenCalculator && onOpenCalculator("electricity") },
                 ].map(l => (
                   <div key={l.label} onClick={l.action} style={{ fontSize: 13, color: "#445566", marginBottom: 7, cursor: "pointer" }}
                     onMouseEnter={e => e.currentTarget.style.color = "#0D9488"}
