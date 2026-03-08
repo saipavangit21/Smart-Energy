@@ -558,29 +558,52 @@ function GasManualCompare({ ttfPrice }) {
   );
 }
 
-// ── SuppliersTab wrapper ──────────────────────────────────────
-const GAS_SUPPLIER_TABS = [
-  { id: "calculator", label: "🔥 Calculator", desc: "Appliances → consumption → best plan" },
-  { id: "compare",    label: "📊 Compare",    desc: "Enter kWh manually → all plans" },
-];
-
+// ── SuppliersTab — plain supplier list ───────────────────────
 function SuppliersTab({ ttfPrice, isMobile }) {
-  const [tab, setTab] = useState("calculator");
+  // Sort by tariff (cheapest first), dynamic last
+  const sorted = [...SUPPLIERS_DATA].sort((a, b) => {
+    if (a.tariff == null) return 1;
+    if (b.tariff == null) return -1;
+    return a.tariff - b.tariff;
+  });
+
   return (
     <div>
-      <div style={{ display: "flex", gap: 4, marginBottom: 16, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 4 }}>
-        {GAS_SUPPLIER_TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            style={{ flex: 1, padding: "10px 8px", borderRadius: 9, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer",
-              background: tab===t.id?"rgba(255,255,255,0.1)":"transparent",
-              color: tab===t.id?"#fff":"#667", textAlign: "center" }}>
-            <div>{t.label}</div>
-            {!isMobile && <div style={{ fontSize: 10, color: tab===t.id?"#889":"#445", marginTop: 2 }}>{t.desc}</div>}
-          </button>
-        ))}
+      <div style={{ fontSize: 11, color: "#445", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, fontWeight: 700 }}>
+        All Belgian Gas Suppliers · c€/kWh
       </div>
-      {tab === "calculator" && <GasApplianceCalc ttfPrice={ttfPrice} />}
-      {tab === "compare"    && <GasManualCompare ttfPrice={ttfPrice} />}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {sorted.map((s, i) => {
+          const spotRate = ttfPrice != null ? (ttfPrice / 1000 * 100 + (s.surcharge || 0)) : null;
+          const displayRate = s.type === "dynamic" ? spotRate : s.tariff;
+          return (
+            <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${i === 0 ? s.color + "55" : "rgba(255,255,255,0.06)"}`, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {i === 0 && <span style={{ fontSize: 14 }}>🏆</span>}
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: i === 0 ? s.color : "#C4D4E0" }}>{s.name}</div>
+                  <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>{s.typeLabel} · {s.note}</div>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                {displayRate != null ? (
+                  <>
+                    <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "monospace", color: i === 0 ? s.color : "#94A3B8" }}>
+                      {displayRate.toFixed(2)} c€
+                    </div>
+                    <div style={{ fontSize: 10, color: "#445" }}>/kWh excl. grid</div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 12, color: "#334" }}>—</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 10, color: "#334", marginTop: 14, lineHeight: 1.6 }}>
+        Energy rate only · standing charge {"{"}€65–95/yr{"}"} not included · verify on supplier website before switching.
+      </div>
     </div>
   );
 }

@@ -86,7 +86,9 @@ function SupplierCompare({ currentMwh, isMobile, energyType }) {
       {/* Supplier cards */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
         {SUPPLIERS.map((s, i) => {
-          const retailKwh = currentMwh != null ? getSupplierPrice(s.name, currentMwh) : null;
+          // currentMwh is MWh → convert to kWh, pass supplier object
+          const spotKwh = currentMwh != null ? currentMwh / 1000 : null;
+          const retailKwh = spotKwh != null ? getSupplierPrice(spotKwh, s) : null;
           return (
             <div key={s.name} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${i === 0 ? s.color + "55" : "rgba(255,255,255,0.06)"}`, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
