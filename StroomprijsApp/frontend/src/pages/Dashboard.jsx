@@ -75,31 +75,49 @@ function PlanBadge({ children, color }) {
   return <span style={{ background: `${color}22`, color, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, whiteSpace: "nowrap" }}>{children}</span>;
 }
 
-// ── Calculator redirect (both old tabs now send to the wizard) ─
-function SupplierCompare({ currentMwh, isMobile, onOpenCalculator, energyType }) {
+// ── Supplier comparison tab ────────────────────────────────────
+function SupplierCompare({ currentMwh, isMobile, energyType }) {
   return (
     <div style={{ padding: "8px 0" }}>
-      <div style={{ background: "linear-gradient(135deg,rgba(13,148,136,0.1),rgba(26,86,164,0.08))", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 18, padding: "28px 22px", textAlign: "center" }}>
-        <div style={{ fontSize: 42, marginBottom: 14 }}>🔌</div>
-        <div style={{ color: "#E2E8F0", fontSize: 18, fontWeight: 900, marginBottom: 8, letterSpacing: "-0.4px" }}>
-          Plan Calculator
-        </div>
-        <div style={{ color: "#64748B", fontSize: 14, lineHeight: 1.7, marginBottom: 22, maxWidth: 320, margin: "0 auto 22px" }}>
-          Answer 4 quick questions about your home and appliances. We'll calculate your annual consumption and rank every Belgian supplier by price — for electricity and gas together.
-        </div>
-        <button onClick={() => onOpenCalculator && onOpenCalculator(energyType || "electricity")}
-          style={{ padding: "14px 32px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#0D9488,#1A56A4)", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 24px rgba(13,148,136,0.4)", display: "inline-block" }}>
-          Start Calculator →
-        </button>
-        <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 22, flexWrap: "wrap" }}>
-          {[["⚡", "Electricity plans"], ["🔥", "Gas plans"], ["☀️", "Solar aware"], ["🏠", "Appliance-based"]].map(([icon, label]) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 14 }}>{icon}</span>
-              <span style={{ fontSize: 12, color: "#64748B" }}>{label}</span>
-            </div>
-          ))}
-        </div>
+      <div style={{ fontSize: 11, color: "#445", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, fontWeight: 700 }}>
+        All Belgian Suppliers · Estimated retail price
       </div>
+
+      {/* Supplier cards */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+        {SUPPLIERS.map((s, i) => {
+          const retailKwh = currentMwh != null ? getSupplierPrice(s.name, currentMwh) : null;
+          return (
+            <div key={s.name} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${i === 0 ? s.color + "55" : "rgba(255,255,255,0.06)"}`, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {i === 0 && <span style={{ fontSize: 14 }}>🏆</span>}
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: i === 0 ? s.color : "#C4D4E0" }}>{s.name}</div>
+                  <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>Variable · electricity</div>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                {retailKwh != null ? (
+                  <>
+                    <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "monospace", color: i === 0 ? s.color : "#94A3B8" }}>
+                      €{retailKwh.toFixed(4)}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#445" }}>/kWh incl. VAT</div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 12, color: "#334" }}>—</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ fontSize: 10, color: "#334", marginBottom: 20, lineHeight: 1.6 }}>
+        Prices are estimates based on current EPEX Spot rate + typical supplier margin. Verify on supplier websites before switching.
+      </div>
+
+
     </div>
   );
 }
@@ -332,10 +350,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                 <div style={{ fontSize: 9, color: "#556" }}>NOW /MWh</div>
               </div>
             )}
-            <button onClick={() => openCalculator(energyType)}
-              style={{ padding: "6px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "1px solid rgba(13,148,136,0.35)", background: "rgba(13,148,136,0.12)", color: "#0D9488", cursor: "pointer", whiteSpace: "nowrap" }}>
-              🔌 Calculator
-            </button>
+
             <button onClick={() => setShowMenu(m => !m)} style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
               {(user?.name || user?.email || "?")[0].toUpperCase()}
             </button>
@@ -352,13 +367,16 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
       {!isMobile && (
         <div style={{ maxWidth: 1000, margin: "0 auto", padding: "24px 18px 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 28 }}>🇧🇪</span>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, letterSpacing: "-1px" }}>SmartPrice</h1>
-              <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
-              <span style={{ fontSize: 12, color: "#445" }}>{energyType === "gas" ? "TTF · ICE EEX" : (source || "Energy-Charts")} · Belgium</span>
+            {/* LEFT: brand + energy toggle */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 28 }}>🇧🇪</span>
+                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: "-1px" }}>SmartPrice</h1>
+                <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
+              </div>
+              <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
             </div>
-            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
+            {/* RIGHT: EPEX price + sign-in / avatar */}
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {mwh != null && (
                 <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
@@ -366,14 +384,6 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                   <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(1)}<span style={{ fontSize: 12, color: "#556", fontWeight: 400 }}>/MWh</span></div>
                   <div style={{ fontSize: 11, color: "#778" }}>{lbl?.emoji} {lbl?.text}{retailKwh ? ` · ${supplier}: €${retailKwh.toFixed(4)}/kWh` : ""}</div>
                 </div>
-              )}
-              {!isGuest && (
-                <button onClick={() => openCalculator(energyType)}
-                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, border: "1px solid rgba(13,148,136,0.35)", background: "rgba(13,148,136,0.1)", color: "#0D9488", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.2)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.1)"; }}>
-                  🔌 Plan Calculator
-                </button>
               )}
               <div style={{ position: "relative" }}>
                 {isGuest ? (
@@ -721,7 +731,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 
         {/* ── Compare ── */}
         {energyType === "electricity" && tab === "compare" && (
-          <SupplierCompare currentMwh={mwh} isMobile={isMobile} onOpenCalculator={openCalculator} energyType={energyType} />
+          <SupplierCompare currentMwh={mwh} isMobile={isMobile} energyType={energyType} />
         )}
 
         {/* ── Alerts ── */}
