@@ -93,6 +93,7 @@ export default function App() {
       <CalculatorPage
         isGuest={!user}
         onBack={() => navigate("/")}
+        onSignIn={() => setShowAuth(true)}
       />
     );
   }

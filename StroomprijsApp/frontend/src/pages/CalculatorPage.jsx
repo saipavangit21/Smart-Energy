@@ -832,7 +832,7 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
 }
 
 // ─── Main wizard shell ────────────────────────────────────────
-export default function CalculatorPage({ isGuest, onBack }) {
+export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
   const [step,    setStep]    = useState(0);
   const [data,    setData]    = useState({});
   const [results, setResults] = useState(null);
@@ -951,7 +951,7 @@ export default function CalculatorPage({ isGuest, onBack }) {
         {step === 1 && <Step2 data={data} onChange={update} onNext={() => go(2)} onBack={() => go(0)} />}
         {step === 2 && <Step3 data={data} onChange={update} onNext={() => go(3)} onBack={() => go(1)} />}
         {step === 3 && <Step4 data={data} onChange={update} onSubmit={submit} onBack={() => go(2)} loading={loading} isGuest={isGuest} />}
-        {step === 4 && results && <Results results={results} data={data} onRestart={restart} isGuest={isGuest} onSignIn={() => window.dispatchEvent(new CustomEvent("openSignIn"))} />}
+        {step === 4 && results && <Results results={results} data={data} onRestart={restart} isGuest={isGuest} onSignIn={onSignIn} />}
       </div>
     </div>
   );
