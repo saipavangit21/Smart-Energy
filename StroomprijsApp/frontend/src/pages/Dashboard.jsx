@@ -399,7 +399,6 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                   </>
                 )}
               </div>
-            </div>
           </div>
           {/* BOTTOM ROW: brand left + energy toggle right */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
