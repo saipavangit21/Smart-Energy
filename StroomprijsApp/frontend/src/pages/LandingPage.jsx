@@ -26,11 +26,9 @@ const suppliers = [
 
 const faqs = [
   { q: "What is EPEX Spot?", a: "EPEX Spot is the European Power Exchange where electricity is traded on the wholesale day-ahead market. In Belgium, dynamic energy contracts follow these hourly prices — your cost per kWh changes every hour." },
-  { q: "What is a dynamic electricity contract?", a: "A dynamic contract means your electricity price follows the EPEX Spot market, changing every hour. Suppliers like Bolt Energy offer these. They can save money if you shift consumption to cheap hours." },
   { q: "How does the Plan Calculator work?", a: "Select your appliances, set how many times per week you use each, choose your region (Flanders/Wallonia/Brussels) and we calculate your annual kWh + peak kW, then rank all 7 Belgian suppliers showing your real total cost including grid fees and VAT." },
-  { q: "How much can I actually save?", a: "On an average day, the spread between cheapest and most expensive hour is €100–150/MWh. For a 2kW appliance run 1h/day, that's €50–100/year. Choosing the right supplier can save an additional €100–300/year depending on your consumption profile." },
-  { q: "Is this free?", a: "Yes, completely free. Price data comes from Energy-Charts.info and Elia Open Data — both open public sources under CC BY 4.0." },
-  { q: "Is my data safe?", a: "All data is stored in the EU (GDPR compliant). We never sell your data or show ads. Delete your account at any time." },
+  { q: "How much can I actually save?", a: "On an average day, the spread between cheapest and most expensive hour is €100–150/MWh. Choosing the right supplier can save an additional €100–300/year depending on your consumption profile." },
+  { q: "Is this free and safe?", a: "Yes, completely free — no credit card, no ads. All data stored in the EU (GDPR compliant). We never sell your data. Delete your account at any time." },
 ];
 
 export default function LandingPage({ onGetStarted, onOpenCalculator }) {
@@ -68,7 +66,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       </nav>
 
       {/* HERO */}
-      <section style={{ maxWidth: 960, margin: "0 auto", padding: "88px 24px 68px", textAlign: "center", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 960, margin: "0 auto", padding: "64px 24px 48px", textAlign: "center", position: "relative", zIndex: 1 }}>
         <div style={{ opacity: heroVisible ? 1 : 0, transform: heroVisible ? "translateY(0)" : "translateY(22px)", transition: "all 0.7s ease" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 30, padding: "6px 16px", fontSize: 12, color: "#0D9488", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 28 }}>
             🇧🇪 Belgium · Real-Time Energy Prices
@@ -106,7 +104,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       </section>
 
       {/* LIVE STATS */}
-      <section style={{ maxWidth: 960, margin: "0 auto 72px", padding: "0 24px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 960, margin: "0 auto 44px", padding: "0 24px", position: "relative", zIndex: 1 }}>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "24px 28px", display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 10, color: "#3A4D63", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 10 }}>Live EPEX Spot · Belgium</div>
@@ -126,8 +124,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       </section>
 
       {/* CALCULATOR SHOWCASE */}
-      <section style={{ maxWidth: 960, margin: "0 auto 100px", padding: "0 24px", position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: 50 }}>
+      <section style={{ maxWidth: 960, margin: "0 auto 64px", padding: "0 24px", position: "relative", zIndex: 1 }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>Plan Calculator</div>
           <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900, letterSpacing: "-1.5px", margin: "0 0 16px" }}>Find your cheapest energy plan<br />in 30 seconds</h2>
           <p style={{ color: "#556B82", fontSize: 15, maxWidth: 520, margin: "0 auto" }}>Select appliances → set weekly usage → pick region → see all 7 suppliers ranked by real annual cost.</p>
@@ -186,7 +184,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       </section>
 
       {/* SUPPLIERS */}
-      <section style={{ maxWidth: 960, margin: "0 auto 90px", padding: "0 24px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 960, margin: "0 auto 56px", padding: "0 24px", position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Coverage</div>
           <h2 style={{ fontSize: "clamp(24px, 3.5vw, 38px)", fontWeight: 900, letterSpacing: "-1px", margin: "0 0 10px" }}>All 7 Belgian suppliers compared</h2>
@@ -203,8 +201,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       </section>
 
       {/* FEATURES */}
-      <section style={{ maxWidth: 960, margin: "0 auto 90px", padding: "0 24px", position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: 46 }}>
+      <section style={{ maxWidth: 960, margin: "0 auto 56px", padding: "0 24px", position: "relative", zIndex: 1 }}>
+        <div style={{ textAlign: "center", marginBottom: 30 }}>
           <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Features</div>
           <h2 style={{ fontSize: "clamp(26px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-1.5px", margin: 0 }}>Everything in one dashboard</h2>
         </div>
@@ -221,41 +219,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section style={{ background: "rgba(255,255,255,0.015)", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "70px 24px", marginBottom: 90, position: "relative", zIndex: 1 }}>
-        <div style={{ maxWidth: 960, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 50 }}>
-            <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>How It Works</div>
-            <h2 style={{ fontSize: "clamp(26px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-1.5px", margin: 0 }}>Up and running in 60 seconds</h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 0 }}>
-            {[
-              { n: "1", title: "Create free account", desc: "Sign up with email or Google. No credit card, ever." },
-              { n: "2", title: "Run the Calculator", desc: "Select your appliances, set usage, choose region — no login needed." },
-              { n: "3", title: "See live prices", desc: "Today's hourly EPEX + TTF prices and the 5 cheapest windows." },
-              { n: "4", title: "Set a price alert", desc: "Get emailed when EPEX drops below your threshold." },
-            ].map((s, i) => (
-              <div key={i} style={{ textAlign: "center", padding: "0 22px" }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 900, color: "#fff", margin: "0 auto 16px", boxShadow: "0 4px 20px rgba(13,148,136,0.35)" }}>{s.n}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, color: "#DDE8F0" }}>{s.title}</div>
-                <div style={{ fontSize: 13, color: "#556B82", lineHeight: 1.7 }}>{s.desc}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ textAlign: "center", marginTop: 50, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={onGetStarted} style={{ padding: "15px 40px", borderRadius: 50, fontSize: 15, fontWeight: 800, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer", boxShadow: "0 8px 32px rgba(13,148,136,0.4)" }}>
-              Create Free Account →
-            </button>
-            <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")} style={{ padding: "15px 40px", borderRadius: 50, fontSize: 15, fontWeight: 700, background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "#aaa", cursor: "pointer" }}>
-              Try Calculator First
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ */}
-      <section style={{ maxWidth: 740, margin: "0 auto 90px", padding: "0 24px", position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: 46 }}>
+      <section style={{ maxWidth: 740, margin: "0 auto 56px", padding: "0 24px", position: "relative", zIndex: 1 }}>
+        <div style={{ textAlign: "center", marginBottom: 30 }}>
           <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>FAQ</div>
           <h2 style={{ fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 900, letterSpacing: "-1px", margin: 0 }}>Common questions</h2>
         </div>
@@ -274,25 +240,6 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               )}
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* FINAL CTA */}
-      <section style={{ maxWidth: 960, margin: "0 auto 90px", padding: "0 24px", position: "relative", zIndex: 1 }}>
-        <div style={{ background: "linear-gradient(135deg, rgba(13,148,136,0.12), rgba(26,86,164,0.12))", border: "1px solid rgba(13,148,136,0.22)", borderRadius: 28, padding: "54px 36px", textAlign: "center" }}>
-          <div style={{ fontSize: 38, marginBottom: 16 }}>🇧🇪</div>
-          <h2 style={{ fontSize: "clamp(26px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-1.5px", margin: "0 0 16px" }}>Start saving on energy today</h2>
-          <p style={{ fontSize: 15, color: "#556B82", maxWidth: 480, margin: "0 auto 36px", lineHeight: 1.75 }}>
-            Join Belgian households already using SmartPrice to shift consumption to cheap hours and switch to the cheapest supplier for their usage profile.
-          </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={onGetStarted} style={{ padding: "16px 44px", borderRadius: 50, fontSize: 16, fontWeight: 800, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer", boxShadow: "0 8px 32px rgba(13,148,136,0.45)" }}>
-              Get Started — It's Free →
-            </button>
-            <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")} style={{ padding: "16px 44px", borderRadius: 50, fontSize: 16, fontWeight: 700, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#aaa", cursor: "pointer" }}>
-              Try Calculator
-            </button>
-          </div>
         </div>
       </section>
 
