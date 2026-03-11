@@ -7,6 +7,7 @@
  *   /calculator/gas           → CalculatorPage (public, sign-in gate on results)
  *   /oauth/callback           → AuthCallback
  *   /privacy                  → PrivacyPolicy
+ *   /admin                    → AdminDashboard (protected by admin secret)
  */
 import { useState, useEffect, useCallback } from "react";
 import { useAuth }       from "./context/AuthContext";
@@ -17,6 +18,7 @@ import AuthCallback      from "./pages/AuthCallback";
 import PrivacyPolicy     from "./pages/PrivacyPolicy";
 import LandingPage       from "./pages/LandingPage";
 import CalculatorPage    from "./pages/CalculatorPage";
+import AdminDashboard    from "./pages/AdminDashboard";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
 
@@ -64,6 +66,7 @@ export default function App() {
   // ── Hard-coded path matches ──────────────────────────────────
   if (path === "/oauth/callback") return <AuthCallback />;
   if (path === "/privacy")        return <PrivacyPolicy onClose={() => navigate("/")} />;
+  if (path === "/admin")          return <AdminDashboard />;
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   // ── Loading spinner ──────────────────────────────────────────
