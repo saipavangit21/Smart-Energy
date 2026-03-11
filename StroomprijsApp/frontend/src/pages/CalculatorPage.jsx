@@ -949,9 +949,59 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
 
         {step === 0 && <Step1 data={data} onChange={update} onNext={() => go(1)} />}
         {step === 1 && <Step2 data={data} onChange={update} onNext={() => go(2)} onBack={() => go(0)} />}
-        {step === 2 && <Step3 data={data} onChange={update} onNext={() => go(3)} onBack={() => go(1)} />}
-        {step === 3 && <Step4 data={data} onChange={update} onSubmit={submit} onBack={() => go(2)} loading={loading} isGuest={isGuest} />}
-        {step === 4 && results && <Results results={results} data={data} onRestart={restart} isGuest={isGuest} onSignIn={onSignIn} />}
+        {step === 2 && <Step3 data={data} onChange={update} onNext={() => isGuest ? go(3) : go(3)} onBack={() => go(1)} />}
+        {step === 3 && isGuest && (
+          <div style={{ textAlign: "center", padding: "48px 24px" }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>🔐</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: C.light, marginBottom: 10 }}>
+              Sign in to see your results
+            </div>
+            <div style={{ fontSize: 14, color: C.muted, maxWidth: 360, margin: "0 auto 28px", lineHeight: 1.7 }}>
+              Your plan comparison is ready. Create a free account to unlock it — no credit card, takes 30 seconds.
+            </div>
+            <button onClick={onSignIn} style={{
+              padding: "14px 36px", borderRadius: 50, fontSize: 15, fontWeight: 800,
+              background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none",
+              color: "#fff", cursor: "pointer", boxShadow: "0 8px 32px rgba(13,148,136,0.4)",
+              marginBottom: 16, display: "block", width: "100%", maxWidth: 320, margin: "0 auto 16px",
+            }}>
+              Sign In Free — See My Results →
+            </button>
+            <button onClick={() => go(2)} style={{
+              background: "transparent", border: "none", color: C.muted,
+              fontSize: 13, cursor: "pointer", textDecoration: "underline",
+            }}>
+              ← Go back
+            </button>
+          </div>
+        )}
+        {step === 3 && !isGuest && <Step4 data={data} onChange={update} onSubmit={submit} onBack={() => go(2)} loading={loading} isGuest={false} />}
+        {step === 4 && results && !isGuest && <Results results={results} data={data} onRestart={restart} isGuest={false} onSignIn={onSignIn} />}
+        {step === 4 && results && isGuest && (
+          <div style={{ textAlign: "center", padding: "48px 24px" }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>🔐</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: C.light, marginBottom: 10 }}>
+              Sign in to see your results
+            </div>
+            <div style={{ fontSize: 14, color: C.muted, maxWidth: 360, margin: "0 auto 28px", lineHeight: 1.7 }}>
+              Your plan comparison is ready. Create a free account to unlock it — no credit card, takes 30 seconds.
+            </div>
+            <button onClick={onSignIn} style={{
+              padding: "14px 36px", borderRadius: 50, fontSize: 15, fontWeight: 800,
+              background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none",
+              color: "#fff", cursor: "pointer", boxShadow: "0 8px 32px rgba(13,148,136,0.4)",
+              display: "block", width: "100%", maxWidth: 320, margin: "0 auto 16px",
+            }}>
+              Sign In Free — See My Results →
+            </button>
+            <button onClick={restart} style={{
+              background: "transparent", border: "none", color: C.muted,
+              fontSize: 13, cursor: "pointer", textDecoration: "underline",
+            }}>
+              ↺ Start over
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
