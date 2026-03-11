@@ -199,22 +199,20 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
         )}
       </button>
 
-      {/* Calculator button — only for signed-in users */}
-      {!isGuest && (
-        <button onClick={() => onOpenCalculator && onOpenCalculator(type)} style={{
-          display: "flex", alignItems: "center", gap: 7,
-          padding: "8px 16px", borderRadius: 10, cursor: "pointer",
-          fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
-          transition: "all 0.2s ease",
-          border: "1px solid rgba(255,255,255,0.08)",
-          background: "transparent",
-          color: "#4A6070",
-        }}
-          onMouseEnter={e => { e.currentTarget.style.color = "#0D9488"; e.currentTarget.style.border = "1px solid rgba(13,148,136,0.35)"; e.currentTarget.style.background = "rgba(13,148,136,0.08)"; }}
-          onMouseLeave={e => { e.currentTarget.style.color = "#4A6070"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}>
-          🔌 Calculator
-        </button>
-      )}
+      {/* Calculator button — visible to all, guests get sign-in prompt */}
+      <button onClick={() => onOpenCalculator && onOpenCalculator(type)} style={{
+        display: "flex", alignItems: "center", gap: 7,
+        padding: "8px 16px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: isGuest ? "1px solid rgba(13,148,136,0.3)" : "1px solid rgba(255,255,255,0.08)",
+        background: isGuest ? "rgba(13,148,136,0.08)" : "transparent",
+        color: isGuest ? "#0D9488" : "#4A6070",
+      }}
+        onMouseEnter={e => { e.currentTarget.style.color = "#0D9488"; e.currentTarget.style.border = "1px solid rgba(13,148,136,0.35)"; e.currentTarget.style.background = "rgba(13,148,136,0.08)"; }}
+        onMouseLeave={e => { e.currentTarget.style.color = isGuest ? "#0D9488" : "#4A6070"; e.currentTarget.style.border = isGuest ? "1px solid rgba(13,148,136,0.3)" : "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = isGuest ? "rgba(13,148,136,0.08)" : "transparent"; }}>
+        🔌 Calculator{isGuest ? " →" : ""}
+      </button>
 
       <style>{`
         @keyframes pulse-elec {
