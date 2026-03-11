@@ -12,6 +12,7 @@ for (const key of required) {
 
 const authRoutes      = require("./routes/auth");
 const googleRoutes    = require("./routes/google");
+const attachAnalytics = require("./analytics");
 const { checkAndSendAlerts, checkAndSendGasAlerts } = require("./email-alerts");
 const { router: gasRoutes } = require("./routes/gas");
 const { router: suppliersRoutes, runWeeklyScrape } = require("./routes/suppliers");
@@ -74,7 +75,9 @@ async function fetchElia(s,e) { const k=`elia-${s}-${e}`; if(cache.has(k)) retur
 function enrich(prices) { const now=new Date(),ts=toISODate(now); return prices.map(p=>{ const d=new Date(p.timestamp); const localDate=toLocalISODate(d); const localHour=getLocalHour(d); const nowHour=getLocalHour(now); const it=localDate===ts; return{...p,day:it?"today":"tomorrow",hour:localHour,hour_label:`${String(localHour).padStart(2,"0")}:00`,is_current:it&&localHour===nowHour,is_negative:p.price_eur_mwh<0,price_category:getPriceCategory(p.price_eur_mwh)}; }); }
 async function getPrices(s,e) { try{return{prices:await fetchEC(s,e),source:"Energy-Charts"};}catch(e1){try{return{prices:await fetchElia(s,e),source:"Elia Open Data"};}catch(e2){throw new Error(`Both failed`);}} }
 
-app.get("/api/health",(req,res)=>res.json({status:"ok",version:"2.0.0",timestamp:new Date().toISOString()}));
+// ── Health check (DB + EPEX + data freshness) ──────────────
+require("./health-route")(app, pool);
+attachAnalytics(app, pool);
 app.get("/api/prices/today",async(req,res)=>{ try{const{today,tomorrow}=todayAndTomorrow();const{prices,source}=await getPrices(today,tomorrow);const d=enrich(prices);res.json({success:true,source,data:d,stats:computeStats(d),fetched_at:new Date().toISOString()});}catch(e){res.status(500).json({success:false,error:e.message});} });
 app.get("/api/current",async(req,res)=>{ try{const{today}=todayAndTomorrow();const{prices}=await getPrices(today,today);const h=new Date().getHours();const c=prices.find(p=>new Date(p.timestamp).getHours()===h)||prices[prices.length-1];res.json({success:true,current:c,timestamp:new Date().toISOString()});}catch(e){res.status(500).json({success:false,error:e.message});} });
 app.get("/api/cheapest",async(req,res)=>{ try{const n=parseInt(req.query.hours||"5");const{today,tomorrow}=todayAndTomorrow();const{prices}=await getPrices(today,tomorrow);const now=new Date();const c=[...prices.filter(p=>new Date(p.timestamp)>=now)].sort((a,b)=>a.price_eur_mwh-b.price_eur_mwh).slice(0,n);res.json({success:true,cheapest_hours:c});}catch(e){res.status(500).json({success:false,error:e.message});} });
