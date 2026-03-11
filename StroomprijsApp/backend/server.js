@@ -12,7 +12,7 @@ for (const key of required) {
 
 const authRoutes      = require("./routes/auth");
 const googleRoutes    = require("./routes/google");
-const attachAnalytics = require("./analytics");
+const attachAnalytics = require("./analytics-backup");
 const { checkAndSendAlerts, checkAndSendGasAlerts } = require("./email-alerts");
 const { router: gasRoutes } = require("./routes/gas");
 const { router: suppliersRoutes, runWeeklyScrape } = require("./routes/suppliers");
