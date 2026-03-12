@@ -12,7 +12,7 @@ for (const key of required) {
 
 const authRoutes      = require("./routes/auth");
 const googleRoutes    = require("./routes/google");
-const attachAnalytics = require("./analytics-backup");
+const attachAnalytics = require("./analytics");
 const { checkAndSendAlerts, checkAndSendGasAlerts } = require("./email-alerts");
 const { router: gasRoutes } = require("./routes/gas");
 const { router: suppliersRoutes, runWeeklyScrape } = require("./routes/suppliers");
@@ -45,6 +45,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+// ── Analytics middleware — must be BEFORE route mounts ──────
+attachAnalytics(app, pool);
+
 app.use("/auth", authRoutes);
 app.use("/auth/google", googleRoutes);
 app.use("/api/gas", gasRoutes);
@@ -77,7 +80,6 @@ async function getPrices(s,e) { try{return{prices:await fetchEC(s,e),source:"Ene
 
 // ── Health check (DB + EPEX + data freshness) ──────────────
 require("./health-route")(app, pool);
-attachAnalytics(app, pool);
 app.get("/api/prices/today",async(req,res)=>{ try{const{today,tomorrow}=todayAndTomorrow();const{prices,source}=await getPrices(today,tomorrow);const d=enrich(prices);res.json({success:true,source,data:d,stats:computeStats(d),fetched_at:new Date().toISOString()});}catch(e){res.status(500).json({success:false,error:e.message});} });
 app.get("/api/current",async(req,res)=>{ try{const{today}=todayAndTomorrow();const{prices}=await getPrices(today,today);const h=new Date().getHours();const c=prices.find(p=>new Date(p.timestamp).getHours()===h)||prices[prices.length-1];res.json({success:true,current:c,timestamp:new Date().toISOString()});}catch(e){res.status(500).json({success:false,error:e.message});} });
 app.get("/api/cheapest",async(req,res)=>{ try{const n=parseInt(req.query.hours||"5");const{today,tomorrow}=todayAndTomorrow();const{prices}=await getPrices(today,tomorrow);const now=new Date();const c=[...prices.filter(p=>new Date(p.timestamp)>=now)].sort((a,b)=>a.price_eur_mwh-b.price_eur_mwh).slice(0,n);res.json({success:true,cheapest_hours:c});}catch(e){res.status(500).json({success:false,error:e.message});} });
