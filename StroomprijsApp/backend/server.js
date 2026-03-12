@@ -68,7 +68,7 @@ function computeStats(prices) {
       if (!acc[key]) acc[key] = p;
       return acc;
     }, {}));
-    const v = hourly.map(p=>p.price_eur_mwh);
+    const v = hourly.map(p=>p.price_eur_mwh).filter(x => x != null && !isNaN(x));
     return { min:Math.min(...v), max:Math.max(...v), avg:+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(2), negative_hours:hourly.filter(p=>p.price_eur_mwh<0).length };
   };
   return { today:calc(prices.filter(p=>p.day==="today")), tomorrow:calc(prices.filter(p=>p.day==="tomorrow")) };

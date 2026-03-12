@@ -586,7 +586,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                       <XAxis dataKey="hour_label" tick={{ fill: "#445", fontSize: isMobile ? 9 : 11 }} tickLine={false} interval={isMobile ? 3 : Math.max(0, Math.floor(chartData.length / 8) - 1)} />
-                      <YAxis tick={{ fill: "#445", fontSize: isMobile ? 9 : 11 }} tickLine={false} axisLine={false} tickFormatter={v => `€${v}`} domain={["auto", "auto"]} width={40} />
+                      <YAxis tick={{ fill: "#445", fontSize: isMobile ? 9 : 11 }} tickLine={false} axisLine={false} tickFormatter={v => `€${v}`} domain={[dataMin => Math.floor(dataMin * 0.9), dataMax => Math.ceil(dataMax * 1.05)]} width={40} />
                       <Tooltip content={<PriceTooltip supplier={supplier} />} />
                       <ReferenceLine y={0} stroke="rgba(0,229,255,0.25)" strokeDasharray="4 4" />
                       <ReferenceLine y={alertThreshold} stroke={C.yellow} strokeDasharray="4 4" label={{ value: "⚠ Alert", fill: C.yellow, fontSize: 9, position: "insideTopRight" }} />
