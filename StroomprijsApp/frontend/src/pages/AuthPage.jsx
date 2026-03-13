@@ -38,7 +38,7 @@ function Input({ label, type = "text", value, onChange, placeholder, autoComplet
   );
 }
 
-export default function AuthPage({ onBack, onSkip }) {
+export default function AuthPage({ onBack, onSkip, reason }) {
   const { login, register } = useAuth();
   const [mode,      setMode]      = useState("login");
   const [name,      setName]      = useState("");
@@ -99,11 +99,30 @@ export default function AuthPage({ onBack, onSkip }) {
         )}
 
         {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
+        <div style={{ textAlign: "center", marginBottom: reason ? 20 : 36 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>🇧🇪</div>
           <h1 style={{ margin: 0, fontSize: 28, fontWeight: 900, color: C.white, letterSpacing: "-1px" }}>SmartPrice</h1>
           <div style={{ fontSize: 14, color: "#64748B", marginTop: 6 }}>Belgium Real-Time Electricity Prices</div>
         </div>
+
+        {/* Context banner — shown when user is redirected for a reason */}
+        {reason && (
+          <div style={{
+            background: "rgba(13,148,136,0.12)", border: "1px solid rgba(13,148,136,0.3)",
+            borderRadius: 14, padding: "14px 18px", marginBottom: 20,
+            display: "flex", alignItems: "flex-start", gap: 12,
+          }}>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>{reason.icon || "🔐"}</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", marginBottom: 3 }}>
+                {reason.title}
+              </div>
+              <div style={{ fontSize: 13, color: "#64748B", lineHeight: 1.6 }}>
+                {reason.body}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Card */}
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "32px 36px", boxShadow: "0 25px 60px rgba(0,0,0,0.5)" }}>

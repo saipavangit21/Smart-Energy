@@ -89,6 +89,11 @@ export default function App() {
       <AuthPage
         onBack={() => setShowAuth(false)}
         onSkip={() => { setShowAuth(false); setGuestMode(true); }}
+        reason={{
+          icon: energyType === "gas" ? "🔥" : "⚡",
+          title: "Sign in to see your results",
+          body: "Your personalised plan comparison is ready. Create a free account in 30 seconds — no credit card needed.",
+        }}
       />
     );
 
