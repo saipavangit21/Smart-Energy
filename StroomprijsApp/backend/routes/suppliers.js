@@ -94,7 +94,7 @@ const EMBEDDED_TARIFFS = {
     },
     "bolt": {
       "id": "bolt", "name": "Bolt Energy", "logo": "⚡", "color": "#00C896",
-      "url": "https://www.bolt.eu/en-be/energy", "scrape_url": "https://www.bolt.eu/en-be/energy/electricity/",
+      "url": "https://www.boltenergie.be/en", "scrape_url": "https://www.boltenergie.be/en/electricity/",
       "plans": [
         { "id":"bolt-elec-dynamic", "name":"Dynamic",   "type":"dynamic",  "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":null,   "markup_cEkWh":0.3,  "standing_charge_year":72.00, "green":true,  "highlights":["EPEX hourly pricing","Lowest markup 0.3 c€/kWh","Best for EV owners","Smart charging support"], "formula":"EPEX_hour + 0.3 c€/kWh", "last_verified":"2026-03-01" },
         { "id":"bolt-elec-flex",    "name":"Flex",       "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.0965, "markup_cEkWh":null, "standing_charge_year":72.00, "green":true,  "highlights":["Monthly EPEX average","No exit fee","100% renewable"],                                           "formula":"EPEX_SPP + 0.5 c€/kWh",  "last_verified":"2026-03-01" },
@@ -418,12 +418,12 @@ async function scrapeSupplierPages() {
   const targets = [
     {
       key: "bolt_electricity",
-      url: "https://www.bolt.eu/en-be/energy/electricity/",
+      url: "https://www.boltenergie.be/en/electricity/",
       pattern: /markup[^€\d]*([0-9][.,][0-9]{1,2})\s*c[€e]|([0-9][.,][0-9]{1,2})\s*c[€e]\/kWh\s*markup/i,
     },
     {
       key: "bolt_gas",
-      url: "https://www.bolt.eu/en-be/energy/gas/",
+      url: "https://www.boltenergie.be/en/gas/",
       pattern: /markup[^€\d]*([0-9][.,][0-9]{1,2})\s*c[€e]|([0-9][.,][0-9]{1,2})\s*c[€e]\/kWh\s*markup/i,
     },
     {
