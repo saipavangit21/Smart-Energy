@@ -279,7 +279,7 @@ function Step2({ data, onChange, onNext, onBack }) {
         <span style={{ fontSize: 20, flexShrink: 0 }}>{a.icon}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ color: C.light, fontSize: 13, fontWeight: 600 }}>{a.label}</div>
-          <div style={{ color: C.muted, fontSize: 11 }}>{a.kwh_per_use} kWh/use{a.peak_kw ? ` · peak ${a.peak_kw} kW` : ""}</div>
+          <div style={{ color: C.muted, fontSize: 11 }}>{a.kwh_per_use} {CC.kwhPerUse || "kWh/use"}{a.peak_kw ? ` · ${CC.peak || "peak"} ${a.peak_kw} kW` : ""}</div>
         </div>
         {/* counter */}
         {sel.selected && (
@@ -860,11 +860,11 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
       )}
 
       <div style={{ textAlign: "center", margin: "20px 0", fontSize: 11, color: C.muted, lineHeight: 1.8 }}>
-        Annual cost includes energy + grid + levies + VAT.<br/>
-        Tariffs scraped weekly · Always verify on supplier website before switching.
+        {CC.costDisclaimer || "Annual cost includes energy + grid + levies + VAT."}<br/>
+        {CC.tariffsNote || "Tariffs scraped weekly · Always verify on supplier website before switching."}
       </div>
 
-      <Btn onClick={onRestart} variant="ghost">↺ Start a new calculation</Btn>
+      <Btn onClick={onRestart} variant="ghost">{`↺ ${CC.restartBtn || "Start a new calculation"}`}</Btn>
     </div>
   );
 }
