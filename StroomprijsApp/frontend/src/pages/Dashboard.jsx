@@ -72,6 +72,9 @@ function PlanBadge({ children, color }) {
 
 // ── Supplier comparison tab ────────────────────────────────────
 function SupplierCompare({ currentMwh, isMobile, energyType }) {
+  const { tSection } = useLanguage();
+  const T  = tSection("dashboard");
+  const TC = tSection("common");
   return (
     <div style={{ padding: "8px 0" }}>
       <div style={{ fontSize: 11, color: "#445", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, fontWeight: 700 }}>
@@ -792,6 +795,9 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 }
 
 function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAlert, user, updatePreferences, C, isMobile }) {
+  const { tSection } = useLanguage();
+  const T  = tSection("alerts");
+  const TC = tSection("common");
   const existingEmail = user?.preferences?.alertEmail || user?.email || "";
   const [alertEmail, setAlertEmail] = useState(existingEmail);
   const [emailSaved, setEmailSaved] = useState(existingEmail.length > 0);
@@ -902,6 +908,8 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
 }
 
 function DropMenu({ onProfile, onLogout, onPrivacy }) {
+  const { tSection } = useLanguage();
+  const TC = tSection("common");
   return (
     <div style={{ position:"absolute", right:0, top:"calc(100% + 8px)", zIndex:100, background:"#0D1626", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:8, minWidth:180, boxShadow:"0 8px 32px rgba(0,0,0,0.4)" }}>
       <MenuBtn icon="👤" label={TC.myProfile} onClick={onProfile} />
