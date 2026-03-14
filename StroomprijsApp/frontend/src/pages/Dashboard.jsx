@@ -666,8 +666,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               <>
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: "16px 8px 12px", marginBottom: 12 }}>
                   <div style={{ paddingLeft: 14, marginBottom: 12 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700 }}{T.sevenDayTitle || "7-Day Average Prices"}</div>
-                    <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}{T.sevenDaySub || "Tap a day for hourly detail"}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>{T.sevenDayTitle || "7-Day Average Prices"}</div>
+                    <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>{T.sevenDaySub || "Tap a day for hourly detail"}</div>
                   </div>
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={history} margin={{ top:0, right:16, left:0, bottom:0 }}>
