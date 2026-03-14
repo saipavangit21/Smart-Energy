@@ -138,11 +138,10 @@ const ENERGY_OPTIONS = [
   { id: "heatpump",    icon: "🌡️", label: "Heat Pump",     color: C.purple, desc: "Heat pump for heating and/or cooling" },
 ];
 
-function Step1({
+function Step1({ data, onChange, onNext }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
- data, onChange, onNext }) {
   const sel = data.energyTypes || [];
   const toggle = (id) => onChange({ energyTypes: sel.includes(id) ? sel.filter(x => x !== id) : [...sel, id] });
   const canGo  = sel.includes("electricity") || sel.includes("gas");
@@ -199,11 +198,10 @@ function Step1({
 }
 
 // ─── STEP 2 · Appliances ──────────────────────────────────────
-function Step2({
+function Step2({ data, onChange, onNext, onBack }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
- data, onChange, onNext, onBack }) {
   const [elecList, setElecList] = useState([]);
   const [gasList,  setGasList]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -368,11 +366,10 @@ const CONTRACT_TYPES = [
   { id: "dynamic",  icon: "⚡", label: "Dynamic (EPEX)",    sub: "Hourly spot prices — best with SmartPrice" },
 ];
 
-function Step3({
+function Step3({ data, onChange, onNext, onBack }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
- data, onChange, onNext, onBack }) {
   const set = (k, v) => onChange({ [k]: v });
   const hasSolar = (data.energyTypes || []).includes("solar");
   const canGo = data.region && data.householdSize && data.contractPref;
@@ -525,11 +522,10 @@ function Field({ label, required, fieldKey, type = "text", placeholder, hint, pr
   );
 }
 
-function Step4({
+function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
- data, onChange, onSubmit, onBack, loading, isGuest }) {
   const { user } = useAuth();
   const set = useCallback((k, v) => onChange({ [k]: v }), [onChange]);
   const canGo = isGuest ? (data.firstName?.trim() && data.email?.trim()) : true;
