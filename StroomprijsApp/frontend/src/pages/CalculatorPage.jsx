@@ -502,7 +502,7 @@ function Field({ label, required, fieldKey, type = "text", placeholder, hint, pr
           value={value}
           onChange={e => onChange(fieldKey, e.target.value)}
           style={{ width: "100%", padding: prefix ? "11px 14px 11px 28px" : "11px 14px",
-            borderRadius: 10, border: `1px solid ${C.border}`, background: C.panel,
+            borderRadius: 10, border: `1px solid $C.border`, background: C.panel,
             color: C.light, fontSize: 14, outline: "none", boxSizing: "border-box" }}
           onFocus={e => e.target.style.borderColor = C.teal}
           onBlur={e => e.target.style.borderColor = C.border}

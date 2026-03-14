@@ -141,7 +141,7 @@ export default function AuthPage({ onBack, onSkip, reason }) {
                 background: mode === m ? "rgba(255,255,255,0.1)" : "transparent",
                 color: mode === m ? C.white : "#64748B",
               }}>
-                {m === "login" ? {A.signInTab} : {A.registerTab}}
+                {m === "login" ? A.signInTab : A.registerTab}
               </button>
             ))}
           </div>
@@ -186,7 +186,7 @@ export default function AuthPage({ onBack, onSkip, reason }) {
             color: C.white, marginTop: 4, transition: "all 0.2s",
             boxShadow: loading ? "none" : "0 4px 20px rgba(13,148,136,0.35)",
           }}>
-            {loading ? {A.pleaseWait} : mode === "login" ? {A.signInBtn} : {A.registerBtn}}
+            {loading ? A.pleaseWait : mode === "login" ? A.signInBtn : A.registerBtn}
           </button>
 
           {/* 1st: Skip — most prominent alternative */}

@@ -401,7 +401,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                         {(user?.name || user?.email || "?")[0].toUpperCase()}
                       </div>
                       <div style={{ textAlign: "left" }}>
-                        <div style={{ fontSize: 12, fontWeight: 600 }}>{user?.name || {TC.account}}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600 }}>{user?.name || TC.account}</div>
                         <div style={{ fontSize: 10, color: "#556" }}>▾ Menu</div>
                       </div>
                     </button>
@@ -873,7 +873,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
             background: emailSaved ? "rgba(0,200,150,0.2)" : "rgba(13,148,136,0.3)",
             color: emailSaved ? C.green : "#0D9488", whiteSpace: "nowrap",
           }}>
-            {emailSaved ? "✓ Saved" : saving ? "…" : {TC.save}}
+            {emailSaved ? "✓ Saved" : saving ? "…" : TC.save}
           </button>
         </div>
         {emailError && <div style={{ fontSize: 11, color: C.red, marginTop: 6 }}>⚠ {emailError}</div>}
@@ -894,7 +894,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
           background: alertActive ? "rgba(239,68,68,0.2)" : "rgba(0,200,150,0.2)",
           color: alertActive ? C.red : C.green,
         }}>
-          {alertActive ? {TC.disable} : {TC.enable}}
+          {alertActive ? TC.disable : TC.enable}
         </button>
       </div>
     </div>

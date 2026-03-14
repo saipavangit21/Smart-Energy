@@ -445,7 +445,7 @@ function GasApplianceCalc({ ttfPrice }) {
       {appliances.map(a => {
         const sel = selections[a.id] || { selected: true, uses: a.default_uses_per_week };
         return (
-          <div key={a.id} style={{ background: C.card, border: `1px solid ${sel.selected ? `${C.orange}44` : C.border}`, borderRadius: 12, padding: 12, marginBottom: 8, opacity: sel.selected ? 1 : 0.45, transition: "all 0.15s" }}>
+          <div key={a.id} style={{ background: C.card, border: `1px solid ${sel.selected ? `$C.orange44` : C.border}`, borderRadius: 12, padding: 12, marginBottom: 8, opacity: sel.selected ? 1 : 0.45, transition: "all 0.15s" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div onClick={() => setSel(a.id, { selected: !sel.selected })}
                 style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${sel.selected?C.orange:C.border}`, background: sel.selected?`${C.orange}22`:"transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -675,8 +675,8 @@ function AlertsTab({ user, isGuest, onSignIn }) {
           <input value={alertEmail} onChange={e => { setAlertEmail(e.target.value); setEmailSaved(false); setEmailError(""); }} type="email" placeholder="your@email.com"
             style={{ flex: 1, background: "#0A2040", border: `1px solid ${emailError ? C.red : C.border}`, borderRadius: 8, color: C.light, fontSize: 14, padding: "10px 12px", outline: "none" }} />
           <button onClick={saveEmail} disabled={saving || emailSaved}
-            style={{ padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: emailSaved ? "default" : "pointer", border: "none", background: emailSaved ? `${C.green}33` : C.teal, color: emailSaved ? C.green : "#fff" }}>
-            {emailSaved ? "✓" : saving ? "…" : {TC.save}}
+            style={{ padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: emailSaved ? "default" : "pointer", border: "none", background: emailSaved ? `$C.green33` : C.teal, color: emailSaved ? C.green : "#fff" }}>
+            {emailSaved ? "✓" : saving ? "…" : TC.save}
           </button>
         </div>
         {emailError && <div style={{ color: C.red, fontSize: 12, marginTop: 6 }}>{emailError}</div>}
@@ -762,7 +762,7 @@ export default function GasTab({ user, isGuest, onSignIn, isMobile, mobileTab, s
         <div style={{ display: "flex", gap: 4, marginBottom: 16, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 4, width: "fit-content", flexWrap: "wrap" }}>
           {GAS_NAV.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              style={{ padding: "7px 13px", borderRadius: 9, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.15s", background: activeTab === t.id ? `${C.orange}33` : "transparent", color: activeTab === t.id ? C.orange : "#667" }}>
+              style={{ padding: "7px 13px", borderRadius: 9, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.15s", background: activeTab === t.id ? `$C.orange33` : "transparent", color: activeTab === t.id ? C.orange : "#667" }}>
               {t.icon} {t.label}
             </button>
           ))}
