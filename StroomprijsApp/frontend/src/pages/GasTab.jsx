@@ -477,7 +477,7 @@ function GasApplianceCalc({ ttfPrice }) {
       {ttfPrice && <div style={{ background: `${C.orange}11`, border: `1px solid ${C.orange}33`, borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: C.muted }}>🔥 Current TTF: <strong style={{ color: C.orange }}>€{ttfPrice?.toFixed(2)}/MWh</strong> — used in dynamic plan calculations</div>}
 
       <button onClick={calculate} disabled={loading}
-        style={{ width: "100%", padding: "14px 0", borderRadius: 12, border: "none", background: `linear-gradient(135deg,${C.orange},#C2410C)`, color: "#fff", fontSize: 15, fontWeight: 800, cursor: loading?"default":"pointer", marginTop: 4, boxShadow: `0 4px 20px ${C.orange}44`, opacity: loading ? 0.7 : 1 }}>
+        style={{ width: "100%", padding: "14px 0", borderRadius: 12, border: "none", background: `linear-gradient(135deg,$C.orange,#C2410C)`, color: "#fff", fontSize: 15, fontWeight: 800, cursor: loading?"default":"pointer", marginTop: 4, boxShadow: `0 4px 20px ${C.orange}44`, opacity: loading ? 0.7 : 1 }}>
         {loading ? "Calculating…" : "🔥 Find My Best Gas Plan →"}
       </button>
     </div>

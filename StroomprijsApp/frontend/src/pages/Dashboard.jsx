@@ -618,8 +618,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 12 : 13 }}>
                       <thead>
                         <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                          {[{TC.hour}, "€/MWh", `${supplier} €/kWh`, {TC.status}].map(h => (
-                            <th key={h} style={{ padding: "8px 10px", textAlign: h === {TC.hour} ? "left" : "right", color: "#445", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>{h}</th>
+                          {[ TC.hour, "€/MWh", `${supplier} €/kWh`, TC.status].map(h => (
+                            <th key={h} style={{ padding: "8px 10px", textAlign: h === TC.hour ? "left" : "right", color: "#445", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>{h}</th>
                           ))}
                         </tr>
                       </thead>

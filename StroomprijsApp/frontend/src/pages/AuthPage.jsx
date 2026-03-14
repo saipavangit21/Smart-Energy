@@ -182,7 +182,7 @@ export default function AuthPage({ onBack, onSkip, reason }) {
           <button onClick={handleSubmit} disabled={loading} style={{
             width: "100%", padding: "14px 0", borderRadius: 12, fontSize: 15, fontWeight: 700,
             border: "none", cursor: loading ? "not-allowed" : "pointer",
-            background: loading ? "rgba(13,148,136,0.5)" : `linear-gradient(135deg, ${C.teal}, ${C.blue})`,
+            background: loading ? "rgba(13,148,136,0.5)" : `linear-gradient(135deg, $C.teal, ${C.blue})`,
             color: C.white, marginTop: 4, transition: "all 0.2s",
             boxShadow: loading ? "none" : "0 4px 20px rgba(13,148,136,0.35)",
           }}>
