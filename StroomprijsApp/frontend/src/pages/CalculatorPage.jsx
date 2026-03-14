@@ -75,14 +75,17 @@ const Btn = ({ onClick, disabled, children, variant = "primary", style: s = {} }
 };
 
 // ─── Step progress indicator ───────────────────────────────────
-const STEP_META = [
-  { label: CC.step1 || CC.energyCost || "Energy",     icon: "⚡" },
-  { label: CC.step2 || "Appliances", icon: "🏠" },
-  { label: CC.step3 || "Usage",      icon: "📊" },
-  { label: CC.step4 || "Details",    icon: "👤" },
-];
+// STEP_META moved inside StepBar component
 
 function StepBar({ step }) {
+  const { tSection } = useLanguage();
+  const CC = tSection("calculator");
+  const STEP_META = [
+    { label: CC.step1 || "Energy",     icon: "⚡" },
+    { label: CC.step2 || "Appliances", icon: "🏠" },
+    { label: CC.step3 || "Usage",      icon: "📊" },
+    { label: CC.step4 || "Details",    icon: "👤" },
+  ];
   return (
     <div style={{ padding: "12px 0 16px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center" }}>
@@ -611,6 +614,10 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
 
 // ─── Plan card ────────────────────────────────────────────────
 function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
+
+  const { tSection } = useLanguage();
+  const CC = tSection("calculator");
+  const TC = tSection("common");
   const isOpen = expanded === plan.plan_id;
   const isGas  = plan.plan_id?.includes("gas");
   const accent = isGas ? C.orange : (plan.type === "dynamic" ? C.green : plan.type === "fixed" ? C.cyan : C.teal);
