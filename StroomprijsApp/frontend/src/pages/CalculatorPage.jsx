@@ -291,7 +291,7 @@ function Step2({ data, onChange, onNext, onBack }) {
             }}>−</button>
             <div style={{ textAlign: "center", minWidth: 38 }}>
               <div style={{ color: C.light, fontWeight: 800, fontSize: 14 }}>{sel.uses}×</div>
-              <div style={{ color: C.muted, fontSize: 9, lineHeight: 1 }}>per week</div>
+              <div style={{ color: C.muted, fontSize: 9, lineHeight: 1 }}>{CC.perWeek || "per week"}</div>
             </div>
             <button onClick={() => onSet(a.id, { uses: Math.min(21, sel.uses + 1) })} style={{
               width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.border}`,
@@ -313,8 +313,8 @@ function Step2({ data, onChange, onNext, onBack }) {
     <div>
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{CC.step2}</div>
-        <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>Which appliances<br/>do you use?</h2>
-        <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>Tap to toggle. Adjust how many times per week you use each one.</p>
+        <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>{CC.step2Title || "Which appliances do you use?"}</h2>
+        <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>{CC.step2Sub || "Tap to toggle."}</p>
       </div>
 
       {hasSolar && (
@@ -327,8 +327,8 @@ function Step2({ data, onChange, onNext, onBack }) {
       {hasElec && elecList.length > 0 && (
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.teal }}>⚡ Electricity appliances</div>
-            <div style={{ fontSize: 11, color: C.muted }}>{selectedElec} selected</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.teal }}>{CC.elecAppliances || "⚡ Electricity appliances"}</div>
+            <div style={{ fontSize: 11, color: C.muted }}>{`${selectedElec} ${CC.selected || "selected"}`}</div>
           </div>
           {elecList.map(a => (
             <AppRow key={a.id} a={a} sel={(data.elecSel||{})[a.id] || { selected: false, uses: a.default_uses_per_week }} onSet={setElec} accent={C.teal} />
@@ -339,8 +339,8 @@ function Step2({ data, onChange, onNext, onBack }) {
       {hasGas && gasList.length > 0 && (
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.orange }}>🔥 Gas appliances</div>
-            <div style={{ fontSize: 11, color: C.muted }}>{selectedGas} selected</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.orange }}>{CC.gasAppliances   || "🔥 Gas appliances"}</div>
+            <div style={{ fontSize: 11, color: C.muted }}>{`${selectedGas} ${CC.selected || "selected"}`}</div>
           </div>
           {gasList.map(a => (
             <AppRow key={a.id} a={a} sel={(data.gasSel||{})[a.id] || { selected: false, uses: a.default_uses_per_week }} onSet={setGas} accent={C.orange} />
@@ -375,6 +375,18 @@ function Step3({ data, onChange, onNext, onBack }) {
   const CC = tSection("calculator");
   const TC = tSection("common");
   const REGIONS = REGIONS_DATA.map(r => ({ ...r, label: TC[r.id] || r.id }));
+  const HOUSEHOLD_SIZES = [
+    { id: "1",   label: CC.household1Label  || "1 person",   icon: "👤", sub: CC.household1Sub  || "Studio / flat" },
+    { id: "2",   label: CC.household2Label  || "2 people",   icon: "👥", sub: CC.household2Sub  || "Couple" },
+    { id: "3-4", label: CC.household34Label || "3–4 people", icon: "👨‍👩‍👧", sub: CC.household34Sub || "Family home" },
+    { id: "5+",  label: CC.household5Label  || "5+ people",  icon: "👨‍👩‍👧‍👦", sub: CC.household5Sub  || "Large family" },
+  ];
+  const CONTRACT_TYPES = [
+    { id: "cheapest", icon: "💸", label: CC.contractCheapestLabel || "Just the cheapest", sub: CC.contractCheapestSub || "Show all types, ranked by price" },
+    { id: "variable", icon: "📈", label: CC.contractVariableLabel || "Variable rate",     sub: CC.contractVariableSub || "Moves monthly with the market" },
+    { id: "fixed",    icon: "🔒", label: CC.contractFixedLabel    || "Fixed rate",        sub: CC.contractFixedSub    || "Locked price for 1–3 years" },
+    { id: "dynamic",  icon: "⚡", label: CC.contractDynamicLabel  || "Dynamic (EPEX)",    sub: CC.contractDynamicSub  || "Hourly spot prices — best with SmartPrice" },
+  ];
   const set = (k, v) => onChange({ [k]: v });
   const hasSolar = (data.energyTypes || []).includes("solar");
   const canGo = data.region && data.householdSize && data.contractPref;
@@ -409,13 +421,13 @@ function Step3({ data, onChange, onNext, onBack }) {
     <div>
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{CC.step3}</div>
-        <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>Your usage<br/>& situation</h2>
-        <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>This lets us calculate regional grid costs and find the right contract type.</p>
+        <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>{CC.step3Title || "Your usage & situation"}</h2>
+        <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>{CC.step3Sub || "This lets us calculate regional grid costs."}</p>
       </div>
 
       {/* Region */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>📍 Your region</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>{CC.yourRegion || "📍 Your region"}</div>
         <div style={{ display: "flex", gap: 8 }}>
           {REGIONS.map(r => {
             const on = data.region === r.id;
@@ -436,7 +448,7 @@ function Step3({ data, onChange, onNext, onBack }) {
 
       {/* Household */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>🏠 Household size</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>{CC.householdSize || "🏠 Household size"}</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           {HOUSEHOLD.map(h => {
             const on = data.householdSize === h.id;
@@ -569,7 +581,7 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
 
       {/* Summary chip row */}
       <div style={{ background: C.teal + "0A", border: `1px solid ${C.teal}25`, borderRadius: 14, padding: "13px 16px", marginBottom: 22 }}>
-        <div style={{ fontSize: 10, color: C.teal, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 9 }}>Your profile</div>
+        <div style={{ fontSize: 10, color: C.teal, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 9 }}>{CC.yourProfile || "Your profile"}</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {chips.map((ch, i) => (
             <span key={i} style={{ fontSize: 11, background: ch.color + "18", border: `1px solid ${ch.color}30`,
@@ -586,10 +598,10 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
             value={data.lastName || ""} onChange={set} />
         </div>
         <Field fieldKey="email" type="email" label={TC.email || "Email address"} required={isGuest}
-          placeholder="jan@example.be" hint="We'll send your plan comparison here. No spam, ever."
+          placeholder="jan@example.be" hint=CC.emailHint || "We'll send your plan comparison here."
           value={data.email || ""} onChange={set} />
         <Field fieldKey="postcode" label={TC.postcode || "Postcode"} placeholder="e.g. 2000"
-          hint="Optional — improves local grid tariff accuracy."
+          hint=CC.postcodeHint || "Optional — improves accuracy."
           value={data.postcode || ""} onChange={set} />
         <Field fieldKey="currentBill" type="number" label={TC.currentBill || "Current monthly bill"}
           prefix="€" placeholder="e.g. 180" hint="Optional — we'll calculate your potential savings."
@@ -640,7 +652,7 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginBottom: 3 }}>
-            {plan.cheapest && <Badge color={C.green}>🏆 BEST DEAL</Badge>}
+            {plan.cheapest && <Badge color={C.green}>{CC.bestDeal    || "🏆 BEST DEAL"}</Badge>}
             <span style={{ fontSize: 13, fontWeight: 700, color: C.light }}>{plan.supplier_name}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
@@ -716,6 +728,9 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
 
 // ─── Results page ─────────────────────────────────────────────
 function Results({ results, data, onRestart, isGuest, onSignIn }) {
+  const { tSection } = useLanguage();
+  const CC = tSection("calculator");
+  const TC = tSection("common");
   const [expanded, setExpanded] = useState(null);
   const hasElec = results.electricity?.success;
   const hasGas  = results.gas?.success;
@@ -729,14 +744,14 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
       <div style={{ background: accent + "08", border: `1px solid ${accent}22`, borderRadius: 14, padding: "14px 16px", marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: cons.breakdown?.length ? 12 : 0 }}>
           <div>
-            <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 3 }}>Annual usage</div>
+            <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 3 }}>{CC.annualUsage || "Annual usage"}</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: C.light, fontFamily: "monospace", lineHeight: 1 }}>
               {cons.total_kwh?.toLocaleString()} <span style={{ fontSize: 12, color: C.muted }}>kWh</span>
             </div>
           </div>
           {!isGas && cons.peak_kw && (
             <div>
-              <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 3 }}>Peak load</div>
+              <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 3 }}>{CC.peakLoad    || "Peak load"}</div>
               <div style={{ fontSize: 28, fontWeight: 900, color: C.yellow, fontFamily: "monospace", lineHeight: 1 }}>
                 {cons.peak_kw} <span style={{ fontSize: 12, color: C.muted }}>kW</span>
               </div>
@@ -764,10 +779,10 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
       <div style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.1),rgba(13,148,136,0.08))",
         border: `1px solid ${C.green}44`, borderRadius: 18, padding: "20px 22px", marginBottom: 22 }}>
         <div style={{ fontSize: 10, color: C.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
-          🎉 Your personalised plan comparison
+          {`🎉 ${CC.resultsTitle || "Your personalised plan comparison"}`}
         </div>
         <div style={{ fontSize: 18, fontWeight: 900, color: C.light, marginBottom: annualBill ? 8 : 0 }}>
-          {data.firstName ? `Hi ${data.firstName}! ` : ""}Here are the best plans for your profile.
+          {data.firstName ? `${(CC.hiUser || "Hi {name}! ").replace("{name}", data.firstName)}` : ""}{CC.resultsSub || "Here are the best plans for your profile."}
         </div>
         {annualBill && hasElec && results.electricity.results?.[0] && (
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 10 }}>
@@ -817,8 +832,8 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, marginTop: 4 }}>
             <span style={{ fontSize: 18 }}>⚡</span>
-            <span style={{ fontSize: 15, fontWeight: 800, color: C.teal }}>Electricity Plans</span>
-            <span style={{ fontSize: 11, color: C.muted }}>· {results.electricity.results?.length} plans found</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: C.teal }}>{CC.electricityPlans || "Electricity Plans"}</span>
+            <span style={{ fontSize: 11, color: C.muted }}>· {`${results.electricity.results?.length} ${CC.plansFound || "plans found"}`}</span>
           </div>
           <ConsumptionCard cons={results.electricity.consumption} isGas={false} />
           {results.electricity.results?.map((plan, i) => (
@@ -833,8 +848,8 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, marginTop: 20 }}>
             <span style={{ fontSize: 18 }}>🔥</span>
-            <span style={{ fontSize: 15, fontWeight: 800, color: C.orange }}>Gas Plans</span>
-            <span style={{ fontSize: 11, color: C.muted }}>· {results.gas.results?.length} plans found</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: C.orange }}>{CC.gasPlans || "Gas Plans"}</span>
+            <span style={{ fontSize: 11, color: C.muted }}>· {`${results.gas.results?.length} ${CC.plansFound || "plans found"}`}</span>
           </div>
           <ConsumptionCard cons={results.gas.consumption} isGas={true} />
           {results.gas.results?.map((plan, i) => (
