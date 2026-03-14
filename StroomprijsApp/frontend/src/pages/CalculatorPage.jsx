@@ -575,18 +575,18 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field fieldKey="firstName" label=TC.firstName || "First name" required={isGuest} placeholder="Jan"
+          <Field fieldKey="firstName" label={TC.firstName || "First name"} required={isGuest} placeholder="Jan"
             value={data.firstName || ""} onChange={set} />
-          <Field fieldKey="lastName" label=TC.lastName  || "Last name" placeholder="Janssen"
+          <Field fieldKey="lastName" label={TC.lastName || "Last name"} placeholder="Janssen"
             value={data.lastName || ""} onChange={set} />
         </div>
-        <Field fieldKey="email" type="email" label=TC.email || "Email address" required={isGuest}
+        <Field fieldKey="email" type="email" label={TC.email || "Email address"} required={isGuest}
           placeholder="jan@example.be" hint="We'll send your plan comparison here. No spam, ever."
           value={data.email || ""} onChange={set} />
-        <Field fieldKey="postcode" label=TC.postcode || "Postcode" placeholder="e.g. 2000"
+        <Field fieldKey="postcode" label={TC.postcode || "Postcode"} placeholder="e.g. 2000"
           hint="Optional — improves local grid tariff accuracy."
           value={data.postcode || ""} onChange={set} />
-        <Field fieldKey="currentBill" type="number" label=TC.currentBill || "Current monthly bill"
+        <Field fieldKey="currentBill" type="number" label={TC.currentBill || "Current monthly bill"}
           prefix="€" placeholder="e.g. 180" hint="Optional — we'll calculate your potential savings."
           value={data.currentBill || ""} onChange={set} />
       </div>
