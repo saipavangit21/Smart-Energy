@@ -796,7 +796,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
   const isValidEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
   const saveEmail = async () => {
-    if (!isValidEmail(alertEmail)) { setEmailError({T.emailInvalid}); return; }
+    if (!isValidEmail(alertEmail)) { setEmailError(T.emailInvalid); return; }
     setEmailError("");
     setSaving(true);
     try {
@@ -804,14 +804,14 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
       if (res?.error) { setEmailError(res.error); }
       else { setEmailSaved(true); }
     } catch (err) {
-      setEmailError(err.message || {T.emailError});
+      setEmailError(err.message || T.emailError);
     }
     setSaving(false);
   };
 
   const handleToggle = async () => {
     if (!alertActive) {
-      if (!isValidEmail(alertEmail)) { setEmailError({T.emailInvalid}); return; }
+      if (!isValidEmail(alertEmail)) { setEmailError(T.emailInvalid); return; }
       if (!emailSaved) {
         setSaving(true);
         try {
@@ -819,7 +819,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
           if (res?.error) { setEmailError(res.error); setSaving(false); return; }
           setEmailSaved(true);
         } catch (err) {
-          setEmailError(err.message || {T.emailError});
+          setEmailError(err.message || T.emailError);
           setSaving(false);
           return;
         }

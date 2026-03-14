@@ -58,13 +58,13 @@ export default function AuthPage({ onBack, onSkip, reason }) {
     reset();
 
     if (mode === "register") {
-      if (!name.trim())        { setError({A.errName}); return; }
-      if (!password)           { setError({A.errPassword}); return; }
-      if (password.length < 8) { setError({A.errPasswordLength}); return; }
-      if (password !== confirm) { setError({A.errPasswordMatch}); return; }
+      if (!name.trim())        { setError(A.errName); return; }
+      if (!password)           { setError(A.errPassword); return; }
+      if (password.length < 8) { setError(A.errPasswordLength); return; }
+      if (password !== confirm) { setError(A.errPasswordMatch); return; }
     } else {
-      if (!loginId.trim()) { setError({A.errNameOrEmail}); return; }
-      if (!password)       { setError({A.errEnterPassword}); return; }
+      if (!loginId.trim()) { setError(A.errNameOrEmail); return; }
+      if (!password)       { setError(A.errEnterPassword); return; }
     }
 
     setLoading(true);
@@ -77,7 +77,7 @@ export default function AuthPage({ onBack, onSkip, reason }) {
         await register({ name, password });
       }
     } catch (err) {
-      setError(err.message || {A.errGeneric});
+      setError(err.message || A.errGeneric);
     } finally {
       setLoading(false);
     }
