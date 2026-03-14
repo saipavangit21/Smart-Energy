@@ -731,6 +731,7 @@ export default function GasTab({ user, isGuest, onSignIn, isMobile, mobileTab, s
   const T  = tSection("dashboard");
   const TC = tSection("common");
   const AL = tSection("alerts");
+  const PL = tSection("priceLabels");
   const GAS_NAV = makeGasNav(TC);
   const GAS_REGIONS = makeGasRegions(TC);
   const [desktopTab, setDesktopTab] = useState("today");

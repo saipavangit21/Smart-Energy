@@ -21,7 +21,7 @@ function PriceTooltip({ active, payload, label, supplier }) {
   const mwh = payload[0]?.value;
   if (mwh == null) return null;
   const sup = SUPPLIERS.find(s => s.name === supplier);
-  const lbl = getPriceLabel(mwh);
+  const lbl = getPriceLabel(mwh, PL);
   const col = getPriceColor(mwh);
   return (
     <div style={{ background: "rgba(8,12,22,0.97)", border: `1px solid ${col}44`, borderRadius: 14, padding: "12px 16px" }}>
@@ -232,6 +232,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   const { tSection } = useLanguage();
   const T  = tSection("dashboard");
   const TC = tSection("common");
+  const PL = tSection("priceLabels");  // price label translations
   const NAV_ITEMS = [
     { id: "today",    icon: "📈", label: TC.today },
     { id: "tomorrow", icon: "⏩", label: TC.tomorrow },
@@ -319,7 +320,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   const tomorrowData = prices.filter(p => p.day === "tomorrow");
   const chartData = tab === "tomorrow" ? tomorrowData : todayData;
   const mwh = current?.price_eur_mwh ?? null;
-  const lbl = mwh != null ? getPriceLabel(mwh) : null;
+  const lbl = mwh != null ? getPriceLabel(mwh, PL) : null;
   const sup = SUPPLIERS.find(s => s.name === supplier);
   const retailKwh = mwh != null && sup ? getSupplierPrice(mwh / 1000, sup) : null;
 
@@ -395,7 +396,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                   <button onClick={onSignIn} style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(13,148,136,0.5)", background: "rgba(13,148,136,0.12)", color: "#0D9488", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.22)"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.12)"; }}>
-                    Sign In — It's Free →
+                    {TC.signIn} →
                   </button>
                 ) : (
                   <>
@@ -506,7 +507,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 
 {energyType === "electricity" && (
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 10, color: "#445", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Your Supplier</div>
+          <div style={{ fontSize: 10, color: "#445", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>{T.yourSupplier}</div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {SUPPLIERS.map(s => (
               <button key={s.name} onClick={() => changeSupplier(s.name)} style={{ padding: isMobile ? "6px 11px" : "7px 14px", borderRadius: 30, fontSize: isMobile ? 11 : 12, fontWeight: 600, cursor: "pointer", border: supplier === s.name ? `1px solid ${s.color}` : `1px solid ${C.border}`, background: supplier === s.name ? `${s.color}22` : C.card, color: supplier === s.name ? s.color : "#778", transition: "all 0.15s" }}>
@@ -634,7 +635,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                           return acc;
                         }, {})).map((row, i) => {
                           const rowMwh = row.price_eur_mwh;
-                          const rowLbl = getPriceLabel(rowMwh);
+                          const rowLbl = getPriceLabel(rowMwh, PL);
                           const rowCol = getPriceColor(rowMwh);
                           const isNow = row.is_current;
                           return (
@@ -717,7 +718,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             {cheapest.length === 0 ? <div style={{ color:"#556", textAlign:"center", padding:"30px 0" }}>Loading…</div>
             : cheapest.map((h, i) => {
               const ts = new Date(h.timestamp);
-              const lbl_ = getPriceLabel(h.price_eur_mwh);
+              const lbl_ = getPriceLabel(h.price_eur_mwh, PL);
               return (
                 <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 14px", marginBottom:8, background:"rgba(0,200,150,0.04)", border:"1px solid rgba(0,200,150,0.12)", borderRadius:14 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>

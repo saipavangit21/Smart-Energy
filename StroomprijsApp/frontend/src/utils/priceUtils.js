@@ -21,13 +21,14 @@ export function getPriceColor(priceMwh) {
   return '#EF4444'
 }
 
-export function getPriceLabel(priceMwh) {
-  if (priceMwh < 0)    return { text: 'Negative price!', emoji: '⚡', tip: 'Grid is overloaded — run everything now!' }
-  if (priceMwh < 50)   return { text: 'Very cheap',       emoji: '🟢', tip: 'Great time for high consumption' }
-  if (priceMwh < 90)   return { text: 'Cheap',            emoji: '🟡', tip: 'Good time for laundry, EV charging' }
-  if (priceMwh < 130)  return { text: 'Moderate',         emoji: '🟠', tip: 'Avoid high loads if possible' }
-  if (priceMwh < 160)  return { text: 'Expensive',        emoji: '🔴', tip: 'Postpone high consumption' }
-  return                        { text: 'Peak price',      emoji: '🚨', tip: 'Avoid using large appliances!' }
+export function getPriceLabel(priceMwh, labels) {
+  const L = labels || {};
+  if (priceMwh < 0)    return { text: L.negative   || 'Negative price!', emoji: '🤑', tip: 'Grid is overloaded — run everything now!' }
+  if (priceMwh < 50)   return { text: L.very_cheap || 'Very cheap',       emoji: '💚', tip: 'Great time for high consumption' }
+  if (priceMwh < 90)   return { text: L.cheap      || 'Cheap',            emoji: '🟡', tip: 'Good time for laundry, EV charging' }
+  if (priceMwh < 130)  return { text: L.moderate   || 'Moderate',         emoji: '🟠', tip: 'Avoid high loads if possible' }
+  if (priceMwh < 160)  return { text: L.expensive  || 'Expensive',        emoji: '🔴', tip: 'Postpone high consumption' }
+  return                        { text: L.peak      || 'Peak price',       emoji: '⛔', tip: 'Avoid using large appliances!' }
 }
 
 export function formatPrice(priceMwh, unit = 'MWh') {
