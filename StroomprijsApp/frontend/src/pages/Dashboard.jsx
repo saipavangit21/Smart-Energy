@@ -549,7 +549,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               <div style={{ display: "flex", background: C.card, borderRadius: 8, padding: 3, gap: 2 }}>
                 {["graph", "table"].map(v => (
                   <button key={v} onClick={() => setViewMode(v)} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", background: viewMode === v ? "rgba(255,255,255,0.12)" : "transparent", color: viewMode === v ? "#fff" : "#556" }}>
-                    {v === "graph" ? "📊 Graph" : "📋 Table"}
+                    {v === "graph" ? `📊 ${T.graph}` : `📋 ${T.table}`}
                   </button>
                 ))}
               </div>
@@ -577,13 +577,13 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                 {!isMobile && (
                   <div style={{ paddingLeft: 14, marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: 14 }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700 }}>{tab === "today" ? "Today's" : "Tomorrow's"} Hourly Prices · Belgium</div>
-                      <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>EPEX Spot · {lastFetched && `Updated ${lastFetched.toLocaleTimeString("en-GB")}`}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700 }}>{tab === "today" ? T.todayHourlyPrices : T.tomorrowHourlyPrices}</div>
+                      <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>{T.epexUpdated} {lastFetched && lastFetched.toLocaleTimeString("en-GB")}</div>
                     </div>
                     <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3, gap: 2 }}>
                       {["graph", "table"].map(v => (
                         <button key={v} onClick={() => setViewMode(v)} style={{ padding: "5px 14px", borderRadius: 6, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: viewMode === v ? "rgba(255,255,255,0.1)" : "transparent", color: viewMode === v ? "#fff" : "#556" }}>
-                          {v === "graph" ? "📊 Graph" : "📋 Table"}
+                          {v === "graph" ? `📊 ${T.graph}` : `📋 ${T.table}`}
                         </button>
                       ))}
                     </div>
@@ -666,8 +666,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               <>
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: "16px 8px 12px", marginBottom: 12 }}>
                   <div style={{ paddingLeft: 14, marginBottom: 12 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700 }}>7-Day Average Prices</div>
-                    <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>Tap a day for hourly detail</div>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}{T.sevenDayTitle || "7-Day Average Prices"}</div>
+                    <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}{T.sevenDaySub || "Tap a day for hourly detail"}</div>
                   </div>
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={history} margin={{ top:0, right:16, left:0, bottom:0 }}>
@@ -798,6 +798,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
   const { tSection } = useLanguage();
   const T  = tSection("alerts");
   const TC = tSection("common");
+  const AL = T;
   const existingEmail = user?.preferences?.alertEmail || user?.email || "";
   const [alertEmail, setAlertEmail] = useState(existingEmail);
   const [emailSaved, setEmailSaved] = useState(existingEmail.length > 0);
@@ -842,8 +843,8 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
 
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
-      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>🔔 Price Alerts</div>
-      <div style={{ fontSize: 12, color: "#556", marginBottom: 20 }}>Get emailed when electricity drops below your threshold</div>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{`🔔 ${AL.title}`}</div>
+      <div style={{ fontSize: 12, color: "#556", marginBottom: 20 }}>{AL.subtitle}</div>
 
       {/* Threshold slider */}
       <div style={{ marginBottom: 24 }}>
@@ -854,14 +855,14 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
           onChange={e => saveAlertThreshold(+e.target.value)}
           style={{ width: "100%", accentColor: C.yellow, cursor: "pointer" }} />
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#445", marginTop: 4 }}>
-          <span>€-20</span><span>€200/MWh</span>
+          <span>-2 cent</span><span>20 cent/kWh</span>
         </div>
       </div>
 
       {/* Email input — only shown here */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 12, color: "#778", marginBottom: 8 }}>
-          📧 Alert email <span style={{ color: "#445" }}>(required to receive notifications)</span>
+          {`📧 ${AL.emailLabel}`}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <input
@@ -883,7 +884,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
           </button>
         </div>
         {emailError && <div style={{ fontSize: 11, color: C.red, marginTop: 6 }}>⚠ {emailError}</div>}
-        {emailSaved && <div style={{ fontSize: 11, color: C.green, marginTop: 6 }}>✓ Alerts will be sent to {alertEmail}</div>}
+        {emailSaved && <div style={{ fontSize: 11, color: C.green, marginTop: 6 }}>{`✓ ${AL.emailSaved} → ${alertEmail}`}</div>}
       </div>
 
       {/* Enable/disable toggle */}

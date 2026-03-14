@@ -270,6 +270,8 @@ export const translations = {
       gridNoteBrussels: "Sibelga · kWh tariff",
       variableElec: "Variable · electricity",
       cheapestSupplier: "Cheapest right now",
+      sevenDayTitle: "7-Day Average Prices",
+      sevenDaySub: "Tap a day for hourly detail",
     },
     nl: {
       live: "LIVE",
@@ -298,6 +300,8 @@ export const translations = {
       gridNoteBrussels: "Sibelga · kWh-tarief",
       variableElec: "Variabel · elektriciteit",
       cheapestSupplier: "Goedkoopste op dit moment",
+      sevenDayTitle: "7-daags gemiddelde",
+      sevenDaySub: "Tik op een dag voor uurdetail",
     },
     fr: {
       live: "EN DIRECT",
@@ -326,6 +330,8 @@ export const translations = {
       gridNoteBrussels: "Sibelga · Tarif kWh",
       variableElec: "Variable · électricité",
       cheapestSupplier: "Le moins cher en ce moment",
+      sevenDayTitle: "Prix moyens sur 7 jours",
+      sevenDaySub: "Appuyez sur un jour pour le détail horaire",
     },
   },
 
