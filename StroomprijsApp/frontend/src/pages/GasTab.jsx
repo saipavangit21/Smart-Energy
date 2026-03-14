@@ -165,6 +165,9 @@ function TomorrowTab({ history }) {
 
 // ── 7 DAYS ───────────────────────────────────────────────────
 function WeekTab() {
+  const { tSection } = useLanguage();
+  const TC = tSection("common");
+  const T  = tSection("dashboard");
   const [history, setHistory] = useState(null);
   const [days,    setDays]    = useState(7);
 
@@ -257,11 +260,13 @@ function calcCost(rate, standing, consumption) {
 
 
 // ── GAS TABS: Calculator + Compare ───────────────────────────
-const GAS_REGIONS = [
-  { id: "flanders", label: TC.flanders, flag: "🔶" },
-  { id: "wallonia", label: TC.wallonia,  flag: "🔷" },
-  { id: "brussels", label: TC.brussels,  flag: "🏙️" },
-];
+function makeGasRegions(TC) {
+  return [
+    { id: "flanders", label: TC.flanders, flag: "🔶" },
+    { id: "wallonia", label: TC.wallonia,  flag: "🔷" },
+    { id: "brussels", label: TC.brussels,  flag: "🏙️" },
+  ];
+}
 const GAS_TYPE_COLOR = { variable: "#0D9488", fixed: "#06B6D4", dynamic: "#10B981" };
 const GAS_TYPE_LABEL = { variable: "Variable", fixed: "Fixed", dynamic: "Dynamic" };
 
@@ -613,6 +618,10 @@ function SuppliersTab({ ttfPrice, isMobile }) {
 
 
 function AlertsTab({ user, isGuest, onSignIn }) {
+  const { tSection } = useLanguage();
+  const TC = tSection("common");
+  const T  = tSection("alerts");
+  const AL = tSection("alerts");
   const { updatePreferences } = useAuth();
   const prefs = user?.preferences || {};
   const [threshold,   setThreshold]   = useState(prefs.gasAlertThreshold || 30);
@@ -723,6 +732,7 @@ export default function GasTab({ user, isGuest, onSignIn, isMobile, mobileTab, s
   const TC = tSection("common");
   const AL = tSection("alerts");
   const GAS_NAV = makeGasNav(TC);
+  const GAS_REGIONS = makeGasRegions(TC);
   const [desktopTab, setDesktopTab] = useState("today");
   const [current,    setCurrent]    = useState(null);
   const [history,    setHistory]    = useState(null);
