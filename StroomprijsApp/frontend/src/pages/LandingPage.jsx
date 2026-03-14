@@ -8,12 +8,6 @@ import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher from "../components/LangSwitcher";
 
 const featureIcons = ["⚡", "🔥", "💚", "🔔", "🔌", "📅"];
-  { icon: "🔥", title: "Gas Prices (TTF)", desc: "Real-time TTF natural gas prices alongside electricity — track both energy costs in one dashboard." },
-  { icon: "💚", title: "5 Cheapest Hours", desc: "We find the best windows each day to run your EV, washing machine, or dishwasher — saving money every single day." },
-  { icon: "🔔", title: "Price Drop Alerts", desc: "Set a threshold and get emailed when prices fall below it. Never miss cheap electricity again." },
-  { icon: "🔌", title: "Plan Calculator", desc: "Pick your appliances, adjust weekly usage, choose your region — we rank all 7 Belgian suppliers by your real annual cost including grid fees and VAT." },
-  { icon: "📅", title: "7-Day History", desc: "Understand price patterns over the past week. Plan consumption around Belgium's energy market rhythm." },
-];
 
 const suppliers = [
   { name: "Engie",         logo: "🔵" },
