@@ -56,13 +56,12 @@ function StatCard({ label, value, color, sub }) {
 }
 
 // ── TODAY ────────────────────────────────────────────────────
-function TodayTab({
+function TodayTab({ current, history }) {
   const { tSection } = useLanguage();
   const T  = tSection("dashboard");
   const TC = tSection("common");
   const CC = tSection("calculator");
   const AL = tSection("alerts");
- current, history }) {
   if (!current) return <Loading />;
   const price = current.ttf?.price;
   const color = pc(price || 0);
@@ -125,13 +124,12 @@ function TodayTab({
 }
 
 // ── TOMORROW ─────────────────────────────────────────────────
-function TomorrowTab({
+function TomorrowTab({ history }) {
   const { tSection } = useLanguage();
   const T  = tSection("dashboard");
   const TC = tSection("common");
   const CC = tSection("calculator");
   const AL = tSection("alerts");
- history }) {
   const stats  = history?.stats;
   const data   = history?.history || [];
   const latest = data[data.length - 1];
