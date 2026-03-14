@@ -566,7 +566,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               </div>
             ) : chartData.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 20px", color: "#556" }}>
-                {tab === "tomorrow" ? <><div style={{ fontSize: 28, marginBottom: 10 }}>⏰</div><div style={{ fontSize: 14, color: "#778", marginBottom: 6 }}>Tomorrow's prices not yet published</div><div style={{ fontSize: 12, color: "#445" }}>EPEX Spot publishes at <strong style={{ color: C.teal }}>13:00 CET</strong> daily</div></> : {TC.noData}}
+                {tab === "tomorrow" ? <><div style={{ fontSize: 28, marginBottom: 10 }}>⏰</div><div style={{ fontSize: 14, color: "#778", marginBottom: 6 }}>Tomorrow's prices not yet published</div><div style={{ fontSize: 12, color: "#445" }}>EPEX Spot publishes at <strong style={{ color: C.teal }}>13:00 CET</strong> daily</div></> : TC.noData}
               </div>
             ) : (
               <>
@@ -885,7 +885,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
         <div>
           <div style={{ fontWeight: 600, fontSize: 14 }}>Alert {alertActive ? "🟢 Active" : "⚫ Inactive"}</div>
           <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>
-            {alertActive ? `Monitoring prices · email: ${alertEmail}` : {T.signInRequired}}
+            {alertActive ? `Monitoring prices · email: ${alertEmail}` : T.signInRequired}
           </div>
         </div>
         <button onClick={handleToggle} style={{
