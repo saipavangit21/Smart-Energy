@@ -133,7 +133,7 @@ const EMBEDDED_TARIFFS = {
     },
     "octaplus": {
       "id": "octaplus", "name": "Octa+", "logo": "🟠", "color": "#F97316",
-      "url": "https://www.octaplus.be", "scrape_url": "https://www.octaplus.be/nl/tarieven",
+      "url": "https://www.octaplus.be/nl/elektriciteit-aardgas/tarieven", "scrape_url": "https://www.octaplus.be/nl/elektriciteit-aardgas/tarieven",
       "plans": [
         { "id":"octa-elec-flex",   "name":"Flex",       "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1008, "standing_charge_year":91.20, "green":false, "highlights":["Belgian independent","No exit fee","Monthly indexed"],           "formula":"EPEX_SPP + 1.4 c€",     "last_verified":"2026-03-01" },
         { "id":"octa-elec-green",  "name":"Green Flex", "type":"variable", "energy_type":"electricity", "duration":"indefinite", "regions":["flanders","wallonia","brussels"], "energy_rate_excl_vat":0.1029, "standing_charge_year":91.20, "green":true,  "highlights":["100% Belgian green","No exit fee","Monthly indexed"],            "formula":"EPEX_SPP + 1.6 c€",     "last_verified":"2026-03-01" },
@@ -321,8 +321,8 @@ async function scrapeVREG() {
   try {
     // VREG publishes a public JSON/XML API for approved tariffs
     const urls = [
-      "https://www.vreg.be/nl/tools/tariefscanner/api/products?productType=ELECTRICITY&region=FLEMISH",
-      "https://www.vreg.be/nl/tools/tariefscanner/api/products?productType=GAS&region=FLEMISH",
+      "https://vtest.vreg.be/api/products?productType=ELECTRICITY&region=FLEMISH",
+      "https://vtest.vreg.be/api/products?productType=GAS&region=FLEMISH",
     ];
     for (const url of urls) {
       const energyType = url.includes("GAS") ? "gas" : "electricity";
@@ -348,8 +348,8 @@ async function scrapeVREG() {
 async function scrapeCallMePower() {
   const updates = {};
   const urls = [
-    { url: "https://callmepower.be/en/energy/tariffs",     type: "electricity" },
-    { url: "https://callmepower.be/en/gas/tariffs",        type: "gas" },
+    { url: "https://callmepower.be/nl/energie/leveranciers",  type: "electricity" },
+    { url: "https://callmepower.be/nl/energie/gids/tarief",   type: "gas" },
   ];
   const KNOWN_SUPPLIERS = [
     { key: "engie",         aliases: ["engie"] },
@@ -418,12 +418,12 @@ async function scrapeSupplierPages() {
   const targets = [
     {
       key: "bolt_electricity",
-      url: "https://www.boltenergie.be/en/electricity/",
+      url: "https://www.boltenergie.be/nl/tarief",
       pattern: /markup[^€\d]*([0-9][.,][0-9]{1,2})\s*c[€e]|([0-9][.,][0-9]{1,2})\s*c[€e]\/kWh\s*markup/i,
     },
     {
       key: "bolt_gas",
-      url: "https://www.boltenergie.be/en/gas/",
+      url: "https://www.boltenergie.be/nl/prijslijsten",
       pattern: /markup[^€\d]*([0-9][.,][0-9]{1,2})\s*c[€e]|([0-9][.,][0-9]{1,2})\s*c[€e]\/kWh\s*markup/i,
     },
     {
@@ -438,7 +438,7 @@ async function scrapeSupplierPages() {
     },
     {
       key: "octaplus_electricity",
-      url: "https://www.octaplus.be/nl/tarieven",
+      url: "https://www.octaplus.be/nl/elektriciteit-aardgas/tarieven",
       pattern: /(\d{1,2}[.,]\d{2,4})\s*c[€e]\/kWh|(\d{1,2}[.,]\d{2,4})\s*euro(?:cent)?\/kWh/i,
     },
   ];
