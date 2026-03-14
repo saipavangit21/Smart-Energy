@@ -17,6 +17,8 @@ import { SUPPLIERS, getSupplierPrice, getPriceColor, getPriceLabel } from "../ut
 import GasTab from "./GasTab";
 
 function PriceTooltip({ active, payload, label, supplier }) {
+  const { tSection } = useLanguage();
+  const PL = tSection("priceLabels");
   if (!active || !payload?.length) return null;
   const mwh = payload[0]?.value;
   if (mwh == null) return null;
