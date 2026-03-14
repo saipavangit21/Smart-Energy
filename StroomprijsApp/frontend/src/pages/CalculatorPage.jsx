@@ -374,6 +374,7 @@ function Step3({ data, onChange, onNext, onBack }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
+  const REGIONS = REGIONS_DATA.map(r => ({ ...r, label: TC[r.id] || r.id }));
   const set = (k, v) => onChange({ [k]: v });
   const hasSolar = (data.energyTypes || []).includes("solar");
   const canGo = data.region && data.householdSize && data.contractPref;
