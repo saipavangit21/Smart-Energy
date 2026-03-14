@@ -79,9 +79,9 @@ function TodayTab({ current, history }) {
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <StatCard label="30-day Low"  value={stats?.min != null ? `€${stats.min}` : "—"} color={C.green}  />
-        <StatCard label="30-day Avg"  value={stats?.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} />
-        <StatCard label="30-day High" value={stats?.max != null ? `€${stats.max}` : "—"} color={C.orange} />
+        <StatCard label=T.periodLow  || "30-day Low"  value={stats?.min != null ? `€${stats.min}` : "—"} color={C.green}  />
+        <StatCard label=T.periodAvg  || "30-day Avg"  value={stats?.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} />
+        <StatCard label=T.periodHigh || "30-day High" value={stats?.max != null ? `€${stats.max}` : "—"} color={C.orange} />
       </div>
 
       {recent.length > 0 && (
@@ -101,9 +101,9 @@ function TodayTab({ current, history }) {
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 }}>
         <div style={{ color: C.teal, fontSize: 13, fontWeight: 700, marginBottom: 12 }}>💡 What makes up your gas bill?</div>
         {[
-          { pct: "~40%", label: "Energy (TTF-based)",    desc: "The market price shown above — varies daily",             color: C.orange },
-          { pct: "~35%", label: "Grid & Distribution",   desc: "Fluxys (transport) + Fluvius/ORES (local distribution)",  color: C.teal   },
-          { pct: "~25%", label: "Taxes & Levies",        desc: "Federal contribution + VAT (21%)",                        color: C.muted  },
+          { pct: "~40%", label: T.gasEnergy   || "Energy (TTF-based)",    desc: T.gasEnergyDesc || "Market price — varies daily",             color: C.orange },
+          { pct: "~35%", label: T.gasGrid     || "Grid & Distribution",   desc: T.gasGridDesc || "Fluxys + Fluvius/ORES",  color: C.teal   },
+          { pct: "~25%", label: T.gasTaxes    || "Taxes & Levies",        desc: "Federal contribution + VAT (21%)",                        color: C.muted  },
         ].map(r => (
           <div key={r.label} style={{ display: "flex", gap: 12, marginBottom: 10 }}>
             <div style={{ color: r.color, fontWeight: 800, fontSize: 14, width: 42, flexShrink: 0 }}>{r.pct}</div>
@@ -153,9 +153,9 @@ function TomorrowTab({ history }) {
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 }}>
           <div style={{ color: C.teal, fontSize: 13, fontWeight: 700, marginBottom: 12 }}>📊 Recent context</div>
           <div style={{ display: "flex", gap: 8 }}>
-            <StatCard label="30-day Low"  value={stats.min != null ? `€${stats.min}` : "—"} color={C.green}  />
-            <StatCard label="30-day Avg"  value={stats.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} />
-            <StatCard label="30-day High" value={stats.max != null ? `€${stats.max}` : "—"} color={C.orange} />
+            <StatCard label=T.periodLow  || "30-day Low"  value={stats.min != null ? `€${stats.min}` : "—"} color={C.green}  />
+            <StatCard label=T.periodAvg  || "30-day Avg"  value={stats.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} />
+            <StatCard label=T.periodHigh || "30-day High" value={stats.max != null ? `€${stats.max}` : "—"} color={C.orange} />
           </div>
         </div>
       )}
@@ -202,9 +202,9 @@ function WeekTab() {
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <StatCard label="Period Low"  value={stats?.min != null ? `€${stats.min}` : "—"} color={C.green}  sub="€/MWh" />
-        <StatCard label="Period Avg"  value={stats?.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} sub="€/MWh" />
-        <StatCard label="Period High" value={stats?.max != null ? `€${stats.max}` : "—"} color={C.orange} sub="€/MWh" />
+        <StatCard label=T.periodLow  || "Period Low"  value={stats?.min != null ? `€${stats.min}` : "—"} color={C.green}  sub="€/MWh" />
+        <StatCard label=T.periodAvg  || "Period Avg"  value={stats?.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} sub="€/MWh" />
+        <StatCard label=T.periodHigh || "Period High" value={stats?.max != null ? `€${stats.max}` : "—"} color={C.orange} sub="€/MWh" />
       </div>
 
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 8px 8px", marginBottom: 12 }}>
@@ -341,6 +341,10 @@ function GasPlanCard({ plan, rank, expanded, setExpanded }) {
 
 // ── Gas Appliance Calculator ──────────────────────────────────
 function GasApplianceCalc({ ttfPrice }) {
+  const { tSection } = useLanguage();
+  const CC = tSection("calculator");
+  const TC = tSection("common");
+  const AL = tSection("alerts");
   const [appliances,  setAppliances]  = useState([]);
   const [selections,  setSelections]  = useState({});
   const [region,      setRegion]      = useState("flanders");
@@ -483,7 +487,7 @@ function GasApplianceCalc({ ttfPrice }) {
 
       <button onClick={calculate} disabled={loading}
         style={{ width: "100%", padding: "14px 0", borderRadius: 12, border: "none", background: `linear-gradient(135deg,$C.orange,#C2410C)`, color: "#fff", fontSize: 15, fontWeight: 800, cursor: loading?"default":"pointer", marginTop: 4, boxShadow: `0 4px 20px ${C.orange}44`, opacity: loading ? 0.7 : 1 }}>
-        {loading ? "Calculating…" : "🔥 Find My Best Gas Plan →"}
+        {loading ? CC.calculating || "Calculating…" : "🔥 " + (CC.calculate || "Find My Best Gas Plan →")}
       </button>
     </div>
   );
@@ -642,7 +646,7 @@ function AlertsTab({ user, isGuest, onSignIn }) {
   );
 
   const saveEmail = async () => {
-    if (!alertEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alertEmail)) { setEmailError("Enter a valid email"); return; }
+    if (!alertEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alertEmail)) { setEmailError(AL.emailInvalid || "Enter a valid email"); return; }
     setSaving(true);
     try { await updatePreferences({ alertEmail }); setEmailSaved(true); setEmailError(""); }
     catch (e) { setEmailError(e.message); } finally { setSaving(false); }
@@ -710,7 +714,7 @@ function AlertsTab({ user, isGuest, onSignIn }) {
         </div>
         <button onClick={saveThreshold} disabled={saving}
           style={{ width: "100%", padding: "12px 0", borderRadius: 9, border: "none", background: C.orange, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-          {saving ? "Saving…" : saved ? "✓ Saved" : "Save Threshold"}
+          {saving ? TC.loading || "Saving…" : saved ? TC.save + " ✓" || "✓ Saved" : TC.save || "Save Threshold"}
         </button>
         <div style={{ color: C.muted, fontSize: 11, marginTop: 10, lineHeight: 1.7 }}>
           💡 Good thresholds: €25–30 = historically cheap · €35–40 = below recent avg<br />

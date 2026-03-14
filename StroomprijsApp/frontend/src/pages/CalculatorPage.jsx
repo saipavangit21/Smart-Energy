@@ -76,10 +76,10 @@ const Btn = ({ onClick, disabled, children, variant = "primary", style: s = {} }
 
 // ─── Step progress indicator ───────────────────────────────────
 const STEP_META = [
-  { label: "Energy",     icon: "⚡" },
-  { label: "Appliances", icon: "🏠" },
-  { label: "Usage",      icon: "📊" },
-  { label: "Details",    icon: "👤" },
+  { label: CC.step1 || CC.energyCost || "Energy",     icon: "⚡" },
+  { label: CC.step2 || "Appliances", icon: "🏠" },
+  { label: CC.step3 || "Usage",      icon: "📊" },
+  { label: CC.step4 || "Details",    icon: "👤" },
 ];
 
 function StepBar({ step }) {
@@ -555,10 +555,10 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{CC.step4}</div>
         <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>
-          {isGuest ? "Create your free account" : "Ready to calculate!"}
+          {isGuest ? TC.register || "Create your free account" : CC.calculate || "Ready to calculate!"}
         </h2>
         <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>
-          {isGuest ? "Free account needed to run the calculator and save your results. No spam, ever." : "We already have your details — just hit Calculate."}
+          {isGuest ? CC.signInSub || "Free account — no spam, ever." : CC.signInSub2 || "We already have your details — just hit Calculate."}
         </p>
       </div>
 
@@ -575,18 +575,18 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field fieldKey="firstName" label="First name" required={isGuest} placeholder="Jan"
+          <Field fieldKey="firstName" label=TC.firstName || "First name" required={isGuest} placeholder="Jan"
             value={data.firstName || ""} onChange={set} />
-          <Field fieldKey="lastName" label="Last name" placeholder="Janssen"
+          <Field fieldKey="lastName" label=TC.lastName  || "Last name" placeholder="Janssen"
             value={data.lastName || ""} onChange={set} />
         </div>
-        <Field fieldKey="email" type="email" label="Email address" required={isGuest}
+        <Field fieldKey="email" type="email" label=TC.email || "Email address" required={isGuest}
           placeholder="jan@example.be" hint="We'll send your plan comparison here. No spam, ever."
           value={data.email || ""} onChange={set} />
-        <Field fieldKey="postcode" label="Postcode" placeholder="e.g. 2000"
+        <Field fieldKey="postcode" label=TC.postcode || "Postcode" placeholder="e.g. 2000"
           hint="Optional — improves local grid tariff accuracy."
           value={data.postcode || ""} onChange={set} />
-        <Field fieldKey="currentBill" type="number" label="Current monthly bill"
+        <Field fieldKey="currentBill" type="number" label=TC.currentBill || "Current monthly bill"
           prefix="€" placeholder="e.g. 180" hint="Optional — we'll calculate your potential savings."
           value={data.currentBill || ""} onChange={set} />
       </div>
@@ -660,8 +660,8 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
         <div style={{ marginTop: 14, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
           {/* Cost grid */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 10 }}>
-            {[["Energy", plan.costs.energy, C.orange], ["Grid", plan.costs.grid, C.yellow],
-              ["Standing", plan.costs.standing, C.muted], ["VAT", plan.costs.vat, C.muted]].map(([l, v, col]) => (
+            {[[CC.step1 || CC.energyCost || "Energy", plan.costs.energy, C.orange], [CC.gridCost   || "Grid", plan.costs.grid, C.yellow],
+              [CC.standing   || "Standing", plan.costs.standing, C.muted], ["VAT", plan.costs.vat, C.muted]].map(([l, v, col]) => (
               <div key={l} style={{ background: C.panel, borderRadius: 9, padding: "9px 10px", textAlign: "center" }}>
                 <div style={{ fontSize: 10, color: C.muted, marginBottom: 3 }}>{l}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: col, fontFamily: "monospace" }}>€{v}</div>
@@ -903,7 +903,7 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
       setResults({ electricity: filterByType(elecRes), gas: filterByType(gasRes) });
       go(4);
     } catch (e) {
-      setError("Something went wrong. Please check your connection and try again.");
+      setError(CC.errGeneric || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
