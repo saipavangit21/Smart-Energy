@@ -21,13 +21,11 @@ function PriceTooltip({ active, payload, label, supplier }) {
   const sup = SUPPLIERS.find(s => s.name === supplier);
   const lbl = getPriceLabel(mwh);
   const col = getPriceColor(mwh);
-  const cents = (mwh / 10).toFixed(2);  // €X/MWh → X/10 cent/kWh
   return (
     <div style={{ background: "rgba(8,12,22,0.97)", border: `1px solid ${col}44`, borderRadius: 14, padding: "12px 16px" }}>
       <div style={{ color: "#667", fontSize: 11, marginBottom: 3 }}>{label}</div>
-      <div style={{ color: col, fontSize: 22, fontWeight: 800, fontFamily: "monospace" }}>{cents}<span style={{ fontSize: 11, color: "#667" }}> cent/kWh</span></div>
-      <div style={{ color: "#667", fontSize: 10, marginTop: 1 }}>EPEX Spot (excl. taxes)</div>
-      {sup && <div style={{ color: "#aaa", fontSize: 11, marginTop: 4 }}>{sup.name}: {(getSupplierPrice(mwh/1000, sup) * 100).toFixed(2)} cent/kWh incl. VAT</div>}
+      <div style={{ color: col, fontSize: 22, fontWeight: 800, fontFamily: "monospace" }}>€{mwh.toFixed(1)}<span style={{ fontSize: 11, color: "#667" }}>/MWh</span></div>
+      {sup && <div style={{ color: "#aaa", fontSize: 11, marginTop: 2 }}>{sup.name}: €{getSupplierPrice(mwh/1000, sup).toFixed(4)}/kWh</div>}
       <div style={{ color: col, fontSize: 11, fontWeight: 600, marginTop: 4 }}>{lbl.emoji} {lbl.text}</div>
     </div>
   );
@@ -104,7 +102,7 @@ function SupplierCompare({ currentMwh, isMobile, energyType }) {
                 {retailKwh != null ? (
                   <>
                     <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "monospace", color: i === 0 ? s.color : "#94A3B8" }}>
-                      {(retailKwh * 100).toFixed(2)} cent
+                      €{retailKwh.toFixed(4)}
                     </div>
                     <div style={{ fontSize: 10, color: "#445" }}>/kWh incl. VAT</div>
                   </>
@@ -295,7 +293,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   useEffect(() => {
     if (!current || !alertActive) return;
     if (current.price_eur_mwh < alertThreshold) {
-      setNotification(`⚡ ${(current.price_eur_mwh/10).toFixed(2)} cent/kWh — below your ${(alertThreshold/10).toFixed(1)} cent threshold`);
+      setNotification(`⚡ €${current.price_eur_mwh.toFixed(0)}/MWh — below your €${alertThreshold} threshold`);
       setTimeout(() => setNotification(null), 6000);
     }
   }, [current, alertThreshold, alertActive]);
@@ -348,8 +346,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {mwh != null && (
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>{(mwh/10).toFixed(2)}</div>
-                <div style={{ fontSize: 9, color: "#556" }}>NOW cent/kWh</div>
+                <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(0)}</div>
+                <div style={{ fontSize: 9, color: "#556" }}>NOW /MWh</div>
               </div>
             )}
 
@@ -373,8 +371,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               {mwh != null && (
                 <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
                   <div style={{ fontSize: 10, color: "#556", marginBottom: 1 }}>NOW · EPEX Spot</div>
-                  <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>{(mwh/10).toFixed(2)}<span style={{ fontSize: 12, color: "#556", fontWeight: 400 }}> cent/kWh</span></div>
-                  <div style={{ fontSize: 11, color: "#778" }}>{lbl?.emoji} {lbl?.text}{retailKwh ? ` · ${supplier}: ${(retailKwh * 100).toFixed(2)} cent/kWh` : ""}</div>
+                  <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(1)}<span style={{ fontSize: 12, color: "#556", fontWeight: 400 }}>/MWh</span></div>
+                  <div style={{ fontSize: 11, color: "#778" }}>{lbl?.emoji} {lbl?.text}{retailKwh ? ` · ${supplier}: €${retailKwh.toFixed(4)}/kWh` : ""}</div>
                 </div>
               )}
               <div style={{ position: "relative" }}>
@@ -445,9 +443,9 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           <div style={{ background: `linear-gradient(135deg, ${getPriceColor(mwh)}18, ${getPriceColor(mwh)}08)`, border: `1px solid ${getPriceColor(mwh)}33`, borderRadius: 20, padding: "20px 20px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div style={{ fontSize: 11, color: "#556", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>Right Now · EPEX Spot</div>
-              <div style={{ fontSize: 44, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>{(mwh/10).toFixed(2)}</div>
-              <div style={{ fontSize: 12, color: "#667", marginTop: 4 }}>cent/kWh EPEX · {lbl?.emoji} {lbl?.text}</div>
-              {retailKwh && <div style={{ fontSize: 12, color: "#556", marginTop: 2 }}>{supplier}: {(retailKwh * 100).toFixed(2)} cent/kWh incl. VAT</div>}
+              <div style={{ fontSize: 44, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(1)}</div>
+              <div style={{ fontSize: 12, color: "#667", marginTop: 4 }}>per MWh · {lbl?.emoji} {lbl?.text}</div>
+              {retailKwh && <div style={{ fontSize: 12, color: "#556", marginTop: 2 }}>{supplier}: €{retailKwh.toFixed(4)}/kWh</div>}
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 11, color: "#445", marginBottom: 8 }}>{new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>
@@ -460,14 +458,14 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {energyType === "electricity" && isMobile && stats?.today && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
             {[
-              { label: "Min", value: `${(stats.today.min/10).toFixed(2)}`, unit: "cent", color: C.green, sub: todayMin?.hour?.hour_label },
-              { label: "Avg", value: `${(stats.today.avg/10).toFixed(2)}`, unit: "cent", color: C.yellow },
-              { label: "Max", value: `${(stats.today.max/10).toFixed(2)}`, unit: "cent", color: C.red, sub: todayMax?.hour?.hour_label },
-              { label: "Neg hrs", value: stats.today.negative_hours || 0, unit: "", color: C.cyan },
+              { label: "Min", value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
+              { label: "Avg", value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
+              { label: "Max", value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
+              { label: "Neg hrs", value: stats.today.negative_hours || 0, color: C.cyan },
             ].map(s => (
               <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px 8px", textAlign: "center" }}>
                 <div style={{ fontSize: 9, color: "#445", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>{s.label}</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>{s.value}<span style={{ fontSize: 9, color: "#445", fontWeight: 400 }}>{s.unit}</span></div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>{s.value}</div>
                 {s.sub && <div style={{ fontSize: 9, color: "#334", marginTop: 2 }}>{s.sub}</div>}
               </div>
             ))}
@@ -478,14 +476,14 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {energyType === "electricity" && !isMobile && !loading && !error && stats?.today && (
           <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
             {[
-              { label: "Today Min", value: `${(stats.today.min/10).toFixed(2)}`, unit: "cent", color: C.green, sub: todayMin?.hour?.hour_label },
-              { label: "Today Avg", value: `${(stats.today.avg/10).toFixed(2)}`, unit: "cent", color: C.yellow },
-              { label: "Today Max", value: `${(stats.today.max/10).toFixed(2)}`, unit: "cent", color: C.red, sub: todayMax?.hour?.hour_label },
-              { label: "Negative Hrs", value: stats.today.negative_hours || 0, unit: "", color: C.cyan },
+              { label: "Today Min", value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
+              { label: "Today Avg", value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
+              { label: "Today Max", value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
+              { label: "Negative Hrs", value: stats.today.negative_hours || 0, color: C.cyan },
             ].map(s => (
               <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 16px", flex: 1, minWidth: 100 }}>
                 <div style={{ fontSize: 10, color: "#556", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.5px" }}>{s.label}{s.sub ? ` · ${s.sub}` : ""}</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>{s.value}<span style={{ fontSize: 11, color: "#445", fontWeight: 400 }}>{s.unit}</span></div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>{s.value}</div>
               </div>
             ))}
           </div>
@@ -588,7 +586,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                       <XAxis dataKey="hour_label" tick={{ fill: "#445", fontSize: isMobile ? 9 : 11 }} tickLine={false} interval={isMobile ? 3 : Math.max(0, Math.floor(chartData.length / 8) - 1)} />
-                      <YAxis tick={{ fill: "#445", fontSize: isMobile ? 9 : 11 }} tickLine={false} axisLine={false} tickFormatter={v => `${(v/10).toFixed(1)} cent`} domain={[dataMin => Math.floor(dataMin * 0.9), dataMax => Math.ceil(dataMax * 1.05)]} width={40} />
+                      <YAxis tick={{ fill: "#445", fontSize: isMobile ? 9 : 11 }} tickLine={false} axisLine={false} tickFormatter={v => `€${v}`} domain={[dataMin => Math.floor(dataMin * 0.9), dataMax => Math.ceil(dataMax * 1.05)]} width={40} />
                       <Tooltip content={<PriceTooltip supplier={supplier} />} />
                       <ReferenceLine y={0} stroke="rgba(0,229,255,0.25)" strokeDasharray="4 4" />
                       <ReferenceLine y={alertThreshold} stroke={C.yellow} strokeDasharray="4 4" label={{ value: "⚠ Alert", fill: C.yellow, fontSize: 9, position: "insideTopRight" }} />
@@ -608,7 +606,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 12 : 13 }}>
                       <thead>
                         <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                          {["Hour", "cent/kWh", `${supplier} cent/kWh`, "Status"].map(h => (
+                          {["Hour", "€/MWh", `${supplier} €/kWh`, "Status"].map(h => (
                             <th key={h} style={{ padding: "8px 10px", textAlign: h === "Hour" ? "left" : "right", color: "#445", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>{h}</th>
                           ))}
                         </tr>
@@ -629,8 +627,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                               <td style={{ padding: "9px 10px", color: isNow ? "#fff" : "#778", fontWeight: isNow ? 700 : 400 }}>
                                 {row.hour_label} {isNow && <span style={{ fontSize: 9, color: C.green, background: "rgba(0,200,150,0.15)", borderRadius: 4, padding: "1px 5px", marginLeft: 4 }}>NOW</span>}
                               </td>
-                              <td style={{ padding: "9px 10px", textAlign: "right", color: rowCol, fontWeight: 700, fontFamily: "monospace" }}>{(rowMwh/10).toFixed(2)}</td>
-                              <td style={{ padding: "9px 10px", textAlign: "right", color: "#778", fontFamily: "monospace" }}>{sup ? `${(getSupplierPrice(rowMwh/1000, sup) * 100).toFixed(2)}` : "—"}</td>
+                              <td style={{ padding: "9px 10px", textAlign: "right", color: rowCol, fontWeight: 700, fontFamily: "monospace" }}>€{rowMwh.toFixed(1)}</td>
+                              <td style={{ padding: "9px 10px", textAlign: "right", color: "#778", fontFamily: "monospace" }}>{sup ? `€${getSupplierPrice(rowMwh/1000, sup).toFixed(4)}` : "—"}</td>
                               <td style={{ padding: "9px 10px", textAlign: "right", fontSize: isMobile ? 10 : 11 }}>{rowLbl.emoji} {rowLbl.text}</td>
                             </tr>
                           );
@@ -660,11 +658,11 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                     <BarChart data={history} margin={{ top:0, right:16, left:0, bottom:0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                       <XAxis dataKey="label" tick={{ fill:"#445", fontSize:10 }} tickLine={false} />
-                      <YAxis tick={{ fill:"#445", fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={v=>`${(v/10).toFixed(1)} cent`} width={40} />
+                      <YAxis tick={{ fill:"#445", fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={v=>`€${v}`} width={36} />
                       <Tooltip content={({active,payload,label})=>{
                         if(!active||!payload?.length) return null;
                         const d = payload[0]?.payload;
-                        return <div style={{ background:"rgba(8,12,22,0.97)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"10px 14px" }}><div style={{ color:"#aaa", fontSize:11, marginBottom:3 }}>{label}</div><div style={{ color:C.green, fontSize:16, fontWeight:800 }}>Avg {(d?.avg/10).toFixed(2)} cent/kWh</div><div style={{ color:"#556", fontSize:11, marginTop:3 }}>Min {(d?.min/10).toFixed(2)} · Max {(d?.max/10).toFixed(2)} cent</div></div>;
+                        return <div style={{ background:"rgba(8,12,22,0.97)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"10px 14px" }}><div style={{ color:"#aaa", fontSize:11, marginBottom:3 }}>{label}</div><div style={{ color:C.green, fontSize:16, fontWeight:800 }}>Avg €{d?.avg}/MWh</div><div style={{ color:"#556", fontSize:11, marginTop:3 }}>Min €{d?.min} · Max €{d?.max}</div></div>;
                       }} />
                       <Bar dataKey="avg" radius={[5,5,0,0]} cursor="pointer" onClick={d => setSelectedDay(selectedDay?.date===d.date?null:d)}>
                         {history.map((d,i)=><Cell key={i} fill={selectedDay?.date===d.date?C.teal:d.avg<80?C.green:d.avg<130?C.yellow:C.red} opacity={selectedDay&&selectedDay.date!==d.date?0.35:1} />)}
@@ -675,7 +673,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                 {selectedDay && (
                   <div style={{ background: C.card, border: `1px solid rgba(13,148,136,0.3)`, borderRadius: 20, padding: "16px 8px 12px" }}>
                     <div style={{ paddingLeft:14, marginBottom:12, display:"flex", justifyContent:"space-between", alignItems:"center", paddingRight:14 }}>
-                      <div><div style={{ fontSize:14, fontWeight:700 }}>{selectedDay.label}</div><div style={{ fontSize:10, color:"#556", marginTop:2 }}>Min {(selectedDay.min/10).toFixed(2)} · Avg {(selectedDay.avg/10).toFixed(2)} · Max {(selectedDay.max/10).toFixed(2)} cent/kWh</div></div>
+                      <div><div style={{ fontSize:14, fontWeight:700 }}>{selectedDay.label}</div><div style={{ fontSize:10, color:"#556", marginTop:2 }}>Min €{selectedDay.min} · Avg €{selectedDay.avg} · Max €{selectedDay.max}</div></div>
                       <button onClick={()=>setSelectedDay(null)} style={{ background:"rgba(255,255,255,0.05)", border:`1px solid ${C.border}`, color:"#778", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontSize:11 }}>✕</button>
                     </div>
                     <ResponsiveContainer width="100%" height={180}>
@@ -683,7 +681,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                         <defs><linearGradient id="gradH" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.teal} stopOpacity={0.25}/><stop offset="95%" stopColor={C.teal} stopOpacity={0}/></linearGradient></defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                         <XAxis dataKey="hour_label" tick={{fill:"#445",fontSize:9}} tickLine={false} interval={3} />
-                        <YAxis tick={{fill:"#445",fontSize:9}} tickLine={false} axisLine={false} tickFormatter={v=>`${(v/10).toFixed(1)} cent`} domain={[dataMin => Math.floor(dataMin * 0.9), dataMax => Math.ceil(dataMax * 1.05)]} width={36} />
+                        <YAxis tick={{fill:"#445",fontSize:9}} tickLine={false} axisLine={false} tickFormatter={v=>`€${v}`} domain={[dataMin => Math.floor(dataMin * 0.9), dataMax => Math.ceil(dataMax * 1.05)]} width={36} />
                         <Tooltip content={<PriceTooltip supplier={supplier} />} />
                         <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" />
                         <Area type="monotone" dataKey="price" stroke={C.teal} strokeWidth={2} fill="url(#gradH)" />
@@ -715,7 +713,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                     </div>
                   </div>
                   <div style={{ textAlign:"right" }}>
-                    <div style={{ color:getPriceColor(h.price_eur_mwh), fontWeight:800, fontSize:16, fontFamily:"monospace" }}>{(h.price_eur_mwh/10).toFixed(2)} cent</div>
+                    <div style={{ color:getPriceColor(h.price_eur_mwh), fontWeight:800, fontSize:16, fontFamily:"monospace" }}>€{h.price_eur_mwh.toFixed(1)}</div>
                     <div style={{ fontSize:10, color:"#556" }}>{lbl_.emoji} {lbl_.text}</div>
                   </div>
                 </div>
@@ -832,13 +830,13 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
       {/* Threshold slider */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, color: "#aaa", marginBottom: 10 }}>
-          Alert when below: <strong style={{ color: C.yellow }}>{(alertThreshold/10).toFixed(1)} cent/kWh</strong>
+          Alert when below: <strong style={{ color: C.yellow }}>€{alertThreshold}/MWh</strong>
         </div>
         <input type="range" min={-20} max={200} step={5} value={alertThreshold}
           onChange={e => saveAlertThreshold(+e.target.value)}
           style={{ width: "100%", accentColor: C.yellow, cursor: "pointer" }} />
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#445", marginTop: 4 }}>
-          <span>-2 cent</span><span>20 cent/kWh</span>
+          <span>€-20</span><span>€200/MWh</span>
         </div>
       </div>
 
