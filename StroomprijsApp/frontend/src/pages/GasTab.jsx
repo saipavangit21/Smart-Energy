@@ -212,7 +212,7 @@ function WeekTab() {
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: C.muted }} tickFormatter={d => d.slice(5)} interval={Math.max(0, Math.floor(data.length / 6) - 1)} />
             <YAxis tick={{ fontSize: 10, fill: C.muted }} domain={["auto", "auto"]} width={38} />
             <Tooltip content={<Tip />} />
-            {stats?.avg && <ReferenceLine y={stats.avg} stroke={C.yellow} strokeDasharray="4 4" label={{ value: {TC.avg}, fill: C.yellow, fontSize: 10, position: "insideTopRight" }} />}
+            {stats?.avg && <ReferenceLine y={stats.avg} stroke={C.yellow} strokeDasharray="4 4" label={{ value: TC.avg, fill: C.yellow, fontSize: 10, position: "insideTopRight" }} />}
             <Bar dataKey="price" radius={[3, 3, 0, 0]}>
               {data.map((entry, i) => <Cell key={i} fill={pc(entry.price)} />)}
             </Bar>
@@ -258,9 +258,9 @@ function calcCost(rate, standing, consumption) {
 
 // ── GAS TABS: Calculator + Compare ───────────────────────────
 const GAS_REGIONS = [
-  { id: "flanders", label: {TC.flanders}, flag: "🔶" },
-  { id: "wallonia", label: {TC.wallonia},  flag: "🔷" },
-  { id: "brussels", label: {TC.brussels},  flag: "🏙️" },
+  { id: "flanders", label: TC.flanders, flag: "🔶" },
+  { id: "wallonia", label: TC.wallonia,  flag: "🔷" },
+  { id: "brussels", label: TC.brussels,  flag: "🏙️" },
 ];
 const GAS_TYPE_COLOR = { variable: "#0D9488", fixed: "#06B6D4", dynamic: "#10B981" };
 const GAS_TYPE_LABEL = { variable: "Variable", fixed: "Fixed", dynamic: "Dynamic" };

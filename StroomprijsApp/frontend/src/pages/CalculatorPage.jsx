@@ -26,10 +26,10 @@ const C = {
   light:  "#E2E8F0",
 };
 
-const REGIONS = [
-  { id: "flanders", label: {TC.flanders}, flag: "🔶", note: "Fluvius · capacity tariff" },
-  { id: "wallonia", label: {TC.wallonia},  flag: "🔷", note: "ORES/RESA · kWh tariff"  },
-  { id: "brussels", label: {TC.brussels},  flag: "🏙️", note: "Sibelga · kWh tariff"   },
+const REGIONS_DATA = [
+  { id: "flanders", flag: "🔶", note: "Fluvius · capacity tariff" },
+  { id: "wallonia",  flag: "🔷", note: "ORES/RESA · kWh tariff"  },
+  { id: "brussels",  flag: "🏙️", note: "Sibelga · kWh tariff"   },
 ];
 
 // ─── Tiny shared components ────────────────────────────────────
@@ -131,7 +131,7 @@ function StepBar({ step }) {
 
 // ─── STEP 1 · Energy types ────────────────────────────────────
 const ENERGY_OPTIONS = [
-  { id: "electricity", icon: "⚡", label: {TC.electricity},   color: C.teal,   desc: "EPEX Spot dynamic, variable or fixed plans" },
+  { id: "electricity", icon: "⚡", label: "Electricity",   color: C.teal,   desc: "EPEX Spot dynamic, variable or fixed plans" },
   { id: "gas",         icon: "🔥", label: "Natural Gas",   color: C.orange, desc: "TTF-linked or fixed gas supplier plans" },
   { id: "solar",       icon: "☀️", label: "Solar Panels",  color: C.yellow, desc: "I have solar — factor in self-consumption" },
   { id: "ev",          icon: "🚗", label: "Electric Car",  color: C.cyan,   desc: "EV charging shapes my peak demand" },
@@ -838,6 +838,7 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
+  const REGIONS = REGIONS_DATA.map(r => ({ ...r, label: TC[r.id] || r.id }));
   const [step,    setStep]    = useState(0);
   const [data,    setData]    = useState({});
   const [results, setResults] = useState(null);

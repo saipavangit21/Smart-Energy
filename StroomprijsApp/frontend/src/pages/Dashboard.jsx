@@ -58,10 +58,10 @@ const C = {
 // SUPPLIER COMPARE + APPLIANCE CALCULATOR
 // ══════════════════════════════════════════════════════════════════
 
-const REGIONS = [
-  { id: "flanders", label: {TC.flanders}, flag: "🔶", note: {T.gridNote} },
-  { id: "wallonia", label: {TC.wallonia},  flag: "🔷", note: {T.gridNoteWallonia}   },
-  { id: "brussels", label: {TC.brussels},  flag: "🏙️", note: {T.gridNoteBrussels}     },
+const REGIONS_DATA = [
+  { id: "flanders", flag: "🔶", noteKey: "gridNote" },
+  { id: "wallonia",  flag: "🔷", noteKey: "gridNoteWallonia" },
+  { id: "brussels",  flag: "🏙️", noteKey: "gridNoteBrussels" },
 ];
 const TYPE_COLOR = { variable: "#0D9488", fixed: "#06B6D4", dynamic: "#10B981" };
 const TYPE_LABEL = { variable: "Variable", fixed: "Fixed", dynamic: "Dynamic" };
@@ -236,6 +236,11 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
     { id: "compare",  icon: "🏢", label: TC.suppliers },
     { id: "alerts",   icon: "🔔", label: TC.alerts },
   ];
+  const REGIONS = REGIONS_DATA.map(r => ({
+    ...r,
+    label: TC[r.id] || r.id,
+    note:  T[r.noteKey] || "",
+  }));
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
   const openCalculator = (type) => isGuest ? onSignIn() : (onOpenCalculator && onOpenCalculator(type));
   const { current } = useCurrentPrice();
@@ -465,10 +470,10 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {energyType === "electricity" && isMobile && stats?.today && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
             {[
-              { label: {TC.min}, value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
-              { label: {TC.avg}, value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
-              { label: {TC.max}, value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
-              { label: {T.negHrs}, value: stats.today.negative_hours || 0, color: C.cyan },
+              { label: TC.min, value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
+              { label: TC.avg, value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
+              { label: TC.max, value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
+              { label: T.negHrs, value: stats.today.negative_hours || 0, color: C.cyan },
             ].map(s => (
               <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px 8px", textAlign: "center" }}>
                 <div style={{ fontSize: 9, color: "#445", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>{s.label}</div>
@@ -483,10 +488,10 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {energyType === "electricity" && !isMobile && !loading && !error && stats?.today && (
           <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
             {[
-              { label: {T.todayMin}, value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
-              { label: {T.todayAvg}, value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
-              { label: {T.todayMax}, value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
-              { label: {T.negativeHrs}, value: stats.today.negative_hours || 0, color: C.cyan },
+              { label: T.todayMin, value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
+              { label: T.todayAvg, value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
+              { label: T.todayMax, value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
+              { label: T.negativeHrs, value: stats.today.negative_hours || 0, color: C.cyan },
             ].map(s => (
               <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 16px", flex: 1, minWidth: 100 }}>
                 <div style={{ fontSize: 10, color: "#556", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.5px" }}>{s.label}{s.sub ? ` · ${s.sub}` : ""}</div>
@@ -517,7 +522,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {/* ── DESKTOP Tabs ── */}
         {energyType === "electricity" && !isMobile && (
           <div style={{ display: "flex", gap: 4, marginBottom: 16, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 4, width: "fit-content", flexWrap: "wrap" }}>
-            {[...NAV_ITEMS, { id: "history", icon: "📅", label: {TC.history} }].map(t => (
+            {[...NAV_ITEMS, { id: "history", icon: "📅", label: TC.history }].map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "7px 13px", borderRadius: 9, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.15s", background: tab === t.id ? "rgba(255,255,255,0.1)" : "transparent", color: tab === t.id ? "#fff" : "#667" }}>
                 {t.icon} {t.label}
               </button>
@@ -598,7 +603,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                       <ReferenceLine y={0} stroke="rgba(0,229,255,0.25)" strokeDasharray="4 4" />
                       <ReferenceLine y={alertThreshold} stroke={C.yellow} strokeDasharray="4 4" label={{ value: "⚠ Alert", fill: C.yellow, fontSize: 9, position: "insideTopRight" }} />
                       {tab === "today" && current && (
-                        <ReferenceLine x={`${String(current.hour ?? new Date().getHours()).padStart(2, "0")}:00`} stroke="rgba(255,255,255,0.2)" strokeWidth={2} label={{ value: {TC.now}, fill: "#fff", fontSize: 9, position: "top" }} />
+                        <ReferenceLine x={`${String(current.hour ?? new Date().getHours()).padStart(2, "0")}:00`} stroke="rgba(255,255,255,0.2)" strokeWidth={2} label={{ value: TC.now, fill: "#fff", fontSize: 9, position: "top" }} />
                       )}
                       <Area type="monotone" dataKey="price" stroke="#00C896" strokeWidth={2} fill="url(#grad)"
                         dot={props => props.payload?.is_current
@@ -762,7 +767,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
       {isMobile && (
         <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:50, background:"rgba(6,11,20,0.97)", backdropFilter:"blur(20px)", borderTop:`1px solid ${C.border}`, display:"flex", padding:"8px 0 12px" }}>
           {energyType === "electricity" ? (
-            [...NAV_ITEMS, { id:"history", icon:"📅", label:{TC.history} }].map(t => (
+            [...NAV_ITEMS, { id:"history", icon:"📅", label:TC.history }].map(t => (
               <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? C.green : "#445" }}>
                 <span style={{ fontSize:18 }}>{t.icon}</span>
                 <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
@@ -770,7 +775,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               </button>
             ))
           ) : (
-            [{id:"today",icon:"🔥",label:{TC.today}},{id:"tomorrow",icon:"⏩",label:{TC.tomorrow}},{id:"week",icon:"📅",label:"7 Days"},{id:"suppliers",icon:"🏢",label:{TC.suppliers}},{id:"alerts",icon:"🔔",label:{TC.alerts}}].map(t => (
+            [{id:"today",icon:"🔥",label:TC.today},{id:"tomorrow",icon:"⏩",label:TC.tomorrow},{id:"week",icon:"📅",label:"7 Days"},{id:"suppliers",icon:"🏢",label:TC.suppliers},{id:"alerts",icon:"🔔",label:TC.alerts}].map(t => (
               <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? "#F97316" : "#445" }}>
                 <span style={{ fontSize:18 }}>{t.icon}</span>
                 <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
