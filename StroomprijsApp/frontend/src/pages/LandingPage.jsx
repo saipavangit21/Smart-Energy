@@ -4,9 +4,10 @@
  * separate elec/gas CTA buttons, improved FAQ, richer footer.
  */
 import { useState, useEffect } from "react";
+import { useLanguage } from "../context/LanguageContext";
+import LangSwitcher from "../components/LangSwitcher";
 
-const features = [
-  { icon: "⚡", title: "Live EPEX Spot Prices", desc: "Belgium day-ahead electricity prices from EPEX Spot, refreshed every hour. Know exactly what the market is doing right now." },
+const featureIcons = ["⚡", "🔥", "💚", "🔔", "🔌", "📅"];
   { icon: "🔥", title: "Gas Prices (TTF)", desc: "Real-time TTF natural gas prices alongside electricity — track both energy costs in one dashboard." },
   { icon: "💚", title: "5 Cheapest Hours", desc: "We find the best windows each day to run your EV, washing machine, or dishwasher — saving money every single day." },
   { icon: "🔔", title: "Price Drop Alerts", desc: "Set a threshold and get emailed when prices fall below it. Never miss cheap electricity again." },
@@ -24,14 +25,26 @@ const suppliers = [
   { name: "Octa+",         logo: "🔷" },
 ];
 
-const faqs = [
-  { q: "What is EPEX Spot?", a: "EPEX Spot is the European Power Exchange where electricity is traded on the wholesale day-ahead market. In Belgium, dynamic energy contracts follow these hourly prices — your cost per kWh changes every hour." },
-  { q: "How does the Plan Calculator work?", a: "Select your appliances, set how many times per week you use each, choose your region (Flanders/Wallonia/Brussels) and we calculate your annual kWh + peak kW, then rank all 7 Belgian suppliers showing your real total cost including grid fees and VAT." },
-  { q: "How much can I actually save?", a: "On an average day, the spread between cheapest and most expensive hour is €100–150/MWh. Choosing the right supplier can save an additional €100–300/year depending on your consumption profile." },
-  { q: "Is this free and safe?", a: "Yes, completely free — no credit card, no ads. All data stored in the EU (GDPR compliant). We never sell your data. Delete your account at any time." },
-];
-
 export default function LandingPage({ onGetStarted, onOpenCalculator }) {
+  const { t, tSection } = useLanguage();
+  const L = tSection("landing");
+  const C = tSection("common");
+
+  const features = [
+    { icon: "⚡", title: L.feature1Title, desc: L.feature1Body },
+    { icon: "🔥", title: L.feature2Title, desc: L.feature2Body },
+    { icon: "💚", title: L.feature3Title, desc: L.feature3Body },
+    { icon: "🔔", title: L.feature4Title, desc: L.feature4Body },
+    { icon: "🔌", title: L.feature5Title, desc: L.feature5Body },
+    { icon: "📅", title: L.feature6Title, desc: L.feature6Body },
+  ];
+
+  const faqs = [
+    { q: L.faq1Q, a: L.faq1A },
+    { q: L.faq2Q, a: L.faq2A },
+    { q: L.faq3Q, a: L.faq3A },
+    { q: L.faq4Q, a: L.faq4A },
+  ];
   const [openFaq, setOpenFaq] = useState(null);
   const [heroVisible, setHeroVisible] = useState(false);
   useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 60); return () => clearTimeout(t); }, []);
@@ -54,13 +67,14 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           <span style={{ fontSize: 9, color: "#00C896", background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>● LIVE</span>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <LangSwitcher style={{ marginRight: 4 }} />
           <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
             style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.3)", color: "#0D9488", cursor: "pointer" }}>
-            🔌 Calculator
+            {C.calculator}
           </button>
           <button onClick={onGetStarted}
             style={{ padding: "9px 22px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer", boxShadow: "0 4px 20px rgba(13,148,136,0.35)" }}>
-            Get Started Free →
+            {L.openDashboard}
           </button>
         </div>
       </nav>
@@ -69,7 +83,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       <section style={{ maxWidth: 960, margin: "0 auto", padding: "64px 24px 48px", textAlign: "center", position: "relative", zIndex: 1 }}>
         <div style={{ opacity: heroVisible ? 1 : 0, transform: heroVisible ? "translateY(0)" : "translateY(22px)", transition: "all 0.7s ease" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 30, padding: "6px 16px", fontSize: 12, color: "#0D9488", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 28 }}>
-            🇧🇪 Belgium · Real-Time Energy Prices
+            {C.tagline}
           </div>
           <h1 style={{ fontSize: "clamp(38px, 6.5vw, 72px)", fontWeight: 900, letterSpacing: "-2.5px", lineHeight: 1.04, margin: "0 0 26px" }}>
             <span style={{ background: "linear-gradient(135deg, #ffffff 20%, #0D9488 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Stop Overpaying</span>
@@ -84,13 +98,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               style={{ padding: "16px 38px", borderRadius: 50, fontSize: 16, fontWeight: 800, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer", boxShadow: "0 8px 32px rgba(13,148,136,0.4)", transition: "all 0.2s" }}
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(13,148,136,0.55)"; }}
               onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(13,148,136,0.4)"; }}>
-              Start for Free →
+              {L.openDashboard}
             </button>
-            <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
+          <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
               style={{ padding: "16px 38px", borderRadius: 50, fontSize: 16, fontWeight: 700, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.4)", color: "#0D9488", cursor: "pointer", transition: "all 0.2s" }}
               onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.2)"; e.currentTarget.style.color = "#fff"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.1)"; e.currentTarget.style.color = "#0D9488"; }}>
-              🔌 Try the Calculator
+              🔌 {L.tryCalculator}
             </button>
           </div>
           <div style={{ fontSize: 12, color: "#2E3D52" }}>Free forever · No credit card · GDPR compliant · Data stored in EU</div>
@@ -169,7 +183,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             </div>
           ))}
           <div style={{ textAlign: "right", marginTop: 12 }}>
-            <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
+          <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
               style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer" }}>
               Calculate my plan →
             </button>
@@ -181,7 +195,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       <section style={{ maxWidth: 960, margin: "0 auto 56px", padding: "0 24px", position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Coverage</div>
-          <h2 style={{ fontSize: "clamp(24px, 3.5vw, 38px)", fontWeight: 900, letterSpacing: "-1px", margin: "0 0 10px" }}>All 7 Belgian suppliers compared</h2>
+          <h2 style={{ fontSize: "clamp(24px, 3.5vw, 38px)", fontWeight: 900, letterSpacing: "-1px", margin: "0 0 10px" }}>{L.suppliersTitle}</h2>
           <p style={{ color: "#556B82", fontSize: 13 }}>Variable · Fixed · Dynamic — electricity and gas plans</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
@@ -247,7 +261,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 <span style={{ fontWeight: 900, fontSize: 17, letterSpacing: "-0.5px" }}>SmartPrice.be</span>
               </div>
               <div style={{ fontSize: 12, color: "#334455", lineHeight: 1.9 }}>
-                Free Belgian energy price tracker<br />
+                {L.hero}<br />
                 <a href="mailto:hello@smartprice.be" style={{ color: "#0D9488", textDecoration: "none" }}>hello@smartprice.be</a>
               </div>
             </div>
@@ -278,7 +292,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             </div>
           </div>
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 18, fontSize: 11, color: "#2A3A4A", lineHeight: 2 }}>
-            Price data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E · EPEX Spot Belgium · ICE EEX (TTF Gas)<br />
+            {L.footer}<br />
             Not financial advice. Always verify tariffs on supplier websites before switching.
           </div>
         </div>

@@ -5,6 +5,8 @@
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
+import LangSwitcher from "../components/LangSwitcher";
 
 // ─── Design tokens ────────────────────────────────────────────
 const C = {
@@ -25,9 +27,9 @@ const C = {
 };
 
 const REGIONS = [
-  { id: "flanders", label: "Flanders", flag: "🔶", note: "Fluvius · capacity tariff" },
-  { id: "wallonia", label: "Wallonia",  flag: "🔷", note: "ORES/RESA · kWh tariff"  },
-  { id: "brussels", label: "Brussels",  flag: "🏙️", note: "Sibelga · kWh tariff"   },
+  { id: "flanders", label: {TC.flanders}, flag: "🔶", note: "Fluvius · capacity tariff" },
+  { id: "wallonia", label: {TC.wallonia},  flag: "🔷", note: "ORES/RESA · kWh tariff"  },
+  { id: "brussels", label: {TC.brussels},  flag: "🏙️", note: "Sibelga · kWh tariff"   },
 ];
 
 // ─── Tiny shared components ────────────────────────────────────
@@ -129,7 +131,7 @@ function StepBar({ step }) {
 
 // ─── STEP 1 · Energy types ────────────────────────────────────
 const ENERGY_OPTIONS = [
-  { id: "electricity", icon: "⚡", label: "Electricity",   color: C.teal,   desc: "EPEX Spot dynamic, variable or fixed plans" },
+  { id: "electricity", icon: "⚡", label: {TC.electricity},   color: C.teal,   desc: "EPEX Spot dynamic, variable or fixed plans" },
   { id: "gas",         icon: "🔥", label: "Natural Gas",   color: C.orange, desc: "TTF-linked or fixed gas supplier plans" },
   { id: "solar",       icon: "☀️", label: "Solar Panels",  color: C.yellow, desc: "I have solar — factor in self-consumption" },
   { id: "ev",          icon: "🚗", label: "Electric Car",  color: C.cyan,   desc: "EV charging shapes my peak demand" },
@@ -144,7 +146,7 @@ function Step1({ data, onChange, onNext }) {
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Step 1 of 4</div>
+        <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{CC.step1}</div>
         <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>What energy does<br/>your home use?</h2>
         <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>Select everything that applies. We'll personalise your plan comparison.</p>
       </div>
@@ -300,7 +302,7 @@ function Step2({ data, onChange, onNext, onBack }) {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Step 2 of 4</div>
+        <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{CC.step2}</div>
         <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>Which appliances<br/>do you use?</h2>
         <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>Tap to toggle. Adjust how many times per week you use each one.</p>
       </div>
@@ -337,7 +339,7 @@ function Step2({ data, onChange, onNext, onBack }) {
       )}
 
       <div style={{ display: "flex", gap: 10 }}>
-        <Btn onClick={onBack} variant="ghost" style={{ flex: 1 }}>← Back</Btn>
+        <Btn onClick={onBack} variant="ghost" style={{ flex: 1 }}>{CC.back}</Btn>
         <div style={{ flex: 3 }}><Btn onClick={onNext}>Continue — Usage & Situation →</Btn></div>
       </div>
     </div>
@@ -392,7 +394,7 @@ function Step3({ data, onChange, onNext, onBack }) {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Step 3 of 4</div>
+        <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{CC.step3}</div>
         <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>Your usage<br/>& situation</h2>
         <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>This lets us calculate regional grid costs and find the right contract type.</p>
       </div>
@@ -474,7 +476,7 @@ function Step3({ data, onChange, onNext, onBack }) {
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
-        <Btn onClick={onBack} variant="ghost" style={{ flex: 1 }}>← Back</Btn>
+        <Btn onClick={onBack} variant="ghost" style={{ flex: 1 }}>{CC.back}</Btn>
         <div style={{ flex: 3 }}><Btn onClick={onNext} disabled={!canGo}>Continue — Your Details →</Btn></div>
       </div>
     </div>
@@ -539,7 +541,7 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Step 4 of 4</div>
+        <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{CC.step4}</div>
         <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>
           {isGuest ? "Create your free account" : "Ready to calculate!"}
         </h2>
@@ -584,10 +586,10 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
-        <Btn onClick={onBack} variant="ghost" style={{ flex: 1 }}>← Back</Btn>
+        <Btn onClick={onBack} variant="ghost" style={{ flex: 1 }}>{CC.back}</Btn>
         <div style={{ flex: 3 }}>
           <Btn onClick={onSubmit} disabled={loading || !canGo}>
-            {loading ? "⚡ Calculating your plans…" : "🔍 Get My Plan Comparison →"}
+            {loading ? `⚡ ${CC.calculating}` : `🔍 ${CC.calculate} →`}
           </Btn>
         </div>
       </div>
@@ -833,6 +835,9 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
 
 // ─── Main wizard shell ────────────────────────────────────────
 export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
+  const { tSection } = useLanguage();
+  const CC = tSection("calculator");
+  const TC = tSection("common");
   const [step,    setStep]    = useState(0);
   const [data,    setData]    = useState({});
   const [results, setResults] = useState(null);
@@ -918,6 +923,7 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <LangSwitcher />
             {!isGuest && (
               <span style={{ fontSize: 11, color: C.green, background: "rgba(16,185,129,0.1)",
                 border: "1px solid rgba(16,185,129,0.25)", borderRadius: 20, padding: "3px 10px", fontWeight: 700 }}>

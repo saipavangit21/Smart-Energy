@@ -7,6 +7,8 @@
 
 import { useState } from "react";
 import { useAuth }  from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
+import LangSwitcher from "../components/LangSwitcher";
 
 const C = {
   teal:  "#0D9488",
@@ -40,6 +42,8 @@ function Input({ label, type = "text", value, onChange, placeholder, autoComplet
 
 export default function AuthPage({ onBack, onSkip, reason }) {
   const { login, register } = useAuth();
+  const { tSection } = useLanguage();
+  const A = tSection("auth");
   const [mode,      setMode]      = useState("login");
   const [name,      setName]      = useState("");
   const [loginId,   setLoginId]   = useState(""); // email or name for login
@@ -54,13 +58,13 @@ export default function AuthPage({ onBack, onSkip, reason }) {
     reset();
 
     if (mode === "register") {
-      if (!name.trim())        { setError("Please enter your name"); return; }
-      if (!password)           { setError("Please enter a password"); return; }
-      if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
-      if (password !== confirm) { setError("Passwords do not match"); return; }
+      if (!name.trim())        { setError({A.errName}); return; }
+      if (!password)           { setError({A.errPassword}); return; }
+      if (password.length < 8) { setError({A.errPasswordLength}); return; }
+      if (password !== confirm) { setError({A.errPasswordMatch}); return; }
     } else {
-      if (!loginId.trim()) { setError("Please enter your name or email"); return; }
-      if (!password)       { setError("Please enter your password"); return; }
+      if (!loginId.trim()) { setError({A.errNameOrEmail}); return; }
+      if (!password)       { setError({A.errEnterPassword}); return; }
     }
 
     setLoading(true);
@@ -73,7 +77,7 @@ export default function AuthPage({ onBack, onSkip, reason }) {
         await register({ name, password });
       }
     } catch (err) {
-      setError(err.message || "Something went wrong");
+      setError(err.message || {A.errGeneric});
     } finally {
       setLoading(false);
     }
@@ -100,9 +104,10 @@ export default function AuthPage({ onBack, onSkip, reason }) {
 
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: reason ? 20 : 36 }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4 }}><LangSwitcher /></div>
           <div style={{ fontSize: 40, marginBottom: 8 }}>🇧🇪</div>
           <h1 style={{ margin: 0, fontSize: 28, fontWeight: 900, color: C.white, letterSpacing: "-1px" }}>SmartPrice</h1>
-          <div style={{ fontSize: 14, color: "#64748B", marginTop: 6 }}>Belgium Real-Time Electricity Prices</div>
+          <div style={{ fontSize: 14, color: "#64748B", marginTop: 6 }}>{A.subtitle}</div>
         </div>
 
         {/* Context banner — shown when user is redirected for a reason */}
@@ -136,7 +141,7 @@ export default function AuthPage({ onBack, onSkip, reason }) {
                 background: mode === m ? "rgba(255,255,255,0.1)" : "transparent",
                 color: mode === m ? C.white : "#64748B",
               }}>
-                {m === "login" ? "Sign In" : "Create Account"}
+                {m === "login" ? {A.signInTab} : {A.registerTab}}
               </button>
             ))}
           </div>
@@ -150,13 +155,13 @@ export default function AuthPage({ onBack, onSkip, reason }) {
 
           {/* REGISTER: name + password only */}
           {mode === "register" && (<>
-            <Input label="Your Name" value={name} onChange={setName}
-              placeholder="Jan Janssen" autoComplete="name"
-              hint="This is how you'll sign in — no email needed" />
-            <Input label="Password" type="password" value={password} onChange={setPassword}
-              placeholder="Min. 8 characters" autoComplete="new-password" />
-            <Input label="Confirm Password" type="password" value={confirm} onChange={setConfirm}
-              placeholder="Repeat password" autoComplete="new-password" />
+            <Input label={A.yourName} value={name} onChange={setName}
+              placeholder={A.namePlaceholder} autoComplete="name"
+              hint={A.nameHint} />
+            <Input label={A.password} type="password" value={password} onChange={setPassword}
+              placeholder={A.passwordHint} autoComplete="new-password" />
+            <Input label={A.confirmPassword} type="password" value={confirm} onChange={setConfirm}
+              placeholder={A.confirmPlaceholder} autoComplete="new-password" />
 
             {/* Email note */}
             <div style={{ background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#94A3B8", lineHeight: 1.6 }}>
@@ -166,11 +171,11 @@ export default function AuthPage({ onBack, onSkip, reason }) {
 
           {/* LOGIN: name or email + password */}
           {mode === "login" && (<>
-            <Input label="Name or Email" value={loginId} onChange={setLoginId}
-              placeholder="Jan Janssen or jan@example.be" autoComplete="username"
-              hint="Sign in with your name or email address" />
-            <Input label="Password" type="password" value={password} onChange={setPassword}
-              placeholder="Your password" autoComplete="current-password" />
+            <Input label={A.nameOrEmail} value={loginId} onChange={setLoginId}
+              placeholder={A.nameOrEmailPlaceholder} autoComplete="username"
+              hint={A.nameOrEmailHint} />
+            <Input label={A.password} type="password" value={password} onChange={setPassword}
+              placeholder={A.passwordPlaceholder} autoComplete="current-password" />
           </>)}
 
           {/* Submit */}
@@ -181,7 +186,7 @@ export default function AuthPage({ onBack, onSkip, reason }) {
             color: C.white, marginTop: 4, transition: "all 0.2s",
             boxShadow: loading ? "none" : "0 4px 20px rgba(13,148,136,0.35)",
           }}>
-            {loading ? "Please wait…" : mode === "login" ? "Sign In →" : "Create Account →"}
+            {loading ? {A.pleaseWait} : mode === "login" ? {A.signInBtn} : {A.registerBtn}}
           </button>
 
           {/* 1st: Skip — most prominent alternative */}

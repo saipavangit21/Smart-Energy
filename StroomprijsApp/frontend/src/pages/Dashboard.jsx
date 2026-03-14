@@ -10,6 +10,8 @@ import {
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
 } from "recharts";
 import { useAuth }       from "../context/AuthContext";
+import { useLanguage }   from "../context/LanguageContext";
+import LangSwitcher      from "../components/LangSwitcher";
 import { usePrices, useCurrentPrice, useCheapestHours } from "../hooks/usePrices";
 import { SUPPLIERS, getSupplierPrice, getPriceColor, getPriceLabel } from "../utils/priceUtils";
 import GasTab from "./GasTab";
@@ -31,13 +33,6 @@ function PriceTooltip({ active, payload, label, supplier }) {
   );
 }
 
-const NAV_ITEMS = [
-  { id: "today",    icon: "📈", label: "Today" },
-  { id: "tomorrow", icon: "⏩", label: "Tomorrow" },
-  { id: "cheapest", icon: "💚", label: "Best" },
-  { id: "compare",  icon: "🏢", label: "Suppliers" },
-  { id: "alerts",   icon: "🔔", label: "Alerts" },
-];
 
 
 // ── Energy Type Toggle ────────────────────────────────────────
@@ -64,9 +59,9 @@ const C = {
 // ══════════════════════════════════════════════════════════════════
 
 const REGIONS = [
-  { id: "flanders", label: "Flanders", flag: "🔶", note: "Fluvius · Capacity tariff" },
-  { id: "wallonia", label: "Wallonia",  flag: "🔷", note: "ORES/RESA · kWh tariff"   },
-  { id: "brussels", label: "Brussels",  flag: "🏙️", note: "Sibelga · kWh tariff"     },
+  { id: "flanders", label: {TC.flanders}, flag: "🔶", note: {T.gridNote} },
+  { id: "wallonia", label: {TC.wallonia},  flag: "🔷", note: {T.gridNoteWallonia}   },
+  { id: "brussels", label: {TC.brussels},  flag: "🏙️", note: {T.gridNoteBrussels}     },
 ];
 const TYPE_COLOR = { variable: "#0D9488", fixed: "#06B6D4", dynamic: "#10B981" };
 const TYPE_LABEL = { variable: "Variable", fixed: "Fixed", dynamic: "Dynamic" };
@@ -95,7 +90,7 @@ function SupplierCompare({ currentMwh, isMobile, energyType }) {
                 {i === 0 && <span style={{ fontSize: 14 }}>🏆</span>}
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: i === 0 ? s.color : "#C4D4E0" }}>{s.name}</div>
-                  <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>Variable · electricity</div>
+                  <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>{T.variableElec}</div>
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -231,6 +226,16 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
 export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn, onOpenCalculator }) {
   // Gate: guests clicking the calculator go to sign-in first
   const { user, updatePreferences, logout, authFetch } = useAuth();
+  const { tSection } = useLanguage();
+  const T  = tSection("dashboard");
+  const TC = tSection("common");
+  const NAV_ITEMS = [
+    { id: "today",    icon: "📈", label: TC.today },
+    { id: "tomorrow", icon: "⏩", label: TC.tomorrow },
+    { id: "cheapest", icon: "💚", label: TC.best },
+    { id: "compare",  icon: "🏢", label: TC.suppliers },
+    { id: "alerts",   icon: "🔔", label: TC.alerts },
+  ];
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
   const openCalculator = (type) => isGuest ? onSignIn() : (onOpenCalculator && onOpenCalculator(type));
   const { current } = useCurrentPrice();
@@ -344,6 +349,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <LangSwitcher />
             {mwh != null && (
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(0)}</div>
@@ -368,6 +374,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         <div style={{ maxWidth: 1000, margin: "0 auto", padding: "16px 18px 0" }}>
           {/* TOP ROW: EPEX + sign-in flush right */}
           <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <LangSwitcher />
               {mwh != null && (
                 <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
                   <div style={{ fontSize: 10, color: "#556", marginBottom: 1 }}>NOW · EPEX Spot</div>
@@ -389,7 +396,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                         {(user?.name || user?.email || "?")[0].toUpperCase()}
                       </div>
                       <div style={{ textAlign: "left" }}>
-                        <div style={{ fontSize: 12, fontWeight: 600 }}>{user?.name || "Account"}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600 }}>{user?.name || {TC.account}}</div>
                         <div style={{ fontSize: 10, color: "#556" }}>▾ Menu</div>
                       </div>
                     </button>
@@ -418,18 +425,18 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               <>
                 <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>Browsing as guest</div>
                 <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-                <MenuBtn icon="🔒" label="Privacy Policy" onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
+                <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
                 <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-                <MenuBtn icon="👤" label="Sign In / Register" onClick={() => { setShowMenu(false); onSignIn(); }} />
+                <MenuBtn icon="👤" label={TC.signIn} onClick={() => { setShowMenu(false); onSignIn(); }} />
               </>
             ) : (
               <>
                 <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>{user?.email || user?.name}</div>
                 <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-                <MenuBtn icon="👤" label="My Profile" onClick={() => { setShowMenu(false); onGoProfile(); }} />
-                <MenuBtn icon="🔒" label="Privacy Policy" onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
+                <MenuBtn icon="👤" label={TC.myProfile} onClick={() => { setShowMenu(false); onGoProfile(); }} />
+                <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
                 <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-                <MenuBtn icon="🚪" label="Sign Out" onClick={() => { setShowMenu(false); logout(); }} danger />
+                <MenuBtn icon="🚪" label={TC.signOut} onClick={() => { setShowMenu(false); logout(); }} danger />
               </>
             )}
           </div>
@@ -458,10 +465,10 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {energyType === "electricity" && isMobile && stats?.today && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
             {[
-              { label: "Min", value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
-              { label: "Avg", value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
-              { label: "Max", value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
-              { label: "Neg hrs", value: stats.today.negative_hours || 0, color: C.cyan },
+              { label: {TC.min}, value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
+              { label: {TC.avg}, value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
+              { label: {TC.max}, value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
+              { label: {T.negHrs}, value: stats.today.negative_hours || 0, color: C.cyan },
             ].map(s => (
               <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px 8px", textAlign: "center" }}>
                 <div style={{ fontSize: 9, color: "#445", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>{s.label}</div>
@@ -476,10 +483,10 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {energyType === "electricity" && !isMobile && !loading && !error && stats?.today && (
           <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
             {[
-              { label: "Today Min", value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
-              { label: "Today Avg", value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
-              { label: "Today Max", value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
-              { label: "Negative Hrs", value: stats.today.negative_hours || 0, color: C.cyan },
+              { label: {T.todayMin}, value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
+              { label: {T.todayAvg}, value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
+              { label: {T.todayMax}, value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
+              { label: {T.negativeHrs}, value: stats.today.negative_hours || 0, color: C.cyan },
             ].map(s => (
               <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 16px", flex: 1, minWidth: 100 }}>
                 <div style={{ fontSize: 10, color: "#556", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.5px" }}>{s.label}{s.sub ? ` · ${s.sub}` : ""}</div>
@@ -510,7 +517,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {/* ── DESKTOP Tabs ── */}
         {energyType === "electricity" && !isMobile && (
           <div style={{ display: "flex", gap: 4, marginBottom: 16, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 4, width: "fit-content", flexWrap: "wrap" }}>
-            {[...NAV_ITEMS, { id: "history", icon: "📅", label: "History" }].map(t => (
+            {[...NAV_ITEMS, { id: "history", icon: "📅", label: {TC.history} }].map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "7px 13px", borderRadius: 9, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.15s", background: tab === t.id ? "rgba(255,255,255,0.1)" : "transparent", color: tab === t.id ? "#fff" : "#667" }}>
                 {t.icon} {t.label}
               </button>
@@ -546,7 +553,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {energyType === "electricity" && (tab === "today" || tab === "tomorrow") && (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? "16px 8px 12px" : "20px 8px 12px", marginBottom: 16 }}>
             {loading ? (
-              <div style={{ textAlign: "center", padding: "50px 0", color: "#556" }}>⚡ Loading prices…</div>
+              <div style={{ textAlign: "center", padding: "50px 0", color: "#556" }}>{T.loadingPrices}</div>
             ) : error ? (
               <div style={{ textAlign: "center", padding: "40px 0" }}>
                 <div style={{ color: C.red, marginBottom: 12 }}>{error}</div>
@@ -554,7 +561,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               </div>
             ) : chartData.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 20px", color: "#556" }}>
-                {tab === "tomorrow" ? <><div style={{ fontSize: 28, marginBottom: 10 }}>⏰</div><div style={{ fontSize: 14, color: "#778", marginBottom: 6 }}>Tomorrow's prices not yet published</div><div style={{ fontSize: 12, color: "#445" }}>EPEX Spot publishes at <strong style={{ color: C.teal }}>13:00 CET</strong> daily</div></> : "No data"}
+                {tab === "tomorrow" ? <><div style={{ fontSize: 28, marginBottom: 10 }}>⏰</div><div style={{ fontSize: 14, color: "#778", marginBottom: 6 }}>Tomorrow's prices not yet published</div><div style={{ fontSize: 12, color: "#445" }}>EPEX Spot publishes at <strong style={{ color: C.teal }}>13:00 CET</strong> daily</div></> : {TC.noData}}
               </div>
             ) : (
               <>
@@ -591,7 +598,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                       <ReferenceLine y={0} stroke="rgba(0,229,255,0.25)" strokeDasharray="4 4" />
                       <ReferenceLine y={alertThreshold} stroke={C.yellow} strokeDasharray="4 4" label={{ value: "⚠ Alert", fill: C.yellow, fontSize: 9, position: "insideTopRight" }} />
                       {tab === "today" && current && (
-                        <ReferenceLine x={`${String(current.hour ?? new Date().getHours()).padStart(2, "0")}:00`} stroke="rgba(255,255,255,0.2)" strokeWidth={2} label={{ value: "NOW", fill: "#fff", fontSize: 9, position: "top" }} />
+                        <ReferenceLine x={`${String(current.hour ?? new Date().getHours()).padStart(2, "0")}:00`} stroke="rgba(255,255,255,0.2)" strokeWidth={2} label={{ value: {TC.now}, fill: "#fff", fontSize: 9, position: "top" }} />
                       )}
                       <Area type="monotone" dataKey="price" stroke="#00C896" strokeWidth={2} fill="url(#grad)"
                         dot={props => props.payload?.is_current
@@ -606,8 +613,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 12 : 13 }}>
                       <thead>
                         <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                          {["Hour", "€/MWh", `${supplier} €/kWh`, "Status"].map(h => (
-                            <th key={h} style={{ padding: "8px 10px", textAlign: h === "Hour" ? "left" : "right", color: "#445", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>{h}</th>
+                          {[{TC.hour}, "€/MWh", `${supplier} €/kWh`, {TC.status}].map(h => (
+                            <th key={h} style={{ padding: "8px 10px", textAlign: h === {TC.hour} ? "left" : "right", color: "#445", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -697,8 +704,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         {/* ── Best Hours ── */}
         {energyType === "electricity" && tab === "cheapest" && (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>💚 5 Cheapest Upcoming Hours</div>
-            <div style={{ fontSize: 12, color: "#556", marginBottom: 16 }}>Best windows for EV charging, washing machine, dishwasher</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{T.cheapestHours}</div>
+            <div style={{ fontSize: 12, color: "#556", marginBottom: 16 }}>{T.cheapestSub}</div>
             {cheapest.length === 0 ? <div style={{ color:"#556", textAlign:"center", padding:"30px 0" }}>Loading…</div>
             : cheapest.map((h, i) => {
               const ts = new Date(h.timestamp);
@@ -721,7 +728,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             })}
             {stats?.today && (
               <div style={{ marginTop:12, padding:"10px 14px", background:"rgba(0,130,255,0.05)", border:"1px solid rgba(0,130,255,0.12)", borderRadius:12, fontSize:12, color:"#778" }}>
-                💡 Running a 2kW appliance at cheapest vs peak saves <strong style={{color:C.green}}>€{(((stats.today.max-stats.today.min)/1000)*2).toFixed(3)}</strong> today
+                {T.savingsTip} <strong style={{color:C.green}}>€{(((stats.today.max-stats.today.min)/1000)*2).toFixed(3)}</strong> today
               </div>
             )}
           </div>
@@ -755,7 +762,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
       {isMobile && (
         <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:50, background:"rgba(6,11,20,0.97)", backdropFilter:"blur(20px)", borderTop:`1px solid ${C.border}`, display:"flex", padding:"8px 0 12px" }}>
           {energyType === "electricity" ? (
-            [...NAV_ITEMS, { id:"history", icon:"📅", label:"History" }].map(t => (
+            [...NAV_ITEMS, { id:"history", icon:"📅", label:{TC.history} }].map(t => (
               <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? C.green : "#445" }}>
                 <span style={{ fontSize:18 }}>{t.icon}</span>
                 <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
@@ -763,7 +770,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               </button>
             ))
           ) : (
-            [{id:"today",icon:"🔥",label:"Today"},{id:"tomorrow",icon:"⏩",label:"Tomorrow"},{id:"week",icon:"📅",label:"7 Days"},{id:"suppliers",icon:"🏢",label:"Suppliers"},{id:"alerts",icon:"🔔",label:"Alerts"}].map(t => (
+            [{id:"today",icon:"🔥",label:{TC.today}},{id:"tomorrow",icon:"⏩",label:{TC.tomorrow}},{id:"week",icon:"📅",label:"7 Days"},{id:"suppliers",icon:"🏢",label:{TC.suppliers}},{id:"alerts",icon:"🔔",label:{TC.alerts}}].map(t => (
               <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? "#F97316" : "#445" }}>
                 <span style={{ fontSize:18 }}>{t.icon}</span>
                 <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
@@ -789,7 +796,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
   const isValidEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
   const saveEmail = async () => {
-    if (!isValidEmail(alertEmail)) { setEmailError("Please enter a valid email"); return; }
+    if (!isValidEmail(alertEmail)) { setEmailError({T.emailInvalid}); return; }
     setEmailError("");
     setSaving(true);
     try {
@@ -797,14 +804,14 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
       if (res?.error) { setEmailError(res.error); }
       else { setEmailSaved(true); }
     } catch (err) {
-      setEmailError(err.message || "Failed to save email");
+      setEmailError(err.message || {T.emailError});
     }
     setSaving(false);
   };
 
   const handleToggle = async () => {
     if (!alertActive) {
-      if (!isValidEmail(alertEmail)) { setEmailError("Please enter a valid email first"); return; }
+      if (!isValidEmail(alertEmail)) { setEmailError({T.emailInvalid}); return; }
       if (!emailSaved) {
         setSaving(true);
         try {
@@ -812,7 +819,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
           if (res?.error) { setEmailError(res.error); setSaving(false); return; }
           setEmailSaved(true);
         } catch (err) {
-          setEmailError(err.message || "Failed to save email");
+          setEmailError(err.message || {T.emailError});
           setSaving(false);
           return;
         }
@@ -830,7 +837,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
       {/* Threshold slider */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, color: "#aaa", marginBottom: 10 }}>
-          Alert when below: <strong style={{ color: C.yellow }}>€{alertThreshold}/MWh</strong>
+          {T.alertWhenBelow} <strong style={{ color: C.yellow }}>€{alertThreshold}/MWh</strong>
         </div>
         <input type="range" min={-20} max={200} step={5} value={alertThreshold}
           onChange={e => saveAlertThreshold(+e.target.value)}
@@ -861,7 +868,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
             background: emailSaved ? "rgba(0,200,150,0.2)" : "rgba(13,148,136,0.3)",
             color: emailSaved ? C.green : "#0D9488", whiteSpace: "nowrap",
           }}>
-            {emailSaved ? "✓ Saved" : saving ? "…" : "Save"}
+            {emailSaved ? "✓ Saved" : saving ? "…" : {TC.save}}
           </button>
         </div>
         {emailError && <div style={{ fontSize: 11, color: C.red, marginTop: 6 }}>⚠ {emailError}</div>}
@@ -873,7 +880,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
         <div>
           <div style={{ fontWeight: 600, fontSize: 14 }}>Alert {alertActive ? "🟢 Active" : "⚫ Inactive"}</div>
           <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>
-            {alertActive ? `Monitoring prices · email: ${alertEmail}` : "Enable to start receiving alerts"}
+            {alertActive ? `Monitoring prices · email: ${alertEmail}` : {T.signInRequired}}
           </div>
         </div>
         <button onClick={handleToggle} style={{
@@ -882,7 +889,7 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
           background: alertActive ? "rgba(239,68,68,0.2)" : "rgba(0,200,150,0.2)",
           color: alertActive ? C.red : C.green,
         }}>
-          {alertActive ? "Disable" : "Enable"}
+          {alertActive ? {TC.disable} : {TC.enable}}
         </button>
       </div>
     </div>
@@ -892,10 +899,10 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
 function DropMenu({ onProfile, onLogout, onPrivacy }) {
   return (
     <div style={{ position:"absolute", right:0, top:"calc(100% + 8px)", zIndex:100, background:"#0D1626", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:8, minWidth:180, boxShadow:"0 8px 32px rgba(0,0,0,0.4)" }}>
-      <MenuBtn icon="👤" label="My Profile" onClick={onProfile} />
-      <MenuBtn icon="🔒" label="Privacy Policy" onClick={onPrivacy} />
+      <MenuBtn icon="👤" label={TC.myProfile} onClick={onProfile} />
+      <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={onPrivacy} />
       <div style={{ height:1, background:"rgba(255,255,255,0.07)", margin:"6px 0" }} />
-      <MenuBtn icon="🚪" label="Sign Out" onClick={onLogout} danger />
+      <MenuBtn icon="🚪" label={TC.signOut} onClick={onLogout} danger />
     </div>
   );
 }
