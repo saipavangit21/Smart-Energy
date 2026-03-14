@@ -23,12 +23,21 @@ export function getPriceColor(priceMwh) {
 
 export function getPriceLabel(priceMwh, labels) {
   const L = labels || {};
-  if (priceMwh < 0)    return { text: L.negative   || 'Negative price!', emoji: '🤑', tip: 'Grid is overloaded — run everything now!' }
-  if (priceMwh < 50)   return { text: L.very_cheap || 'Very cheap',       emoji: '💚', tip: 'Great time for high consumption' }
-  if (priceMwh < 90)   return { text: L.cheap      || 'Cheap',            emoji: '🟡', tip: 'Good time for laundry, EV charging' }
-  if (priceMwh < 130)  return { text: L.moderate   || 'Moderate',         emoji: '🟠', tip: 'Avoid high loads if possible' }
-  if (priceMwh < 160)  return { text: L.expensive  || 'Expensive',        emoji: '🔴', tip: 'Postpone high consumption' }
-  return                        { text: L.peak      || 'Peak price',       emoji: '⛔', tip: 'Avoid using large appliances!' }
+  // Each label entry can be {emoji, text} object or a plain string
+  const txt = (key, fallback) => {
+    const v = L[key];
+    return v ? (typeof v === 'object' ? v.text : v) : fallback;
+  };
+  const emo = (key, fallback) => {
+    const v = L[key];
+    return v ? (typeof v === 'object' ? v.emoji : fallback) : fallback;
+  };
+  if (priceMwh < 0)    return { text: txt('negative',   'Negative price!'), emoji: emo('negative',   '🤑'), tip: 'Grid is overloaded — run everything now!' }
+  if (priceMwh < 50)   return { text: txt('very_cheap', 'Very cheap'),       emoji: emo('very_cheap', '💚'), tip: 'Great time for high consumption' }
+  if (priceMwh < 90)   return { text: txt('cheap',      'Cheap'),            emoji: emo('cheap',      '🟡'), tip: 'Good time for laundry, EV charging' }
+  if (priceMwh < 130)  return { text: txt('moderate',   'Moderate'),         emoji: emo('moderate',   '🟠'), tip: 'Avoid high loads if possible' }
+  if (priceMwh < 160)  return { text: txt('expensive',  'Expensive'),        emoji: emo('expensive',  '🔴'), tip: 'Postpone high consumption' }
+  return                        { text: txt('peak',       'Peak price'),       emoji: emo('peak',       '⛔'), tip: 'Avoid using large appliances!' }
 }
 
 export function formatPrice(priceMwh, unit = 'MWh') {
