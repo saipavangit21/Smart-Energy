@@ -598,10 +598,10 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
             value={data.lastName || ""} onChange={set} />
         </div>
         <Field fieldKey="email" type="email" label={TC.email || "Email address"} required={isGuest}
-          placeholder="jan@example.be" hint=CC.emailHint || "We'll send your plan comparison here."
+          placeholder="jan@example.be" hint={CC.emailHint || "We'll send your plan comparison here."}
           value={data.email || ""} onChange={set} />
         <Field fieldKey="postcode" label={TC.postcode || "Postcode"} placeholder="e.g. 2000"
-          hint=CC.postcodeHint || "Optional — improves accuracy."
+          hint={CC.postcodeHint || "Optional — improves accuracy."}
           value={data.postcode || ""} onChange={set} />
         <Field fieldKey="currentBill" type="number" label={TC.currentBill || "Current monthly bill"}
           prefix="€" placeholder="e.g. 180" hint="Optional — we'll calculate your potential savings."
