@@ -133,18 +133,19 @@ function StepBar({ step }) {
 }
 
 // ─── STEP 1 · Energy types ────────────────────────────────────
-const ENERGY_OPTIONS = [
-  { id: "electricity", icon: "⚡", label: "Electricity",   color: C.teal,   desc: "EPEX Spot dynamic, variable or fixed plans" },
-  { id: "gas",         icon: "🔥", label: "Natural Gas",   color: C.orange, desc: "TTF-linked or fixed gas supplier plans" },
-  { id: "solar",       icon: "☀️", label: "Solar Panels",  color: C.yellow, desc: "I have solar — factor in self-consumption" },
-  { id: "ev",          icon: "🚗", label: "Electric Car",  color: C.cyan,   desc: "EV charging shapes my peak demand" },
-  { id: "heatpump",    icon: "🌡️", label: "Heat Pump",     color: C.purple, desc: "Heat pump for heating and/or cooling" },
-];
+// ENERGY_OPTIONS moved inside Step1
 
 function Step1({ data, onChange, onNext }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
+  const ENERGY_OPTIONS = [
+    { id: "electricity", icon: "⚡", label: CC.energyElecLabel  || "Electricity",  color: C.teal,   desc: CC.energyElecDesc  || "EPEX Spot dynamic, variable or fixed plans" },
+    { id: "gas",         icon: "🔥", label: CC.energyGasLabel   || "Natural Gas",  color: C.orange, desc: CC.energyGasDesc   || "TTF-linked or fixed gas supplier plans" },
+    { id: "solar",       icon: "☀️", label: CC.energySolarLabel || "Solar Panels", color: C.yellow, desc: CC.energySolarDesc || "I have solar — factor in self-consumption" },
+    { id: "ev",          icon: "🚗", label: CC.energyEvLabel    || "Electric Car", color: C.cyan,   desc: CC.energyEvDesc    || "EV charging shapes my peak demand" },
+    { id: "heatpump",    icon: "🌡️", label: CC.energyHpLabel   || "Heat Pump",    color: C.purple, desc: CC.energyHpDesc    || "Heat pump for heating and/or cooling" },
+  ];
   const sel = data.energyTypes || [];
   const toggle = (id) => onChange({ energyTypes: sel.includes(id) ? sel.filter(x => x !== id) : [...sel, id] });
   const canGo  = sel.includes("electricity") || sel.includes("gas");
@@ -153,8 +154,8 @@ function Step1({ data, onChange, onNext }) {
     <div>
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{CC.step1}</div>
-        <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>What energy does<br/>your home use?</h2>
-        <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>Select everything that applies. We'll personalise your plan comparison.</p>
+        <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1.2 }}>{CC.step1Title || "What energy does your home use?"}</h2>
+        <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>{CC.step1Sub || "Select everything that applies."}</p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
@@ -195,7 +196,7 @@ function Step1({ data, onChange, onNext }) {
         </div>
       )}
 
-      <Btn onClick={onNext} disabled={!canGo}>Continue — Pick Appliances →</Btn>
+      <Btn onClick={onNext} disabled={!canGo}>{CC.continueBtn || "Continue →"}</Btn>
     </div>
   );
 }
