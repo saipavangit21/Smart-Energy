@@ -79,9 +79,9 @@ function TodayTab({ current, history }) {
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <StatCard label=T.periodLow  || "30-day Low"  value={stats?.min != null ? `€${stats.min}` : "—"} color={C.green}  />
-        <StatCard label=T.periodAvg  || "30-day Avg"  value={stats?.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} />
-        <StatCard label=T.periodHigh || "30-day High" value={stats?.max != null ? `€${stats.max}` : "—"} color={C.orange} />
+        <StatCard label={T.periodLow || "30-day Low"}  value={stats?.min != null ? `€${stats.min}` : "—"} color={C.green}  />
+        <StatCard label={T.periodAvg || "30-day Avg"}  value={stats?.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} />
+        <StatCard label={T.periodHigh || "30-day High"} value={stats?.max != null ? `€${stats.max}` : "—"} color={C.orange} />
       </div>
 
       {recent.length > 0 && (
@@ -153,9 +153,9 @@ function TomorrowTab({ history }) {
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 }}>
           <div style={{ color: C.teal, fontSize: 13, fontWeight: 700, marginBottom: 12 }}>📊 Recent context</div>
           <div style={{ display: "flex", gap: 8 }}>
-            <StatCard label=T.periodLow  || "30-day Low"  value={stats.min != null ? `€${stats.min}` : "—"} color={C.green}  />
-            <StatCard label=T.periodAvg  || "30-day Avg"  value={stats.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} />
-            <StatCard label=T.periodHigh || "30-day High" value={stats.max != null ? `€${stats.max}` : "—"} color={C.orange} />
+            <StatCard label={T.periodLow || "30-day Low"}  value={stats.min != null ? `€${stats.min}` : "—"} color={C.green}  />
+            <StatCard label={T.periodAvg || "30-day Avg"}  value={stats.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} />
+            <StatCard label={T.periodHigh || "30-day High"} value={stats.max != null ? `€${stats.max}` : "—"} color={C.orange} />
           </div>
         </div>
       )}
@@ -202,9 +202,9 @@ function WeekTab() {
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <StatCard label=T.periodLow  || "Period Low"  value={stats?.min != null ? `€${stats.min}` : "—"} color={C.green}  sub="€/MWh" />
-        <StatCard label=T.periodAvg  || "Period Avg"  value={stats?.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} sub="€/MWh" />
-        <StatCard label=T.periodHigh || "Period High" value={stats?.max != null ? `€${stats.max}` : "—"} color={C.orange} sub="€/MWh" />
+        <StatCard label={T.periodLow || "Period Low"}  value={stats?.min != null ? `€${stats.min}` : "—"} color={C.green}  sub="€/MWh" />
+        <StatCard label={T.periodAvg || "Period Avg"}  value={stats?.avg != null ? `€${stats.avg}` : "—"} color={C.yellow} sub="€/MWh" />
+        <StatCard label={T.periodHigh || "Period High"} value={stats?.max != null ? `€${stats.max}` : "—"} color={C.orange} sub="€/MWh" />
       </div>
 
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 8px 8px", marginBottom: 12 }}>
