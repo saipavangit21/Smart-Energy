@@ -199,7 +199,7 @@ export default function AdminDashboard() {
             value={period} onChange={e => setPeriod(Number(e.target.value))}
             style={{ background: C.card, border: `1px solid ${C.border}`, color: C.text, borderRadius: 8, padding: "6px 10px", fontSize: 13, cursor: "pointer" }}
           >
-            {[7, 14, 30, 90].map(d => <option key={d} value={d}>Last {d}d</option>)}
+            {[1, 7, 14, 30, 90].map(d => <option key={d} value={d}>{d === 1 ? "Today" : `Last ${d}d`}</option>)}
           </select>
           <button onClick={load} style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`, color: C.text, borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer" }}>
             {loading ? "↻" : "↻ Refresh"}
