@@ -6,7 +6,7 @@
 import { useState } from "react";
 import LangSwitcher from "../components/LangSwitcher";
 
-const API = "https://smart-energy-production-aef3.up.railway.app";
+const API = "https://smartprice.be";
 
 const C = {
   bg: "#060B14", card: "#0D1626", border: "rgba(255,255,255,0.08)",
