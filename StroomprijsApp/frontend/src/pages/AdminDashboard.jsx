@@ -216,7 +216,7 @@ export default function AdminDashboard() {
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
           <StatCard label="Registered Users" value={totalUsers} sub={`${fmt(analytics?.total_registered_users?.google_users)} Google · ${fmt(analytics?.total_registered_users?.email_users)} email`} color={C.teal} />
           <StatCard label="Calculator Runs" value={Number(calcRuns) + Number(calcGasRuns)} sub={`⚡ ${fmt(calcRuns)} elec · 🔥 ${fmt(calcGasRuns)} gas`} color={C.yellow} />
-          <StatCard label="Page Views" value={pageViews} sub={`last ${period} days`} color={C.blue} />
+          <StatCard label="Page Views" value={pageViews} sub={period === 1 ? "today (since midnight)" : `last ${period} days`} color={C.blue} />
           <StatCard label="Users with Email" value={(users || []).filter(u => u.email).length} sub="can receive alerts" color={C.green} />
         </div>
 
