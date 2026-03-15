@@ -138,7 +138,10 @@ export default function AdminDashboard() {
   const totalUsers   = Number(analytics?.total_registered_users?.total || 0);
   const calcRuns     = analytics?.summary?.find(e => e.event === "calculator_start")?.total || 0;
   const calcGasRuns  = analytics?.summary?.find(e => e.event === "calculator_start_gas")?.total || 0;
-  const pageViews    = analytics?.summary?.find(e => e.event === "page_view")?.total || 0;
+  const pageViews = (
+    Number(analytics?.summary?.find(e => e.event === "page_view")?.total || 0) +
+    Number(analytics?.summary?.find(e => e.event === "guest_session")?.total || 0)
+  );
 
   const goalMetrics = {
     users:      totalUsers,
