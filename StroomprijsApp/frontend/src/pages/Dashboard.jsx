@@ -127,6 +127,7 @@ function SupplierCompare({ currentMwh, isMobile, energyType }) {
 function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
   const { tSection } = useLanguage();
   const TC = tSection("common");
+  const L  = tSection("landing");
   return (
     <div style={{
       display: "flex",
@@ -199,6 +200,21 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
             animation: "pulse-gas 2s infinite",
           }} />
         )}
+      </button>
+
+
+      {/* EV button */}
+      <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{
+        display: "flex", alignItems: "center", gap: 5,
+        padding: "8px 14px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "transparent", color: "#4A6070",
+      }}
+        onMouseEnter={e => { e.currentTarget.style.color = "#00C896"; e.currentTarget.style.border = "1px solid rgba(0,200,150,0.35)"; e.currentTarget.style.background = "rgba(0,200,150,0.08)"; }}
+        onMouseLeave={e => { e.currentTarget.style.color = "#4A6070"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}>
+        🚗 EV
       </button>
 
       {/* Calculator button — visible to all, guests get sign-in prompt */}
