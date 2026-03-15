@@ -92,13 +92,13 @@ module.exports = function attachAnalytics(app, pool) {
     next();
   });
 
-  // Dashboard loads — track every visit to the main price endpoint
+  // Dashboard loads
   app.use("/api/prices/today", (req, res, next) => {
     if (req.method === "GET") {
-      const hasToken = !!(req.cookies?.access_token || req.headers.authorization);
+      const isGuest = !req.cookies?.access_token && !req.headers.authorization;
       track(pool, {
-        event: "page_view",
-        method: hasToken ? "logged_in" : "guest",
+        event: isGuest ? "guest_session" : "page_view",
+        method: isGuest ? "guest" : "logged_in",
         userId: req.user?.id || null,
         sessionId: req._sessionId,
         path: req.originalUrl,
@@ -146,7 +146,7 @@ module.exports = function attachAnalytics(app, pool) {
       const guestRatio = await pool.query(`
         SELECT method, COUNT(DISTINCT session_id) AS sessions
         FROM analytics_events
-        WHERE event = 'page_view'
+        WHERE event IN ('guest_session','page_view')
           AND created_at >= NOW() - INTERVAL '${days} days'
         GROUP BY method
       `);
@@ -162,7 +162,9 @@ module.exports = function attachAnalytics(app, pool) {
       const userCount = await pool.query(`
         SELECT COUNT(*) AS total,
           COUNT(*) FILTER (WHERE providers->>'google' = 'true') AS google_users,
-          COUNT(*) FILTER (WHERE providers->>'email'  = 'true') AS email_users
+          COUNT(*) FILTER (WHERE providers->>'email'  = 'true') AS email_users,
+          COUNT(*) FILTER (WHERE created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Europe/Brussels') AT TIME ZONE 'Europe/Brussels') AS new_today,
+          COUNT(*) FILTER (WHERE ${dateFilter}) AS new_in_period
         FROM users
       `);
 

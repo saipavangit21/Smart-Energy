@@ -17,6 +17,7 @@ const C = {
   yellow:  "#D97706",
   red:     "#DC2626",
   blue:    "#1A56A4",
+  cyan:    "#06B6D4",
   text:    "#E2E8F0",
   muted:   "#64748B",
 };
@@ -156,6 +157,8 @@ export default function AdminDashboard() {
 
   // ── Derived metrics for goal tracker ────────────────────────────────────────
   const totalUsers   = Number(analytics?.total_registered_users?.total || 0);
+  const newToday     = Number(analytics?.total_registered_users?.new_today || 0);
+  const newInPeriod  = Number(analytics?.total_registered_users?.new_in_period || 0);
   const calcRuns     = analytics?.summary?.find(e => e.event === "calculator_start")?.total || 0;
   const calcGasRuns  = analytics?.summary?.find(e => e.event === "calculator_start_gas")?.total || 0;
   const pageViews = (
@@ -239,6 +242,7 @@ export default function AdminDashboard() {
         {/* Stat cards */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
           <StatCard label="Registered Users" value={totalUsers} sub={`${fmt(analytics?.total_registered_users?.google_users)} Google · ${fmt(analytics?.total_registered_users?.email_users)} email`} color={C.teal} />
+          <StatCard label="New Users" value={newToday} sub={`today · ${newInPeriod} in period`} color={C.cyan} />
           <StatCard label="Calculator Runs" value={Number(calcRuns) + Number(calcGasRuns)} sub={`⚡ ${fmt(calcRuns)} elec · 🔥 ${fmt(calcGasRuns)} gas`} color={C.yellow} />
           <StatCard label="Page Views" value={pageViews} sub={period === 1 ? "today (since midnight)" : `last ${period} days`} color={C.blue} />
           <StatCard label="Users with Email" value={(users || []).filter(u => u.email).length} sub="can receive alerts" color={C.green} />
