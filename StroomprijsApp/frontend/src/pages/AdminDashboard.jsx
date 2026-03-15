@@ -101,7 +101,7 @@ function GoalBar({ goal, current }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [input,     setInput]     = useState("");
-  const [secret,    setSecret]    = useState(SECRET); // active secret being used
+  const [secret,    setSecret]    = useState(() => SECRET || sessionStorage.getItem("sp_admin_secret") || "");
   const [authed,    setAuthed]    = useState(false);  // only true after backend confirms
   const [error,     setError]     = useState("");
   const [tab,       setTab]       = useState("goals");
@@ -127,6 +127,7 @@ export default function AdminDashboard() {
       setAnalytics(aData);
       if (uData.success) setUsers(uData.users);
       setAuthed(true);
+      sessionStorage.setItem("sp_admin_secret", s || secret);
     } catch (e) {
       setError(e.message);
       setAuthed(false);
@@ -135,8 +136,11 @@ export default function AdminDashboard() {
     }
   };
 
-  // Auto-login if VITE_ADMIN_SECRET is set — verify it first
-  useEffect(() => { if (SECRET) load(SECRET); }, []);
+  // Auto-login if VITE_ADMIN_SECRET or saved session secret exists
+  useEffect(() => {
+    const saved = SECRET || sessionStorage.getItem("sp_admin_secret");
+    if (saved) load(saved);
+  }, []);
 
   useEffect(() => { if (authed) load(); }, [period]);
 
@@ -153,6 +157,7 @@ export default function AdminDashboard() {
     setSecret("");
     setInput("");
     setError("");
+    sessionStorage.removeItem("sp_admin_secret");
   };
 
   // ── Derived metrics for goal tracker ────────────────────────────────────────
