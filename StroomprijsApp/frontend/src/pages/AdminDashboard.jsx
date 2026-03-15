@@ -100,9 +100,10 @@ function GoalBar({ goal, current }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [input,     setInput]     = useState("");
-  const [authed,    setAuthed]    = useState(!!SECRET);
+  const [secret,    setSecret]    = useState(SECRET); // active secret being used
+  const [authed,    setAuthed]    = useState(false);  // only true after backend confirms
   const [error,     setError]     = useState("");
-  const [tab,       setTab]       = useState("goals");   // goals | analytics | users
+  const [tab,       setTab]       = useState("goals");
   const [period,    setPeriod]    = useState(30);
   const [analytics, setAnalytics] = useState(null);
   const [users,     setUsers]     = useState(null);
@@ -110,28 +111,47 @@ export default function AdminDashboard() {
   const [copied,    setCopied]    = useState("");
   const [userSearch, setUserSearch] = useState("");
 
-  const load = async () => {
+  const hdrs = (s) => ({ "Content-Type": "application/json", "x-admin-secret": s || secret });
+
+  const load = async (s) => {
     setLoading(true);
+    setError("");
     try {
       const [aRes, uRes] = await Promise.all([
-        fetch(`${API}/api/admin/analytics?days=${period}`, { headers: headers() }),
-        fetch(`${API}/api/admin/users`,                    { headers: headers() }),
+        fetch(`${API}/api/admin/analytics?days=${period}`, { headers: hdrs(s) }),
+        fetch(`${API}/api/admin/users`,                    { headers: hdrs(s) }),
       ]);
       const [aData, uData] = await Promise.all([aRes.json(), uRes.json()]);
-      if (!aData.success) throw new Error(aData.error);
+      if (aRes.status === 401 || !aData.success) throw new Error("Unauthorized — wrong secret");
       setAnalytics(aData);
       if (uData.success) setUsers(uData.users);
+      setAuthed(true);
     } catch (e) {
       setError(e.message);
+      setAuthed(false);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { if (authed) load(); }, [authed, period]);
+  // Auto-login if VITE_ADMIN_SECRET is set — verify it first
+  useEffect(() => { if (SECRET) load(SECRET); }, []);
+
+  useEffect(() => { if (authed) load(); }, [period]);
 
   const tryAuth = () => {
-    if (input.trim()) { setAuthed(true); } else { setError("Enter the admin secret"); }
+    if (!input.trim()) { setError("Enter the admin secret"); return; }
+    setSecret(input.trim());
+    load(input.trim());
+  };
+
+  const signOut = () => {
+    setAuthed(false);
+    setAnalytics(null);
+    setUsers(null);
+    setSecret("");
+    setInput("");
+    setError("");
   };
 
   // ── Derived metrics for goal tracker ────────────────────────────────────────
