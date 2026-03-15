@@ -2,12 +2,16 @@
  * App.jsx — SmartPrice.be
  *
  * Routes (no react-router, plain pathname):
- *   /                         → LandingPage (logged-out) or Dashboard (logged-in / guest)
- *   /calculator/electricity   → CalculatorPage (public, sign-in gate on results)
- *   /calculator/gas           → CalculatorPage (public, sign-in gate on results)
- *   /oauth/callback           → AuthCallback
- *   /privacy                  → PrivacyPolicy
- *   /admin                    → AdminDashboard (protected by admin secret)
+ *   /                                    → LandingPage (logged-out) or Dashboard (logged-in / guest)
+ *   /calculator/electricity              → CalculatorPage
+ *   /calculator/gas                      → CalculatorPage
+ *   /oauth/callback                      → AuthCallback
+ *   /privacy                             → PrivacyPolicy
+ *   /admin                               → AdminDashboard
+ *   /epex-price-belgium                  → EpexBelgiumPage (SEO)
+ *   /belpex-price-today                  → EpexBelgiumPage (SEO alias)
+ *   /cheapest-electricity-hours-belgium  → CheapestHoursPage (SEO)
+ *   /api-docs                            → ApiPage (Home Assistant / developers)
  */
 import { useState, useEffect, useCallback } from "react";
 import { useAuth }       from "./context/AuthContext";
@@ -19,6 +23,9 @@ import PrivacyPolicy     from "./pages/PrivacyPolicy";
 import LandingPage       from "./pages/LandingPage";
 import CalculatorPage    from "./pages/CalculatorPage";
 import AdminDashboard    from "./pages/AdminDashboard";
+import EpexBelgiumPage   from "./pages/seo/EpexBelgiumPage";
+import CheapestHoursPage from "./pages/seo/CheapestHoursPage";
+import ApiPage           from "./pages/ApiPage";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
 
@@ -67,6 +74,14 @@ export default function App() {
   if (path === "/oauth/callback") return <AuthCallback />;
   if (path === "/privacy")        return <PrivacyPolicy onClose={() => navigate("/")} />;
   if (path === "/admin")          return <AdminDashboard />;
+
+  // SEO pages
+  if (path === "/epex-price-belgium" || path === "/belpex-price-today")
+    return <EpexBelgiumPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
+  if (path === "/cheapest-electricity-hours-belgium")
+    return <CheapestHoursPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
+  if (path === "/api-docs")
+    return <ApiPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} />;
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   // ── Loading spinner ──────────────────────────────────────────
