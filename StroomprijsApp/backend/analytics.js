@@ -92,13 +92,13 @@ module.exports = function attachAnalytics(app, pool) {
     next();
   });
 
-  // Dashboard loads
+  // Dashboard loads — track every visit to the main price endpoint
   app.use("/api/prices/today", (req, res, next) => {
     if (req.method === "GET") {
-      const isGuest = !req.cookies?.access_token && !req.headers.authorization;
+      const hasToken = !!(req.cookies?.access_token || req.headers.authorization);
       track(pool, {
-        event: isGuest ? "guest_session" : "page_view",
-        method: isGuest ? "guest" : "logged_in",
+        event: "page_view",
+        method: hasToken ? "logged_in" : "guest",
         userId: req.user?.id || null,
         sessionId: req._sessionId,
         path: req.originalUrl,
@@ -117,19 +117,13 @@ module.exports = function attachAnalytics(app, pool) {
 
     const days = Math.min(parseInt(req.query.days || 7), 90);
 
-    // For 1 day: use calendar day from midnight Brussels time
-    // For 7d+: use rolling window
-    const dateFilter = days === 1
-      ? `created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Europe/Brussels') AT TIME ZONE 'Europe/Brussels'`
-      : `created_at >= NOW() - INTERVAL '${days} days'`;
-
     try {
       const summary = await pool.query(`
         SELECT event, COUNT(*) AS total,
           COUNT(DISTINCT session_id) AS unique_sessions,
           COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL) AS logged_in_users
         FROM analytics_events
-        WHERE ${dateFilter}
+        WHERE created_at >= NOW() - INTERVAL '${days} days'
         GROUP BY event ORDER BY total DESC
       `);
 
@@ -137,7 +131,7 @@ module.exports = function attachAnalytics(app, pool) {
         SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
           event, COUNT(*) AS count
         FROM analytics_events
-        WHERE ${dateFilter}
+        WHERE created_at >= NOW() - INTERVAL '${days} days'
         GROUP BY day, event ORDER BY day DESC, count DESC
       `);
 
@@ -145,15 +139,15 @@ module.exports = function attachAnalytics(app, pool) {
         SELECT method, COUNT(*) AS attempts, COUNT(DISTINCT session_id) AS unique_users
         FROM analytics_events
         WHERE event IN ('login_attempt_email','login_attempt_google','register_email')
-          AND ${dateFilter}
+          AND created_at >= NOW() - INTERVAL '${days} days'
         GROUP BY method ORDER BY attempts DESC
       `);
 
       const guestRatio = await pool.query(`
         SELECT method, COUNT(DISTINCT session_id) AS sessions
         FROM analytics_events
-        WHERE event IN ('guest_session','page_view')
-          AND ${dateFilter}
+        WHERE event = 'page_view'
+          AND created_at >= NOW() - INTERVAL '${days} days'
         GROUP BY method
       `);
 
@@ -161,7 +155,7 @@ module.exports = function attachAnalytics(app, pool) {
         SELECT event, COUNT(*) AS total, COUNT(DISTINCT session_id) AS unique_sessions
         FROM analytics_events
         WHERE event IN ('calculator_start','calculator_start_gas','login_attempt_email','login_attempt_google','register_email')
-          AND ${dateFilter}
+          AND created_at >= NOW() - INTERVAL '${days} days'
         GROUP BY event ORDER BY total DESC
       `);
 
@@ -175,7 +169,6 @@ module.exports = function attachAnalytics(app, pool) {
       res.json({
         success: true,
         period_days: days,
-        period_label: days === 1 ? "today" : `last_${days}_days`,
         generated_at: new Date().toISOString(),
         total_registered_users: userCount.rows[0],
         summary: summary.rows,
