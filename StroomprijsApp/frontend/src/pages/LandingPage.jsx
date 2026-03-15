@@ -266,6 +266,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                   { label: L.footerElecLink || "⚡ Electricity Prices", action: onGetStarted },
                   { label: L.footerGasLink || "🔥 Gas Prices", action: onGetStarted },
                   { label: L.footerCalcLink || "🔌 Plan Calculator", action: () => onOpenCalculator && onOpenCalculator("electricity") },
+                  { label: L.footerEvLink || "🚗 EV Charging", action: () => window.location.href = "/ev-charging-belgium" },
                 ].map(l => (
                   <div key={l.label} onClick={l.action} style={{ fontSize: 13, color: "#445566", marginBottom: 7, cursor: "pointer" }}
                     onMouseEnter={e => e.currentTarget.style.color = "#0D9488"}

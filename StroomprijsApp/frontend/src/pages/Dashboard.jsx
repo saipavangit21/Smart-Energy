@@ -916,9 +916,12 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
 function DropMenu({ onProfile, onLogout, onPrivacy }) {
   const { tSection } = useLanguage();
   const TC = tSection("common");
+  const L  = tSection("landing");
   return (
     <div style={{ position:"absolute", right:0, top:"calc(100% + 8px)", zIndex:100, background:"#0D1626", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:8, minWidth:180, boxShadow:"0 8px 32px rgba(0,0,0,0.4)" }}>
       <MenuBtn icon="👤" label={TC.myProfile} onClick={onProfile} />
+      <MenuBtn icon="🚗" label={L.footerEvLink || "EV Charging"} onClick={() => window.location.href = "/ev-charging-belgium"} />
+      <MenuBtn icon="📡" label="API Docs" onClick={() => window.location.href = "/api-docs"} />
       <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={onPrivacy} />
       <div style={{ height:1, background:"rgba(255,255,255,0.07)", margin:"6px 0" }} />
       <MenuBtn icon="🚪" label={TC.signOut} onClick={onLogout} danger />
