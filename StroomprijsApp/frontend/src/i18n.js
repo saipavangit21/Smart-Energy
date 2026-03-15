@@ -191,7 +191,7 @@ export const translations = {
       footerLegal: "Legal",
       footerElecLink: "⚡ Electricity Prices",
       footerGasLink: "🔥 Gas Prices",
-      footerCalcLink: "🔌 Plan Calculator"
+      footerCalcLink: "🔌 Plan Calculator",
       footerEvLink: "🚗 EV Charging",
       heroLine1: "Stop Overpaying",
       heroLine2: "for Energy",
@@ -249,7 +249,7 @@ export const translations = {
       footerLegal: "Legal",
       footerElecLink: "⚡ Electricity Prices",
       footerGasLink: "🔥 Gas Prices",
-      footerCalcLink: "🔌 Plan Calculator"
+      footerCalcLink: "🔌 Plan Calculator",
       footerEvLink: "🚗 EV Charging",
       heroLine1: "Stop Overpaying",
       heroLine2: "for Energy",
@@ -277,7 +277,7 @@ export const translations = {
       footerLegal: "Juridisch",
       footerElecLink: "⚡ Elektriciteitsprijzen",
       footerGasLink: "🔥 Gasprijzen",
-      footerCalcLink: "🔌 Tariefcalculator"
+      footerCalcLink: "🔌 Tariefcalculator",
       footerEvLink: "🚗 EV Laden",
       heroLine1: "Stop met te veel betalen",
       heroLine2: "voor energie",
@@ -335,7 +335,7 @@ export const translations = {
       footerLegal: "Légal",
       footerElecLink: "⚡ Prix de l'électricité",
       footerGasLink: "🔥 Prix du gaz",
-      footerCalcLink: "🔌 Calculateur de tarif"
+      footerCalcLink: "🔌 Calculateur de tarif",
       footerEvLink: "🚗 Charge VE",
       heroLine1: "Arrêtez de trop payer",
       heroLine2: "votre énergie",
