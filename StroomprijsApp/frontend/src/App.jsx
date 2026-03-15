@@ -25,6 +25,7 @@ import CalculatorPage    from "./pages/CalculatorPage";
 import AdminDashboard    from "./pages/AdminDashboard";
 import EpexBelgiumPage   from "./pages/seo/EpexBelgiumPage";
 import CheapestHoursPage from "./pages/seo/CheapestHoursPage";
+import EvChargingPage    from "./pages/seo/EvChargingPage";
 import ApiPage           from "./pages/ApiPage";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
@@ -82,6 +83,8 @@ export default function App() {
     return <CheapestHoursPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
   if (path === "/api-docs")
     return <ApiPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} />;
+  if (path === "/ev-charging-belgium")
+    return <EvChargingPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   // ── Loading spinner ──────────────────────────────────────────
