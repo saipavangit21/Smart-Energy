@@ -192,7 +192,7 @@ function Step1({ data, onChange, onNext }) {
       {sel.length > 0 && !canGo && (
         <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
           borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#F87171", marginBottom: 16 }}>
-          ⚠ Please select at least <strong>Electricity</strong> or <strong>Gas</strong> to get plan quotes.
+          {CC.selectEnergyWarning || "⚠ Please select at least Electricity or Gas to get plan quotes."}
         </div>
       )}
 
@@ -562,9 +562,9 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
 
   // Summary of what they picked
   const chips = [
-    ...(data.energyTypes || []).map(t => ({ label: { electricity: "⚡ Electricity", gas: "🔥 Gas", solar: "☀️ Solar", ev: "🚗 EV", heatpump: "🌡️ Heat Pump" }[t] || t, color: C.teal })),
-    data.region      && { label: "📍 " + data.region.charAt(0).toUpperCase() + data.region.slice(1), color: C.muted },
-    data.householdSize && { label: "🏠 " + data.householdSize + " person" + (data.householdSize === "1" ? "" : "s"), color: C.muted },
+    ...(data.energyTypes || []).map(t => ({ label: (CC.energyTypeLabels || {})[t] || { electricity: "⚡ Electricity", gas: "🔥 Gas", solar: "☀️ Solar", ev: "🚗 EV", heatpump: "🌡️ Heat Pump" }[t] || t, color: C.teal })),
+    data.region      && { label: "📍 " + ((CC.regionLabels || {})[data.region] || data.region.charAt(0).toUpperCase() + data.region.slice(1)), color: C.muted },
+    data.householdSize && { label: "🏠 " + data.householdSize + " " + (data.householdSize === "1" ? (CC.householdSuffix || "person") : (CC.householdSuffixPlural || "persons")), color: C.muted },
     data.contractPref  && { label: "📋 " + data.contractPref,  color: C.muted },
     data.greenOnly     && { label: "🌿 Green",                  color: C.green },
   ].filter(Boolean);
@@ -606,14 +606,13 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
           hint={CC.postcodeHint || "Optional — improves accuracy."}
           value={data.postcode || ""} onChange={set} />
         <Field fieldKey="currentBill" type="number" label={TC.currentBill || "Current monthly bill"}
-          prefix="€" placeholder="e.g. 180" hint="Optional — we'll calculate your potential savings."
+          prefix="€" placeholder="e.g. 180" hint={CC.currentBillHint || "Optional — we'll calculate your potential savings."}
           value={data.currentBill || ""} onChange={set} />
       </div>
 
       <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${C.border}`,
         borderRadius: 10, padding: "10px 14px", marginBottom: 20, fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
-        🔒 Your data is stored securely in the EU (GDPR compliant). We never sell or share your information.
-        You can delete your account at any time from your profile.
+        {CC.gdprNote || "🔒 Your data is stored securely in the EU (GDPR compliant)."}
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
