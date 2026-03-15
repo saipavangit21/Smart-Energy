@@ -120,7 +120,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             </div>
           </div>
           <button onClick={onGetStarted} style={{ padding: "11px 22px", borderRadius: 12, fontSize: 13, fontWeight: 700, background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.3)", color: "#00C896", cursor: "pointer", whiteSpace: "nowrap" }}>
-            See Live Prices →
+            {L.seeLivePrices || "See Live Prices →"}
           </button>
         </div>
       </section>
@@ -128,8 +128,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       {/* CALCULATOR SHOWCASE */}
       <section style={{ maxWidth: 960, margin: "0 auto 64px", padding: "0 24px", position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>Plan Calculator</div>
-          <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900, letterSpacing: "-1.5px", margin: "0 0 16px" }}>Find your cheapest energy plan<br />in 30 seconds</h2>
+          <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>{L.calcSectionLabel || "Plan Calculator"}</div>
+          <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900, letterSpacing: "-1.5px", margin: "0 0 16px" }}>{L.calcSectionTitle || "Find your cheapest energy plan in 30 seconds"}</h2>
           <p style={{ color: "#556B82", fontSize: 15, maxWidth: 520, margin: "0 auto" }}>Select appliances → set weekly usage → pick region → see all 7 suppliers ranked by real annual cost.</p>
         </div>
 
@@ -205,8 +205,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       {/* FEATURES */}
       <section style={{ maxWidth: 960, margin: "0 auto 56px", padding: "0 24px", position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 30 }}>
-          <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Features</div>
-          <h2 style={{ fontSize: "clamp(26px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-1.5px", margin: 0 }}>Everything in one dashboard</h2>
+          <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{L.featuresLabel || "Features"}</div>
+          <h2 style={{ fontSize: "clamp(26px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-1.5px", margin: 0 }}>{L.featuresTitle || "Everything in one dashboard"}</h2>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))", gap: 13 }}>
           {features.map((f, i) => (
@@ -224,8 +224,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       {/* FAQ */}
       <section style={{ maxWidth: 740, margin: "0 auto 56px", padding: "0 24px", position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 30 }}>
-          <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>FAQ</div>
-          <h2 style={{ fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 900, letterSpacing: "-1px", margin: 0 }}>Common questions</h2>
+          <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{L.faqLabel || "FAQ"}</div>
+          <h2 style={{ fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 900, letterSpacing: "-1px", margin: 0 }}>{L.faqTitle || "Common questions"}</h2>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {faqs.map((f, i) => (
@@ -261,11 +261,11 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             </div>
             <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
               <div>
-                <div style={{ fontSize: 10, color: "#334455", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, fontWeight: 700 }}>Product</div>
+                <div style={{ fontSize: 10, color: "#334455", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, fontWeight: 700 }}>{L.footerProduct || "Product"}</div>
                 {[
-                  { label: "⚡ Electricity Prices", action: onGetStarted },
-                  { label: "🔥 Gas Prices", action: onGetStarted },
-                  { label: "🔌 Plan Calculator", action: () => onOpenCalculator && onOpenCalculator("electricity") },
+                  { label: L.footerElecLink || "⚡ Electricity Prices", action: onGetStarted },
+                  { label: L.footerGasLink || "🔥 Gas Prices", action: onGetStarted },
+                  { label: L.footerCalcLink || "🔌 Plan Calculator", action: () => onOpenCalculator && onOpenCalculator("electricity") },
                 ].map(l => (
                   <div key={l.label} onClick={l.action} style={{ fontSize: 13, color: "#445566", marginBottom: 7, cursor: "pointer" }}
                     onMouseEnter={e => e.currentTarget.style.color = "#0D9488"}
@@ -275,7 +275,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 ))}
               </div>
               <div>
-                <div style={{ fontSize: 10, color: "#334455", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, fontWeight: 700 }}>Legal</div>
+                <div style={{ fontSize: 10, color: "#334455", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, fontWeight: 700 }}>{L.footerLegal || "Legal"}</div>
                 <div onClick={() => window.dispatchEvent(new CustomEvent("showPrivacy"))} style={{ fontSize: 13, color: "#445566", marginBottom: 6, cursor: "pointer" }}
                   onMouseEnter={e => e.currentTarget.style.color = "#0D9488"}
                   onMouseLeave={e => e.currentTarget.style.color = "#445566"}>
