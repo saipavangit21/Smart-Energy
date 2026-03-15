@@ -192,7 +192,7 @@ export const translations = {
       footerElecLink: "⚡ Electricity Prices",
       footerGasLink: "🔥 Gas Prices",
       footerCalcLink: "🔌 Plan Calculator"
-      footerEvLink: "🚗 EV Charging",,
+      footerEvLink: "🚗 EV Charging",
       heroLine1: "Stop Overpaying",
       heroLine2: "for Energy",
       heroDesc: "Track live EPEX & TTF prices, find the cheapest hours for your appliances, compare all 7 Belgian suppliers, and get alerts when prices drop.",
@@ -250,7 +250,7 @@ export const translations = {
       footerElecLink: "⚡ Electricity Prices",
       footerGasLink: "🔥 Gas Prices",
       footerCalcLink: "🔌 Plan Calculator"
-      footerEvLink: "🚗 EV Charging",,
+      footerEvLink: "🚗 EV Charging",
       heroLine1: "Stop Overpaying",
       heroLine2: "for Energy",
       heroDesc: "Track live EPEX & TTF prices, find the cheapest hours for your appliances, compare all 7 Belgian suppliers, and get alerts when prices drop.",
@@ -278,7 +278,7 @@ export const translations = {
       footerElecLink: "⚡ Elektriciteitsprijzen",
       footerGasLink: "🔥 Gasprijzen",
       footerCalcLink: "🔌 Tariefcalculator"
-      footerEvLink: "🚗 EV Laden",,
+      footerEvLink: "🚗 EV Laden",
       heroLine1: "Stop met te veel betalen",
       heroLine2: "voor energie",
       heroDesc: "Volg live EPEX- en TTF-prijzen, vind de goedkoopste uren voor uw toestellen, vergelijk alle 7 Belgische leveranciers en ontvang meldingen bij prijsdalingen.",
@@ -336,7 +336,7 @@ export const translations = {
       footerElecLink: "⚡ Prix de l'électricité",
       footerGasLink: "🔥 Prix du gaz",
       footerCalcLink: "🔌 Calculateur de tarif"
-      footerEvLink: "🚗 Charge VE",,
+      footerEvLink: "🚗 Charge VE",
       heroLine1: "Arrêtez de trop payer",
       heroLine2: "votre énergie",
       heroDesc: "Suivez les prix EPEX et TTF en direct, trouvez les heures les moins chères, comparez les 7 fournisseurs belges et recevez des alertes quand les prix baissent.",
