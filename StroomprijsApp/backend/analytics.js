@@ -117,13 +117,19 @@ module.exports = function attachAnalytics(app, pool) {
 
     const days = Math.min(parseInt(req.query.days || 7), 90);
 
+    // For 1 day: use calendar day from midnight Brussels time
+    // For 7d+: use rolling window
+    const dateFilter = days === 1
+      ? `created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Europe/Brussels') AT TIME ZONE 'Europe/Brussels'`
+      : `created_at >= NOW() - INTERVAL '${days} days'`;
+
     try {
       const summary = await pool.query(`
         SELECT event, COUNT(*) AS total,
           COUNT(DISTINCT session_id) AS unique_sessions,
           COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL) AS logged_in_users
         FROM analytics_events
-        WHERE created_at >= NOW() - INTERVAL '${days} days'
+        WHERE ${dateFilter}
         GROUP BY event ORDER BY total DESC
       `);
 
@@ -131,7 +137,7 @@ module.exports = function attachAnalytics(app, pool) {
         SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
           event, COUNT(*) AS count
         FROM analytics_events
-        WHERE created_at >= NOW() - INTERVAL '${days} days'
+        WHERE ${dateFilter}
         GROUP BY day, event ORDER BY day DESC, count DESC
       `);
 
@@ -139,7 +145,7 @@ module.exports = function attachAnalytics(app, pool) {
         SELECT method, COUNT(*) AS attempts, COUNT(DISTINCT session_id) AS unique_users
         FROM analytics_events
         WHERE event IN ('login_attempt_email','login_attempt_google','register_email')
-          AND created_at >= NOW() - INTERVAL '${days} days'
+          AND ${dateFilter}
         GROUP BY method ORDER BY attempts DESC
       `);
 
@@ -147,7 +153,7 @@ module.exports = function attachAnalytics(app, pool) {
         SELECT method, COUNT(DISTINCT session_id) AS sessions
         FROM analytics_events
         WHERE event IN ('guest_session','page_view')
-          AND created_at >= NOW() - INTERVAL '${days} days'
+          AND ${dateFilter}
         GROUP BY method
       `);
 
@@ -155,7 +161,7 @@ module.exports = function attachAnalytics(app, pool) {
         SELECT event, COUNT(*) AS total, COUNT(DISTINCT session_id) AS unique_sessions
         FROM analytics_events
         WHERE event IN ('calculator_start','calculator_start_gas','login_attempt_email','login_attempt_google','register_email')
-          AND created_at >= NOW() - INTERVAL '${days} days'
+          AND ${dateFilter}
         GROUP BY event ORDER BY total DESC
       `);
 
