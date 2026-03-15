@@ -228,6 +228,7 @@ export default function AdminDashboard() {
             {loading ? "↻" : "↻ Refresh"}
           </button>
           <a href="/" style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`, color: C.text, borderRadius: 8, padding: "6px 12px", fontSize: 13, textDecoration: "none" }}>← Site</a>
+          <button onClick={signOut} style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", color: "#EF4444", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>🚪 Sign Out</button>
         </div>
       </div>
 
