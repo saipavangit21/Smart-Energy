@@ -184,5 +184,27 @@ module.exports = function attachAnalytics(app, pool) {
     }
   });
 
+  // Admin users list endpoint
+  app.get("/api/admin/users", async (req, res) => {
+    const secret = req.headers["x-admin-secret"];
+    if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    try {
+      const result = await pool.query(`
+        SELECT
+          id, name, email,
+          CASE WHEN providers->>'google' = 'true' THEN true ELSE false END AS google,
+          CASE WHEN providers->>'email'  = 'true' THEN true ELSE false END AS email_auth,
+          created_at
+        FROM users
+        ORDER BY created_at DESC
+      `);
+      res.json({ success: true, users: result.rows });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
   console.log("   Analytics: enabled");
 };
