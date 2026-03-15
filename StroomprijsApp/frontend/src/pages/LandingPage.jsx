@@ -80,12 +80,12 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             {C.tagline}
           </div>
           <h1 style={{ fontSize: "clamp(38px, 6.5vw, 72px)", fontWeight: 900, letterSpacing: "-2.5px", lineHeight: 1.04, margin: "0 0 26px" }}>
-            <span style={{ background: "linear-gradient(135deg, #ffffff 20%, #0D9488 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Stop Overpaying</span>
+            <span style={{ background: "linear-gradient(135deg, #ffffff 20%, #0D9488 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{L.heroLine1 || "Stop Overpaying"}</span>
             <br />
-            <span style={{ background: "linear-gradient(135deg, #E8EDF5 40%, #1A56A4 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>for Energy</span>
+            <span style={{ background: "linear-gradient(135deg, #E8EDF5 40%, #1A56A4 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{L.heroLine2 || "for Energy"}</span>
           </h1>
           <p style={{ fontSize: "clamp(16px, 2.2vw, 20px)", color: "#6B7E99", maxWidth: 600, margin: "0 auto 42px", lineHeight: 1.75 }}>
-            Track live EPEX &amp; TTF prices, find the cheapest hours for your appliances, compare all 7 Belgian suppliers, and get alerts when prices drop.
+            {L.heroDesc || "Track live EPEX & TTF prices, find the cheapest hours, compare all 7 Belgian suppliers, and get alerts when prices drop."}
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
             <button onClick={onGetStarted}
@@ -101,7 +101,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               🔌 {L.tryCalculator}
             </button>
           </div>
-          <div style={{ fontSize: 12, color: "#2E3D52" }}>Free forever · No credit card · GDPR compliant · Data stored in EU</div>
+          <div style={{ fontSize: 12, color: "#2E3D52" }}>{L.heroBadge || "Free forever · No credit card · GDPR compliant"}</div>
         </div>
       </section>
 
@@ -141,16 +141,16 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
               <div style={{ fontSize: 34 }}>🔌</div>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: "#0D9488", marginBottom: 4 }}>Plan Calculator — Electricity &amp; Gas</div>
-                <div style={{ fontSize: 12, color: "#556B82", lineHeight: 1.6 }}>Select your appliances · choose region · see all 7 suppliers ranked by real annual cost including grid fees &amp; VAT</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: "#0D9488", marginBottom: 4 }}>{L.calcTitle || "Plan Calculator — Electricity & Gas"}</div>
+                <div style={{ fontSize: 12, color: "#556B82", lineHeight: 1.6 }}>{L.calcDesc || "Select your appliances · choose region · see all 7 suppliers ranked"}</div>
               </div>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 16 }}>
-              {["⚡ Electricity", "🔥 Gas", "☀️ Solar aware", "🚗 EV charging", "🌡️ Heat pump", "📍 Flanders / Wallonia / Brussels"].map(t => (
+              {(L.calcTags || ["⚡ Electricity", "🔥 Gas", "☀️ Solar", "🚗 EV", "🌡️ Heat pump", "📍 Flanders / Wallonia / Brussels"]).map(t => (
                 <span key={t} style={{ fontSize: 10, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", color: "#0D9488", borderRadius: 20, padding: "3px 9px", fontWeight: 600 }}>{t}</span>
               ))}
             </div>
-            <div style={{ color: "#0D9488", fontWeight: 700, fontSize: 13 }}>Start Calculator →</div>
+            <div style={{ color: "#0D9488", fontWeight: 700, fontSize: 13 }}>{L.calcCta || "Start Calculator →"}</div>
           </div>
         </div>
 
@@ -179,7 +179,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           <div style={{ textAlign: "right", marginTop: 12 }}>
           <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
               style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer" }}>
-              Calculate my plan →
+              {L.calcMyPlan || "Calculate my plan →"}
             </button>
           </div>
         </div>
@@ -188,9 +188,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       {/* SUPPLIERS */}
       <section style={{ maxWidth: 960, margin: "0 auto 56px", padding: "0 24px", position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>Coverage</div>
+          <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 12 }}>{L.coverage || "Coverage"}</div>
           <h2 style={{ fontSize: "clamp(24px, 3.5vw, 38px)", fontWeight: 900, letterSpacing: "-1px", margin: "0 0 10px" }}>{L.suppliersTitle}</h2>
-          <p style={{ color: "#556B82", fontSize: 13 }}>Variable · Fixed · Dynamic — electricity and gas plans</p>
+          <p style={{ color: "#556B82", fontSize: 13 }}>{L.coverageSub || "Variable · Fixed · Dynamic — electricity and gas plans"}</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
           {suppliers.map(s => (
@@ -287,7 +287,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           </div>
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 18, fontSize: 11, color: "#2A3A4A", lineHeight: 2 }}>
             {L.footer}<br />
-            Not financial advice. Always verify tariffs on supplier websites before switching.
+            {L.disclaimer || "Not financial advice."}
           </div>
         </div>
       </footer>

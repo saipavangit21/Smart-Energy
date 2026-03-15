@@ -125,6 +125,8 @@ function SupplierCompare({ currentMwh, isMobile, energyType }) {
 }
 
 function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
+  const { tSection } = useLanguage();
+  const TC = tSection("common");
   return (
     <div style={{
       display: "flex",
@@ -155,7 +157,7 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
           filter: type === "electricity" ? "drop-shadow(0 0 6px rgba(0,230,180,0.8))" : "none",
           transition: "filter 0.2s",
         }}>⚡</span>
-        <span>Electricity</span>
+        <span>{TC.electricity || "Electricity"}</span>
         {type === "electricity" && (
           <span style={{
             width: 6, height: 6, borderRadius: "50%",
@@ -187,7 +189,7 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
           filter: type === "gas" ? "drop-shadow(0 0 6px rgba(255,140,66,0.8))" : "none",
           transition: "filter 0.2s",
         }}>🔥</span>
-        <span>Gas</span>
+        <span>{TC.gas || "Gas"}</span>
         {type === "gas" && (
           <span style={{
             width: 6, height: 6, borderRadius: "50%",
@@ -211,7 +213,7 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
       }}
         onMouseEnter={e => { e.currentTarget.style.color = "#0D9488"; e.currentTarget.style.border = "1px solid rgba(13,148,136,0.35)"; e.currentTarget.style.background = "rgba(13,148,136,0.08)"; }}
         onMouseLeave={e => { e.currentTarget.style.color = isGuest ? "#0D9488" : "#4A6070"; e.currentTarget.style.border = isGuest ? "1px solid rgba(13,148,136,0.3)" : "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = isGuest ? "rgba(13,148,136,0.08)" : "transparent"; }}>
-        🔌 Calculator{isGuest ? " →" : ""}
+        {`🔌 ${TC.calculator || "Calculator"}${isGuest ? " →" : ""}`}
       </button>
 
       <style>{`
