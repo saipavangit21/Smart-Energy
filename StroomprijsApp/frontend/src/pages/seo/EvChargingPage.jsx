@@ -373,7 +373,7 @@ export default function EvChargingPage({ onGetStarted, onOpenCalculator }) {
 
         {/* CTA */}
         <div style={{ background: "rgba(13,148,136,0.07)", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 20, padding: "28px 32px", marginBottom: 20, textAlign: "center" }}>
-          <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")} style={{ padding: "14px 36px", borderRadius: 50, fontSize: 16, fontWeight: 800, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, border: "none", color: "#fff", cursor: "pointer", marginBottom: 8 }}>
+          <button onClick={() => { window.location.href = "/calculator/electricity?ev=1"; }} style={{ padding: "14px 36px", borderRadius: 50, fontSize: 16, fontWeight: 800, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, border: "none", color: "#fff", cursor: "pointer", marginBottom: 8 }}>
             {T.cta}
           </button>
           <div style={{ fontSize: 12, color: C.muted }}>{T.ctaSub}</div>

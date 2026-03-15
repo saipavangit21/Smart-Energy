@@ -878,7 +878,17 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
   const TC = tSection("common");
   const REGIONS = REGIONS_DATA.map(r => ({ ...r, label: TC[r.id] || r.id }));
   const [step,    setStep]    = useState(0);
-  const [data,    setData]    = useState({});
+  const [data,    setData]    = useState(() => {
+    // Pre-select energy types from URL params e.g. ?ev=1 or ?types=electricity,ev
+    const params = new URLSearchParams(window.location.search);
+    const types = params.get("types")?.split(",").filter(Boolean) || [];
+    if (params.get("ev"))          types.push("ev");
+    if (params.get("gas"))         types.push("gas");
+    if (params.get("solar"))       types.push("solar");
+    if (params.get("heatpump"))    types.push("heatpump");
+    if (types.length > 0 && !types.includes("electricity")) types.unshift("electricity");
+    return types.length > 0 ? { energyTypes: [...new Set(types)] } : {};
+  });
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
