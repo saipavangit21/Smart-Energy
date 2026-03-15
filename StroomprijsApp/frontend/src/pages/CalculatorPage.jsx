@@ -206,6 +206,8 @@ function Step2({ data, onChange, onNext, onBack }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
+  const AP = tSection("appliances");
+  const trApp = (a) => ({ ...a, label: AP[a.id]?.label || a.label, tip: AP[a.id]?.tip || a.tip });
   const [elecList, setElecList] = useState([]);
   const [gasList,  setGasList]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -331,7 +333,7 @@ function Step2({ data, onChange, onNext, onBack }) {
             <div style={{ fontSize: 11, color: C.muted }}>{`${selectedElec} ${CC.selected || "selected"}`}</div>
           </div>
           {elecList.map(a => (
-            <AppRow key={a.id} a={a} sel={(data.elecSel||{})[a.id] || { selected: false, uses: a.default_uses_per_week }} onSet={setElec} accent={C.teal} />
+            <AppRow key={a.id} a={trApp(a)} sel={(data.elecSel||{})[a.id] || { selected: false, uses: a.default_uses_per_week }} onSet={setElec} accent={C.teal} />
           ))}
         </div>
       )}
@@ -343,7 +345,7 @@ function Step2({ data, onChange, onNext, onBack }) {
             <div style={{ fontSize: 11, color: C.muted }}>{`${selectedGas} ${CC.selected || "selected"}`}</div>
           </div>
           {gasList.map(a => (
-            <AppRow key={a.id} a={a} sel={(data.gasSel||{})[a.id] || { selected: false, uses: a.default_uses_per_week }} onSet={setGas} accent={C.orange} />
+            <AppRow key={a.id} a={trApp(a)} sel={(data.gasSel||{})[a.id] || { selected: false, uses: a.default_uses_per_week }} onSet={setGas} accent={C.orange} />
           ))}
         </div>
       )}
@@ -731,6 +733,7 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
+  const AP = tSection("appliances");
   const [expanded, setExpanded] = useState(null);
   const hasElec = results.electricity?.success;
   const hasGas  = results.gas?.success;
@@ -761,7 +764,7 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
         {cons.breakdown?.slice(0, 5).map(b => (
           <div key={b.id} style={{ marginBottom: 6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 2 }}>
-              <span style={{ color: C.light }}>{b.icon} {b.label}</span>
+              <span style={{ color: C.light }}>{b.icon} {AP[b.id]?.label || b.label}</span>
               <span style={{ color: C.muted }}>{b.annual_kwh} kWh · {b.pct}%</span>
             </div>
             <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
