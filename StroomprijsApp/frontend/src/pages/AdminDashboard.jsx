@@ -101,7 +101,7 @@ function GoalBar({ goal, current }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [input,     setInput]     = useState("");
-  const [secret,    setSecret]    = useState(() => SECRET || sessionStorage.getItem("sp_admin_secret") || "");
+  const [secret,    setSecret]    = useState(() => SECRET || localStorage.getItem("sp_admin_secret") || "");
   const [authed,    setAuthed]    = useState(false);  // only true after backend confirms
   const [error,     setError]     = useState("");
   const [tab,       setTab]       = useState("goals");
@@ -123,26 +123,32 @@ export default function AdminDashboard() {
         fetch(`${API}/api/admin/users`,                    { headers: hdrs(s) }),
       ]);
       const [aData, uData] = await Promise.all([aRes.json(), uRes.json()]);
-      if (aRes.status === 401 || !aData.success) throw new Error("Unauthorized — wrong secret");
+      if (aRes.status === 401 || !aData.success) {
+        // Only sign out on 401 - not on other errors
+        if (aRes.status === 401) {
+          setAuthed(false);
+          localStorage.removeItem("sp_admin_secret");
+        }
+        throw new Error(aRes.status === 401 ? "Unauthorized — wrong secret" : (aData.error || "Load failed"));
+      }
       setAnalytics(aData);
       if (uData.success) setUsers(uData.users);
       setAuthed(true);
-      sessionStorage.setItem("sp_admin_secret", s || secret);
+      localStorage.setItem("sp_admin_secret", s || secret);
     } catch (e) {
       setError(e.message);
-      setAuthed(false);
     } finally {
       setLoading(false);
     }
   };
 
-  // Auto-login if VITE_ADMIN_SECRET or saved session secret exists
+  // Auto-login if VITE_ADMIN_SECRET or saved secret exists
   useEffect(() => {
-    const saved = SECRET || sessionStorage.getItem("sp_admin_secret");
+    const saved = SECRET || localStorage.getItem("sp_admin_secret");
     if (saved) load(saved);
   }, []);
 
-  useEffect(() => { if (authed) load(); }, [period]);
+  useEffect(() => { if (authed) load(sessionStorage.getItem("sp_admin_secret") || SECRET); }, [period]);
 
   const tryAuth = () => {
     if (!input.trim()) { setError("Enter the admin secret"); return; }
@@ -157,7 +163,7 @@ export default function AdminDashboard() {
     setSecret("");
     setInput("");
     setError("");
-    sessionStorage.removeItem("sp_admin_secret");
+    localStorage.removeItem("sp_admin_secret");
   };
 
   // ── Derived metrics for goal tracker ────────────────────────────────────────
@@ -247,7 +253,7 @@ export default function AdminDashboard() {
         {/* Stat cards */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
           <StatCard label="Registered Users" value={totalUsers} sub={`${fmt(analytics?.total_registered_users?.google_users)} Google · ${fmt(analytics?.total_registered_users?.email_users)} email`} color={C.teal} />
-          <StatCard label="New Users" value={newToday} sub={`today · ${newInPeriod} in period`} color={C.cyan} />
+          <StatCard label="New Users" value={newToday} sub={`today · +${newInPeriod} last ${period === 1 ? "day" : `${period}d`}`} color={C.cyan} />
           <StatCard label="Calculator Runs" value={Number(calcRuns) + Number(calcGasRuns)} sub={`⚡ ${fmt(calcRuns)} elec · 🔥 ${fmt(calcGasRuns)} gas`} color={C.yellow} />
           <StatCard label="Page Views" value={pageViews} sub={period === 1 ? "today (since midnight)" : `last ${period} days`} color={C.blue} />
           <StatCard label="Users with Email" value={(users || []).filter(u => u.email).length} sub="can receive alerts" color={C.green} />
