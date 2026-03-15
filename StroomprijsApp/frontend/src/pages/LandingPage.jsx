@@ -109,9 +109,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       <section style={{ maxWidth: 960, margin: "0 auto 44px", padding: "0 24px", position: "relative", zIndex: 1 }}>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "24px 28px", display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <div style={{ fontSize: 10, color: "#3A4D63", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 10 }}>Live EPEX Spot · Belgium</div>
+            <div style={{ fontSize: 10, color: "#3A4D63", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 10 }}>{L.liveEpex || "Live EPEX Spot · Belgium"}</div>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-              {[{ label: "Today Min", color: "#10B981", val: "~€38" }, { label: "Today Avg", color: "#F59E0B", val: "~€92" }, { label: "Today Max", color: "#EF4444", val: "~€154" }, { label: "TTF Gas", color: "#F97316", val: "~€35/MWh" }].map(s => (
+              {[{ label: L.statMin || "Today Min", color: "#10B981", val: "~€38" }, { label: L.statAvg || "Today Avg", color: "#F59E0B", val: "~€92" }, { label: L.statMax || "Today Max", color: "#EF4444", val: "~€154" }, { label: L.statGas || "TTF Gas", color: "#F97316", val: "~€35/MWh" }].map(s => (
                 <div key={s.label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 9, color: "#3A4D63", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 3 }}>{s.label}</div>
                   <div style={{ fontSize: 19, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>{s.val}</div>
@@ -130,7 +130,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 10, color: "#0D9488", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 14 }}>{L.calcSectionLabel || "Plan Calculator"}</div>
           <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900, letterSpacing: "-1.5px", margin: "0 0 16px" }}>{L.calcSectionTitle || "Find your cheapest energy plan in 30 seconds"}</h2>
-          <p style={{ color: "#556B82", fontSize: 15, maxWidth: 520, margin: "0 auto" }}>Select appliances → set weekly usage → pick region → see all 7 suppliers ranked by real annual cost.</p>
+          <p style={{ color: "#556B82", fontSize: 15, maxWidth: 520, margin: "0 auto" }}>{L.calcSteps || "Select appliances → set weekly usage → pick region → see all 7 suppliers ranked."}</p>
         </div>
 
         <div style={{ marginBottom: 16 }}>
