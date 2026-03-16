@@ -722,6 +722,7 @@ function AlertsTab({ user, isGuest, onSignIn }) {
       </div>
     </div>
   );
+}
 
 function Loading() {
   return <div style={{ color: C.muted, textAlign: "center", padding: 40 }}>Loading…</div>;
