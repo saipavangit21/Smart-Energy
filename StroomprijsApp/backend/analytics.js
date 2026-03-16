@@ -95,11 +95,41 @@ module.exports = function attachAnalytics(app, pool) {
   // Dashboard loads
   app.use("/api/prices/today", (req, res, next) => {
     if (req.method === "GET") {
-      const isGuest = !req.cookies?.access_token && !req.headers.authorization;
+      const hasToken = !!(req.cookies?.access_token || req.headers.authorization);
       track(pool, {
-        event: isGuest ? "guest_session" : "page_view",
-        method: isGuest ? "guest" : "logged_in",
+        event: "page_view",
+        method: hasToken ? "logged_in" : "guest",
         userId: req.user?.id || null,
+        sessionId: req._sessionId,
+        path: req.originalUrl,
+        ip: req._ip,
+      });
+    }
+    next();
+  });
+
+  // EV page loads — track via /api/cheapest endpoint
+  app.use("/api/cheapest", (req, res, next) => {
+    if (req.method === "GET") {
+      track(pool, {
+        event: "ev_page_view",
+        method: "guest",
+        userId: null,
+        sessionId: req._sessionId,
+        path: req.originalUrl,
+        ip: req._ip,
+      });
+    }
+    next();
+  });
+
+  // SEO page views — track via /api/current endpoint
+  app.use("/api/current", (req, res, next) => {
+    if (req.method === "GET") {
+      track(pool, {
+        event: "seo_page_view",
+        method: "guest",
+        userId: null,
         sessionId: req._sessionId,
         path: req.originalUrl,
         ip: req._ip,
@@ -152,7 +182,7 @@ module.exports = function attachAnalytics(app, pool) {
       const guestRatio = await pool.query(`
         SELECT method, COUNT(DISTINCT session_id) AS sessions
         FROM analytics_events
-        WHERE event IN ('guest_session','page_view')
+        WHERE event IN ('guest_session','page_view','ev_page_view','seo_page_view')
           AND ${dateFilter}
         GROUP BY method
       `);
@@ -160,7 +190,7 @@ module.exports = function attachAnalytics(app, pool) {
       const funnel = await pool.query(`
         SELECT event, COUNT(*) AS total, COUNT(DISTINCT session_id) AS unique_sessions
         FROM analytics_events
-        WHERE event IN ('calculator_start','calculator_start_gas','login_attempt_email','login_attempt_google','register_email')
+        WHERE event IN ('calculator_start','calculator_start_gas','login_attempt_email','login_attempt_google','register_email','ev_page_view','seo_page_view')
           AND ${dateFilter}
         GROUP BY event ORDER BY total DESC
       `);

@@ -176,11 +176,13 @@ export default function AdminDashboard() {
     Number(analytics?.summary?.find(e => e.event === "page_view")?.total || 0) +
     Number(analytics?.summary?.find(e => e.event === "guest_session")?.total || 0)
   );
+  const evPageViews  = Number(analytics?.summary?.find(e => e.event === "ev_page_view")?.total  || 0);
+  const seoPageViews = Number(analytics?.summary?.find(e => e.event === "seo_page_view")?.total || 0);
 
   const goalMetrics = {
     users:      totalUsers,
     calculator: Number(calcRuns) + Number(calcGasRuns),
-    pageviews:  Number(pageViews),
+    pageviews:  Number(pageViews) + Number(evPageViews) + Number(seoPageViews),
   };
 
   // ── Next unlocked supplier ───────────────────────────────────────────────────
@@ -257,6 +259,8 @@ export default function AdminDashboard() {
           <StatCard label="Calculator Runs" value={Number(calcRuns) + Number(calcGasRuns)} sub={`⚡ ${fmt(calcRuns)} elec · 🔥 ${fmt(calcGasRuns)} gas`} color={C.yellow} />
           <StatCard label="Page Views" value={pageViews} sub={period === 1 ? "today (since midnight)" : `last ${period} days`} color={C.blue} />
           <StatCard label="Users with Email" value={(users || []).filter(u => u.email).length} sub="can receive alerts" color={C.green} />
+          <StatCard label="EV Page Views" value={evPageViews} sub={period === 1 ? "today" : `last ${period}d`} color={C.teal} />
+          <StatCard label="SEO Page Views" value={seoPageViews} sub={period === 1 ? "today" : `last ${period}d`} color={C.blue} />
         </div>
 
         {/* Next goal banner */}
