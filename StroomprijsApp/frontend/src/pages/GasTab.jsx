@@ -634,106 +634,94 @@ function SuppliersTab({ ttfPrice, isMobile }) {
 function AlertsTab({ user, isGuest, onSignIn }) {
   const { tSection } = useLanguage();
   const TC = tSection("common");
-  const T  = tSection("alerts");
   const AL = tSection("alerts");
   const { updatePreferences } = useAuth();
   const prefs = user?.preferences || {};
   const [threshold,   setThreshold]   = useState(prefs.gasAlertThreshold || 30);
   const [alertActive, setAlertActive] = useState(prefs.gasAlertEnabled   || false);
-  const [alertEmail,  setAlertEmail]  = useState(prefs.alertEmail || user?.email || "");
-  const [emailSaved,  setEmailSaved]  = useState(!!(prefs.alertEmail || user?.email));
-  const [emailError,  setEmailError]  = useState("");
   const [saving,      setSaving]      = useState(false);
   const [saved,       setSaved]       = useState(false);
 
-  if (isGuest) return (
-    <div style={{ textAlign: "center", padding: "40px 20px" }}>
-      <div style={{ fontSize: 40, marginBottom: 12 }}>🔥</div>
-      <div style={{ color: C.light, fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Gas Price Alerts</div>
-      <div style={{ color: C.muted, fontSize: 14, marginBottom: 20 }}>Sign in to get emailed when TTF drops below your threshold.</div>
-      <button onClick={onSignIn} style={{ background: C.orange, color: "#fff", border: "none", borderRadius: 10, padding: "12px 28px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Sign In / Register</button>
-    </div>
-  );
+  const accountEmail = prefs.alertEmail || user?.email || "";
 
-  const saveEmail = async () => {
-    if (!alertEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alertEmail)) { setEmailError(AL.emailInvalid || "Enter a valid email"); return; }
-    setSaving(true);
-    try { await updatePreferences({ alertEmail }); setEmailSaved(true); setEmailError(""); }
-    catch (e) { setEmailError(e.message); } finally { setSaving(false); }
-  };
+  // Guest — show login prompt
+  if (isGuest) {
+    return (
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, textAlign: "center" }}>
+        <div style={{ fontSize: 28, marginBottom: 12 }}>🔔</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: C.light, marginBottom: 8 }}>{AL.title || "Gas Price Alerts"}</div>
+        <div style={{ fontSize: 13, color: C.muted, marginBottom: 20 }}>
+          {AL.loginRequired || "Sign in to receive email alerts when gas prices drop below your threshold."}
+        </div>
+        <button onClick={onSignIn} style={{ padding: "10px 28px", borderRadius: 30, fontWeight: 700, fontSize: 14, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer" }}>
+          {TC.signIn || "Sign in"} →
+        </button>
+      </div>
+    );
+  }
 
   const handleToggle = async () => {
-    if (!alertActive && !emailSaved) { await saveEmail(); return; }
     const next = !alertActive;
     setSaving(true);
-    try { await updatePreferences({ gasAlertEnabled: next, gasAlertThreshold: threshold }); setAlertActive(next); setSaved(true); setTimeout(() => setSaved(false), 2000); }
-    catch (e) { setEmailError(e.message); } finally { setSaving(false); }
+    try {
+      await updatePreferences({ gasAlertEnabled: next, gasAlertThreshold: threshold });
+      setAlertActive(next);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) { console.error(e); }
+    setSaving(false);
   };
 
-  const saveThreshold = async () => {
-    setSaving(true);
-    try { await updatePreferences({ gasAlertThreshold: threshold }); setSaved(true); setTimeout(() => setSaved(false), 2000); }
-    finally { setSaving(false); }
+  const saveThreshold = async (val) => {
+    setThreshold(val);
+    try { await updatePreferences({ gasAlertThreshold: val }); }
+    catch (e) { console.error(e); }
   };
 
   return (
     <div>
-      <div style={{ background: C.card, border: `1px solid ${alertActive ? C.orange : C.border}`, borderRadius: 14, padding: 20, marginBottom: 14 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <div>
-            <div style={{ color: C.light, fontSize: 15, fontWeight: 700 }}>🔥 Gas Price Alerts</div>
-            <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>Email when TTF drops below threshold</div>
-          </div>
-          <div onClick={handleToggle} style={{ width: 48, height: 26, borderRadius: 13, background: alertActive ? C.orange : "#1E3A5F", cursor: "pointer", position: "relative", transition: "background 0.2s" }}>
-            <div style={{ position: "absolute", top: 3, left: alertActive ? 24 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 0.2s" }} />
-          </div>
-        </div>
-        <div style={{ color: alertActive ? C.orange : C.muted, fontSize: 13, fontWeight: 600 }}>{alertActive ? "✅ Alerts active" : "⭕ Alerts off"}</div>
-        {saved && <div style={{ color: C.green, fontSize: 12, marginTop: 4 }}>✓ Saved</div>}
-      </div>
-
+      {/* Threshold */}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
-        <div style={{ color: C.light, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>📧 Alert email address</div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input value={alertEmail} onChange={e => { setAlertEmail(e.target.value); setEmailSaved(false); setEmailError(""); }} type="email" placeholder="your@email.com"
-            style={{ flex: 1, background: "#0A2040", border: `1px solid ${emailError ? C.red : C.border}`, borderRadius: 8, color: C.light, fontSize: 14, padding: "10px 12px", outline: "none" }} />
-          <button onClick={saveEmail} disabled={saving || emailSaved}
-            style={{ padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: emailSaved ? "default" : "pointer", border: "none", background: emailSaved ? `$C.green33` : C.teal, color: emailSaved ? C.green : "#fff" }}>
-            {emailSaved ? "✓" : saving ? "…" : TC.save}
-          </button>
+        <div style={{ color: C.light, fontSize: 14, fontWeight: 600, marginBottom: 10 }}>
+          {AL.alertWhenBelow || "Alert when below"} <strong style={{ color: C.orange }}>€{threshold}/MWh</strong>
         </div>
-        {emailError && <div style={{ color: C.red, fontSize: 12, marginTop: 6 }}>{emailError}</div>}
-        {emailSaved && <div style={{ color: C.green, fontSize: 12, marginTop: 6 }}>✓ Email saved</div>}
+        <input type="range" min={10} max={80} step={5} value={threshold}
+          onChange={e => saveThreshold(+e.target.value)}
+          style={{ width: "100%", accentColor: C.orange, cursor: "pointer" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, marginTop: 4 }}>
+          <span>€10</span><span>€80/MWh</span>
+        </div>
       </div>
 
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16 }}>
-        <div style={{ color: C.light, fontSize: 14, fontWeight: 600, marginBottom: 4 }}>📊 Alert threshold</div>
-        <div style={{ color: C.muted, fontSize: 12, marginBottom: 12 }}>Alert me when TTF drops below:</div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
-          <div style={{ color: pc(threshold), fontSize: 40, fontWeight: 900, fontFamily: "monospace" }}>€{threshold}</div>
-          <div style={{ color: C.muted, fontSize: 14 }}>/MWh</div>
-          <div style={{ color: C.muted, fontSize: 12 }}>= {(threshold / 10).toFixed(2)} c€/kWh</div>
-        </div>
-        <input type="range" min={15} max={100} step={1} value={threshold}
-          onChange={e => setThreshold(parseInt(e.target.value))}
-          style={{ width: "100%", accentColor: C.orange, marginBottom: 8 }} />
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
-          <span style={{ color: C.green, fontSize: 11 }}>€15 — very cheap</span>
-          <span style={{ color: C.yellow, fontSize: 11 }}>€50 — average</span>
-          <span style={{ color: C.orange, fontSize: 11 }}>€100 — expensive</span>
-        </div>
-        <button onClick={saveThreshold} disabled={saving}
-          style={{ width: "100%", padding: "12px 0", borderRadius: 9, border: "none", background: C.orange, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-          {saving ? TC.loading || "Saving…" : saved ? TC.save + " ✓" || "✓ Saved" : TC.save || "Save Threshold"}
-        </button>
-        <div style={{ color: C.muted, fontSize: 11, marginTop: 10, lineHeight: 1.7 }}>
-          💡 Good thresholds: €25–30 = historically cheap · €35–40 = below recent avg<br />
-          Gas alerts run hourly. Max one email per 6 hours.
+      {/* Email — read only */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
+        <div style={{ color: C.muted, fontSize: 11, marginBottom: 4 }}>📧 {AL.emailLabel || "Alert email"}</div>
+        <div style={{ color: C.light, fontSize: 14, fontWeight: 600 }}>{accountEmail || "—"}</div>
+        <div style={{ color: C.muted, fontSize: 11, marginTop: 4 }}>{AL.emailFromAccount || "Email from your account. Change in Profile."}</div>
+      </div>
+
+      {/* Toggle */}
+      <div style={{ background: C.card, border: `1px solid ${alertActive ? C.orange : C.border}`, borderRadius: 14, padding: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ color: C.light, fontSize: 15, fontWeight: 700 }}>🔥 {AL.title || "Gas Price Alerts"}</div>
+            <div style={{ color: alertActive ? C.orange : C.muted, fontSize: 12, marginTop: 2 }}>
+              {alertActive ? `✅ ${AL.active || "Active"} · ${accountEmail}` : `⭕ ${AL.inactive || "Off"}`}
+            </div>
+            {saved && <div style={{ color: C.green, fontSize: 11, marginTop: 2 }}>✓ Saved</div>}
+          </div>
+          <button onClick={handleToggle} disabled={saving} style={{
+            padding: "8px 18px", borderRadius: 30, fontWeight: 700, fontSize: 13,
+            border: "none", cursor: "pointer",
+            background: alertActive ? "rgba(239,68,68,0.2)" : "rgba(249,115,22,0.2)",
+            color: alertActive ? C.red : C.orange,
+          }}>
+            {saving ? "…" : alertActive ? TC.disable : TC.enable}
+          </button>
         </div>
       </div>
     </div>
   );
-}
 
 function Loading() {
   return <div style={{ color: C.muted, textAlign: "center", padding: 40 }}>Loading…</div>;

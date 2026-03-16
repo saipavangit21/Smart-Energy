@@ -594,7 +594,10 @@ export const translations = {
       emailPlaceholder: "jan@voorbeeld.be",
       emailSaved: "✓ E-mail opgeslagen",
       emailError: "E-mail opslaan mislukt",
-      emailInvalid: "Voer een geldig e-mailadres in",
+      emailInvalid: "Voer een geldig e-mailadres in"
+      loginRequired: "Log in om e-mailmeldingen te ontvangen wanneer prijzen onder uw drempel dalen.",
+      emailFromAccount: "Meldingen worden verzonden naar uw accounte-mail. Wijzig in Profiel.",
+      enableToReceive: "Schakel in om e-mailmeldingen te ontvangen",,
       alertEnabled: "Melding actief",
       alertDisabled: "Melding inactief",
       signInRequired: "Activeer om meldingen te ontvangen",

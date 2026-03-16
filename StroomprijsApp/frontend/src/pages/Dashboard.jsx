@@ -138,6 +138,21 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
       border: "1px solid rgba(255,255,255,0.07)",
       boxShadow: "inset 0 1px 3px rgba(0,0,0,0.4)",
     }}>
+      {/* EV button */}
+      <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{
+        display: "flex", alignItems: "center", gap: 5,
+        padding: "8px 14px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "transparent", color: "#4A6070",
+      }}
+        onMouseEnter={e => { e.currentTarget.style.color = "#00C896"; e.currentTarget.style.border = "1px solid rgba(0,200,150,0.35)"; e.currentTarget.style.background = "rgba(0,200,150,0.08)"; }}
+        onMouseLeave={e => { e.currentTarget.style.color = "#4A6070"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}>
+        🚗 EV
+      </button>
+
+
       {/* Electricity button */}
       <button onClick={() => onChange("electricity")} style={{
         display: "flex", alignItems: "center", gap: 7,
@@ -202,20 +217,6 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
         )}
       </button>
 
-
-      {/* EV button */}
-      <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{
-        display: "flex", alignItems: "center", gap: 5,
-        padding: "8px 14px", borderRadius: 10, cursor: "pointer",
-        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
-        transition: "all 0.2s ease",
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "transparent", color: "#4A6070",
-      }}
-        onMouseEnter={e => { e.currentTarget.style.color = "#00C896"; e.currentTarget.style.border = "1px solid rgba(0,200,150,0.35)"; e.currentTarget.style.background = "rgba(0,200,150,0.08)"; }}
-        onMouseLeave={e => { e.currentTarget.style.color = "#4A6070"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}>
-        🚗 EV
-      </button>
 
       {/* Calculator button — visible to all, guests get sign-in prompt */}
       <button onClick={() => onOpenCalculator && onOpenCalculator(type)} style={{
@@ -769,10 +770,11 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── Alerts ── */}
-        {energyType === "electricity" && tab === "alerts" && (
+        {tab === "alerts" && (
           <AlertsTab
             alertActive={alertActive} alertThreshold={alertThreshold}
             saveAlertThreshold={saveAlertThreshold} toggleAlert={toggleAlert}
+            isGuest={isGuest} onSignIn={() => setShowAuth(true)}
             user={user} updatePreferences={updatePreferences}
             C={C} isMobile={isMobile}
           />
@@ -815,51 +817,39 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   );
 }
 
-function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAlert, user, updatePreferences, C, isMobile }) {
+function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAlert, user, updatePreferences, C, isMobile, isGuest, onSignIn }) {
   const { tSection } = useLanguage();
   const T  = tSection("alerts");
   const TC = tSection("common");
   const AL = T;
-  const existingEmail = user?.preferences?.alertEmail || user?.email || "";
-  const [alertEmail, setAlertEmail] = useState(existingEmail);
-  const [emailSaved, setEmailSaved] = useState(existingEmail.length > 0);
-  const [saving,     setSaving]     = useState(false);
-  const [emailError, setEmailError] = useState("");
 
-  const isValidEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  // Always use account email - read only if logged in
+  const accountEmail = user?.preferences?.alertEmail || user?.email || "";
+  const [threshold, setThreshold] = useState(alertThreshold || 80);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  const saveEmail = async () => {
-    if (!isValidEmail(alertEmail)) { setEmailError(T.emailInvalid); return; }
-    setEmailError("");
-    setSaving(true);
-    try {
-      const res = await updatePreferences({ alertEmail });
-      if (res?.error) { setEmailError(res.error); }
-      else { setEmailSaved(true); }
-    } catch (err) {
-      setEmailError(err.message || T.emailError);
-    }
-    setSaving(false);
-  };
+  // Guest — show login prompt
+  if (isGuest) {
+    return (
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24, textAlign: "center" }}>
+        <div style={{ fontSize: 28, marginBottom: 12 }}>🔔</div>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>{AL.title || "Price Alerts"}</div>
+        <div style={{ fontSize: 13, color: "#556", marginBottom: 20 }}>
+          {AL.loginRequired || "Sign in to receive email alerts when prices drop below your threshold."}
+        </div>
+        <button onClick={onSignIn} style={{ padding: "10px 28px", borderRadius: 30, fontWeight: 700, fontSize: 14, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer" }}>
+          {TC.signIn || "Sign in"} →
+        </button>
+      </div>
+    );
+  }
 
   const handleToggle = async () => {
-    if (!alertActive) {
-      if (!isValidEmail(alertEmail)) { setEmailError(T.emailInvalid); return; }
-      if (!emailSaved) {
-        setSaving(true);
-        try {
-          const res = await updatePreferences({ alertEmail });
-          if (res?.error) { setEmailError(res.error); setSaving(false); return; }
-          setEmailSaved(true);
-        } catch (err) {
-          setEmailError(err.message || T.emailError);
-          setSaving(false);
-          return;
-        }
-        setSaving(false);
-      }
-    }
-    await toggleAlert();
+    setSaving(true);
+    try { await toggleAlert(); setSaved(true); setTimeout(() => setSaved(false), 2000); }
+    catch (e) { console.error(e); }
+    setSaving(false);
   };
 
   return (
@@ -880,32 +870,11 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
         </div>
       </div>
 
-      {/* Email input — only shown here */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, color: "#778", marginBottom: 8 }}>
-          {`📧 ${AL.emailLabel}`}
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input
-            type="email" value={alertEmail} onChange={e => { setAlertEmail(e.target.value); setEmailSaved(false); setEmailError(""); }}
-            placeholder="your@email.be"
-            style={{
-              flex: 1, padding: "10px 14px", borderRadius: 10, fontSize: 14,
-              background: "rgba(255,255,255,0.06)", border: `1px solid ${emailError ? C.red : emailSaved ? C.green : "rgba(255,255,255,0.12)"}`,
-              color: "#fff", outline: "none", fontFamily: "inherit",
-            }}
-          />
-          <button onClick={saveEmail} disabled={saving || emailSaved} style={{
-            padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700,
-            border: "none", cursor: emailSaved ? "default" : "pointer",
-            background: emailSaved ? "rgba(0,200,150,0.2)" : "rgba(13,148,136,0.3)",
-            color: emailSaved ? C.green : "#0D9488", whiteSpace: "nowrap",
-          }}>
-            {emailSaved ? "✓ Saved" : saving ? "…" : TC.save}
-          </button>
-        </div>
-        {emailError && <div style={{ fontSize: 11, color: C.red, marginTop: 6 }}>⚠ {emailError}</div>}
-        {emailSaved && <div style={{ fontSize: 11, color: C.green, marginTop: 6 }}>{`✓ ${AL.emailSaved} → ${alertEmail}`}</div>}
+      {/* Email — read only, from account */}
+      <div style={{ marginBottom: 20, padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`, borderRadius: 10 }}>
+        <div style={{ fontSize: 11, color: "#556", marginBottom: 4 }}>📧 {AL.emailLabel || "Alert email"}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#E2E8F0" }}>{accountEmail || "—"}</div>
+        <div style={{ fontSize: 11, color: "#445", marginTop: 4 }}>{AL.emailFromAccount || "Email from your account"}</div>
       </div>
 
       {/* Enable/disable toggle */}
@@ -913,21 +882,20 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
         <div>
           <div style={{ fontWeight: 600, fontSize: 14 }}>Alert {alertActive ? "🟢 Active" : "⚫ Inactive"}</div>
           <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>
-            {alertActive ? `Monitoring prices · email: ${alertEmail}` : T.signInRequired}
+            {alertActive ? `Monitoring · ${accountEmail}` : (AL.enableToReceive || "Enable to receive alerts")}
           </div>
+          {saved && <div style={{ fontSize: 11, color: C.green, marginTop: 2 }}>✓ Saved</div>}
         </div>
-        <button onClick={handleToggle} style={{
+        <button onClick={handleToggle} disabled={saving} style={{
           padding: "8px 18px", borderRadius: 30, fontWeight: 700, fontSize: 13,
           border: "none", cursor: "pointer",
           background: alertActive ? "rgba(239,68,68,0.2)" : "rgba(0,200,150,0.2)",
           color: alertActive ? C.red : C.green,
         }}>
-          {alertActive ? TC.disable : TC.enable}
+          {saving ? "…" : alertActive ? TC.disable : TC.enable}
         </button>
       </div>
     </div>
-  );
-}
 
 function DropMenu({ onProfile, onLogout, onPrivacy }) {
   const { tSection } = useLanguage();
