@@ -896,6 +896,8 @@ function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAler
         </button>
       </div>
     </div>
+  );
+}
 
 function DropMenu({ onProfile, onLogout, onPrivacy }) {
   const { tSection } = useLanguage();
