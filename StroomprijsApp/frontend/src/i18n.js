@@ -585,6 +585,9 @@ export const translations = {
       signInBtn: "Sign in to enable",
       notifTitle: "Price Alert Active",
       notifBody: "You'll receive an email when EPEX spot drops below your threshold.",
+      loginRequired: "Sign in to receive email alerts when prices drop below your threshold.",
+      emailFromAccount: "Alerts sent to your account email. Change in Profile.",
+      enableToReceive: "Enable to receive email alerts",
     },
     nl: {
       title: "Prijsmeldingen",
@@ -594,10 +597,10 @@ export const translations = {
       emailPlaceholder: "jan@voorbeeld.be",
       emailSaved: "✓ E-mail opgeslagen",
       emailError: "E-mail opslaan mislukt",
-      emailInvalid: "Voer een geldig e-mailadres in"
+      emailInvalid: "Voer een geldig e-mailadres in",
       loginRequired: "Log in om e-mailmeldingen te ontvangen wanneer prijzen onder uw drempel dalen.",
       emailFromAccount: "Meldingen worden verzonden naar uw accounte-mail. Wijzig in Profiel.",
-      enableToReceive: "Schakel in om e-mailmeldingen te ontvangen",,
+      enableToReceive: "Schakel in om e-mailmeldingen te ontvangen",
       alertEnabled: "Melding actief",
       alertDisabled: "Melding inactief",
       signInRequired: "Activeer om meldingen te ontvangen",
@@ -620,6 +623,9 @@ export const translations = {
       signInBtn: "Se connecter pour activer",
       notifTitle: "Alerte de prix active",
       notifBody: "Vous recevrez un e-mail quand le prix spot EPEX passera sous votre seuil.",
+      loginRequired: "Connectez-vous pour recevoir des alertes par e-mail quand les prix passent sous votre seuil.",
+      emailFromAccount: "Alertes envoyées à l'e-mail de votre compte. Modifiez dans Profil.",
+      enableToReceive: "Activez pour recevoir des alertes par e-mail",
     },
   },
 
