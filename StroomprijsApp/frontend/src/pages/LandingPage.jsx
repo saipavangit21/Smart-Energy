@@ -25,6 +25,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const C = tSection("common");
 
   const features = [
+    { icon: "🚗", title: L.featureEvTitle || "EV Charging Optimizer", desc: L.featureEvBody || "Find the cheapest hours to charge your EV. Live EPEX prices + best windows + cost calculator.", link: "/ev-charging-belgium", linkLabel: "Open EV page →" },
     { icon: "⚡", title: L.feature1Title, desc: L.feature1Body },
     { icon: "🔥", title: L.feature2Title, desc: L.feature2Body },
     { icon: "💚", title: L.feature3Title, desc: L.feature3Body },
@@ -60,8 +61,12 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
           <span style={{ fontSize: 9, color: "#00C896", background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>● LIVE</span>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
           <LangSwitcher style={{ marginRight: 4 }} />
+          <a href="/ev-charging-belgium"
+            style={{ padding: "8px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.25)", color: "#00C896", cursor: "pointer", textDecoration: "none" }}>
+            🚗 EV
+          </a>
           <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
             style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.3)", color: "#0D9488", cursor: "pointer" }}>
             {C.calculator}
@@ -185,6 +190,50 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         </div>
       </section>
 
+      {/* EV CHARGING SECTION */}
+      <section style={{ maxWidth: 960, margin: "0 auto 64px", padding: "0 24px", position: "relative", zIndex: 1 }}>
+        <div style={{ background: "linear-gradient(135deg, rgba(0,200,150,0.08), rgba(0,200,150,0.03))", border: "1px solid rgba(0,200,150,0.25)", borderRadius: 20, padding: "28px 28px", cursor: "pointer", transition: "all 0.2s" }}
+          onClick={() => window.location.href = "/ev-charging-belgium"}
+          onMouseEnter={e => { e.currentTarget.style.border = "1px solid rgba(0,200,150,0.5)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
+          onMouseLeave={e => { e.currentTarget.style.border = "1px solid rgba(0,200,150,0.25)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 18, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 44, lineHeight: 1 }}>🚗</div>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 10, color: "#00C896", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 8 }}>{L.evSectionLabel || "EV Charging"}</div>
+              <div style={{ fontSize: "clamp(18px, 3vw, 26px)", fontWeight: 900, letterSpacing: "-0.5px", marginBottom: 10, color: "#E2E8F0" }}>{L.evSectionTitle || "Best time to charge your EV tonight"}</div>
+              <div style={{ fontSize: 13, color: "#556B82", lineHeight: 1.7, marginBottom: 16, maxWidth: 520 }}>{L.evSectionDesc || "Live EPEX prices tell you the cheapest hours. Belgian EV drivers save €300–600/year by timing their charging."}</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+                {(L.evSectionTags || ["🕐 Hourly prices", "💚 Cheapest windows", "🔋 Cost calculator", "🇧🇪 Belgium"]).map(t => (
+                  <span key={t} style={{ fontSize: 10, background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.25)", color: "#00C896", borderRadius: 20, padding: "3px 9px", fontWeight: 600 }}>{t}</span>
+                ))}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ color: "#00C896", fontWeight: 700, fontSize: 14 }}>{L.evSectionCta || "See cheapest charging hours →"}</div>
+                <a href="/ev-charging-stations-belgium" onClick={e => { e.stopPropagation(); window.location.href="/ev-charging-stations-belgium"; }}
+                  style={{ fontSize: 12, color: "#0D9488", textDecoration: "none", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "4px 12px", fontWeight: 600 }}>
+                  🗺️ Find stations →
+                </a>
+              </div>
+            </div>
+            {/* Mini price preview */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 130 }}>
+              {[
+                { time: "02:00", price: "~€18", color: "#00C896" },
+                { time: "03:00", price: "~€22", color: "#00C896" },
+                { time: "13:00", price: "~€45", color: "#84CC16" },
+                { time: "19:00", price: "~€165", color: "#EF4444" },
+              ].map(h => (
+                <div key={h.time} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(0,0,0,0.2)", borderRadius: 8, padding: "6px 10px" }}>
+                  <span style={{ fontSize: 11, color: "#556B82", fontFamily: "monospace" }}>{h.time}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: h.color, fontFamily: "monospace" }}>{h.price}/MWh</span>
+                </div>
+              ))}
+              <div style={{ fontSize: 9, color: "#3A4D63", textAlign: "center", marginTop: 2 }}>typical day prices</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* SUPPLIERS */}
       <section style={{ maxWidth: 960, margin: "0 auto 56px", padding: "0 24px", position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
@@ -210,12 +259,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))", gap: 13 }}>
           {features.map((f, i) => (
-            <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "24px 20px", transition: "all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.05)"; e.currentTarget.style.border = "1px solid rgba(13,148,136,0.18)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+            <div key={i} style={{ background: i === 0 ? "rgba(0,200,150,0.05)" : "rgba(255,255,255,0.02)", border: i === 0 ? "1px solid rgba(0,200,150,0.2)" : "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: "24px 20px", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = i === 0 ? "rgba(0,200,150,0.09)" : "rgba(13,148,136,0.05)"; e.currentTarget.style.border = i === 0 ? "1px solid rgba(0,200,150,0.35)" : "1px solid rgba(13,148,136,0.18)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = i === 0 ? "rgba(0,200,150,0.05)" : "rgba(255,255,255,0.02)"; e.currentTarget.style.border = i === 0 ? "1px solid rgba(0,200,150,0.2)" : "1px solid rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}>
               <div style={{ fontSize: 26, marginBottom: 12 }}>{f.icon}</div>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: "#DDE8F0" }}>{f.title}</div>
               <div style={{ fontSize: 13, color: "#556B82", lineHeight: 1.75 }}>{f.desc}</div>
+              {f.link && <a href={f.link} style={{ display: "inline-block", marginTop: 12, fontSize: 12, fontWeight: 700, color: "#00C896", textDecoration: "none" }}>{f.linkLabel}</a>}
             </div>
           ))}
         </div>

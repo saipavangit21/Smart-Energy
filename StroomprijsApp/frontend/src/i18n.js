@@ -1,1050 +1,927 @@
 /**
- * i18n.js — SmartPrice.be translations
- * Languages: EN (default), NL (Dutch/Flemish), FR (French)
+ * pages/Dashboard.jsx — SmartPrice.be
+ * Mobile-first redesign with Fortum-style layout + Graph/Table toggle
+ * Bottom navigation on mobile, full header on desktop
  */
 
-export const translations = {
+import { useState, useEffect, useCallback } from "react";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
+} from "recharts";
+import { useAuth }       from "../context/AuthContext";
+import { useLanguage }   from "../context/LanguageContext";
+import LangSwitcher      from "../components/LangSwitcher";
+import { usePrices, useCurrentPrice, useCheapestHours } from "../hooks/usePrices";
+import { SUPPLIERS, getSupplierPrice, getPriceColor, getPriceLabel } from "../utils/priceUtils";
+import GasTab from "./GasTab";
 
-  // ── COMMON ─────────────────────────────────────────────────
-  common: {
-    en: {
-      appName: "SmartPrice",
-      tagline: "Belgium Real-Time Energy Prices",
-      electricity: "Electricity",
-      gas: "Gas",
-      calculator: "Calculator",
-      today: "Today",
-      tomorrow: "Tomorrow",
-      history: "History",
-      suppliers: "Suppliers",
-      alerts: "Alerts",
-      best: "Best",
-      account: "Account",
-      signIn: "Sign In",
-      signOut: "Sign Out",
-      register: "Create Account",
-      myProfile: "My Profile",
-      privacyPolicy: "Privacy Policy",
-      save: "Save",
-      enable: "Enable",
-      disable: "Disable",
-      loading: "Loading…",
-      noData: "No data",
-      now: "NOW",
-      avg: "Avg",
-      min: "Min",
-      max: "Max",
-      hour: "Hour",
-      status: "Status",
-      flanders: "Flanders",
-      wallonia: "Wallonia",
-      brussels: "Brussels",
-      variable: "Variable",
-      fixed: "Fixed",
-      dynamic: "Dynamic",
-      region: "Region",
-      perYear: "/year",
-      inclVat: "incl. VAT",
-      exclVat: "excl. VAT",
-      learnMore: "Learn more",
-      close: "Close",
-      back: "Back",
-      next: "Next",
-      previous: "Previous",
-      orContinueAs: "or continue as guest",
-    },
-    nl: {
-      appName: "SmartPrice",
-      tagline: "Belgische energieprijzen in real-time",
-      electricity: "Elektriciteit",
-      gas: "Gas",
-      calculator: "Calculator",
-      today: "Vandaag",
-      tomorrow: "Morgen",
-      history: "Geschiedenis",
-      suppliers: "Leveranciers",
-      alerts: "Meldingen",
-      best: "Beste",
-      account: "Account",
-      signIn: "Aanmelden",
-      signOut: "Afmelden",
-      register: "Account aanmaken",
-      myProfile: "Mijn profiel",
-      privacyPolicy: "Privacybeleid",
-      save: "Opslaan",
-      enable: "Activeren",
-      disable: "Deactiveren",
-      loading: "Laden…",
-      noData: "Geen data",
-      now: "NU",
-      avg: "Gem",
-      min: "Min",
-      max: "Max",
-      hour: "Uur",
-      status: "Status",
-      flanders: "Vlaanderen",
-      wallonia: "Wallonië",
-      brussels: "Brussel",
-      variable: "Variabel",
-      fixed: "Vast",
-      dynamic: "Dynamisch",
-      region: "Regio",
-      perYear: "/jaar",
-      inclVat: "incl. btw",
-      exclVat: "excl. btw",
-      learnMore: "Meer info",
-      close: "Sluiten",
-      back: "Terug",
-      next: "Volgende",
-      previous: "Vorige",
-      orContinueAs: "of doorgaan als gast",
-    },
-    fr: {
-      appName: "SmartPrice",
-      tagline: "Prix de l'énergie en temps réel en Belgique",
-      electricity: "Électricité",
-      gas: "Gaz",
-      calculator: "Calculateur",
-      today: "Aujourd'hui",
-      tomorrow: "Demain",
-      history: "Historique",
-      suppliers: "Fournisseurs",
-      alerts: "Alertes",
-      best: "Meilleur",
-      account: "Compte",
-      signIn: "Se connecter",
-      signOut: "Se déconnecter",
-      register: "Créer un compte",
-      myProfile: "Mon profil",
-      privacyPolicy: "Politique de confidentialité",
-      save: "Enregistrer",
-      enable: "Activer",
-      disable: "Désactiver",
-      loading: "Chargement…",
-      noData: "Pas de données",
-      now: "MAINTENANT",
-      avg: "Moy",
-      min: "Min",
-      max: "Max",
-      hour: "Heure",
-      status: "Statut",
-      flanders: "Flandre",
-      wallonia: "Wallonie",
-      brussels: "Bruxelles",
-      variable: "Variable",
-      fixed: "Fixe",
-      dynamic: "Dynamique",
-      region: "Région",
-      perYear: "/an",
-      inclVat: "TVA incl.",
-      exclVat: "TVA excl.",
-      learnMore: "En savoir plus",
-      close: "Fermer",
-      back: "Retour",
-      next: "Suivant",
-      previous: "Précédent",
-      orContinueAs: "ou continuer en tant qu'invité",
-    },
-  },
+function PriceTooltip({ active, payload, label, supplier }) {
+  const { tSection } = useLanguage();
+  const PL = tSection("priceLabels");
+  if (!active || !payload?.length) return null;
+  const mwh = payload[0]?.value;
+  if (mwh == null) return null;
+  const sup = SUPPLIERS.find(s => s.name === supplier);
+  const lbl = getPriceLabel(mwh, PL);
+  const col = getPriceColor(mwh);
+  return (
+    <div style={{ background: "rgba(8,12,22,0.97)", border: `1px solid ${col}44`, borderRadius: 14, padding: "12px 16px" }}>
+      <div style={{ color: "#667", fontSize: 11, marginBottom: 3 }}>{label}</div>
+      <div style={{ color: col, fontSize: 22, fontWeight: 800, fontFamily: "monospace" }}>€{mwh.toFixed(1)}<span style={{ fontSize: 11, color: "#667" }}>/MWh</span></div>
+      {sup && <div style={{ color: "#aaa", fontSize: 11, marginTop: 2 }}>{sup.name}: €{getSupplierPrice(mwh/1000, sup).toFixed(4)}/kWh</div>}
+      <div style={{ color: col, fontSize: 11, fontWeight: 600, marginTop: 4 }}>{lbl.emoji} {lbl.text}</div>
+    </div>
+  );
+}
 
-  // ── LANDING PAGE ───────────────────────────────────────────
-  landing: {
-    en: {
-      hero: "Belgium's Smartest Energy Price Tracker",
-      heroSub: "Live EPEX Spot prices · 7 suppliers compared · Free calculator",
-      openDashboard: "Open Dashboard",
-      tryCalculator: "Try Calculator",
-      features: "What SmartPrice does",
-      feature1Title: "Live EPEX Spot Prices",
-      feature1Body: "Belgium day-ahead electricity prices from EPEX Spot, refreshed every hour. Know exactly what the market is doing right now.",
-      feature2Title: "Gas Prices (TTF)",
-      feature2Body: "Real-time TTF natural gas prices alongside electricity — track both energy costs in one dashboard.",
-      feature3Title: "5 Cheapest Hours",
-      feature3Body: "We find the best windows each day to run your EV, washing machine, or dishwasher — saving money every single day.",
-      feature4Title: "Price Drop Alerts",
-      feature4Body: "Set a threshold and get emailed when prices fall below it. Never miss cheap electricity again.",
-      feature5Title: "Plan Calculator",
-      feature5Body: "Pick your appliances, adjust weekly usage, choose your region — we rank all 7 Belgian suppliers by your real annual cost including grid fees and VAT.",
-      feature6Title: "7-Day History",
-      feature6Body: "Understand price patterns over the past week. Plan consumption around Belgium's energy market rhythm.",
-      suppliersTitle: "All 7 Belgian suppliers compared",
-      faqTitle: "Frequently Asked Questions",
-      faq1Q: "What is EPEX Spot?",
-      faq1A: "EPEX Spot is the European Power Exchange where electricity is traded on the wholesale day-ahead market. In Belgium, dynamic energy contracts follow these hourly prices — your cost per kWh changes every hour.",
-      faq2Q: "How does the Plan Calculator work?",
-      faq2A: "Select your appliances, set how many times per week you use each, choose your region (Flanders/Wallonia/Brussels) and we calculate your annual kWh + peak kW, then rank all 7 Belgian suppliers showing your real total cost including grid fees and VAT.",
-      faq3Q: "How much can I actually save?",
-      faq3A: "On an average day, the spread between cheapest and most expensive hour is €100–150/MWh. Choosing the right supplier can save an additional €100–300/year depending on your consumption profile.",
-      faq4Q: "Is this free and safe?",
-      faq4A: "Yes — SmartPrice.be is completely free. We don't sell your data. Price data comes from Energy-Charts.info (CC BY 4.0). We earn a small referral fee if you switch suppliers through our links.",
-      liveEpex: "Live EPEX Spot · Belgium",
-      statMin: "Today Min", statAvg: "Today Avg", statMax: "Today Max", statGas: "TTF Gas",
-      calcSteps: "Select appliances → set weekly usage → pick region → see all 7 suppliers ranked by real annual cost.",
-      seeLivePrices: "See Live Prices →",
-      calcSectionLabel: "Plan Calculator",
-      calcSectionTitle: "Find your cheapest energy plan in 30 seconds",
-      featuresLabel: "Features",
-      featuresTitle: "Everything in one dashboard",
-      faqLabel: "FAQ",
-      faqTitle: "Common questions",
-      footerProduct: "Product",
-      footerLegal: "Legal",
-      footerElecLink: "⚡ Electricity Prices",
-      footerGasLink: "🔥 Gas Prices",
-      footerCalcLink: "🔌 Plan Calculator",
-      footerEvLink: "🚗 EV Charging",
-      heroLine1: "Stop Overpaying",
-      heroLine2: "for Energy",
-      heroDesc: "Track live EPEX & TTF prices, find the cheapest hours for your appliances, compare all 7 Belgian suppliers, and get alerts when prices drop.",
-      heroBadge: "Free forever · No credit card · GDPR compliant · Data stored in EU",
-      calcTitle: "Plan Calculator — Electricity & Gas",
-      calcDesc: "Select your appliances · choose region · see all 7 suppliers ranked by real annual cost including grid fees & VAT",
-      calcTags: ["⚡ Electricity", "🔥 Gas", "☀️ Solar aware", "🚗 EV charging", "🌡️ Heat pump", "📍 Flanders / Wallonia / Brussels"],
-      calcCta: "Start Calculator →",
-      calcMyPlan: "Calculate my plan →",
-      coverage: "Coverage",
-      coverageSub: "Variable · Fixed · Dynamic — electricity and gas plans",
-      disclaimer: "Not financial advice. Always verify tariffs on supplier websites before switching.",
-      footer: "Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E · Prices refresh every 15 min · Not financial advice",
-    },
-    nl: {
-      hero: "Slimste Belgische energieprijstracker",
-      heroSub: "Live EPEX Spot-prijzen · 7 leveranciers vergeleken · Gratis calculator",
-      openDashboard: "Dashboard openen",
-      tryCalculator: "Calculator proberen",
-      features: "Wat SmartPrice doet",
-      feature1Title: "Live EPEX Spot-prijzen",
-      feature1Body: "Belgische day-ahead elektriciteitsprijzen van EPEX Spot, elk uur vernieuwd. Weet precies wat de markt op dit moment doet.",
-      feature2Title: "Gasprijzen (TTF)",
-      feature2Body: "Realtime TTF-gasprijzen naast elektriciteit — volg beide energiekosten in één dashboard.",
-      feature3Title: "5 Goedkoopste uren",
-      feature3Body: "We vinden dagelijks de beste vensters om uw EV, wasmachine of vaatwasser te laten draaien — elke dag geld besparen.",
-      feature4Title: "Prijsdalingsmeldingen",
-      feature4Body: "Stel een drempelwaarde in en ontvang een e-mail wanneer de prijzen eronder zakken. Mis nooit meer goedkope stroom.",
-      feature5Title: "Tariefcalculator",
-      feature5Body: "Kies uw toestellen, pas het wekelijks gebruik aan, kies uw regio — we rangschikken alle 7 Belgische leveranciers op basis van uw echte jaarkosten inclusief netkosten en btw.",
-      feature6Title: "7 dagen geschiedenis",
-      feature6Body: "Begrijp prijspatronen over de afgelopen week. Plan uw verbruik rond het ritme van de Belgische energiemarkt.",
-      suppliersTitle: "Alle 7 Belgische leveranciers vergeleken",
-      faqTitle: "Veelgestelde vragen",
-      faq1Q: "Wat is EPEX Spot?",
-      faq1A: "EPEX Spot is de Europese energiebeurs waar elektriciteit wordt verhandeld op de day-ahead groothandelsmarkt. In België volgen dynamische energiecontracten deze uurprijzen — uw kosten per kWh veranderen elk uur.",
-      faq2Q: "Hoe werkt de tariefcalculator?",
-      faq2A: "Selecteer uw toestellen, stel het wekelijks gebruik in, kies uw regio (Vlaanderen/Wallonië/Brussel) en we berekenen uw jaarlijks kWh-verbruik + piekvermogen, daarna rangschikken we alle 7 Belgische leveranciers met uw echte totaalkost inclusief netkosten en btw.",
-      faq3Q: "Hoeveel kan ik echt besparen?",
-      faq3A: "Op een gemiddelde dag is het verschil tussen het goedkoopste en duurste uur €100–150/MWh. De juiste leverancier kiezen kan nog eens €100–300/jaar besparen, afhankelijk van uw verbruiksprofiel.",
-      faq4Q: "Is dit gratis en veilig?",
-      faq4A: "Ja — SmartPrice.be is volledig gratis. We verkopen uw data niet. Prijsdata komt van Energy-Charts.info (CC BY 4.0). We ontvangen een kleine verwijzingsvergoeding als u via onze links van leverancier wisselt.",
-      liveEpex: "Live EPEX Spot · Belgium",
-      statMin: "Today Min", statAvg: "Today Avg", statMax: "Today Max", statGas: "TTF Gas",
-      calcSteps: "Select appliances → set weekly usage → pick region → see all 7 suppliers ranked by real annual cost.",
-      seeLivePrices: "See Live Prices →",
-      calcSectionLabel: "Plan Calculator",
-      calcSectionTitle: "Find your cheapest energy plan in 30 seconds",
-      featuresLabel: "Features",
-      featuresTitle: "Everything in one dashboard",
-      faqLabel: "FAQ",
-      faqTitle: "Common questions",
-      footerProduct: "Product",
-      footerLegal: "Legal",
-      footerElecLink: "⚡ Electricity Prices",
-      footerGasLink: "🔥 Gas Prices",
-      footerCalcLink: "🔌 Plan Calculator",
-      footerEvLink: "🚗 EV Charging",
-      heroLine1: "Stop Overpaying",
-      heroLine2: "for Energy",
-      heroDesc: "Track live EPEX & TTF prices, find the cheapest hours for your appliances, compare all 7 Belgian suppliers, and get alerts when prices drop.",
-      heroBadge: "Free forever · No credit card · GDPR compliant · Data stored in EU",
-      calcTitle: "Plan Calculator — Electricity & Gas",
-      calcDesc: "Select your appliances · choose region · see all 7 suppliers ranked by real annual cost including grid fees & VAT",
-      calcTags: ["⚡ Electricity", "🔥 Gas", "☀️ Solar aware", "🚗 EV charging", "🌡️ Heat pump", "📍 Flanders / Wallonia / Brussels"],
-      calcCta: "Start Calculator →",
-      calcMyPlan: "Calculate my plan →",
-      coverage: "Coverage",
-      coverageSub: "Variable · Fixed · Dynamic — electricity and gas plans",
-      disclaimer: "Not financial advice. Always verify tariffs on supplier websites before switching.",
-      liveEpex: "Live EPEX Spot · België",
-      statMin: "Min vandaag", statAvg: "Gem vandaag", statMax: "Max vandaag", statGas: "TTF Gas",
-      calcSteps: "Kies toestellen → stel wekelijks gebruik in → kies regio → zie alle 7 leveranciers gerangschikt op echte jaarkosten.",
-      seeLivePrices: "Live prijzen bekijken →",
-      calcSectionLabel: "Tariefcalculator",
-      calcSectionTitle: "Vind uw goedkoopste energieplan in 30 seconden",
-      featuresLabel: "Functies",
-      featuresTitle: "Alles in één dashboard",
-      faqLabel: "FAQ",
-      faqTitle: "Veelgestelde vragen",
-      footerProduct: "Product",
-      footerLegal: "Juridisch",
-      footerElecLink: "⚡ Elektriciteitsprijzen",
-      footerGasLink: "🔥 Gasprijzen",
-      footerCalcLink: "🔌 Tariefcalculator",
-      footerEvLink: "🚗 EV Laden",
-      heroLine1: "Stop met te veel betalen",
-      heroLine2: "voor energie",
-      heroDesc: "Volg live EPEX- en TTF-prijzen, vind de goedkoopste uren voor uw toestellen, vergelijk alle 7 Belgische leveranciers en ontvang meldingen bij prijsdalingen.",
-      heroBadge: "Gratis · Geen kredietkaart · AVG-conform · Gegevens opgeslagen in de EU",
-      calcTitle: "Tariefcalculator — Elektriciteit & Gas",
-      calcDesc: "Selecteer uw toestellen · kies uw regio · zie alle 7 leveranciers gerangschikt op echte jaarkosten inclusief netkosten & btw",
-      calcTags: ["⚡ Elektriciteit", "🔥 Gas", "☀️ Zonnepanelen", "🚗 EV-laden", "🌡️ Warmtepomp", "📍 Vlaanderen / Wallonië / Brussel"],
-      calcCta: "Calculator starten →",
-      calcMyPlan: "Mijn plan berekenen →",
-      coverage: "Dekking",
-      coverageSub: "Variabel · Vast · Dynamisch — elektriciteits- en gasplannen",
-      disclaimer: "Geen financieel advies. Verifieer tarieven altijd op de websites van leveranciers voordat u overstapt.",
-      footer: "Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E · Prijzen elke 15 min vernieuwd · Geen financieel advies",
-    },
-    fr: {
-      hero: "Le meilleur tracker de prix d'énergie en Belgique",
-      heroSub: "Prix EPEX Spot en direct · 7 fournisseurs comparés · Calculateur gratuit",
-      openDashboard: "Ouvrir le tableau de bord",
-      tryCalculator: "Essayer le calculateur",
-      features: "Ce que fait SmartPrice",
-      feature1Title: "Prix EPEX Spot en direct",
-      feature1Body: "Prix de l'électricité belge day-ahead d'EPEX Spot, actualisés chaque heure. Sachez exactement ce que fait le marché en ce moment.",
-      feature2Title: "Prix du gaz (TTF)",
-      feature2Body: "Prix TTF du gaz naturel en temps réel avec l'électricité — suivez les deux coûts énergétiques dans un seul tableau de bord.",
-      feature3Title: "5 heures les moins chères",
-      feature3Body: "Nous trouvons chaque jour les meilleures plages horaires pour faire tourner votre VE, lave-linge ou lave-vaisselle — économiser de l'argent chaque jour.",
-      feature4Title: "Alertes de baisse de prix",
-      feature4Body: "Définissez un seuil et recevez un e-mail quand les prix passent en dessous. Ne manquez plus jamais l'électricité bon marché.",
-      feature5Title: "Calculateur de tarif",
-      feature5Body: "Choisissez vos appareils, ajustez l'utilisation hebdomadaire, choisissez votre région — nous classons les 7 fournisseurs belges selon votre coût annuel réel incluant les frais de réseau et la TVA.",
-      feature6Title: "Historique 7 jours",
-      feature6Body: "Comprenez les tendances de prix de la semaine passée. Planifiez votre consommation selon le rythme du marché énergétique belge.",
-      suppliersTitle: "Les 7 fournisseurs belges comparés",
-      faqTitle: "Questions fréquentes",
-      faq1Q: "Qu'est-ce qu'EPEX Spot ?",
-      faq1A: "EPEX Spot est la bourse européenne de l'énergie où l'électricité est échangée sur le marché de gros day-ahead. En Belgique, les contrats d'énergie dynamiques suivent ces prix horaires — votre coût par kWh change chaque heure.",
-      faq2Q: "Comment fonctionne le calculateur de tarif ?",
-      faq2A: "Sélectionnez vos appareils, définissez la fréquence d'utilisation hebdomadaire, choisissez votre région (Flandre/Wallonie/Bruxelles) et nous calculons votre kWh annuel + kW de pointe, puis classons les 7 fournisseurs belges avec votre coût total réel incluant frais de réseau et TVA.",
-      faq3Q: "Combien puis-je vraiment économiser ?",
-      faq3A: "Un jour moyen, l'écart entre l'heure la moins chère et la plus chère est de 100–150 €/MWh. Choisir le bon fournisseur peut économiser 100–300 €/an selon votre profil de consommation.",
-      faq4Q: "Est-ce gratuit et sûr ?",
-      faq4A: "Oui — SmartPrice.be est entièrement gratuit. Nous ne vendons pas vos données. Les données de prix proviennent d'Energy-Charts.info (CC BY 4.0). Nous percevons une petite commission si vous changez de fournisseur via nos liens.",
-      liveEpex: "EPEX Spot en direct · Belgique",
-      statMin: "Min aujourd'hui", statAvg: "Moy aujourd'hui", statMax: "Max aujourd'hui", statGas: "TTF Gaz",
-      calcSteps: "Choisissez appareils → fréquence d'utilisation → région → 7 fournisseurs classés par coût annuel réel.",
-      seeLivePrices: "Voir les prix en direct →",
-      calcSectionLabel: "Calculateur",
-      calcSectionTitle: "Trouvez votre plan énergétique le moins cher en 30 secondes",
-      featuresLabel: "Fonctionnalités",
-      featuresTitle: "Tout en un seul tableau de bord",
-      faqLabel: "FAQ",
-      faqTitle: "Questions fréquentes",
-      footerProduct: "Produit",
-      footerLegal: "Légal",
-      footerElecLink: "⚡ Prix de l'électricité",
-      footerGasLink: "🔥 Prix du gaz",
-      footerCalcLink: "🔌 Calculateur de tarif",
-      footerEvLink: "🚗 Charge VE",
-      heroLine1: "Arrêtez de trop payer",
-      heroLine2: "votre énergie",
-      heroDesc: "Suivez les prix EPEX et TTF en direct, trouvez les heures les moins chères, comparez les 7 fournisseurs belges et recevez des alertes quand les prix baissent.",
-      heroBadge: "Gratuit · Sans carte de crédit · Conforme RGPD · Données dans l'UE",
-      calcTitle: "Calculateur — Électricité & Gaz",
-      calcDesc: "Sélectionnez vos appareils · choisissez votre région · voyez les 7 fournisseurs classés par coût annuel réel incluant frais de réseau & TVA",
-      calcTags: ["⚡ Électricité", "🔥 Gaz", "☀️ Panneaux solaires", "🚗 Charge VE", "🌡️ Pompe à chaleur", "📍 Flandre / Wallonie / Bruxelles"],
-      calcCta: "Démarrer le calculateur →",
-      calcMyPlan: "Calculer mon plan →",
-      coverage: "Couverture",
-      coverageSub: "Variable · Fixe · Dynamique — plans électricité et gaz",
-      disclaimer: "Pas de conseil financier. Vérifiez toujours les tarifs sur les sites des fournisseurs avant de changer.",
-      footer: "Données : Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E · Prix actualisés toutes les 15 min · Pas de conseil financier",
-    },
-  },
 
-  // ── DASHBOARD ──────────────────────────────────────────────
-  dashboard: {
-    en: {
-      live: "LIVE",
-      todayHourlyPrices: "Today's Hourly Prices · Belgium",
-      tomorrowHourlyPrices: "Tomorrow's Hourly Prices · Belgium",
-      epexUpdated: "EPEX Spot · Updated",
-      graph: "Graph",
-      table: "Table",
-      todayMin: "Today Min",
-      todayAvg: "Today Avg",
-      todayMax: "Today Max",
-      negativeHrs: "Negative Hrs",
-      negHrs: "Neg hrs",
-      yourSupplier: "Your Supplier",
-      cheapestHours: "5 Cheapest Upcoming Hours",
-      cheapestSub: "Best windows for EV charging, washing machine, dishwasher",
-      savingsTip: "Running a 2kW appliance at cheapest vs peak saves",
-      loadingPrices: "Loading prices…",
-      noTomorrowYet: "Tomorrow's prices not yet available",
-      noTomorrowSub: "EPEX publishes tomorrow's prices around 13:00 CET",
-      noPriceData: "No price data available",
-      supplierPriceCol: "€/kWh",
-      epexCol: "€/MWh",
-      gridNote: "Fluvius · Capacity tariff",
-      gridNoteWallonia: "ORES/RESA · kWh tariff",
-      gridNoteBrussels: "Sibelga · kWh tariff",
-      variableElec: "Variable · electricity",
-      cheapestSupplier: "Cheapest right now",
-      sevenDayTitle: "7-Day Average Prices",
-      sevenDaySub: "Tap a day for hourly detail",
-      periodLow: "Period Low",
-      periodAvg: "Period Avg",
-      periodHigh: "Period High",
-      gasEnergy: "Energy (TTF-based)",
-      gasEnergyDesc: "Market price — varies daily",
-      gasGrid: "Grid & Distribution",
-      gasGridDesc: "Fluxys + Fluvius/ORES",
-      gasTaxes: "Taxes & Levies",
-    },
-    nl: {
-      live: "LIVE",
-      todayHourlyPrices: "Uurprijzen vandaag · België",
-      tomorrowHourlyPrices: "Uurprijzen morgen · België",
-      epexUpdated: "EPEX Spot · Bijgewerkt",
-      graph: "Grafiek",
-      table: "Tabel",
-      todayMin: "Min vandaag",
-      todayAvg: "Gem vandaag",
-      todayMax: "Max vandaag",
-      negativeHrs: "Negatieve uren",
-      negHrs: "Neg uren",
-      yourSupplier: "Uw leverancier",
-      cheapestHours: "5 Goedkoopste komende uren",
-      cheapestSub: "Beste momenten voor EV-laden, wasmachine, vaatwasser",
-      savingsTip: "Een 2kW-toestel op het goedkoopste vs piekuur bespaart",
-      loadingPrices: "Prijzen laden…",
-      noTomorrowYet: "Prijzen van morgen nog niet beschikbaar",
-      noTomorrowSub: "EPEX publiceert de prijzen van morgen rond 13:00 CET",
-      noPriceData: "Geen prijsdata beschikbaar",
-      supplierPriceCol: "€/kWh",
-      epexCol: "€/MWh",
-      gridNote: "Fluvius · Capaciteitstarief",
-      gridNoteWallonia: "ORES/RESA · kWh-tarief",
-      gridNoteBrussels: "Sibelga · kWh-tarief",
-      variableElec: "Variabel · elektriciteit",
-      cheapestSupplier: "Goedkoopste op dit moment",
-      sevenDayTitle: "7-daags gemiddelde",
-      sevenDaySub: "Tik op een dag voor uurdetail",
-      periodLow: "Periode laagste",
-      periodAvg: "Periode gemiddeld",
-      periodHigh: "Periode hoogste",
-      gasEnergy: "Energie (TTF-gebaseerd)",
-      gasEnergyDesc: "Marktprijs — dagelijks variabel",
-      gasGrid: "Net & Distributie",
-      gasGridDesc: "Fluxys + Fluvius/ORES",
-      gasTaxes: "Belastingen & Heffingen",
-    },
-    fr: {
-      live: "EN DIRECT",
-      todayHourlyPrices: "Prix horaires aujourd'hui · Belgique",
-      tomorrowHourlyPrices: "Prix horaires demain · Belgique",
-      epexUpdated: "EPEX Spot · Mis à jour",
-      graph: "Graphique",
-      table: "Tableau",
-      todayMin: "Min aujourd'hui",
-      todayAvg: "Moy aujourd'hui",
-      todayMax: "Max aujourd'hui",
-      negativeHrs: "Heures négatives",
-      negHrs: "Hrs neg",
-      yourSupplier: "Votre fournisseur",
-      cheapestHours: "5 prochaines heures les moins chères",
-      cheapestSub: "Meilleures plages pour recharger un VE, lave-linge, lave-vaisselle",
-      savingsTip: "Faire tourner un appareil 2kW à l'heure la moins chère vs la plus chère économise",
-      loadingPrices: "Chargement des prix…",
-      noTomorrowYet: "Les prix de demain ne sont pas encore disponibles",
-      noTomorrowSub: "EPEX publie les prix du lendemain vers 13h00 CET",
-      noPriceData: "Aucune donnée de prix disponible",
-      supplierPriceCol: "€/kWh",
-      epexCol: "€/MWh",
-      gridNote: "Fluvius · Tarif capacité",
-      gridNoteWallonia: "ORES/RESA · Tarif kWh",
-      gridNoteBrussels: "Sibelga · Tarif kWh",
-      variableElec: "Variable · électricité",
-      cheapestSupplier: "Le moins cher en ce moment",
-      sevenDayTitle: "Prix moyens sur 7 jours",
-      sevenDaySub: "Appuyez sur un jour pour le détail horaire",
-      periodLow: "Période basse",
-      periodAvg: "Période moyenne",
-      periodHigh: "Période haute",
-      gasEnergy: "Énergie (basée TTF)",
-      gasEnergyDesc: "Prix marché — varie chaque jour",
-      gasGrid: "Réseau & Distribution",
-      gasGridDesc: "Fluxys + Fluvius/ORES",
-      gasTaxes: "Taxes & Prélèvements",
-    },
-  },
 
-  // ── AUTH PAGE ──────────────────────────────────────────────
-  auth: {
-    en: {
-      title: "SmartPrice",
-      subtitle: "Belgium Real-Time Electricity Prices",
-      signInTab: "Sign In",
-      registerTab: "Create Account",
-      yourName: "Your Name",
-      nameHint: "This is how you'll sign in — no email needed",
-      namePlaceholder: "Jan Janssen",
-      nameOrEmail: "Name or Email",
-      nameOrEmailHint: "Sign in with your name or email address",
-      nameOrEmailPlaceholder: "Jan Janssen or jan@example.be",
-      password: "Password",
-      passwordPlaceholder: "Your password",
-      passwordHint: "Min. 8 characters",
-      confirmPassword: "Confirm Password",
-      confirmPlaceholder: "Repeat password",
-      signInBtn: "Sign In →",
-      registerBtn: "Create Account →",
-      continueGoogle: "Continue with Google",
-      pleaseWait: "Please wait…",
-      errName: "Please enter your name",
-      errPassword: "Please enter a password",
-      errPasswordLength: "Password must be at least 8 characters",
-      errPasswordMatch: "Passwords do not match",
-      errNameOrEmail: "Please enter your name or email",
-      errEnterPassword: "Please enter your password",
-      errGeneric: "Something went wrong",
-      backHome: "← Back to home",
-      signInCtaTitle: "Sign in to see your results",
-      signInCtaBody: "Your personalised plan comparison is ready. Create a free account in 30 seconds — no credit card needed.",
-    },
-    nl: {
-      title: "SmartPrice",
-      subtitle: "Belgische elektriciteitsprijzen in real-time",
-      signInTab: "Aanmelden",
-      registerTab: "Account aanmaken",
-      yourName: "Uw naam",
-      nameHint: "Zo meldt u zich aan — geen e-mail nodig",
-      namePlaceholder: "Jan Janssen",
-      nameOrEmail: "Naam of e-mail",
-      nameOrEmailHint: "Meld u aan met uw naam of e-mailadres",
-      nameOrEmailPlaceholder: "Jan Janssen of jan@voorbeeld.be",
-      password: "Wachtwoord",
-      passwordPlaceholder: "Uw wachtwoord",
-      passwordHint: "Min. 8 tekens",
-      confirmPassword: "Wachtwoord bevestigen",
-      confirmPlaceholder: "Herhaal wachtwoord",
-      signInBtn: "Aanmelden →",
-      registerBtn: "Account aanmaken →",
-      continueGoogle: "Doorgaan met Google",
-      pleaseWait: "Even geduld…",
-      errName: "Voer uw naam in",
-      errPassword: "Voer een wachtwoord in",
-      errPasswordLength: "Wachtwoord moet minimaal 8 tekens bevatten",
-      errPasswordMatch: "Wachtwoorden komen niet overeen",
-      errNameOrEmail: "Voer uw naam of e-mailadres in",
-      errEnterPassword: "Voer uw wachtwoord in",
-      errGeneric: "Er is iets misgegaan",
-      backHome: "← Terug naar startpagina",
-      signInCtaTitle: "Aanmelden om uw resultaten te zien",
-      signInCtaBody: "Uw persoonlijke tariefvergelijking is klaar. Maak in 30 seconden gratis een account aan — geen kredietkaart nodig.",
-    },
-    fr: {
-      title: "SmartPrice",
-      subtitle: "Prix de l'électricité belge en temps réel",
-      signInTab: "Se connecter",
-      registerTab: "Créer un compte",
-      yourName: "Votre nom",
-      nameHint: "C'est ainsi que vous vous connecterez — pas d'e-mail requis",
-      namePlaceholder: "Jean Dupont",
-      nameOrEmail: "Nom ou e-mail",
-      nameOrEmailHint: "Connectez-vous avec votre nom ou adresse e-mail",
-      nameOrEmailPlaceholder: "Jean Dupont ou jean@exemple.be",
-      password: "Mot de passe",
-      passwordPlaceholder: "Votre mot de passe",
-      passwordHint: "Min. 8 caractères",
-      confirmPassword: "Confirmer le mot de passe",
-      confirmPlaceholder: "Répétez le mot de passe",
-      signInBtn: "Se connecter →",
-      registerBtn: "Créer un compte →",
-      continueGoogle: "Continuer avec Google",
-      pleaseWait: "Veuillez patienter…",
-      errName: "Veuillez entrer votre nom",
-      errPassword: "Veuillez entrer un mot de passe",
-      errPasswordLength: "Le mot de passe doit comporter au moins 8 caractères",
-      errPasswordMatch: "Les mots de passe ne correspondent pas",
-      errNameOrEmail: "Veuillez entrer votre nom ou e-mail",
-      errEnterPassword: "Veuillez entrer votre mot de passe",
-      errGeneric: "Une erreur s'est produite",
-      backHome: "← Retour à l'accueil",
-      signInCtaTitle: "Connectez-vous pour voir vos résultats",
-      signInCtaBody: "Votre comparaison de tarifs personnalisée est prête. Créez un compte gratuit en 30 secondes — aucune carte de crédit requise.",
-    },
-  },
+// ── Energy Type Toggle ────────────────────────────────────────
 
-  // ── ALERTS TAB ─────────────────────────────────────────────
-  alerts: {
-    en: {
-      title: "Price Alerts",
-      subtitle: "Get emailed when electricity drops below your threshold",
-      alertWhenBelow: "Alert when below:",
-      emailLabel: "Email for alerts",
-      emailPlaceholder: "jan@example.be",
-      emailSaved: "✓ Email saved",
-      emailError: "Failed to save email",
-      emailInvalid: "Please enter a valid email",
-      alertEnabled: "Alert active",
-      alertDisabled: "Alert inactive",
-      signInRequired: "Enable to start receiving alerts",
-      signInBtn: "Sign in to enable",
-      notifTitle: "Price Alert Active",
-      notifBody: "You'll receive an email when EPEX spot drops below your threshold.",
-    },
-    nl: {
-      title: "Prijsmeldingen",
-      subtitle: "Ontvang een e-mail wanneer de elektriciteitsprijs onder uw drempel zakt",
-      alertWhenBelow: "Melding bij:",
-      emailLabel: "E-mail voor meldingen",
-      emailPlaceholder: "jan@voorbeeld.be",
-      emailSaved: "✓ E-mail opgeslagen",
-      emailError: "E-mail opslaan mislukt",
-      emailInvalid: "Voer een geldig e-mailadres in",
-      alertEnabled: "Melding actief",
-      alertDisabled: "Melding inactief",
-      signInRequired: "Activeer om meldingen te ontvangen",
-      signInBtn: "Aanmelden om te activeren",
-      notifTitle: "Prijsmelding actief",
-      notifBody: "U ontvangt een e-mail wanneer de EPEX-spotprijs onder uw drempel daalt.",
-    },
-    fr: {
-      title: "Alertes de prix",
-      subtitle: "Recevez un e-mail quand l'électricité passe sous votre seuil",
-      alertWhenBelow: "Alerte en dessous de :",
-      emailLabel: "E-mail pour les alertes",
-      emailPlaceholder: "jean@exemple.be",
-      emailSaved: "✓ E-mail enregistré",
-      emailError: "Échec de l'enregistrement de l'e-mail",
-      emailInvalid: "Veuillez entrer un e-mail valide",
-      alertEnabled: "Alerte active",
-      alertDisabled: "Alerte inactive",
-      signInRequired: "Activez pour commencer à recevoir des alertes",
-      signInBtn: "Se connecter pour activer",
-      notifTitle: "Alerte de prix active",
-      notifBody: "Vous recevrez un e-mail quand le prix spot EPEX passera sous votre seuil.",
-    },
-  },
-
-  // ── CALCULATOR ─────────────────────────────────────────────
-  calculator: {
-    en: {
-      title: "Energy Plan Calculator",
-      electricityTitle: "Electricity Plan Calculator",
-      gasTitle: "Gas Plan Calculator",
-      step1: "Your Appliances",
-      step2: "Usage & Region",
-      step3: "Live Prices",
-      step4: "Your Results",
-      step1Sub: "Select what you have at home",
-      step2Sub: "How often do you use them?",
-      step3Sub: "Current market prices",
-      step4Sub: "Ranked by your real annual cost",
-      timesPerWeek: "×/week",
-      annualUsage: "Annual usage",
-      peakDemand: "Peak demand",
-      region: "Region",
-      calculate: "Calculate",
-      calculating: "Calculating…",
-      back: "← Back",
-      switchTo: "Switch to",
-      bestDeal: "Best deal for you",
-      annualCost: "Annual cost",
-      signInToSee: "Sign in to see full results",
-      signInSub: "Free account · takes 30 seconds",
-      perMonth: "/month",
-      signInSub2: "We already have your details — just hit Calculate.",
-      energyCost: "Energy",
-      gridCost: "Grid",
-      standing: "Standing charge",
-      currentBillHint: "Optional — we'll calculate your potential savings.",
-      gdprNote: "🔒 Your data is stored securely in the EU (GDPR compliant). We never sell or share your information. You can delete your account at any time from your profile.",
-      energyTypeLabels: { electricity: "⚡ Electricity", gas: "🔥 Gas", solar: "☀️ Solar", ev: "🚗 EV", heatpump: "🌡️ Heat Pump" },
-      regionLabels: { flanders: "Flanders", wallonia: "Wallonia", brussels: "Brussels" },
-      householdSuffix: "person",
-      householdSuffixPlural: "persons",
-      selectEnergyWarning: "Please select at least Electricity or Gas to get plan quotes.",
-      errGeneric: "Something went wrong. Please try again.",
-      kwhPerUse: "kWh/use",
-      peak: "peak",
-      costDisclaimer: "Annual cost includes energy + grid + levies + VAT.",
-      tariffsNote: "Tariffs scraped weekly · Always verify on supplier website before switching.",
-      restartBtn: "Start a new calculation",
-      step2Title: "Which appliances do you use?",
-      step2Sub: "Tap to toggle. Adjust how many times per week you use each one.",
-      step3Title: "Your usage & situation",
-      step3Sub: "This lets us calculate regional grid costs and find the right contract type.",
-      elecAppliances: "⚡ Electricity appliances",
-      gasAppliances: "🔥 Gas appliances",
-      perWeek: "per week",
-      yourRegion: "📍 Your region",
-      householdSize: "🏠 Household size",
-      yourProfile: "Your profile",
-      resultsTitle: "Your personalised plan comparison",
-      resultsSub: "Here are the best plans for your profile.",
-      plansFound: "plans found",
-      annualUsage: "Annual usage",
-      peakLoad: "Peak load",
-      bestDeal: "🏆 BEST DEAL",
-      selected: "selected",
-      emailHint: "We'll send your plan comparison here. No spam, ever.",
-      postcodeHint: "Optional — improves local grid tariff accuracy.",
-      contractCheapestLabel: "Just the cheapest",
-      contractCheapestSub: "Show all types, ranked by price",
-      contractVariableLabel: "Variable rate",
-      contractVariableSub: "Moves monthly with the market",
-      contractFixedLabel: "Fixed rate",
-      contractFixedSub: "Locked price for 1–3 years",
-      contractDynamicLabel: "Dynamic (EPEX)",
-      contractDynamicSub: "Hourly spot prices — best with SmartPrice",
-      household1Label: "1 person", household1Sub: "Studio / flat",
-      household2Label: "2 people", household2Sub: "Couple",
-      household34Label: "3–4 people", household34Sub: "Family home",
-      household5Label: "5+ people", household5Sub: "Large family",
-      electricityPlans: "Electricity Plans",
-      gasPlans: "Gas Plans",
-      hiUser: "Hi {name}! ",
-      step1Title: "What energy does your home use?",
-      step1Sub: "Select everything that applies. We'll personalise your plan comparison.",
-      continueBtn: "Continue — Pick Appliances →",
-      energyElecLabel: "Electricity",
-      energyElecDesc: "EPEX Spot dynamic, variable or fixed plans",
-      energyGasLabel: "Natural Gas",
-      energyGasDesc: "TTF-linked or fixed gas supplier plans",
-      energySolarLabel: "Solar Panels",
-      energySolarDesc: "I have solar — factor in self-consumption",
-      energyEvLabel: "Electric Car",
-      energyEvDesc: "EV charging shapes my peak demand",
-      energyHpLabel: "Heat Pump",
-      energyHpDesc: "Heat pump for heating and/or cooling",
-    },
-    nl: {
-      title: "Energietariefcalculator",
-      electricityTitle: "Elektriciteitsplanncalculator",
-      gasTitle: "Gasplanncalculator",
-      step1: "Uw toestellen",
-      step2: "Gebruik & regio",
-      step3: "Live prijzen",
-      step4: "Uw resultaten",
-      step1Sub: "Selecteer wat u thuis heeft",
-      step2Sub: "Hoe vaak gebruikt u ze?",
-      step3Sub: "Huidige marktprijzen",
-      step4Sub: "Gerangschikt op uw echte jaarkosten",
-      timesPerWeek: "×/week",
-      annualUsage: "Jaarlijks verbruik",
-      peakDemand: "Piekafname",
-      region: "Regio",
-      calculate: "Berekenen",
-      calculating: "Berekenen…",
-      back: "← Terug",
-      switchTo: "Overstappen naar",
-      bestDeal: "Beste deal voor u",
-      annualCost: "Jaarkosten",
-      signInToSee: "Aanmelden om volledige resultaten te zien",
-      signInSub: "Gratis account · duurt 30 seconden",
-      perMonth: "/maand",
-      signInSub2: "We hebben uw gegevens al — klik op Bereken.",
-      energyCost: "Energie",
-      gridCost: "Net",
-      standing: "Vaste vergoeding",
-      currentBillHint: "Optioneel — we berekenen uw potentiële besparing.",
-      gdprNote: "🔒 Uw gegevens worden veilig opgeslagen in de EU (AVG-conform). We verkopen of delen uw informatie nooit. U kunt uw account op elk moment verwijderen vanuit uw profiel.",
-      energyTypeLabels: { electricity: "⚡ Elektriciteit", gas: "🔥 Gas", solar: "☀️ Zonnepanelen", ev: "🚗 EV", heatpump: "🌡️ Warmtepomp" },
-      regionLabels: { flanders: "Vlaanderen", wallonia: "Wallonië", brussels: "Brussel" },
-      householdSuffix: "persoon",
-      householdSuffixPlural: "personen",
-      selectEnergyWarning: "Selecteer minstens Elektriciteit of Gas om tarieven te vergelijken.",
-      errGeneric: "Er is iets misgegaan. Probeer opnieuw.",
-      kwhPerUse: "kWh/gebruik",
-      peak: "piek",
-      costDisclaimer: "Jaarkosten inclusief energie, net, heffingen en btw.",
-      tariffsNote: "Tarieven wekelijks gescraped · Verifieer altijd op de website van de leverancier.",
-      restartBtn: "Nieuwe berekening starten",
-      step2Title: "Welke toestellen gebruikt u?",
-      step2Sub: "Tik om te selecteren. Pas aan hoe vaak u elk toestel per week gebruikt.",
-      step3Title: "Uw gebruik & situatie",
-      step3Sub: "Dit helpt ons regionale netkosten te berekenen en het juiste contracttype te vinden.",
-      elecAppliances: "⚡ Elektrische toestellen",
-      gasAppliances: "🔥 Gastoestellen",
-      perWeek: "per week",
-      yourRegion: "📍 Uw regio",
-      householdSize: "🏠 Gezinsgrootte",
-      yourProfile: "Uw profiel",
-      resultsTitle: "Uw persoonlijke tariefvergelijking",
-      resultsSub: "De beste plannen voor uw profiel.",
-      plansFound: "plannen gevonden",
-      annualUsage: "Jaarverbruik",
-      peakLoad: "Piekafname",
-      bestDeal: "🏆 BESTE DEAL",
-      selected: "geselecteerd",
-      emailHint: "We sturen uw tariefvergelijking hierheen. Geen spam.",
-      postcodeHint: "Optioneel — verbetert de nauwkeurigheid van lokale netkosten.",
-      contractCheapestLabel: "Gewoon het goedkoopste",
-      contractCheapestSub: "Alle types, gerangschikt op prijs",
-      contractVariableLabel: "Variabel tarief",
-      contractVariableSub: "Volgt maandelijks de markt",
-      contractFixedLabel: "Vast tarief",
-      contractFixedSub: "Vaste prijs voor 1–3 jaar",
-      contractDynamicLabel: "Dynamisch (EPEX)",
-      contractDynamicSub: "Uurlijkse spotprijzen — beste met SmartPrice",
-      household1Label: "1 persoon", household1Sub: "Studio / appartement",
-      household2Label: "2 personen", household2Sub: "Koppel",
-      household34Label: "3–4 personen", household34Sub: "Gezinswoning",
-      household5Label: "5+ personen", household5Sub: "Groot gezin",
-      electricityPlans: "Elektriciteitsplannen",
-      gasPlans: "Gasplannen",
-      hiUser: "Hallo {name}! ",
-      step1Title: "Welke energie gebruikt uw thuis?",
-      step1Sub: "Selecteer alles wat van toepassing is. We personaliseren uw tariefvergelijking.",
-      continueBtn: "Volgende — Toestellen kiezen →",
-      energyElecLabel: "Elektriciteit",
-      energyElecDesc: "EPEX Spot dynamisch, variabel of vast tarief",
-      energyGasLabel: "Aardgas",
-      energyGasDesc: "TTF-gekoppeld of vast gastarief",
-      energySolarLabel: "Zonnepanelen",
-      energySolarDesc: "Ik heb zonnepanelen — zelfverbruik meegerekend",
-      energyEvLabel: "Elektrische auto",
-      energyEvDesc: "EV-laden beïnvloedt mijn piekvermogen",
-      energyHpLabel: "Warmtepomp",
-      energyHpDesc: "Warmtepomp voor verwarming en/of koeling",
-    },
-    fr: {
-      title: "Calculateur de tarif énergétique",
-      electricityTitle: "Calculateur d'électricité",
-      gasTitle: "Calculateur de gaz",
-      step1: "Vos appareils",
-      step2: "Utilisation & région",
-      step3: "Prix en direct",
-      step4: "Vos résultats",
-      step1Sub: "Sélectionnez ce que vous avez chez vous",
-      step2Sub: "À quelle fréquence les utilisez-vous ?",
-      step3Sub: "Prix actuels du marché",
-      step4Sub: "Classé par votre coût annuel réel",
-      timesPerWeek: "×/semaine",
-      annualUsage: "Consommation annuelle",
-      peakDemand: "Puissance de pointe",
-      region: "Région",
-      calculate: "Calculer",
-      calculating: "Calcul en cours…",
-      back: "← Retour",
-      switchTo: "Passer à",
-      bestDeal: "Meilleure offre pour vous",
-      annualCost: "Coût annuel",
-      signInToSee: "Connectez-vous pour voir les résultats complets",
-      signInSub: "Compte gratuit · 30 secondes",
-      perMonth: "/mois",
-      signInSub2: "Vos détails sont déjà enregistrés — cliquez sur Calculer.",
-      energyCost: "Énergie",
-      gridCost: "Réseau",
-      standing: "Redevance fixe",
-      currentBillHint: "Optionnel — nous calculerons vos économies potentielles.",
-      gdprNote: "🔒 Vos données sont stockées en toute sécurité dans l'UE (conforme RGPD). Nous ne vendons ni ne partageons jamais vos informations. Vous pouvez supprimer votre compte à tout moment depuis votre profil.",
-      energyTypeLabels: { electricity: "⚡ Électricité", gas: "🔥 Gaz", solar: "☀️ Solaire", ev: "🚗 VE", heatpump: "🌡️ Pompe à chaleur" },
-      regionLabels: { flanders: "Flandre", wallonia: "Wallonie", brussels: "Bruxelles" },
-      householdSuffix: "personne",
-      householdSuffixPlural: "personnes",
-      selectEnergyWarning: "Veuillez sélectionner au moins Électricité ou Gaz pour obtenir des devis.",
-      errGeneric: "Une erreur s'est produite. Veuillez réessayer.",
-      kwhPerUse: "kWh/utilisation",
-      peak: "pointe",
-      costDisclaimer: "Coût annuel incluant énergie, réseau, taxes et TVA.",
-      tariffsNote: "Tarifs récupérés chaque semaine · Vérifiez toujours sur le site du fournisseur.",
-      restartBtn: "Démarrer un nouveau calcul",
-      step2Title: "Quels appareils utilisez-vous ?",
-      step2Sub: "Appuyez pour sélectionner. Ajustez la fréquence d'utilisation hebdomadaire.",
-      step3Title: "Votre utilisation & situation",
-      step3Sub: "Cela nous permet de calculer les coûts de réseau régionaux et de trouver le bon type de contrat.",
-      elecAppliances: "⚡ Appareils électriques",
-      gasAppliances: "🔥 Appareils à gaz",
-      perWeek: "par semaine",
-      yourRegion: "📍 Votre région",
-      householdSize: "🏠 Taille du foyer",
-      yourProfile: "Votre profil",
-      resultsTitle: "Votre comparaison de tarifs personnalisée",
-      resultsSub: "Les meilleurs plans pour votre profil.",
-      plansFound: "plans trouvés",
-      annualUsage: "Consommation annuelle",
-      peakLoad: "Puissance de pointe",
-      bestDeal: "🏆 MEILLEURE OFFRE",
-      selected: "sélectionnés",
-      emailHint: "Nous enverrons votre comparaison ici. Pas de spam.",
-      postcodeHint: "Optionnel — améliore la précision des coûts de réseau locaux.",
-      contractCheapestLabel: "Le moins cher",
-      contractCheapestSub: "Tous types, classés par prix",
-      contractVariableLabel: "Tarif variable",
-      contractVariableSub: "Suit le marché chaque mois",
-      contractFixedLabel: "Tarif fixe",
-      contractFixedSub: "Prix bloqué pour 1 à 3 ans",
-      contractDynamicLabel: "Dynamique (EPEX)",
-      contractDynamicSub: "Prix spot horaires — idéal avec SmartPrice",
-      household1Label: "1 personne", household1Sub: "Studio / appartement",
-      household2Label: "2 personnes", household2Sub: "Couple",
-      household34Label: "3–4 personnes", household34Sub: "Maison familiale",
-      household5Label: "5+ personnes", household5Sub: "Grande famille",
-      electricityPlans: "Plans électricité",
-      gasPlans: "Plans gaz",
-      hiUser: "Bonjour {name} ! ",
-      step1Title: "Quelle énergie utilise votre domicile ?",
-      step1Sub: "Sélectionnez tout ce qui s'applique. Nous personnaliserons votre comparaison.",
-      continueBtn: "Continuer — Choisir les appareils →",
-      energyElecLabel: "Électricité",
-      energyElecDesc: "EPEX Spot dynamique, variable ou fixe",
-      energyGasLabel: "Gaz naturel",
-      energyGasDesc: "Tarif lié au TTF ou fixe",
-      energySolarLabel: "Panneaux solaires",
-      energySolarDesc: "J'ai des panneaux solaires — autoconsommation incluse",
-      energyEvLabel: "Voiture électrique",
-      energyEvDesc: "La recharge VE influence ma puissance de pointe",
-      energyHpLabel: "Pompe à chaleur",
-      energyHpDesc: "Pompe à chaleur pour le chauffage et/ou la climatisation",
-    },
-  },
-
-  // ── PRICE LABELS ───────────────────────────────────────────
-  priceLabels: {
-    en: {
-      negative:   { emoji: "🤑", text: "Negative price!" },
-      very_cheap: { emoji: "💚", text: "Very cheap" },
-      cheap:      { emoji: "🟡", text: "Cheap" },
-      moderate:   { emoji: "🟠", text: "Moderate" },
-      expensive:  { emoji: "🔴", text: "Expensive" },
-      peak:       { emoji: "⛔", text: "Peak price" },
-    },
-    nl: {
-      negative:   { emoji: "🤑", text: "Negatieve prijs!" },
-      very_cheap: { emoji: "💚", text: "Zeer goedkoop" },
-      cheap:      { emoji: "🟡", text: "Goedkoop" },
-      moderate:   { emoji: "🟠", text: "Matig" },
-      expensive:  { emoji: "🔴", text: "Duur" },
-      peak:       { emoji: "⛔", text: "Piekprijs" },
-    },
-    fr: {
-      negative:   { emoji: "🤑", text: "Prix négatif !" },
-      very_cheap: { emoji: "💚", text: "Très bon marché" },
-      cheap:      { emoji: "🟡", text: "Bon marché" },
-      moderate:   { emoji: "🟠", text: "Modéré" },
-      expensive:  { emoji: "🔴", text: "Cher" },
-      peak:       { emoji: "⛔", text: "Prix de pointe" },
-    },
-  },
-  // ── PROFILE PAGE ───────────────────────────────────────────
-  profile: {
-    en: {
-      title: "My Profile", name: "Name", email: "Email",
-      googleConnected: "Google · Connected",
-      supplierTitle: "Electricity Supplier",
-      supplierDesc: "Your supplier — prices on the dashboard will include their tariff formula",
-      saving: "Saving…", saved: "✅ Saved!", saveChanges: "Save Changes",
-      alertsTitle: "Price Alerts",
-      alertsDesc: "Manage your alert threshold and toggle from the dashboard.",
-      threshold: "Threshold", status: "Status",
-      active: "🟢 Active", inactive: "⚫ Inactive",
-      manageAlerts: "Manage Alerts →",
-      dangerZone: "Danger Zone",
-      deleteDesc: "Permanently delete your account and all associated data. This cannot be undone.",
-      deleteConfirm: "Are you sure? This will permanently delete your account and all data.",
-      deleteError: "Failed to delete account. Please try again.",
-      deleteBtn: "Delete My Account",
-      gdpr: "GDPR Compliant · Data stored in EU",
-    },
-    nl: {
-      title: "Mijn profiel", name: "Naam", email: "E-mail",
-      googleConnected: "Google · Verbonden",
-      supplierTitle: "Elektriciteitsleverancier",
-      supplierDesc: "Uw leverancier — prijzen op het dashboard bevatten hun tariefformule",
-      saving: "Opslaan…", saved: "✅ Opgeslagen!", saveChanges: "Wijzigingen opslaan",
-      alertsTitle: "Prijsmeldingen",
-      alertsDesc: "Beheer uw drempelwaarde en schakel in vanuit het dashboard.",
-      threshold: "Drempel", status: "Status",
-      active: "🟢 Actief", inactive: "⚫ Inactief",
-      manageAlerts: "Meldingen beheren →",
-      dangerZone: "Gevarenzone",
-      deleteDesc: "Verwijder uw account en alle bijbehorende gegevens permanent. Dit kan niet ongedaan worden gemaakt.",
-      deleteConfirm: "Weet u het zeker? Dit verwijdert uw account en alle gegevens permanent.",
-      deleteError: "Account verwijderen mislukt. Probeer opnieuw.",
-      deleteBtn: "Mijn account verwijderen",
-      gdpr: "GDPR-conform · Gegevens opgeslagen in de EU",
-    },
-    fr: {
-      title: "Mon profil", name: "Nom", email: "E-mail",
-      googleConnected: "Google · Connecté",
-      supplierTitle: "Fournisseur d'électricité",
-      supplierDesc: "Votre fournisseur — les prix sur le tableau de bord incluront leur formule tarifaire",
-      saving: "Enregistrement…", saved: "✅ Enregistré !", saveChanges: "Enregistrer les modifications",
-      alertsTitle: "Alertes de prix",
-      alertsDesc: "Gérez votre seuil d'alerte et activez depuis le tableau de bord.",
-      threshold: "Seuil", status: "Statut",
-      active: "🟢 Actif", inactive: "⚫ Inactif",
-      manageAlerts: "Gérer les alertes →",
-      dangerZone: "Zone de danger",
-      deleteDesc: "Supprimez définitivement votre compte et toutes les données associées. Ceci est irréversible.",
-      deleteConfirm: "Êtes-vous sûr ? Cela supprimera définitivement votre compte et toutes vos données.",
-      deleteError: "Échec de la suppression du compte. Veuillez réessayer.",
-      deleteBtn: "Supprimer mon compte",
-      gdpr: "Conforme RGPD · Données stockées dans l'UE",
-    },
-  },
-
-  // ── APPLIANCE TRANSLATIONS ─────────────────────────────────
-  appliances: {
-    en: {
-      washing_machine:  { label: "Washing machine",      tip: "Run at 30°C and off-peak hours to cut costs by up to 40%" },
-      dishwasher:       { label: "Dishwasher",            tip: "Use eco-mode and only run full loads off-peak" },
-      dryer:            { label: "Tumble dryer",          tip: "Biggest single load after EV — air-dry when possible" },
-      ev_charging:      { label: "EV charging (7.4kW)",   tip: "Schedule overnight (00:00–06:00) for low EPEX prices" },
-      ev_charging_fast: { label: "EV fast charge (22kW)", tip: "High peak load — use slower overnight charging" },
-      heat_pump:        { label: "Heat pump / boiler",    tip: "Programme heating schedule; 1°C lower = ~7% savings" },
-      fridge_freezer:   { label: "Fridge/freezer",        tip: "Always-on load — check door seals and keep coils clean" },
-      oven:             { label: "Oven / hob",            tip: "Use residual heat for last 10 min and batch-cook" },
-      lighting:         { label: "Lighting",              tip: "LED bulbs use 80% less — replace halogen/incandescent" },
-      tv_electronics:   { label: "TV / home electronics", tip: "Smart plugs eliminate standby — ~80 kWh/yr saved" },
-      pc_office:        { label: "PC / home office",      tip: "Enable power-save mode; laptop uses 5× less than desktop" },
-      pool_pump:        { label: "Pool pump",             tip: "Timer-control to run during cheapest EPEX hours" },
-      sauna:            { label: "Sauna",                 tip: "High peak load — never run with EV or heat pump" },
-      central_heating:  { label: "Central heating (gas)", tip: "Lower thermostat 1°C = ~7% less gas. Night setback saves 10–15%" },
-      hot_water:        { label: "Hot water (gas boiler)", tip: "Set to 55°C; insulate hot water pipes and cylinder" },
-      gas_hob:          { label: "Gas hob / oven",        tip: "Use lids on pots; match burner size to pan" },
-      gas_dryer:        { label: "Gas tumble dryer",      tip: "More efficient per cycle than electric; only run full loads" },
-      gas_fireplace:    { label: "Gas fireplace",         tip: "Zone heating — great for supplementing central heating" },
-    },
-    nl: {
-      washing_machine:  { label: "Wasmachine",            tip: "Was op 30°C en buiten de piekuren — bespaar tot 40%" },
-      dishwasher:       { label: "Vaatwasser",            tip: "Gebruik eco-modus en draai alleen met volle lading" },
-      dryer:            { label: "Droogkast",             tip: "Grootste verbruiker na EV — luchtdrogen waar mogelijk" },
-      ev_charging:      { label: "EV laden (7,4kW)",      tip: "Plan 's nachts (00:00–06:00) voor lage EPEX-prijzen" },
-      ev_charging_fast: { label: "EV snel laden (22kW)",  tip: "Hoog piekvermogen — gebruik trager nachtladen" },
-      heat_pump:        { label: "Warmtepomp / boiler",   tip: "Programmeer verwarmingsschema; 1°C lager = ~7% besparing" },
-      fridge_freezer:   { label: "Koelkast/vriezer",      tip: "Continu verbruik — controleer deurrubbers en spoelen" },
-      oven:             { label: "Oven / kookplaat",      tip: "Gebruik restwarmte voor laatste 10 min en kook in bulk" },
-      lighting:         { label: "Verlichting",           tip: "LED gebruikt 80% minder — vervang halogeenlampen" },
-      tv_electronics:   { label: "TV / elektronica",      tip: "Slimme stekkers elimineren stand-by — ~80 kWh/jaar bespaard" },
-      pc_office:        { label: "PC / thuiskantoor",     tip: "Energiebesparingsmodus inschakelen; laptop gebruikt 5× minder" },
-      pool_pump:        { label: "Zwembadpomp",           tip: "Timer instellen voor goedkoopste EPEX-uren" },
-      sauna:            { label: "Sauna",                 tip: "Hoog piekvermogen — nooit tegelijk met EV of warmtepomp" },
-      central_heating:  { label: "Centrale verwarming (gas)", tip: "1°C lager = ~7% minder gas. Nachtinstelling bespaart 10-15%" },
-      hot_water:        { label: "Warm water (gasboiler)", tip: "Instellen op 55°C; isoleer leidingen en boiler" },
-      gas_hob:          { label: "Gaskookplaat / oven",   tip: "Gebruik deksels; pas brander aan pangrootte aan" },
-      gas_dryer:        { label: "Gasdroogkast",          tip: "Efficiënter per cyclus dan elektrisch; alleen vol laden" },
-      gas_fireplace:    { label: "Gashaard",              tip: "Zoneverwarming — goed ter aanvulling van centrale verwarming" },
-    },
-    fr: {
-      washing_machine:  { label: "Lave-linge",            tip: "Lavez à 30°C et hors pointe pour économiser jusqu'à 40%" },
-      dishwasher:       { label: "Lave-vaisselle",        tip: "Utilisez le mode éco et ne lancez qu'avec un plein chargement" },
-      dryer:            { label: "Sèche-linge",           tip: "Plus grand consommateur après le VE — séchez à l'air si possible" },
-      ev_charging:      { label: "Charge VE (7,4kW)",     tip: "Programmez la nuit (00h–06h) pour les prix EPEX bas" },
-      ev_charging_fast: { label: "Charge rapide VE (22kW)", tip: "Forte puissance de pointe — préférez la charge lente nocturne" },
-      heat_pump:        { label: "Pompe à chaleur / chaudière", tip: "Programmez le chauffage; 1°C de moins = ~7% d'économies" },
-      fridge_freezer:   { label: "Réfrigérateur/congélateur", tip: "Charge permanente — vérifiez les joints et les serpentins" },
-      oven:             { label: "Four / plaque",         tip: "Utilisez la chaleur résiduelle 10 min avant et cuisinez en lot" },
-      lighting:         { label: "Éclairage",             tip: "Les LED consomment 80% de moins — remplacez les halogènes" },
-      tv_electronics:   { label: "TV / électronique",     tip: "Les prises intelligentes éliminent le veille — ~80 kWh/an économisés" },
-      pc_office:        { label: "PC / bureau à domicile", tip: "Activez l'économie d'énergie; un laptop consomme 5× moins" },
-      pool_pump:        { label: "Pompe de piscine",      tip: "Minuterie sur les heures EPEX les moins chères" },
-      sauna:            { label: "Sauna",                 tip: "Forte puissance — ne jamais utiliser avec VE ou pompe à chaleur" },
-      central_heating:  { label: "Chauffage central (gaz)", tip: "1°C de moins = ~7% de gaz en moins. Régulation nuit = 10-15%" },
-      hot_water:        { label: "Eau chaude (chaudière gaz)", tip: "Régler à 55°C; isoler les tuyaux et le ballon" },
-      gas_hob:          { label: "Plaque / four gaz",     tip: "Utilisez des couvercles; adaptez le brûleur à la casserole" },
-      gas_dryer:        { label: "Sèche-linge gaz",       tip: "Plus efficace par cycle qu'électrique; chargement complet" },
-      gas_fireplace:    { label: "Cheminée à gaz",        tip: "Chauffage de zone — idéal en complément du chauffage central" },
-    },
-  },
-
+const C = {
+  bg:     "#060B14",
+  card:   "#0A1628",
+  card2:  "#0D1E35",
+  border: "#1E3A5F",
+  green:  "#10B981",
+  teal:   "#0D9488",
+  yellow: "#F59E0B",
+  orange: "#F97316",
+  red:    "#EF4444",
+  muted:  "#64748B",
+  light:  "#E2E8F0",
+  cyan:   "#06B6D4",
 };
 
-export const SUPPORTED_LANGS = ["en", "nl", "fr"];
-export const LANG_LABELS = { en: "EN", nl: "NL", fr: "FR" };
-export const DEFAULT_LANG = "nl"; // Belgium default = Dutch
+
+
+// ══════════════════════════════════════════════════════════════════
+// SUPPLIER COMPARE + APPLIANCE CALCULATOR
+// ══════════════════════════════════════════════════════════════════
+
+const REGIONS_DATA = [
+  { id: "flanders", flag: "🔶", noteKey: "gridNote" },
+  { id: "wallonia",  flag: "🔷", noteKey: "gridNoteWallonia" },
+  { id: "brussels",  flag: "🏙️", noteKey: "gridNoteBrussels" },
+];
+const TYPE_COLOR = { variable: "#0D9488", fixed: "#06B6D4", dynamic: "#10B981" };
+const TYPE_LABEL = { variable: "Variable", fixed: "Fixed", dynamic: "Dynamic" };
+
+function PlanBadge({ children, color }) {
+  return <span style={{ background: `${color}22`, color, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, whiteSpace: "nowrap" }}>{children}</span>;
+}
+
+// ── Supplier comparison tab ────────────────────────────────────
+function SupplierCompare({ currentMwh, isMobile, energyType }) {
+  const { tSection } = useLanguage();
+  const T  = tSection("dashboard");
+  const TC = tSection("common");
+  return (
+    <div style={{ padding: "8px 0" }}>
+      <div style={{ fontSize: 11, color: "#445", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12, fontWeight: 700 }}>
+        All Belgian Suppliers · Estimated retail price
+      </div>
+
+      {/* Supplier cards */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+        {SUPPLIERS.map((s, i) => {
+          // currentMwh is MWh → convert to kWh, pass supplier object
+          const spotKwh = currentMwh != null ? currentMwh / 1000 : null;
+          const retailKwh = spotKwh != null ? getSupplierPrice(spotKwh, s) : null;
+          return (
+            <div key={s.name} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${i === 0 ? s.color + "55" : "rgba(255,255,255,0.06)"}`, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {i === 0 && <span style={{ fontSize: 14 }}>🏆</span>}
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: i === 0 ? s.color : "#C4D4E0" }}>{s.name}</div>
+                  <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>{T.variableElec}</div>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                {retailKwh != null ? (
+                  <>
+                    <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "monospace", color: i === 0 ? s.color : "#94A3B8" }}>
+                      €{retailKwh.toFixed(4)}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#445" }}>/kWh incl. VAT</div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 12, color: "#334" }}>—</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ fontSize: 10, color: "#334", marginBottom: 20, lineHeight: 1.6 }}>
+        Prices are estimates based on current EPEX Spot rate + typical supplier margin. Verify on supplier websites before switching.
+      </div>
+
+
+    </div>
+  );
+}
+
+function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
+  const { tSection } = useLanguage();
+  const TC = tSection("common");
+  const L  = tSection("landing");
+  return (
+    <div style={{
+      display: "flex",
+      background: "rgba(0,0,0,0.35)",
+      borderRadius: 14,
+      padding: 4,
+      gap: 4,
+      border: "1px solid rgba(255,255,255,0.07)",
+      boxShadow: "inset 0 1px 3px rgba(0,0,0,0.4)",
+    }}>
+      {/* EV button */}
+      <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{
+        display: "flex", alignItems: "center", gap: 5,
+        padding: "8px 14px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "transparent", color: "#4A6070",
+      }}
+        onMouseEnter={e => { e.currentTarget.style.color = "#00C896"; e.currentTarget.style.border = "1px solid rgba(0,200,150,0.35)"; e.currentTarget.style.background = "rgba(0,200,150,0.08)"; }}
+        onMouseLeave={e => { e.currentTarget.style.color = "#4A6070"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}>
+        🚗 EV
+      </button>
+
+
+      {/* Electricity button */}
+      <button onClick={() => onChange("electricity")} style={{
+        display: "flex", alignItems: "center", gap: 7,
+        padding: "8px 18px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: type === "electricity" ? "1px solid rgba(0,230,180,0.45)" : "1px solid transparent",
+        background: type === "electricity"
+          ? "linear-gradient(135deg, #0A2E2A 0%, #0D3D35 100%)"
+          : "transparent",
+        color: type === "electricity" ? "#00E5B4" : "#4A6070",
+        boxShadow: type === "electricity"
+          ? "0 0 16px rgba(0,200,150,0.25), inset 0 1px 0 rgba(0,230,180,0.15)"
+          : "none",
+      }}>
+        <span style={{
+          fontSize: 15,
+          filter: type === "electricity" ? "drop-shadow(0 0 6px rgba(0,230,180,0.8))" : "none",
+          transition: "filter 0.2s",
+        }}>⚡</span>
+        <span>{TC.electricity || "Electricity"}</span>
+        {type === "electricity" && (
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: "#00E5B4",
+            boxShadow: "0 0 8px #00E5B4",
+            marginLeft: 2,
+            animation: "pulse-elec 2s infinite",
+          }} />
+        )}
+      </button>
+
+      {/* Gas button */}
+      <button onClick={() => onChange("gas")} style={{
+        display: "flex", alignItems: "center", gap: 7,
+        padding: "8px 18px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: type === "gas" ? "1px solid rgba(249,115,22,0.45)" : "1px solid transparent",
+        background: type === "gas"
+          ? "linear-gradient(135deg, #2E1A08 0%, #3D220A 100%)"
+          : "transparent",
+        color: type === "gas" ? "#FF8C42" : "#4A6070",
+        boxShadow: type === "gas"
+          ? "0 0 16px rgba(249,115,22,0.25), inset 0 1px 0 rgba(255,140,66,0.15)"
+          : "none",
+      }}>
+        <span style={{
+          fontSize: 15,
+          filter: type === "gas" ? "drop-shadow(0 0 6px rgba(255,140,66,0.8))" : "none",
+          transition: "filter 0.2s",
+        }}>🔥</span>
+        <span>{TC.gas || "Gas"}</span>
+        {type === "gas" && (
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: "#FF8C42",
+            boxShadow: "0 0 8px #FF8C42",
+            marginLeft: 2,
+            animation: "pulse-gas 2s infinite",
+          }} />
+        )}
+      </button>
+
+
+      {/* Calculator button — visible to all, guests get sign-in prompt */}
+      <button onClick={() => onOpenCalculator && onOpenCalculator(type)} style={{
+        display: "flex", alignItems: "center", gap: 7,
+        padding: "8px 16px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        transition: "all 0.2s ease",
+        border: isGuest ? "1px solid rgba(13,148,136,0.3)" : "1px solid rgba(255,255,255,0.08)",
+        background: isGuest ? "rgba(13,148,136,0.08)" : "transparent",
+        color: isGuest ? "#0D9488" : "#4A6070",
+      }}
+        onMouseEnter={e => { e.currentTarget.style.color = "#0D9488"; e.currentTarget.style.border = "1px solid rgba(13,148,136,0.35)"; e.currentTarget.style.background = "rgba(13,148,136,0.08)"; }}
+        onMouseLeave={e => { e.currentTarget.style.color = isGuest ? "#0D9488" : "#4A6070"; e.currentTarget.style.border = isGuest ? "1px solid rgba(13,148,136,0.3)" : "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = isGuest ? "rgba(13,148,136,0.08)" : "transparent"; }}>
+        {`🔌 ${TC.calculator || "Calculator"}${isGuest ? " →" : ""}`}
+      </button>
+
+      <style>{`
+        @keyframes pulse-elec {
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px #00E5B4; }
+          50%       { opacity: 0.5; box-shadow: 0 0 3px #00E5B4; }
+        }
+        @keyframes pulse-gas {
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px #FF8C42; }
+          50%       { opacity: 0.5; box-shadow: 0 0 3px #FF8C42; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn, onOpenCalculator }) {
+  // Gate: guests clicking the calculator go to sign-in first
+  const { user, updatePreferences, logout, authFetch } = useAuth();
+  const { tSection } = useLanguage();
+  const T  = tSection("dashboard");
+  const TC = tSection("common");
+  const PL = tSection("priceLabels");  // price label translations
+  const NAV_ITEMS = [
+    { id: "today",    icon: "📈", label: TC.today },
+    { id: "tomorrow", icon: "⏩", label: TC.tomorrow },
+    { id: "cheapest", icon: "💚", label: TC.best },
+    { id: "compare",  icon: "🏢", label: TC.suppliers },
+    { id: "alerts",   icon: "🔔", label: TC.alerts },
+  ];
+  const REGIONS = REGIONS_DATA.map(r => ({
+    ...r,
+    label: TC[r.id] || r.id,
+    note:  T[r.noteKey] || "",
+  }));
+  const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
+  const openCalculator = (type) => isGuest ? onSignIn() : (onOpenCalculator && onOpenCalculator(type));
+  const { current } = useCurrentPrice();
+  const cheapest    = useCheapestHours(5);
+
+  const [supplier,       setSupplier]       = useState(user?.preferences?.supplier || "Bolt Energy");
+  const [tab,            setTab]            = useState(initialTab || "today");
+  const [showMenu,       setShowMenu]       = useState(false);
+  const [history,        setHistory]        = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [selectedDay,    setSelectedDay]    = useState(null);
+  const [alertThreshold, setAlertThreshold] = useState(user?.preferences?.alertThreshold || 80);
+  const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertEnabled || false);
+  const [notification,   setNotification]   = useState(null);
+  const [viewMode,       setViewMode]       = useState("graph"); // "graph" | "table"
+  const [isMobile,       setIsMobile]       = useState(window.innerWidth < 768);
+
+  // ── Energy type toggle + URL sync ─────────────────────────
+  const getInitialType = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("type") === "gas" ? "gas" : "electricity";
+  };
+  const [energyType, setEnergyType] = useState(getInitialType);
+
+  const switchType = (type) => {
+    setEnergyType(type);
+    const url = new URL(window.location.href);
+    url.searchParams.set("type", type);
+    window.history.pushState({}, "", url.toString());
+  };
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  useEffect(() => {
+    authFetch("/auth/me").then(r => r.json()).then(d => {
+      if (d.success) {
+        const p = d.user.preferences || {};
+        if (p.supplier)                    setSupplier(p.supplier);
+        if (p.alertThreshold !== undefined) setAlertThreshold(p.alertThreshold);
+        if (p.alertEnabled   !== undefined) setAlertActive(p.alertEnabled);
+      }
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (initialTab) { setTab(initialTab); onTabConsumed?.(); }
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (tab !== "history") return;
+    if (history.length > 0) return;
+    setHistoryLoading(true);
+    fetch("/api/prices/history?days=7").then(r => r.json()).then(d => { if (d.success) setHistory(d.days); }).catch(() => {}).finally(() => setHistoryLoading(false));
+  }, [tab]);
+
+  useEffect(() => {
+    if (!current || !alertActive) return;
+    if (current.price_eur_mwh < alertThreshold) {
+      setNotification(`⚡ €${current.price_eur_mwh.toFixed(0)}/MWh — below your €${alertThreshold} threshold`);
+      setTimeout(() => setNotification(null), 6000);
+    }
+  }, [current, alertThreshold, alertActive]);
+
+  const changeSupplier     = async s => { setSupplier(s); try { await updatePreferences({ supplier: s }); } catch {} };
+  const toggleAlert        = async () => { const next = !alertActive; setAlertActive(next); try { await updatePreferences({ alertEnabled: next, alertThreshold }); } catch {} };
+  const saveAlertThreshold = async v => { setAlertThreshold(v); try { await updatePreferences({ alertThreshold: v }); } catch {} };
+
+  const todayData = prices.filter(p => p.day === "today");
+  const tomorrowData = prices.filter(p => p.day === "tomorrow");
+  const chartData = tab === "tomorrow" ? tomorrowData : todayData;
+  const mwh = current?.price_eur_mwh ?? null;
+  const lbl = mwh != null ? getPriceLabel(mwh, PL) : null;
+  const sup = SUPPLIERS.find(s => s.name === supplier);
+  const retailKwh = mwh != null && sup ? getSupplierPrice(mwh / 1000, sup) : null;
+
+  // Find min/max for today
+  const todayMin = stats?.today ? { price: stats.today.min, hour: todayData.find(p => p.price_eur_mwh === stats.today.min) } : null;
+  const todayMax = stats?.today ? { price: stats.today.max, hour: todayData.find(p => p.price_eur_mwh === stats.today.max) } : null;
+
+  const C = { bg: "#060B14", card: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.08)", teal: "#0D9488", green: "#00C896", yellow: "#F59E0B", red: "#EF4444", cyan: "#00E5FF" };
+
+  return (
+    <div style={{ minHeight: "100vh", background: C.bg, color: "#E8EDF5", fontFamily: "'DM Sans', system-ui, sans-serif", paddingBottom: isMobile ? 80 : 0 }}>
+
+      {/* Notification */}
+      {notification && (
+        <div style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)", zIndex: 999, background: "linear-gradient(135deg,#00C896,#009970)", borderRadius: 30, padding: "12px 20px", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,200,150,0.4)", fontSize: 13, fontWeight: 600, color: "#fff", textAlign: "center" }}>
+          {notification}
+        </div>
+      )}
+
+      {/* Guest banner */}
+      {isGuest && (
+        <div style={{ background: "rgba(13,148,136,0.08)", borderBottom: "1px solid rgba(13,148,136,0.15)", padding: "8px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: "#556B82" }}>🔌 Want to find your cheapest plan? <strong style={{ color: "#0D9488" }}>Sign in free</strong> to use the calculator, save preferences & get price alerts</span>
+          <button onClick={onSignIn} style={{ padding: "5px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "1px solid rgba(13,148,136,0.35)", cursor: "pointer", background: "transparent", color: "#0D9488" }}>
+            Sign In Free →
+          </button>
+        </div>
+      )}
+      {isMobile && (
+        <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 20 }}>🇧🇪</span>
+            <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
+            <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <LangSwitcher />
+            {mwh != null && (
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(0)}</div>
+                <div style={{ fontSize: 9, color: "#556" }}>NOW /MWh</div>
+              </div>
+            )}
+
+            <button onClick={() => setShowMenu(m => !m)} style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+              {(user?.name || user?.email || "?")[0].toUpperCase()}
+            </button>
+          </div>
+          </div>
+          {/* Energy toggle row */}
+          <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 10px" }}>
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
+          </div>
+        </div>
+      )}
+
+      {/* ── DESKTOP HEADER ── */}
+      {!isMobile && (
+        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "16px 18px 0" }}>
+          {/* TOP ROW: EPEX + sign-in flush right */}
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <LangSwitcher />
+              {mwh != null && (
+                <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
+                  <div style={{ fontSize: 10, color: "#556", marginBottom: 1 }}>NOW · EPEX Spot</div>
+                  <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(1)}<span style={{ fontSize: 12, color: "#556", fontWeight: 400 }}>/MWh</span></div>
+                  <div style={{ fontSize: 11, color: "#778" }}>{lbl?.emoji} {lbl?.text}{retailKwh ? ` · ${supplier}: €${retailKwh.toFixed(4)}/kWh` : ""}</div>
+                </div>
+              )}
+              <div style={{ position: "relative" }}>
+                {isGuest ? (
+                  <button onClick={onSignIn} style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(13,148,136,0.5)", background: "rgba(13,148,136,0.12)", color: "#0D9488", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.22)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.12)"; }}>
+                    {TC.signIn} →
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => setShowMenu(m => !m)} style={{ display: "flex", alignItems: "center", gap: 8, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "9px 14px", cursor: "pointer", color: "#E8EDF5" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
+                        {(user?.name || user?.email || "?")[0].toUpperCase()}
+                      </div>
+                      <div style={{ textAlign: "left" }}>
+                        <div style={{ fontSize: 12, fontWeight: 600 }}>{user?.name || TC.account}</div>
+                        <div style={{ fontSize: 10, color: "#556" }}>▾ Menu</div>
+                      </div>
+                    </button>
+                    {showMenu && <DropMenu onProfile={() => { setShowMenu(false); onGoProfile(); }} onLogout={() => { setShowMenu(false); logout(); }} onPrivacy={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />}
+                  </>
+                )}
+              </div>
+          </div>
+          {/* BOTTOM ROW: brand left + energy toggle right */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 26 }}>🇧🇪</span>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: "-1px" }}>SmartPrice</h1>
+              <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
+            </div>
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile dropdown menu */}
+      {isMobile && showMenu && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)" }} onClick={() => setShowMenu(false)}>
+          <div style={{ position: "absolute", top: 60, right: 16, background: "#0D1626", border: `1px solid ${C.border}`, borderRadius: 16, padding: 8, minWidth: 200 }} onClick={e => e.stopPropagation()}>
+            {isGuest ? (
+              <>
+                <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>Browsing as guest</div>
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="👤" label={TC.signIn} onClick={() => { setShowMenu(false); onSignIn(); }} />
+              </>
+            ) : (
+              <>
+                <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>{user?.email || user?.name}</div>
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="👤" label={TC.myProfile} onClick={() => { setShowMenu(false); onGoProfile(); }} />
+                <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="🚪" label={TC.signOut} onClick={() => { setShowMenu(false); logout(); }} danger />
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: isMobile ? "16px 14px" : "0 18px 24px" }}>
+
+        {/* ── MOBILE: Big current price card ── */}
+        {energyType === "electricity" && isMobile && mwh != null && (
+          <div style={{ background: `linear-gradient(135deg, ${getPriceColor(mwh)}18, ${getPriceColor(mwh)}08)`, border: `1px solid ${getPriceColor(mwh)}33`, borderRadius: 20, padding: "20px 20px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 11, color: "#556", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>Right Now · EPEX Spot</div>
+              <div style={{ fontSize: 44, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(1)}</div>
+              <div style={{ fontSize: 12, color: "#667", marginTop: 4 }}>per MWh · {lbl?.emoji} {lbl?.text}</div>
+              {retailKwh && <div style={{ fontSize: 12, color: "#556", marginTop: 2 }}>{supplier}: €{retailKwh.toFixed(4)}/kWh</div>}
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, color: "#445", marginBottom: 8 }}>{new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>
+              {lastFetched && <div style={{ fontSize: 10, color: "#334" }}>Updated {lastFetched.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>}
+            </div>
+          </div>
+        )}
+
+        {/* ── MOBILE: Min/Max cards ── */}
+        {energyType === "electricity" && isMobile && stats?.today && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+            {[
+              { label: TC.min, value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
+              { label: TC.avg, value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
+              { label: TC.max, value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
+              { label: T.negHrs, value: stats.today.negative_hours || 0, color: C.cyan },
+            ].map(s => (
+              <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px 8px", textAlign: "center" }}>
+                <div style={{ fontSize: 9, color: "#445", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>{s.label}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>{s.value}</div>
+                {s.sub && <div style={{ fontSize: 9, color: "#334", marginTop: 2 }}>{s.sub}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── DESKTOP: Stats row ── */}
+        {energyType === "electricity" && !isMobile && !loading && !error && stats?.today && (
+          <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+            {[
+              { label: T.todayMin, value: `€${stats.today.min?.toFixed(0)}`, color: C.green, sub: todayMin?.hour?.hour_label },
+              { label: T.todayAvg, value: `€${stats.today.avg?.toFixed(0)}`, color: C.yellow },
+              { label: T.todayMax, value: `€${stats.today.max?.toFixed(0)}`, color: C.red, sub: todayMax?.hour?.hour_label },
+              { label: T.negativeHrs, value: stats.today.negative_hours || 0, color: C.cyan },
+            ].map(s => (
+              <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 16px", flex: 1, minWidth: 100 }}>
+                <div style={{ fontSize: 10, color: "#556", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.5px" }}>{s.label}{s.sub ? ` · ${s.sub}` : ""}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>{s.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+{energyType === "electricity" && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 10, color: "#445", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>{T.yourSupplier}</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {SUPPLIERS.map(s => (
+              <button key={s.name} onClick={() => changeSupplier(s.name)} style={{ padding: isMobile ? "6px 11px" : "7px 14px", borderRadius: 30, fontSize: isMobile ? 11 : 12, fontWeight: 600, cursor: "pointer", border: supplier === s.name ? `1px solid ${s.color}` : `1px solid ${C.border}`, background: supplier === s.name ? `${s.color}22` : C.card, color: supplier === s.name ? s.color : "#778", transition: "all 0.15s" }}>
+                {s.name}
+              </button>
+            ))}
+          </div>
+        </div>
+        )}
+
+        {/* ── Gas dashboard ── */}
+        {energyType === "gas" && (
+          <GasTab user={user} isGuest={isGuest} onSignIn={onSignIn} isMobile={isMobile} mobileTab={tab} setMobileTab={setTab} />
+        )}
+
+        {/* ── DESKTOP Tabs ── */}
+        {energyType === "electricity" && !isMobile && (
+          <div style={{ display: "flex", gap: 4, marginBottom: 16, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 4, width: "fit-content", flexWrap: "wrap" }}>
+            {[...NAV_ITEMS, { id: "history", icon: "📅", label: TC.history }].map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "7px 13px", borderRadius: 9, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.15s", background: tab === t.id ? "rgba(255,255,255,0.1)" : "transparent", color: tab === t.id ? "#fff" : "#667" }}>
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── Electricity content ── */}
+        {/* ── MOBILE Tab header for current tab ── */}
+        {energyType === "electricity" && isMobile && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>
+              {tab === "today" && "📈 Today's Prices"}
+              {tab === "tomorrow" && "⏩ Tomorrow's Prices"}
+              {tab === "cheapest" && "💚 Best Hours"}
+              {tab === "compare" && "🏢 Suppliers"}
+              {tab === "alerts" && "🔔 Alerts"}
+          {tab === "history" && "📅 History"}
+            </div>
+            {energyType === "electricity" && (tab === "today" || tab === "tomorrow") && (
+              <div style={{ display: "flex", background: C.card, borderRadius: 8, padding: 3, gap: 2 }}>
+                {["graph", "table"].map(v => (
+                  <button key={v} onClick={() => setViewMode(v)} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", background: viewMode === v ? "rgba(255,255,255,0.12)" : "transparent", color: viewMode === v ? "#fff" : "#556" }}>
+                    {v === "graph" ? `📊 ${T.graph}` : `📋 ${T.table}`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Chart + Table ── */}
+        {energyType === "electricity" && (tab === "today" || tab === "tomorrow") && (
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? "16px 8px 12px" : "20px 8px 12px", marginBottom: 16 }}>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: "50px 0", color: "#556" }}>{T.loadingPrices}</div>
+            ) : error ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <div style={{ color: C.red, marginBottom: 12 }}>{error}</div>
+                <button onClick={refetch} style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: C.red, borderRadius: 10, padding: "8px 20px", cursor: "pointer" }}>Retry</button>
+              </div>
+            ) : chartData.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px", color: "#556" }}>
+                {tab === "tomorrow" ? <><div style={{ fontSize: 28, marginBottom: 10 }}>⏰</div><div style={{ fontSize: 14, color: "#778", marginBottom: 6 }}>Tomorrow's prices not yet published</div><div style={{ fontSize: 12, color: "#445" }}>EPEX Spot publishes at <strong style={{ color: C.teal }}>13:00 CET</strong> daily</div></> : TC.noData}
+              </div>
+            ) : (
+              <>
+                {/* Desktop graph/table toggle */}
+                {!isMobile && (
+                  <div style={{ paddingLeft: 14, marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: 14 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700 }}>{tab === "today" ? T.todayHourlyPrices : T.tomorrowHourlyPrices}</div>
+                      <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>{T.epexUpdated} {lastFetched && lastFetched.toLocaleTimeString("en-GB")}</div>
+                    </div>
+                    <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3, gap: 2 }}>
+                      {["graph", "table"].map(v => (
+                        <button key={v} onClick={() => setViewMode(v)} style={{ padding: "5px 14px", borderRadius: 6, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: viewMode === v ? "rgba(255,255,255,0.1)" : "transparent", color: viewMode === v ? "#fff" : "#556" }}>
+                          {v === "graph" ? `📊 ${T.graph}` : `📋 ${T.table}`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {viewMode === "graph" ? (
+                  <ResponsiveContainer width="100%" height={isMobile ? 220 : 280}>
+                    <AreaChart data={chartData.map(p => ({ ...p, price: p.price_eur_mwh }))} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#00C896" stopOpacity={0.25} />
+                          <stop offset="95%" stopColor="#00C896" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="hour_label" tick={{ fill: "#445", fontSize: isMobile ? 9 : 11 }} tickLine={false} interval={isMobile ? 3 : Math.max(0, Math.floor(chartData.length / 8) - 1)} />
+                      <YAxis tick={{ fill: "#445", fontSize: isMobile ? 9 : 11 }} tickLine={false} axisLine={false} tickFormatter={v => `€${v}`} domain={[dataMin => Math.floor(dataMin * 0.9), dataMax => Math.ceil(dataMax * 1.05)]} width={40} />
+                      <Tooltip content={<PriceTooltip supplier={supplier} />} />
+                      <ReferenceLine y={0} stroke="rgba(0,229,255,0.25)" strokeDasharray="4 4" />
+                      <ReferenceLine y={alertThreshold} stroke={C.yellow} strokeDasharray="4 4" label={{ value: "⚠ Alert", fill: C.yellow, fontSize: 9, position: "insideTopRight" }} />
+                      {tab === "today" && current && (
+                        <ReferenceLine x={`${String(current.hour ?? new Date().getHours()).padStart(2, "0")}:00`} stroke="rgba(255,255,255,0.2)" strokeWidth={2} label={{ value: TC.now, fill: "#fff", fontSize: 9, position: "top" }} />
+                      )}
+                      <Area type="monotone" dataKey="price" stroke="#00C896" strokeWidth={2} fill="url(#grad)"
+                        dot={props => props.payload?.is_current
+                          ? <circle key={props.key} cx={props.cx} cy={props.cy} r={6} fill={getPriceColor(props.payload.price_eur_mwh)} stroke="#fff" strokeWidth={2} />
+                          : <g key={props.key} />}
+                        activeDot={{ r: 5, fill: "#00C896" }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  /* TABLE VIEW */
+                  <div style={{ overflowY: "auto", maxHeight: isMobile ? 380 : 440, padding: "0 8px" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 12 : 13 }}>
+                      <thead>
+                        <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+                          {[ TC.hour, "€/MWh", `${supplier} €/kWh`, TC.status].map(h => (
+                            <th key={h} style={{ padding: "8px 10px", textAlign: h === TC.hour ? "left" : "right", color: "#445", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* Deduplicate to one row per hour */}
+                        {Object.values(chartData.reduce((acc, row) => {
+                          const key = row.hour_label;
+                          if (!acc[key]) acc[key] = row;
+                          return acc;
+                        }, {})).map((row, i) => {
+                          const rowMwh = row.price_eur_mwh;
+                          const rowLbl = getPriceLabel(rowMwh, PL);
+                          const rowCol = getPriceColor(rowMwh);
+                          const isNow = row.is_current;
+                          return (
+                            <tr key={i} style={{ borderBottom: `1px solid rgba(255,255,255,0.03)`, background: isNow ? `${rowCol}10` : "transparent" }}>
+                              <td style={{ padding: "9px 10px", color: isNow ? "#fff" : "#778", fontWeight: isNow ? 700 : 400 }}>
+                                {row.hour_label} {isNow && <span style={{ fontSize: 9, color: C.green, background: "rgba(0,200,150,0.15)", borderRadius: 4, padding: "1px 5px", marginLeft: 4 }}>NOW</span>}
+                              </td>
+                              <td style={{ padding: "9px 10px", textAlign: "right", color: rowCol, fontWeight: 700, fontFamily: "monospace" }}>€{rowMwh.toFixed(1)}</td>
+                              <td style={{ padding: "9px 10px", textAlign: "right", color: "#778", fontFamily: "monospace" }}>{sup ? `€${getSupplierPrice(rowMwh/1000, sup).toFixed(4)}` : "—"}</td>
+                              <td style={{ padding: "9px 10px", textAlign: "right", fontSize: isMobile ? 10 : 11 }}>{rowLbl.emoji} {rowLbl.text}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── History ── */}
+          {energyType === "electricity" && tab === "history" && (
+          <div style={{ marginBottom: 16 }}>
+            {historyLoading ? <div style={{ textAlign:"center", padding:"60px 0", color:"#556" }}>⚡ Loading history…</div>
+            : history.length === 0 ? <div style={{ textAlign:"center", padding:"60px 0", color:"#556" }}>No history data</div>
+            : (
+              <>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: "16px 8px 12px", marginBottom: 12 }}>
+                  <div style={{ paddingLeft: 14, marginBottom: 12 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>{T.sevenDayTitle || "7-Day Average Prices"}</div>
+                    <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>{T.sevenDaySub || "Tap a day for hourly detail"}</div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <BarChart data={history} margin={{ top:0, right:16, left:0, bottom:0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="label" tick={{ fill:"#445", fontSize:10 }} tickLine={false} />
+                      <YAxis tick={{ fill:"#445", fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={v=>`€${v}`} width={36} />
+                      <Tooltip content={({active,payload,label})=>{
+                        if(!active||!payload?.length) return null;
+                        const d = payload[0]?.payload;
+                        return <div style={{ background:"rgba(8,12,22,0.97)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"10px 14px" }}><div style={{ color:"#aaa", fontSize:11, marginBottom:3 }}>{label}</div><div style={{ color:C.green, fontSize:16, fontWeight:800 }}>Avg €{d?.avg}/MWh</div><div style={{ color:"#556", fontSize:11, marginTop:3 }}>Min €{d?.min} · Max €{d?.max}</div></div>;
+                      }} />
+                      <Bar dataKey="avg" radius={[5,5,0,0]} cursor="pointer" onClick={d => setSelectedDay(selectedDay?.date===d.date?null:d)}>
+                        {history.map((d,i)=><Cell key={i} fill={selectedDay?.date===d.date?C.teal:d.avg<80?C.green:d.avg<130?C.yellow:C.red} opacity={selectedDay&&selectedDay.date!==d.date?0.35:1} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                {selectedDay && (
+                  <div style={{ background: C.card, border: `1px solid rgba(13,148,136,0.3)`, borderRadius: 20, padding: "16px 8px 12px" }}>
+                    <div style={{ paddingLeft:14, marginBottom:12, display:"flex", justifyContent:"space-between", alignItems:"center", paddingRight:14 }}>
+                      <div><div style={{ fontSize:14, fontWeight:700 }}>{selectedDay.label}</div><div style={{ fontSize:10, color:"#556", marginTop:2 }}>Min €{selectedDay.min} · Avg €{selectedDay.avg} · Max €{selectedDay.max}</div></div>
+                      <button onClick={()=>setSelectedDay(null)} style={{ background:"rgba(255,255,255,0.05)", border:`1px solid ${C.border}`, color:"#778", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontSize:11 }}>✕</button>
+                    </div>
+                    <ResponsiveContainer width="100%" height={180}>
+                      <AreaChart data={selectedDay.prices.map(p=>({...p,price:p.price_eur_mwh}))} margin={{top:8,right:16,left:0,bottom:0}}>
+                        <defs><linearGradient id="gradH" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.teal} stopOpacity={0.25}/><stop offset="95%" stopColor={C.teal} stopOpacity={0}/></linearGradient></defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                        <XAxis dataKey="hour_label" tick={{fill:"#445",fontSize:9}} tickLine={false} interval={3} />
+                        <YAxis tick={{fill:"#445",fontSize:9}} tickLine={false} axisLine={false} tickFormatter={v=>`€${v}`} domain={[dataMin => Math.floor(dataMin * 0.9), dataMax => Math.ceil(dataMax * 1.05)]} width={36} />
+                        <Tooltip content={<PriceTooltip supplier={supplier} />} />
+                        <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" />
+                        <Area type="monotone" dataKey="price" stroke={C.teal} strokeWidth={2} fill="url(#gradH)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── Best Hours ── */}
+        {energyType === "electricity" && tab === "cheapest" && (
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{T.cheapestHours}</div>
+            <div style={{ fontSize: 12, color: "#556", marginBottom: 16 }}>{T.cheapestSub}</div>
+            {cheapest.length === 0 ? <div style={{ color:"#556", textAlign:"center", padding:"30px 0" }}>Loading…</div>
+            : cheapest.map((h, i) => {
+              const ts = new Date(h.timestamp);
+              const lbl_ = getPriceLabel(h.price_eur_mwh, PL);
+              return (
+                <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 14px", marginBottom:8, background:"rgba(0,200,150,0.04)", border:"1px solid rgba(0,200,150,0.12)", borderRadius:14 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <div style={{ width:30, height:30, borderRadius:"50%", background:`rgba(0,200,150,${0.25-i*0.04})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:900, color:C.green }}>{i+1}</div>
+                    <div>
+                      <div style={{ fontWeight:700, fontSize:15 }}>{ts.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} – {new Date(ts.getTime()+3600000).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>
+                      <div style={{ fontSize:10, color:"#445" }}>{ts.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign:"right" }}>
+                    <div style={{ color:getPriceColor(h.price_eur_mwh), fontWeight:800, fontSize:16, fontFamily:"monospace" }}>€{h.price_eur_mwh.toFixed(1)}</div>
+                    <div style={{ fontSize:10, color:"#556" }}>{lbl_.emoji} {lbl_.text}</div>
+                  </div>
+                </div>
+              );
+            })}
+            {stats?.today && (
+              <div style={{ marginTop:12, padding:"10px 14px", background:"rgba(0,130,255,0.05)", border:"1px solid rgba(0,130,255,0.12)", borderRadius:12, fontSize:12, color:"#778" }}>
+                {T.savingsTip} <strong style={{color:C.green}}>€{(((stats.today.max-stats.today.min)/1000)*2).toFixed(3)}</strong> today
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Compare ── */}
+        {energyType === "electricity" && tab === "compare" && (
+          <SupplierCompare currentMwh={mwh} isMobile={isMobile} energyType={energyType} />
+        )}
+
+        {/* ── Alerts ── */}
+        {energyType === "electricity" && tab === "alerts" && (
+          <AlertsTab
+            alertActive={alertActive} alertThreshold={alertThreshold}
+            saveAlertThreshold={saveAlertThreshold} toggleAlert={toggleAlert}
+            isGuest={isGuest} onSignIn={() => setShowAuth(true)}
+            user={user} updatePreferences={updatePreferences}
+            C={C} isMobile={isMobile}
+          />
+        )}
+
+        {/* Footer */}
+        {energyType === "electricity" && !isMobile && (
+          <div style={{ marginTop:20, display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:8, fontSize:11, color:"#334" }}>
+            <span>Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E</span>
+            <span>Prices refresh every 15 min · Not financial advice</span>
+          </div>
+        )}
+      </div>
+
+      {/* ── MOBILE BOTTOM NAV ── */}
+      {isMobile && (
+        <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:50, background:"rgba(6,11,20,0.97)", backdropFilter:"blur(20px)", borderTop:`1px solid ${C.border}`, display:"flex", padding:"8px 0 12px" }}>
+          {energyType === "electricity" ? (
+            [...NAV_ITEMS, { id:"history", icon:"📅", label:TC.history }].map(t => (
+              <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? C.green : "#445" }}>
+                <span style={{ fontSize:18 }}>{t.icon}</span>
+                <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
+                {tab===t.id && <div style={{ width:16, height:2, background:C.green, borderRadius:2 }} />}
+              </button>
+            ))
+          ) : (
+            [{id:"today",icon:"🔥",label:TC.today},{id:"tomorrow",icon:"⏩",label:TC.tomorrow},{id:"week",icon:"📅",label:"7 Days"},{id:"suppliers",icon:"🏢",label:TC.suppliers},{id:"alerts",icon:"🔔",label:TC.alerts}].map(t => (
+              <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"6px 0", color: tab===t.id ? "#F97316" : "#445" }}>
+                <span style={{ fontSize:18 }}>{t.icon}</span>
+                <span style={{ fontSize:9, fontWeight:600, letterSpacing:"0.3px" }}>{t.label}</span>
+                {tab===t.id && <div style={{ width:16, height:2, background:"#F97316", borderRadius:2 }} />}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+
+      <style>{`* { box-sizing: border-box; } button { font-family: inherit; } ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }`}</style>
+    </div>
+  );
+}
+
+function AlertsTab({ alertActive, alertThreshold, saveAlertThreshold, toggleAlert, user, updatePreferences, C, isMobile, isGuest, onSignIn }) {
+  const { tSection } = useLanguage();
+  const T  = tSection("alerts");
+  const TC = tSection("common");
+  const AL = T;
+
+  // Always use account email - read only if logged in
+  const accountEmail = user?.preferences?.alertEmail || user?.email || "";
+  const [threshold, setThreshold] = useState(alertThreshold || 80);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Guest — show login prompt
+  if (isGuest) {
+    return (
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24, textAlign: "center" }}>
+        <div style={{ fontSize: 28, marginBottom: 12 }}>🔔</div>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>{AL.title || "Price Alerts"}</div>
+        <div style={{ fontSize: 13, color: "#556", marginBottom: 20 }}>
+          {AL.loginRequired || "Sign in to receive email alerts when prices drop below your threshold."}
+        </div>
+        <button onClick={onSignIn} style={{ padding: "10px 28px", borderRadius: 30, fontWeight: 700, fontSize: 14, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer" }}>
+          {TC.signIn || "Sign in"} →
+        </button>
+      </div>
+    );
+  }
+
+  const handleToggle = async () => {
+    setSaving(true);
+    try { await toggleAlert(); setSaved(true); setTimeout(() => setSaved(false), 2000); }
+    catch (e) { console.error(e); }
+    setSaving(false);
+  };
+
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{`🔔 ${AL.title}`}</div>
+      <div style={{ fontSize: 12, color: "#556", marginBottom: 20 }}>{AL.subtitle}</div>
+
+      {/* Threshold slider */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 13, color: "#aaa", marginBottom: 10 }}>
+          {T.alertWhenBelow} <strong style={{ color: C.yellow }}>€{alertThreshold}/MWh</strong>
+        </div>
+        <input type="range" min={-20} max={200} step={5} value={alertThreshold}
+          onChange={e => saveAlertThreshold(+e.target.value)}
+          style={{ width: "100%", accentColor: C.yellow, cursor: "pointer" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#445", marginTop: 4 }}>
+          <span>-2 cent</span><span>20 cent/kWh</span>
+        </div>
+      </div>
+
+      {/* Email — read only, from account */}
+      <div style={{ marginBottom: 20, padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`, borderRadius: 10 }}>
+        <div style={{ fontSize: 11, color: "#556", marginBottom: 4 }}>📧 {AL.emailLabel || "Alert email"}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#E2E8F0" }}>{accountEmail || "—"}</div>
+        <div style={{ fontSize: 11, color: "#445", marginTop: 4 }}>{AL.emailFromAccount || "Email from your account"}</div>
+      </div>
+
+      {/* Enable/disable toggle */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", background: alertActive ? "rgba(0,200,150,0.08)" : C.card, border: `1px solid ${alertActive ? "rgba(0,200,150,0.3)" : C.border}`, borderRadius: 14 }}>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>Alert {alertActive ? "🟢 Active" : "⚫ Inactive"}</div>
+          <div style={{ fontSize: 11, color: "#445", marginTop: 2 }}>
+            {alertActive ? `Monitoring · ${accountEmail}` : (AL.enableToReceive || "Enable to receive alerts")}
+          </div>
+          {saved && <div style={{ fontSize: 11, color: C.green, marginTop: 2 }}>✓ Saved</div>}
+        </div>
+        <button onClick={handleToggle} disabled={saving} style={{
+          padding: "8px 18px", borderRadius: 30, fontWeight: 700, fontSize: 13,
+          border: "none", cursor: "pointer",
+          background: alertActive ? "rgba(239,68,68,0.2)" : "rgba(0,200,150,0.2)",
+          color: alertActive ? C.red : C.green,
+        }}>
+          {saving ? "…" : alertActive ? TC.disable : TC.enable}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DropMenu({ onProfile, onLogout, onPrivacy }) {
+  const { tSection } = useLanguage();
+  const TC = tSection("common");
+  const L  = tSection("landing");
+  return (
+    <div style={{ position:"absolute", right:0, top:"calc(100% + 8px)", zIndex:100, background:"#0D1626", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:8, minWidth:180, boxShadow:"0 8px 32px rgba(0,0,0,0.4)" }}>
+      <MenuBtn icon="👤" label={TC.myProfile} onClick={onProfile} />
+      <MenuBtn icon="🚗" label={L.footerEvLink || "EV Charging"} onClick={() => window.location.href = "/ev-charging-belgium"} />
+      <MenuBtn icon="🗺️" label={L.stationsLink || "Charging Stations"} onClick={() => window.location.href = "/ev-charging-stations-belgium"} />
+      <MenuBtn icon="📡" label="API Docs" onClick={() => window.location.href = "/api-docs"} />
+      <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={onPrivacy} />
+      <div style={{ height:1, background:"rgba(255,255,255,0.07)", margin:"6px 0" }} />
+      <MenuBtn icon="🚪" label={TC.signOut} onClick={onLogout} danger />
+    </div>
+  );
+}
+
+function MenuBtn({ icon, label, onClick, danger }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button onClick={onClick} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
+      style={{ width:"100%", padding:"9px 14px", borderRadius:10, textAlign:"left", background:hover?(danger?"rgba(239,68,68,0.08)":"rgba(255,255,255,0.06)"):"transparent", border:"none", color:danger?"#EF4444":"#E8EDF5", fontSize:13, fontWeight:600, cursor:"pointer", display:"flex", gap:8, alignItems:"center" }}>
+      {icon} {label}
+    </button>
+  );
+}
