@@ -1,8 +1,8 @@
 /**
  * pages/Dashboard.jsx — SmartPrice.be
  * Mobile-first redesign with Fortum-style layout + Graph/Table toggle
- * Bottom navigation on mobile, full header on desktop
- hello*/
+ * Bottom navigation on mobile, full header on desktop 
+ */
 
 import { useState, useEffect, useCallback } from "react";
 import {
