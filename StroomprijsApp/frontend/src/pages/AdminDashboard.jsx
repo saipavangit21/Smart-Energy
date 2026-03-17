@@ -1,7 +1,7 @@
 /**
  * pages/AdminDashboard.jsx
  * Admin dashboard — analytics + goal tracker + registered user list
- */
+ hello*/
 
 import { useState, useEffect } from "react";
 
@@ -112,7 +112,10 @@ export default function AdminDashboard() {
   const [copied,    setCopied]    = useState("");
   const [userSearch, setUserSearch] = useState("");
 
-  const hdrs = (s) => ({ "Content-Type": "application/json", "x-admin-secret": s || secret });
+  const hdrs = (s) => {
+    const key = s || secret || localStorage.getItem("sp_admin_secret") || SECRET;
+    return { "Content-Type": "application/json", "x-admin-secret": key };
+  };
 
   const load = async (s) => {
     setLoading(true);
@@ -145,7 +148,10 @@ export default function AdminDashboard() {
   // Auto-login if VITE_ADMIN_SECRET or saved secret exists
   useEffect(() => {
     const saved = SECRET || localStorage.getItem("sp_admin_secret");
-    if (saved) load(saved);
+    if (saved) {
+      setSecret(saved);
+      load(saved);
+    }
   }, []);
 
   // Reload when period changes — only if already authed

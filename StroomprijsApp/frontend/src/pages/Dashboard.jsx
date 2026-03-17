@@ -2,7 +2,7 @@
  * pages/Dashboard.jsx — SmartPrice.be
  * Mobile-first redesign with Fortum-style layout + Graph/Table toggle
  * Bottom navigation on mobile, full header on desktop
- */
+ hello*/
 
 import { useState, useEffect, useCallback } from "react";
 import {
