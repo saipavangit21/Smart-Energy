@@ -153,6 +153,14 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
   const T = CONTENT[lang] || CONTENT.en;
 
   const mapRef    = useRef(null);
+
+  // Inject Leaflet CSS fix for map container
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `.leaflet-container { background: #0a1220; } .leaflet-tile { filter: brightness(0.7) saturate(0.8); }`;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
   const leafletRef = useRef(null);
   const markersRef = useRef([]);
 
@@ -162,6 +170,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
   const [loading,   setLoading]   = useState(true);
   const [mapReady,  setMapReady]  = useState(false);
   const [selected,  setSelected]  = useState(null);
+  const [error,     setError]     = useState(null);
   const [filters,   setFilters]   = useState({ fast: false, type2: false, ccs: false });
 
   // Load EPEX price
@@ -175,13 +184,14 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Load CSS first, then JS
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-    document.head.appendChild(link);
-
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    link.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+    link.onload = () => {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    script.crossOrigin = "anonymous";
     script.onload = () => {
       const L = window.L;
       const map = L.map(mapRef.current, { center: [50.85, 4.35], zoom: 8, zoomControl: true });
@@ -192,7 +202,9 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
       leafletRef.current = map;
       setMapReady(true);
     };
-    document.head.appendChild(script);
+      document.head.appendChild(script);
+    };
+    document.head.appendChild(link);
     return () => { if (leafletRef.current) leafletRef.current.remove(); };
   }, []);
 
@@ -202,11 +214,19 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
       .then(r => r.json())
       .then(data => {
         const list = data.stations || [];
-        setStations(list);
-        setFiltered(list);
+        if (list.length > 0) {
+          setStations(list);
+          setFiltered(list);
+        } else {
+          setError("No stations returned from API");
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(e => {
+        console.error("EV stations fetch failed:", e);
+        setLoading(false);
+        setError("Failed to load stations — " + e.message);
+      });
   }, []);
 
   // Apply filters
@@ -278,7 +298,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
           <span style={{ fontSize: 9, color: C.teal, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>● LIVE</span>
         </a>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <a href="/ev-charging-belgium" style={{ fontSize: 12, color: C.muted, textDecoration: "none", padding: "6px 12px" }}>⏰ Best times</a>
+          <button onClick={() => window.location.href="/ev-charging-belgium"} style={{ fontSize: 12, color: C.muted, background: "none", border: "none", cursor: "pointer", padding: "6px 12px" }}>⏰ Best times</button>
           <LangSwitcher />
           <a href="/" onClick={e => { e.preventDefault(); onGetStarted(); }} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, color: "#fff", textDecoration: "none" }}>Dashboard →</a>
         </div>
@@ -350,9 +370,9 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
               <div style={{ fontSize: 12, color: C.muted }}>{T.mapDesc}</div>
             </div>
             {!mapReady && (
-              <div style={{ height: 500, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted }}>{T.loadingMap}</div>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 500, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, zIndex: 10, background: C.card2 }}>{T.loadingMap}</div>
             )}
-            <div ref={mapRef} style={{ height: 500, width: "100%", display: mapReady ? "block" : "none" }} />
+            <div ref={mapRef} id="smartprice-ev-map" style={{ height: 500, width: "100%", minHeight: 500 }} />
           </div>
 
           {/* Station detail panel */}
@@ -377,7 +397,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
                 <div style={{ fontSize: 13, color: col, fontWeight: 700 }}>{getPriceAdvice(mwh, lang)}</div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
                   {mwh != null ? `€${mwh.toFixed(1)}/MWh` : "—"}
-                  {" · "}<a href="/ev-charging-belgium" style={{ color: C.teal }}>See all cheap hours →</a>
+                  {" · "}<button onClick={() => window.location.href="/ev-charging-belgium"} style={{ color: C.teal, background: "none", border: "none", cursor: "pointer", fontSize: 11, padding: 0 }}>See all cheap hours →</button>
                 </div>
               </div>
 
