@@ -2,7 +2,7 @@
  * pages/Dashboard.jsx — SmartPrice.be
  * Mobile-first redesign with Fortum-style layout + Graph/Table toggle
  * Bottom navigation on mobile, full header on desktop
- */
+ hello*/
 
 import { useState, useEffect, useCallback } from "react";
 import {
@@ -907,6 +907,7 @@ function DropMenu({ onProfile, onLogout, onPrivacy }) {
     <div style={{ position:"absolute", right:0, top:"calc(100% + 8px)", zIndex:100, background:"#0D1626", border:"1px solid rgba(255,255,255,0.1)", borderRadius:14, padding:8, minWidth:180, boxShadow:"0 8px 32px rgba(0,0,0,0.4)" }}>
       <MenuBtn icon="👤" label={TC.myProfile} onClick={onProfile} />
       <MenuBtn icon="🚗" label={L.footerEvLink || "EV Charging"} onClick={() => window.location.href = "/ev-charging-belgium"} />
+      <MenuBtn icon="🗺️" label={L.stationsLink || "Charging Stations"} onClick={() => window.location.href = "/ev-charging-stations-belgium"} />
       <MenuBtn icon="📡" label="API Docs" onClick={() => window.location.href = "/api-docs"} />
       <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={onPrivacy} />
       <div style={{ height:1, background:"rgba(255,255,255,0.07)", margin:"6px 0" }} />

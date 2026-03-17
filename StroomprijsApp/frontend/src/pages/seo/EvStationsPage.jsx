@@ -153,14 +153,6 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
   const T = CONTENT[lang] || CONTENT.en;
 
   const mapRef    = useRef(null);
-
-  // Inject Leaflet CSS fix for map container
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.textContent = `.leaflet-container { background: #0a1220; } .leaflet-tile { filter: brightness(0.7) saturate(0.8); }`;
-    document.head.appendChild(style);
-    return () => style.remove();
-  }, []);
   const leafletRef = useRef(null);
   const markersRef = useRef([]);
 
@@ -185,12 +177,11 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
 
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
     document.head.appendChild(link);
 
     const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
-    script.crossOrigin = "anonymous";
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     script.onload = () => {
       const L = window.L;
       const map = L.map(mapRef.current, { center: [50.85, 4.35], zoom: 8, zoomControl: true });
@@ -359,9 +350,9 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
               <div style={{ fontSize: 12, color: C.muted }}>{T.mapDesc}</div>
             </div>
             {!mapReady && (
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 500, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, zIndex: 10, background: C.card2 }}>{T.loadingMap}</div>
+              <div style={{ height: 500, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted }}>{T.loadingMap}</div>
             )}
-            <div ref={mapRef} id="smartprice-ev-map" style={{ height: 500, width: "100%", minHeight: 500 }} />
+            <div ref={mapRef} style={{ height: 500, width: "100%", display: mapReady ? "block" : "none" }} />
           </div>
 
           {/* Station detail panel */}

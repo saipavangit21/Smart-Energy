@@ -317,10 +317,31 @@ function calcConsumptionFromAppliances(inputs, energyType = "electricity") {
 
 // Tier 1: VREG open data — official Flemish regulator tariff database
 async function scrapeVREG() {
-  // VREG API now requires authentication (401) — disabled until API key obtained
-  // Contact: https://www.vreg.be/nl/contact for API access
-  console.log("[VREG] Skipped — API requires authentication. Using seed data.");
-  return {};
+  const updates = {};
+  try {
+    // VREG publishes a public JSON/XML API for approved tariffs
+    const urls = [
+      "https://vtest.vreg.be/api/products?productType=ELECTRICITY&region=FLEMISH",
+      "https://vtest.vreg.be/api/products?productType=GAS&region=FLEMISH",
+    ];
+    for (const url of urls) {
+      const energyType = url.includes("GAS") ? "gas" : "electricity";
+      const { data } = await axios.get(url, { headers: { "User-Agent": SCRAPE_UA, "Accept": "application/json" }, timeout: 10000 });
+      const products = Array.isArray(data) ? data : (data.products || data.items || []);
+      for (const p of products) {
+        const name  = (p.supplier || p.supplierName || p.name || "").toLowerCase().replace(/\s+/g, "");
+        const price = parseFloat(p.energyRate || p.rate || p.price || 0);
+        if (name && price > 0.03 && price < 0.5) {
+          const key = `${name}_${energyType}`;
+          updates[key] = { rate: price, type: p.contractType || "variable", name: p.productName || p.name };
+        }
+      }
+    }
+    console.log(`[VREG] Got ${Object.keys(updates).length} tariff entries`);
+  } catch (e) {
+    console.warn("[VREG] scrape failed:", e.message);
+  }
+  return updates;
 }
 
 // Tier 2: CallMePower — Belgian comparison site with clean HTML tables
@@ -659,6 +680,24 @@ router.get("/scrape", async (req, res) => {
     res.json({ success: true, ...result });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+
+// ── EV Charging Stations proxy (Open Charge Map) ──────────────
+router.get("/ev-stations", async (req, res) => {
+  try {
+    const { lat = 50.85, lng = 4.35, distance = 100, maxresults = 500 } = req.query;
+    const url = `https://api.openchargemap.io/v3/poi?countrycode=BE&maxresults=${maxresults}&compact=true&verbose=false&output=json&latitude=${lat}&longitude=${lng}&distance=${distance}&distanceunit=KM`;
+    const response = await axios.get(url, {
+      headers: { "User-Agent": "SmartPrice.be/1.0 (hello@smartprice.be)" },
+      timeout: 15000,
+    });
+    res.set("Cache-Control", "public, max-age=3600"); // cache 1 hour
+    res.json({ success: true, stations: response.data || [], count: (response.data || []).length });
+  } catch (e) {
+    console.error("[ev-stations] fetch failed:", e.message);
+    res.status(500).json({ success: false, error: e.message, stations: [] });
   }
 });
 

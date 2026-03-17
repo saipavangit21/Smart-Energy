@@ -26,6 +26,7 @@ import AdminDashboard    from "./pages/AdminDashboard";
 import EpexBelgiumPage   from "./pages/seo/EpexBelgiumPage";
 import CheapestHoursPage from "./pages/seo/CheapestHoursPage";
 import EvChargingPage    from "./pages/seo/EvChargingPage";
+import EvStationsPage   from "./pages/seo/EvStationsPage";
 import ApiPage           from "./pages/ApiPage";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
@@ -78,13 +79,15 @@ export default function App() {
 
   // SEO pages
   if (path === "/epex-price-belgium" || path === "/belpex-price-today")
-    return <EpexBelgiumPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
+    return <EpexBelgiumPage onGetStarted={() => navigate("/")} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
   if (path === "/cheapest-electricity-hours-belgium")
-    return <CheapestHoursPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
+    return <CheapestHoursPage onGetStarted={() => navigate("/")} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
   if (path === "/api-docs")
     return <ApiPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} />;
+  if (path === "/ev-charging-stations-belgium")
+    return <EvStationsPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
   if (path === "/ev-charging-belgium")
-    return <EvChargingPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
+    return <EvChargingPage onGetStarted={() => navigate("/")} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   // ── Loading spinner ──────────────────────────────────────────

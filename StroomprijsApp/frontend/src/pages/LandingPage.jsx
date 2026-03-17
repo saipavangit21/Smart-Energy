@@ -207,9 +207,12 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                   <span key={t} style={{ fontSize: 10, background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.25)", color: "#00C896", borderRadius: 20, padding: "3px 9px", fontWeight: 600 }}>{t}</span>
                 ))}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ color: "#00C896", fontWeight: 700, fontSize: 14 }}>{L.evSectionCta || "See cheapest charging hours →"}</div>
-                <div style={{ fontSize: 11, color: "#3A4D63" }}>{L.evSectionSub || "Free · No account needed"}</div>
+                <a href="/ev-charging-stations-belgium" onClick={e => { e.stopPropagation(); window.location.href="/ev-charging-stations-belgium"; }}
+                  style={{ fontSize: 12, color: "#0D9488", textDecoration: "none", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "4px 12px", fontWeight: 600 }}>
+                  🗺️ Find stations →
+                </a>
               </div>
             </div>
             {/* Mini price preview */}
