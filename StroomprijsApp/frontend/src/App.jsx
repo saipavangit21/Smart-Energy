@@ -85,7 +85,7 @@ export default function App() {
   if (path === "/api-docs")
     return <ApiPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} />;
   if (path === "/ev-charging-stations-belgium")
-    return <EvStationsPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
+    return <EvStationsPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} onNavigate={navigate} />;
   if (path === "/ev-charging-belgium")
     return <EvChargingPage onGetStarted={() => navigate("/")} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
