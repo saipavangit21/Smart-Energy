@@ -688,9 +688,13 @@ router.get("/scrape", async (req, res) => {
 router.get("/ev-stations", async (req, res) => {
   try {
     const { lat = 50.85, lng = 4.35, distance = 100, maxresults = 500 } = req.query;
+    const apiKey = process.env.OCM_API_KEY || "";
     const url = `https://api.openchargemap.io/v3/poi?countrycode=BE&maxresults=${maxresults}&compact=true&verbose=false&output=json&latitude=${lat}&longitude=${lng}&distance=${distance}&distanceunit=KM`;
     const response = await axios.get(url, {
-      headers: { "User-Agent": "SmartPrice.be/1.0 (hello@smartprice.be)" },
+      headers: {
+        "User-Agent": "SmartPrice.be/1.0 (hello@smartprice.be)",
+        ...(apiKey ? { "X-API-Key": apiKey } : {}),
+      },
       timeout: 15000,
     });
     res.set("Cache-Control", "public, max-age=3600"); // cache 1 hour
