@@ -10,7 +10,7 @@ import { useLanguage } from "../../context/LanguageContext";
 import LangSwitcher from "../../components/LangSwitcher";
 
 const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
-const OCM_API = "https://api.openchargemap.io/v3/poi";
+// OCM proxied through backend to avoid CORS issues
 
 const C = {
   bg:     "#060B14",
@@ -198,11 +198,12 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator }) {
 
   // Load stations from Open Charge Map
   useEffect(() => {
-    fetch(`${OCM_API}?countrycode=BE&maxresults=500&compact=true&verbose=false&output=json`)
+    fetch(`${API}/api/suppliers/ev-stations?maxresults=500`)
       .then(r => r.json())
       .then(data => {
-        setStations(data || []);
-        setFiltered(data || []);
+        const list = data.stations || [];
+        setStations(list);
+        setFiltered(list);
         setLoading(false);
       })
       .catch(() => setLoading(false));
