@@ -149,7 +149,10 @@ const CONTENT = {
 };
 
 export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavigate }) {
-  const nav = (path) => onNavigate ? onNavigate(path) : window.location.assign(path);
+  const nav = (path) => {
+    // Force full page load to ensure SPA re-renders correctly
+    window.location.href = path;
+  };
   const { lang } = useLanguage();
   const T = CONTENT[lang] || CONTENT.en;
 
@@ -173,6 +176,44 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
   const [selected,  setSelected]  = useState(null);
   const [error,     setError]     = useState(null);
   const [filters,   setFilters]   = useState({ fast: false, type2: false, ccs: false });
+  const [nearMe,    setNearMe]    = useState(false);
+  const [userPos,   setUserPos]   = useState(null);
+  const [locating,  setLocating]  = useState(false);
+
+  const findNearMe = () => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        setUserPos({ lat, lng });
+        setLocating(false);
+        setNearMe(true);
+        // Re-fetch stations near user
+        fetch(`${API}/api/suppliers/ev-stations?maxresults=100&lat=${lat}&lng=${lng}&distance=20`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.stations?.length > 0) {
+              setStations(data.stations);
+              setFiltered(data.stations);
+            }
+          })
+          .catch(() => {});
+        // Pan map to user location
+        if (leafletRef.current && window.L) {
+          leafletRef.current.setView([lat, lng], 12);
+          window.L.marker([lat, lng], {
+            icon: window.L.divIcon({
+              className: "",
+              html: `<div style="width:16px;height:16px;background:#3B82F6;border:3px solid #fff;border-radius:50%;box-shadow:0 0 10px #3B82F688"></div>`,
+              iconSize: [16,16], iconAnchor: [8,8],
+            })
+          }).addTo(leafletRef.current);
+        }
+      },
+      () => { setLocating(false); alert("Location access denied"); }
+    );
+  };
 
   // Load EPEX price
   useEffect(() => {
@@ -299,7 +340,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           <span style={{ fontSize: 9, color: C.teal, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>● LIVE</span>
         </a>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button onClick={() => nav("/ev-charging-belgium")} style={{ fontSize: 12, color: C.muted, background: "none", border: "none", cursor: "pointer", padding: "6px 12px" }}>⏰ Best times</button>
+          <a href="/ev-charging-belgium" onClick={(e) => { e.preventDefault(); window.location.href = "/ev-charging-belgium"; }} style={{ fontSize: 12, color: C.muted, textDecoration: "none", padding: "6px 12px", display: "inline-block", cursor: "pointer" }}>⏰ Best times</a>
           <LangSwitcher />
           <a href="/" onClick={e => { e.preventDefault(); onGetStarted && onGetStarted(); }} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, color: "#fff", textDecoration: "none" }}>Dashboard →</a>
         </div>
@@ -337,6 +378,14 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 20px" }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10 }}>{T.filtersTitle}</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button onClick={findNearMe} disabled={locating} style={{
+                padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                border: `1px solid ${nearMe ? C.blue : C.border}`,
+                background: nearMe ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.03)",
+                color: nearMe ? C.blue : C.muted, transition: "all 0.15s",
+              }}>
+                {locating ? "📍 Locating…" : nearMe ? "📍 Near me ✓" : "📍 Near me"}
+              </button>
               {[
                 { key: "fast",  label: T.filterFast,  icon: "⚡" },
                 { key: "type2", label: T.filterType2,  icon: "🔌" },
@@ -398,7 +447,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 <div style={{ fontSize: 13, color: col, fontWeight: 700 }}>{getPriceAdvice(mwh, lang)}</div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
                   {mwh != null ? `€${mwh.toFixed(1)}/MWh` : "—"}
-                  {" · "}<button onClick={() => nav("/ev-charging-belgium")} style={{ color: C.teal, background: "none", border: "none", cursor: "pointer", fontSize: 11, padding: 0 }}>See all cheap hours →</button>
+                  {" · "}<a href="/ev-charging-belgium" style={{ color: C.teal, textDecoration: "none", fontSize: 11 }}>See all cheap hours →</a>
                 </div>
               </div>
 
