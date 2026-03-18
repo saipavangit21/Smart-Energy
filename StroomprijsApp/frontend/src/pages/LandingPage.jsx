@@ -22,6 +22,7 @@ const suppliers = [
 ];
 
 export default function LandingPage({ onGetStarted, onOpenCalculator }) {
+  const { theme } = useTheme();
   const { t, tSection } = useLanguage();
   const L = tSection("landing");
   const C = tSection("common");
