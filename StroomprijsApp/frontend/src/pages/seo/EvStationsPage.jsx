@@ -535,4 +535,4 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
       </div>
     </div>
   );
-}
+}   
