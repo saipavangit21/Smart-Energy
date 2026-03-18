@@ -47,7 +47,18 @@
 
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { background: #060B14; }
+      body { background: #060B14; transition: background 0.25s, color 0.25s; }
+      
+      /* Light mode global overrides */
+      [data-theme="light"] body { background: #F8FAFC !important; color: #1E293B !important; }
+      [data-theme="light"] #root > div { background: #F8FAFC !important; color: #1E293B !important; }
+      [data-theme="light"] nav { background: rgba(248,250,252,0.97) !important; border-bottom-color: rgba(0,0,0,0.08) !important; }
+      
+      /* Card backgrounds in light mode */
+      [data-theme="light"] [class*="card"],
+      [data-theme="light"] [data-card] { background: #FFFFFF !important; }
+      
+      * { transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease; }
     </style>
   </head>
   <body>
