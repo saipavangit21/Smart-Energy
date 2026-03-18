@@ -149,7 +149,7 @@ const CONTENT = {
 };
 
 export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavigate }) {
-  const nav = (path) => onNavigate ? onNavigate(path) : window.location.assign(path);
+  const nav = (path) => { window.location.replace(path); };
   const { lang } = useLanguage();
   const T = CONTENT[lang] || CONTENT.en;
 
