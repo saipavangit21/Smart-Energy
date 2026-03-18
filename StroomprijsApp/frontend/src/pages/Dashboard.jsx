@@ -11,7 +11,9 @@ import {
 } from "recharts";
 import { useAuth }       from "../context/AuthContext";
 import { useLanguage }   from "../context/LanguageContext";
+import { useTheme, useColors } from "../context/ThemeContext";
 import LangSwitcher      from "../components/LangSwitcher";
+import ThemeSwitcher     from "../components/ThemeSwitcher";
 import { usePrices, useCurrentPrice, useCheapestHours } from "../hooks/usePrices";
 import { SUPPLIERS, getSupplierPrice, getPriceColor, getPriceLabel } from "../utils/priceUtils";
 import GasTab from "./GasTab";
