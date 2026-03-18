@@ -302,7 +302,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           <span style={{ fontSize: 9, color: C.teal, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>● LIVE</span>
         </a>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button onClick={() => nav("/ev-charging-belgium")} style={{ fontSize: 12, color: C.muted, background: "none", border: "none", cursor: "pointer", padding: "6px 12px" }}>⏰ Best times</button>
+          <a href="/ev-charging-belgium" style={{ fontSize: 12, color: C.muted, textDecoration: "none", padding: "6px 12px", display: "inline-block" }}>⏰ Best times</a>
           <LangSwitcher />
           <a href="/" onClick={e => { e.preventDefault(); onGetStarted && onGetStarted(); }} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, color: "#fff", textDecoration: "none" }}>Dashboard →</a>
         </div>
@@ -401,7 +401,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 <div style={{ fontSize: 13, color: col, fontWeight: 700 }}>{getPriceAdvice(mwh, lang)}</div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
                   {mwh != null ? `€${mwh.toFixed(1)}/MWh` : "—"}
-                  {" · "}<button onClick={() => nav("/ev-charging-belgium")} style={{ color: C.teal, background: "none", border: "none", cursor: "pointer", fontSize: 11, padding: 0 }}>See all cheap hours →</button>
+                  {" · "}<a href="/ev-charging-belgium" style={{ color: C.teal, textDecoration: "none", fontSize: 11 }}>See all cheap hours →</a>
                 </div>
               </div>
 
