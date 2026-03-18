@@ -5,7 +5,9 @@
  */
 import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
-import LangSwitcher from "../components/LangSwitcher";
+import { useTheme } from "../context/ThemeContext";
+import LangSwitcher   from "../components/LangSwitcher";
+import ThemeSwitcher  from "../components/ThemeSwitcher";
 
 const featureIcons = ["⚡", "🔥", "💚", "🔔", "🔌", "📅"];
 
@@ -62,6 +64,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           <span style={{ fontSize: 9, color: "#00C896", background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>● LIVE</span>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <ThemeSwitcher />
           <LangSwitcher style={{ marginRight: 4 }} />
           <a href="/ev-charging-belgium"
             style={{ padding: "8px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.25)", color: "#00C896", cursor: "pointer", textDecoration: "none" }}>

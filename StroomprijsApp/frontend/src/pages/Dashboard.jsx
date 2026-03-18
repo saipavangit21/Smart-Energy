@@ -1,7 +1,7 @@
 /**
  * pages/Dashboard.jsx — SmartPrice.be
  * Mobile-first redesign with Fortum-style layout + Graph/Table toggle
- * Bottom navigation on mobile, full header on desktop 
+ * Bottom navigation on mobile, full header on desktop
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -74,6 +74,8 @@ function PlanBadge({ children, color }) {
 
 // ── Supplier comparison tab ────────────────────────────────────
 function SupplierCompare({ currentMwh, isMobile, energyType }) {
+  const { theme } = useTheme();
+  const TC_theme = useColors();
   const { tSection } = useLanguage();
   const T  = tSection("dashboard");
   const TC = tSection("common");
@@ -250,6 +252,8 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
 export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn, onOpenCalculator }) {
   // Gate: guests clicking the calculator go to sign-in first
   const { user, updatePreferences, logout, authFetch } = useAuth();
+  const { theme } = useTheme();
+  const TC_theme = useColors();
   const { tSection } = useLanguage();
   const T  = tSection("dashboard");
   const TC = tSection("common");
@@ -379,6 +383,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <ThemeSwitcher />
             <LangSwitcher />
             {mwh != null && (
               <div style={{ textAlign: "right" }}>
@@ -770,7 +775,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
 
         {/* ── Alerts ── */}
-        {tab === "alerts" && (
+        {energyType === "electricity" && tab === "alerts" && (
           <AlertsTab
             alertActive={alertActive} alertThreshold={alertThreshold}
             saveAlertThreshold={saveAlertThreshold} toggleAlert={toggleAlert}
