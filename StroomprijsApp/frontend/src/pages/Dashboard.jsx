@@ -77,7 +77,7 @@ function PlanBadge({ children, color }) {
 // ── Supplier comparison tab ────────────────────────────────────
 function SupplierCompare({ currentMwh, isMobile, energyType }) {
   const { theme } = useTheme();
-  const TC_theme = useColors();
+  const TC_colors = useColors();
   const { tSection } = useLanguage();
   const T  = tSection("dashboard");
   const TC = tSection("common");
@@ -255,7 +255,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   // Gate: guests clicking the calculator go to sign-in first
   const { user, updatePreferences, logout, authFetch } = useAuth();
   const { theme } = useTheme();
-  const TC_theme = useColors();
+  const TC_colors = useColors();
   const { tSection } = useLanguage();
   const T  = tSection("dashboard");
   const TC = tSection("common");

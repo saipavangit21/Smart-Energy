@@ -149,7 +149,10 @@ const CONTENT = {
 };
 
 export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavigate }) {
-  const nav = (path) => { window.location.replace(path); };
+  const nav = (path) => {
+    // Force full page load to ensure SPA re-renders correctly
+    window.location.href = path;
+  };
   const { lang } = useLanguage();
   const T = CONTENT[lang] || CONTENT.en;
 

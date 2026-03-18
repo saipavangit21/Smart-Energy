@@ -47,7 +47,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 60); return () => clearTimeout(t); }, []);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#060B14", color: "#E8EDF5", fontFamily: "\'DM Sans\', system-ui, sans-serif", overflowX: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: "#060B14", color: theme === "light" ? "#1E293B" : "#E8EDF5", fontFamily: "\'DM Sans\', system-ui, sans-serif", overflowX: "hidden" }}>
 
       {/* AMBIENT BG */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
