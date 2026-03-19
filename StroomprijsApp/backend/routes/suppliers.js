@@ -701,7 +701,8 @@ router.get("/ev-stations", async (req, res) => {
     res.json({ success: true, stations: response.data || [], count: (response.data || []).length });
   } catch (e) {
     console.error("[ev-stations] fetch failed:", e.message);
-    res.status(500).json({ success: false, error: e.message, stations: [] });
+    // Return 200 with empty array so frontend doesn't crash
+    res.json({ success: false, error: e.message, stations: [], count: 0 });
   }
 });
 

@@ -256,19 +256,17 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
       .then(r => r.json())
       .then(data => {
         const list = data.stations || [];
-        if (list.length > 0) {
-          setStations(list);
-          setFiltered(list);
-        } else {
-          setError("No stations returned from API");
+        setStations(list);
+        setFiltered(list);
+        if (!data.success && list.length === 0) {
+          setError("Station data temporarily unavailable — try again later");
         }
-        setLoading(false);
       })
       .catch(e => {
-        console.error("EV stations fetch failed:", e);
-        setLoading(false);
-        setError("Failed to load stations — " + e.message);
-      });
+        console.warn("EV stations fetch failed:", e.message);
+        setError("Station data temporarily unavailable");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   // Apply filters
@@ -340,7 +338,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           <span style={{ fontSize: 9, color: C.teal, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>● LIVE</span>
         </a>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button onClick={() => nav("/ev-charging-belgium")} style={{ fontSize: 12, color: C.muted, background: "none", border: "none", cursor: "pointer", padding: "6px 12px" }}>⏰ Best times</button>
+          <a href="/ev-charging-belgium" onClick={(e) => { e.preventDefault(); window.location.href = "/ev-charging-belgium"; }} style={{ fontSize: 12, color: C.muted, textDecoration: "none", padding: "6px 12px", display: "inline-block", cursor: "pointer" }}>⏰ Best times</a>
           <LangSwitcher />
           <a href="/" onClick={e => { e.preventDefault(); onGetStarted && onGetStarted(); }} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, color: "#fff", textDecoration: "none" }}>Dashboard →</a>
         </div>
@@ -535,4 +533,4 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
       </div>
     </div>
   );
-}   
+}
