@@ -745,7 +745,7 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
   const [promos, setPromos] = useState({});
 
   useEffect(() => {
-    fetch(`${API}/api/suppliers/promotions`)
+    fetch("/api/suppliers/promotions")
       .then(r => r.json())
       .then(d => { if (d.success) setPromos(d.promotions || {}); })
       .catch(() => {});

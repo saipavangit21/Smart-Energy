@@ -393,6 +393,20 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           </div>
         </div>
       )}
+      {/* Promo ticker */}
+      {promos.length > 0 && (
+        <div style={{ background: "rgba(245,158,11,0.06)", borderBottom: "1px solid rgba(245,158,11,0.15)", padding: "6px 18px", overflow: "hidden", whiteSpace: "nowrap" }}>
+          <div style={{ display: "inline-flex", gap: 32, animation: "ticker 30s linear infinite" }}>
+            {[...promos, ...promos].map((p, i) => (
+              <span key={i} style={{ fontSize: 11, color: "#F59E0B" }}>
+                🎁 <strong>{p.supplier.charAt(0).toUpperCase() + p.supplier.slice(1)}</strong>: {p.text}
+              </span>
+            ))}
+          </div>
+          <style>{`@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+        </div>
+      )}
+
       {isMobile && (
         <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}` }}>
           <div style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
