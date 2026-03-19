@@ -525,7 +525,16 @@ async function runWeeklyScrape() {
   totalUpdated += applyScrapedUpdates(data, direct);
 
   saveSeedData(data);
-  cache.del("tariffs"); // force reload
+  cache.del("tariffs");
+
+  // Also scrape promotions
+  try {
+    await scrapePromotions();
+    cache.del("promotions");
+  } catch (e) {
+    console.warn("[promos] scrape failed:", e.message);
+  }
+
   console.log(`[suppliers] Scrape done — ${totalUpdated} rate(s) updated`);
   return { updated: totalUpdated, vreg: Object.keys(vreg).length, cmp: Object.keys(cmp).length, direct: Object.keys(direct).length };
 }
@@ -684,71 +693,124 @@ router.get("/scrape", async (req, res) => {
 });
 
 
-// ── EV Charging Stations proxy (Open Charge Map) ──────────────
-router.get("/ev-stations", async (req, res) => {
+// ── Promotions scraper ────────────────────────────────────────
+const PROMO_SEED_FILE = path.join(__dirname, "../data/promotions.json");
+
+function loadPromos() {
   try {
-    const { lat = 50.5, lng = 4.47, distance = 50, maxresults = 500 } = req.query;
+    if (fs.existsSync(PROMO_SEED_FILE)) return JSON.parse(fs.readFileSync(PROMO_SEED_FILE, "utf8"));
+  } catch (e) {}
+  return {};
+}
 
-    // Check cache first - stations cached for 24 hours
-    const cacheKey = `ev_stations_${lat}_${lng}`;
-    const cached = cache.get(cacheKey) || cache.get("ev_stations_be");
-    if (cached) {
-      console.log(`[ev-stations] cache hit: ${cached.length} stations`);
-      res.set("Cache-Control", "public, max-age=86400");
-      return res.json({ success: true, stations: cached, count: cached.length, cached: true });
+function savePromos(data) {
+  try { fs.writeFileSync(PROMO_SEED_FILE, JSON.stringify(data, null, 2)); } catch (e) {}
+}
+
+async function scrapePromotions() {
+  const promos = loadPromos();
+  const targets = [
+    {
+      supplier: "bolt",
+      url: "https://www.boltenergie.be/nl/aanbiedingen",
+      patterns: [
+        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus|welkomst|terug)/gi,
+        /(\d+)\s*maand[^.]*gratis/gi,
+        /(welkomst|nieuwe klant)[^.]{0,80}€\s*(\d+)/gi,
+        /bespaar[^.]{0,60}€\s*(\d+)/gi,
+      ],
+    },
+    {
+      supplier: "engie",
+      url: "https://www.engie.be/nl/thuis/stroom-gas/aanbiedingen/",
+      patterns: [
+        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus|welkomst)/gi,
+        /(\d+)\s*maand[^.]*gratis/gi,
+        /(actie|promo)[^.]{0,100}/gi,
+      ],
+    },
+    {
+      supplier: "luminus",
+      url: "https://www.luminus.be/nl/promo",
+      patterns: [
+        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus)/gi,
+        /(\d+)\s*maand[^.]*gratis/gi,
+        /(welkom|nieuwe klant)[^.]{0,80}/gi,
+      ],
+    },
+    {
+      supplier: "totalenergies",
+      url: "https://www.totalenergies.be/nl/particulieren/aanbiedingen",
+      patterns: [
+        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus)/gi,
+        /(\d+)\s*maand[^.]*gratis/gi,
+      ],
+    },
+    {
+      supplier: "eneco",
+      url: "https://www.eneco.be/nl/aanbiedingen",
+      patterns: [
+        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus|terug)/gi,
+        /(\d+)\s*maand[^.]*gratis/gi,
+      ],
+    },
+  ];
+
+  for (const target of targets) {
+    try {
+      const { data } = await axios.get(target.url, {
+        headers: { "User-Agent": SCRAPE_UA, "Accept-Language": "nl-BE,nl;q=0.9" },
+        timeout: 12000,
+      });
+      
+      // Strip HTML tags
+      const text = data.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+      
+      const found = [];
+      for (const pattern of target.patterns) {
+        const matches = [...text.matchAll(pattern)];
+        for (const m of matches.slice(0, 3)) {
+          const promo = m[0].trim().substring(0, 100);
+          if (promo.length > 8 && !found.includes(promo)) {
+            found.push(promo);
+          }
+        }
+      }
+
+      if (found.length > 0) {
+        promos[target.supplier] = {
+          promos: found.slice(0, 3),
+          scraped_at: new Date().toISOString(),
+          url: target.url,
+        };
+        console.log(`[promos] ${target.supplier}: ${found.length} promo(s) found`);
+      } else {
+        // Keep existing promo if scrape finds nothing new
+        if (!promos[target.supplier]) {
+          promos[target.supplier] = { promos: [], scraped_at: new Date().toISOString() };
+        }
+        console.log(`[promos] ${target.supplier}: no promos found`);
+      }
+    } catch (e) {
+      console.warn(`[promos] ${target.supplier} failed:`, e.message);
     }
+  }
 
-    // Use OpenStreetMap Overpass API - completely free, no key needed
-    const bbox_size = parseFloat(distance) / 111; // approx degrees
-    const south = parseFloat(lat) - bbox_size;
-    const north = parseFloat(lat) + bbox_size;
-    const west  = parseFloat(lng) - bbox_size * 1.5;
-    const east  = parseFloat(lng) + bbox_size * 1.5;
+  savePromos(promos);
+  return promos;
+}
 
-    const query = `[out:json][timeout:25];(node["amenity"="charging_station"](${south},${west},${north},${east});way["amenity"="charging_station"](${south},${west},${north},${east}););out body ${maxresults};`;
-    const url = `https://overpass-api.de/api/interpreter`;
-
-    const response = await axios.post(url, query, {
-      headers: { "Content-Type": "text/plain", "User-Agent": "SmartPrice.be/1.0" },
-      timeout: 20000,
-    });
-
-    const elements = response.data?.elements || [];
-
-    // Normalize to OCM-like format for frontend compatibility
-    const stations = elements
-      .filter(el => el.lat && el.lon)
-      .slice(0, parseInt(maxresults))
-      .map(el => ({
-        id: el.id,
-        AddressInfo: {
-          Title: el.tags?.name || el.tags?.operator || "Charging Station",
-          AddressLine1: el.tags?.["addr:street"] ? `${el.tags["addr:street"]} ${el.tags["addr:housenumber"] || ""}`.trim() : null,
-          Town: el.tags?.["addr:city"] || el.tags?.["addr:town"] || null,
-          Postcode: el.tags?.["addr:postcode"] || null,
-          Latitude: el.lat,
-          Longitude: el.lon,
-        },
-        OperatorInfo: {
-          Title: el.tags?.operator || el.tags?.network || null,
-        },
-        Connections: el.tags?.["socket:type2"] ? [
-          { ConnectionTypeID: 2, PowerKW: parseFloat(el.tags?.["capacity:kw"] || el.tags?.["maxpower"] || 22) || 22, Quantity: parseInt(el.tags?.["socket:type2"]) || 1 },
-        ] : el.tags?.["socket:ccs"] ? [
-          { ConnectionTypeID: 1036, PowerKW: parseFloat(el.tags?.["capacity:kw"] || 50) || 50, Quantity: parseInt(el.tags?.["socket:ccs"]) || 1 },
-        ] : [
-          { ConnectionTypeID: 2, PowerKW: 22, Quantity: 1 },
-        ],
-      }));
-
-    console.log(`[ev-stations] OSM: ${stations.length} stations found`);
-    // Cache for 24 hours - stations don't change often
-    cache.set("ev_stations_be", stations, 86400);
-    res.set("Cache-Control", "public, max-age=86400");
-    res.json({ success: true, stations, count: stations.length });
+// ── GET /api/suppliers/promotions ─────────────────────────────
+router.get("/promotions", async (req, res) => {
+  try {
+    const cached = cache.get("promotions");
+    if (cached) return res.json({ success: true, promotions: cached });
+    
+    const promos = loadPromos();
+    cache.set("promotions", promos, 3600); // cache 1 hour
+    res.json({ success: true, promotions: promos });
   } catch (e) {
-    console.error("[ev-stations] fetch failed:", e.message);
-    res.json({ success: false, error: e.message, stations: [], count: 0 });
+    res.json({ success: true, promotions: {} });
   }
 });
 

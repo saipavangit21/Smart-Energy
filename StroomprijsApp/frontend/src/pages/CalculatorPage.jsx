@@ -628,7 +628,7 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
 }
 
 // ─── Plan card ────────────────────────────────────────────────
-function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
+function PlanCard({ plan, rank, expanded, setExpanded, savings, promos = {} }) {
 
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
@@ -661,6 +661,15 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
             <Badge color={accent}>{plan.type?.charAt(0).toUpperCase() + plan.type?.slice(1)}</Badge>
             {plan.green && <Badge color={C.green}>🌿 Green</Badge>}
           </div>
+          {/* Promo badge */}
+          {(() => {
+            const suppKey = plan.supplier_name?.toLowerCase().replace(/[^a-z]/g, "");
+            const suppPromo = Object.entries(promos).find(([k]) => suppKey?.includes(k) || k?.includes(suppKey?.substring(0,5) || ""));
+            const promo = suppPromo?.[1]?.promos?.[0];
+            return promo ? (
+              <div style={{ fontSize: 10, color: "#F59E0B", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 6, padding: "2px 8px", marginTop: 4, display: "inline-block" }}>🎁 {promo}</div>
+            ) : null;
+          })()}
         </div>
         <div style={{ textAlign: "right", flexShrink: 0 }}>
           <div style={{ fontSize: 20, fontWeight: 900, color: plan.cheapest ? C.green : C.light, fontFamily: "monospace" }}>
@@ -733,6 +742,14 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
   const CC = tSection("calculator");
   const TC = tSection("common");
   const AP = tSection("appliances");
+  const [promos, setPromos] = useState({});
+
+  useEffect(() => {
+    fetch(`${API}/api/suppliers/promotions`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setPromos(d.promotions || {}); })
+      .catch(() => {});
+  }, []);
   const [expanded, setExpanded] = useState(null);
   const hasElec = results.electricity?.success;
   const hasGas  = results.gas?.success;
