@@ -689,104 +689,7 @@ router.get("/ev-stations", async (req, res) => {
   try {
     const { lat = 50.5, lng = 4.47, distance = 50, maxresults = 500 } = req.query;
 
-<<<<<<< HEAD
-function savePromos(data) {
-  try { fs.writeFileSync(PROMO_SEED_FILE, JSON.stringify(data, null, 2)); } catch (e) {}
-}
 
-async function scrapePromotions() {
-  // Scraping disabled - supplier promo URLs change frequently
-  // Update promotions.json manually or re-enable when URLs are verified
-  console.log("[promos] Using seed data from promotions.json");
-  return loadPromos();
-
-  // eslint-disable-next-line no-unreachable
-  const promos = loadPromos();
-  const targets = [
-    {
-      supplier: "bolt",
-      url: "https://www.boltenergie.be/nl/",
-      patterns: [
-        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus|welkomst|terug)/gi,
-        /(\d+)\s*maand[^.]*gratis/gi,
-        /(welkomst|nieuwe klant)[^.]{0,80}€\s*(\d+)/gi,
-        /bespaar[^.]{0,60}€\s*(\d+)/gi,
-      ],
-    },
-    {
-      supplier: "engie",
-      url: "https://www.engie.be/nl/thuis/",
-      patterns: [
-        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus|welkomst)/gi,
-        /(\d+)\s*maand[^.]*gratis/gi,
-        /(actie|promo)[^.]{0,100}/gi,
-      ],
-    },
-    {
-      supplier: "luminus",
-      url: "https://www.luminus.be/nl/",
-      patterns: [
-        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus)/gi,
-        /(\d+)\s*maand[^.]*gratis/gi,
-        /(welkom|nieuwe klant)[^.]{0,80}/gi,
-      ],
-    },
-    {
-      supplier: "totalenergies",
-      url: "https://www.totalenergies.be/nl/particulieren/",
-      patterns: [
-        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus)/gi,
-        /(\d+)\s*maand[^.]*gratis/gi,
-      ],
-    },
-    {
-      supplier: "eneco",
-      url: "https://www.eneco.be/nl/",
-      patterns: [
-        /€\s*(\d+)\s*(korting|cashback|voordeel|bonus|terug)/gi,
-        /(\d+)\s*maand[^.]*gratis/gi,
-      ],
-    },
-  ];
-
-  for (const target of targets) {
-    try {
-      const { data } = await axios.get(target.url, {
-        headers: { "User-Agent": SCRAPE_UA, "Accept-Language": "nl-BE,nl;q=0.9" },
-        timeout: 12000,
-      });
-      
-      // Strip HTML tags
-      const text = data.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-      
-      const found = [];
-      for (const pattern of target.patterns) {
-        const matches = [...text.matchAll(pattern)];
-        for (const m of matches.slice(0, 3)) {
-          const promo = m[0].trim().substring(0, 100);
-          if (promo.length > 8 && !found.includes(promo)) {
-            found.push(promo);
-          }
-        }
-      }
-
-      if (found.length > 0) {
-        promos[target.supplier] = {
-          promos: found.slice(0, 3),
-          scraped_at: new Date().toISOString(),
-          url: target.url,
-        };
-        console.log(`[promos] ${target.supplier}: ${found.length} promo(s) found`);
-      } else {
-        // Keep existing promo if scrape finds nothing new
-        if (!promos[target.supplier]) {
-          promos[target.supplier] = { promos: [], scraped_at: new Date().toISOString() };
-        }
-        console.log(`[promos] ${target.supplier}: no promos found`);
-      }
-    } catch (e) {
-      console.warn(`[promos] ${target.supplier} failed:`, e.message);
-=======
     // Check cache first - stations cached for 24 hours
     const cacheKey = `ev_stations_${lat}_${lng}`;
     const cached = cache.get(cacheKey) || cache.get("ev_stations_be");
@@ -794,7 +697,6 @@ async function scrapePromotions() {
       console.log(`[ev-stations] cache hit: ${cached.length} stations`);
       res.set("Cache-Control", "public, max-age=86400");
       return res.json({ success: true, stations: cached, count: cached.length, cached: true });
->>>>>>> parent of 5d5088e (feat: supplier promotions scraper + promo badges on plan cards)
     }
 
     // Use OpenStreetMap Overpass API - completely free, no key needed
