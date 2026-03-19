@@ -369,11 +369,28 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 
       {/* Guest banner */}
       {isGuest && (
-        <div style={{ background: "rgba(13,148,136,0.08)", borderBottom: "1px solid rgba(13,148,136,0.15)", padding: "8px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: "#556B82" }}>🔌 Want to find your cheapest plan? <strong style={{ color: "#0D9488" }}>Sign in free</strong> to use the calculator, save preferences & get price alerts</span>
-          <button onClick={onSignIn} style={{ padding: "5px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "1px solid rgba(13,148,136,0.35)", cursor: "pointer", background: "transparent", color: "#0D9488" }}>
-            Sign In Free →
-          </button>
+        <div style={{ background: "linear-gradient(135deg, rgba(13,148,136,0.1), rgba(26,86,164,0.08))", borderBottom: "1px solid rgba(13,148,136,0.2)", padding: "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🔔</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0" }}>
+                {TC.guestBannerTitle || "Get price alerts & your cheapest plan"}
+              </div>
+              <div style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>
+                {TC.guestBannerSub || "Free account · No spam · 30 seconds to sign up"}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {["🔔 Price alerts", "🔌 Plan calculator", "⚡ Supplier tracking"].map(f => (
+                <span key={f} style={{ fontSize: 10, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.2)", color: "#0D9488", borderRadius: 20, padding: "2px 8px", fontWeight: 600 }}>{f}</span>
+              ))}
+            </div>
+            <button onClick={onSignIn} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 800, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#0D9488,#1A56A4)", color: "#fff", whiteSpace: "nowrap" }}>
+              {TC.signIn || "Sign in"} — Free →
+            </button>
+          </div>
         </div>
       )}
       {isMobile && (
