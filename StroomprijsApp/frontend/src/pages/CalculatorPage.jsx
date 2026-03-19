@@ -857,7 +857,7 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
           <ConsumptionCard cons={results.electricity.consumption} isGas={false} />
           {results.electricity.results?.map((plan, i) => (
             <PlanCard key={plan.plan_id} plan={plan} rank={i} expanded={expanded}
-              setExpanded={setExpanded} savings={annualBill} />
+              setExpanded={setExpanded} savings={annualBill} promos={promos} />
           ))}
         </>
       )}
@@ -873,7 +873,7 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
           <ConsumptionCard cons={results.gas.consumption} isGas={true} />
           {results.gas.results?.map((plan, i) => (
             <PlanCard key={plan.plan_id} plan={plan} rank={i} expanded={expanded}
-              setExpanded={setExpanded} savings={null} />
+              setExpanded={setExpanded} savings={null} promos={promos} />
           ))}
         </>
       )}
