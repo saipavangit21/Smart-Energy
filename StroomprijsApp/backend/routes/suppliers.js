@@ -708,11 +708,17 @@ function savePromos(data) {
 }
 
 async function scrapePromotions() {
+  // Scraping disabled - supplier promo URLs change frequently
+  // Update promotions.json manually or re-enable when URLs are verified
+  console.log("[promos] Using seed data from promotions.json");
+  return loadPromos();
+
+  // eslint-disable-next-line no-unreachable
   const promos = loadPromos();
   const targets = [
     {
       supplier: "bolt",
-      url: "https://www.boltenergie.be/nl/aanbiedingen",
+      url: "https://www.boltenergie.be/nl/",
       patterns: [
         /€\s*(\d+)\s*(korting|cashback|voordeel|bonus|welkomst|terug)/gi,
         /(\d+)\s*maand[^.]*gratis/gi,
@@ -722,7 +728,7 @@ async function scrapePromotions() {
     },
     {
       supplier: "engie",
-      url: "https://www.engie.be/nl/thuis/stroom-gas/aanbiedingen/",
+      url: "https://www.engie.be/nl/thuis/",
       patterns: [
         /€\s*(\d+)\s*(korting|cashback|voordeel|bonus|welkomst)/gi,
         /(\d+)\s*maand[^.]*gratis/gi,
@@ -731,7 +737,7 @@ async function scrapePromotions() {
     },
     {
       supplier: "luminus",
-      url: "https://www.luminus.be/nl/promo",
+      url: "https://www.luminus.be/nl/",
       patterns: [
         /€\s*(\d+)\s*(korting|cashback|voordeel|bonus)/gi,
         /(\d+)\s*maand[^.]*gratis/gi,
@@ -740,7 +746,7 @@ async function scrapePromotions() {
     },
     {
       supplier: "totalenergies",
-      url: "https://www.totalenergies.be/nl/particulieren/aanbiedingen",
+      url: "https://www.totalenergies.be/nl/particulieren/",
       patterns: [
         /€\s*(\d+)\s*(korting|cashback|voordeel|bonus)/gi,
         /(\d+)\s*maand[^.]*gratis/gi,
@@ -748,7 +754,7 @@ async function scrapePromotions() {
     },
     {
       supplier: "eneco",
-      url: "https://www.eneco.be/nl/aanbiedingen",
+      url: "https://www.eneco.be/nl/",
       patterns: [
         /€\s*(\d+)\s*(korting|cashback|voordeel|bonus|terug)/gi,
         /(\d+)\s*maand[^.]*gratis/gi,
