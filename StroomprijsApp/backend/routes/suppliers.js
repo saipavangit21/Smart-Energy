@@ -689,6 +689,15 @@ router.get("/ev-stations", async (req, res) => {
   try {
     const { lat = 50.5, lng = 4.47, distance = 50, maxresults = 500 } = req.query;
 
+    // Check cache first - stations cached for 24 hours
+    const cacheKey = `ev_stations_${lat}_${lng}`;
+    const cached = cache.get(cacheKey) || cache.get("ev_stations_be");
+    if (cached) {
+      console.log(`[ev-stations] cache hit: ${cached.length} stations`);
+      res.set("Cache-Control", "public, max-age=86400");
+      return res.json({ success: true, stations: cached, count: cached.length, cached: true });
+    }
+
     // Use OpenStreetMap Overpass API - completely free, no key needed
     const bbox_size = parseFloat(distance) / 111; // approx degrees
     const south = parseFloat(lat) - bbox_size;
@@ -733,7 +742,9 @@ router.get("/ev-stations", async (req, res) => {
       }));
 
     console.log(`[ev-stations] OSM: ${stations.length} stations found`);
-    res.set("Cache-Control", "public, max-age=3600");
+    // Cache for 24 hours - stations don't change often
+    cache.set("ev_stations_be", stations, 86400);
+    res.set("Cache-Control", "public, max-age=86400");
     res.json({ success: true, stations, count: stations.length });
   } catch (e) {
     console.error("[ev-stations] fetch failed:", e.message);
