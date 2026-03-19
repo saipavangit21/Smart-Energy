@@ -525,16 +525,7 @@ async function runWeeklyScrape() {
   totalUpdated += applyScrapedUpdates(data, direct);
 
   saveSeedData(data);
-  cache.del("tariffs");
-
-  // Also scrape promotions
-  try {
-    await scrapePromotions();
-    cache.del("promotions");
-  } catch (e) {
-    console.warn("[promos] scrape failed:", e.message);
-  }
-
+  cache.del("tariffs"); // force reload
   console.log(`[suppliers] Scrape done — ${totalUpdated} rate(s) updated`);
   return { updated: totalUpdated, vreg: Object.keys(vreg).length, cmp: Object.keys(cmp).length, direct: Object.keys(direct).length };
 }
@@ -693,16 +684,12 @@ router.get("/scrape", async (req, res) => {
 });
 
 
-// ── Promotions scraper ────────────────────────────────────────
-const PROMO_SEED_FILE = path.join(__dirname, "../data/promotions.json");
-
-function loadPromos() {
+// ── EV Charging Stations proxy (Open Charge Map) ──────────────
+router.get("/ev-stations", async (req, res) => {
   try {
-    if (fs.existsSync(PROMO_SEED_FILE)) return JSON.parse(fs.readFileSync(PROMO_SEED_FILE, "utf8"));
-  } catch (e) {}
-  return {};
-}
+    const { lat = 50.5, lng = 4.47, distance = 50, maxresults = 500 } = req.query;
 
+<<<<<<< HEAD
 function savePromos(data) {
   try { fs.writeFileSync(PROMO_SEED_FILE, JSON.stringify(data, null, 2)); } catch (e) {}
 }
@@ -799,24 +786,68 @@ async function scrapePromotions() {
       }
     } catch (e) {
       console.warn(`[promos] ${target.supplier} failed:`, e.message);
+=======
+    // Check cache first - stations cached for 24 hours
+    const cacheKey = `ev_stations_${lat}_${lng}`;
+    const cached = cache.get(cacheKey) || cache.get("ev_stations_be");
+    if (cached) {
+      console.log(`[ev-stations] cache hit: ${cached.length} stations`);
+      res.set("Cache-Control", "public, max-age=86400");
+      return res.json({ success: true, stations: cached, count: cached.length, cached: true });
+>>>>>>> parent of 5d5088e (feat: supplier promotions scraper + promo badges on plan cards)
     }
-  }
 
-  savePromos(promos);
-  return promos;
-}
+    // Use OpenStreetMap Overpass API - completely free, no key needed
+    const bbox_size = parseFloat(distance) / 111; // approx degrees
+    const south = parseFloat(lat) - bbox_size;
+    const north = parseFloat(lat) + bbox_size;
+    const west  = parseFloat(lng) - bbox_size * 1.5;
+    const east  = parseFloat(lng) + bbox_size * 1.5;
 
-// ── GET /api/suppliers/promotions ─────────────────────────────
-router.get("/promotions", async (req, res) => {
-  try {
-    const cached = cache.get("promotions");
-    if (cached) return res.json({ success: true, promotions: cached });
-    
-    const promos = loadPromos();
-    cache.set("promotions", promos, 3600); // cache 1 hour
-    res.json({ success: true, promotions: promos });
+    const query = `[out:json][timeout:25];(node["amenity"="charging_station"](${south},${west},${north},${east});way["amenity"="charging_station"](${south},${west},${north},${east}););out body ${maxresults};`;
+    const url = `https://overpass-api.de/api/interpreter`;
+
+    const response = await axios.post(url, query, {
+      headers: { "Content-Type": "text/plain", "User-Agent": "SmartPrice.be/1.0" },
+      timeout: 20000,
+    });
+
+    const elements = response.data?.elements || [];
+
+    // Normalize to OCM-like format for frontend compatibility
+    const stations = elements
+      .filter(el => el.lat && el.lon)
+      .slice(0, parseInt(maxresults))
+      .map(el => ({
+        id: el.id,
+        AddressInfo: {
+          Title: el.tags?.name || el.tags?.operator || "Charging Station",
+          AddressLine1: el.tags?.["addr:street"] ? `${el.tags["addr:street"]} ${el.tags["addr:housenumber"] || ""}`.trim() : null,
+          Town: el.tags?.["addr:city"] || el.tags?.["addr:town"] || null,
+          Postcode: el.tags?.["addr:postcode"] || null,
+          Latitude: el.lat,
+          Longitude: el.lon,
+        },
+        OperatorInfo: {
+          Title: el.tags?.operator || el.tags?.network || null,
+        },
+        Connections: el.tags?.["socket:type2"] ? [
+          { ConnectionTypeID: 2, PowerKW: parseFloat(el.tags?.["capacity:kw"] || el.tags?.["maxpower"] || 22) || 22, Quantity: parseInt(el.tags?.["socket:type2"]) || 1 },
+        ] : el.tags?.["socket:ccs"] ? [
+          { ConnectionTypeID: 1036, PowerKW: parseFloat(el.tags?.["capacity:kw"] || 50) || 50, Quantity: parseInt(el.tags?.["socket:ccs"]) || 1 },
+        ] : [
+          { ConnectionTypeID: 2, PowerKW: 22, Quantity: 1 },
+        ],
+      }));
+
+    console.log(`[ev-stations] OSM: ${stations.length} stations found`);
+    // Cache for 24 hours - stations don't change often
+    cache.set("ev_stations_be", stations, 86400);
+    res.set("Cache-Control", "public, max-age=86400");
+    res.json({ success: true, stations, count: stations.length });
   } catch (e) {
-    res.json({ success: true, promotions: {} });
+    console.error("[ev-stations] fetch failed:", e.message);
+    res.json({ success: false, error: e.message, stations: [], count: 0 });
   }
 });
 
