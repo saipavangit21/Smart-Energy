@@ -1063,3 +1063,4 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
     </div>
   );
 }
+
