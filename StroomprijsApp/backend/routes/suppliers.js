@@ -687,21 +687,56 @@ router.get("/scrape", async (req, res) => {
 // ── EV Charging Stations proxy (Open Charge Map) ──────────────
 router.get("/ev-stations", async (req, res) => {
   try {
-    const { lat = 50.85, lng = 4.35, distance = 100, maxresults = 500 } = req.query;
-    const apiKey = process.env.OCM_API_KEY || "";
-    const url = `https://api.openchargemap.io/v3/poi?countrycode=BE&maxresults=${maxresults}&compact=true&verbose=false&output=json&latitude=${lat}&longitude=${lng}&distance=${distance}&distanceunit=KM`;
-    const response = await axios.get(url, {
-      headers: {
-        "User-Agent": "SmartPrice.be/1.0 (hello@smartprice.be)",
-        ...(apiKey ? { "X-API-Key": apiKey } : {}),
-      },
-      timeout: 15000,
+    const { lat = 50.5, lng = 4.47, distance = 50, maxresults = 500 } = req.query;
+
+    // Use OpenStreetMap Overpass API - completely free, no key needed
+    const bbox_size = parseFloat(distance) / 111; // approx degrees
+    const south = parseFloat(lat) - bbox_size;
+    const north = parseFloat(lat) + bbox_size;
+    const west  = parseFloat(lng) - bbox_size * 1.5;
+    const east  = parseFloat(lng) + bbox_size * 1.5;
+
+    const query = `[out:json][timeout:25];(node["amenity"="charging_station"](${south},${west},${north},${east});way["amenity"="charging_station"](${south},${west},${north},${east}););out body ${maxresults};`;
+    const url = `https://overpass-api.de/api/interpreter`;
+
+    const response = await axios.post(url, query, {
+      headers: { "Content-Type": "text/plain", "User-Agent": "SmartPrice.be/1.0" },
+      timeout: 20000,
     });
-    res.set("Cache-Control", "public, max-age=3600"); // cache 1 hour
-    res.json({ success: true, stations: response.data || [], count: (response.data || []).length });
+
+    const elements = response.data?.elements || [];
+
+    // Normalize to OCM-like format for frontend compatibility
+    const stations = elements
+      .filter(el => el.lat && el.lon)
+      .slice(0, parseInt(maxresults))
+      .map(el => ({
+        id: el.id,
+        AddressInfo: {
+          Title: el.tags?.name || el.tags?.operator || "Charging Station",
+          AddressLine1: el.tags?.["addr:street"] ? `${el.tags["addr:street"]} ${el.tags["addr:housenumber"] || ""}`.trim() : null,
+          Town: el.tags?.["addr:city"] || el.tags?.["addr:town"] || null,
+          Postcode: el.tags?.["addr:postcode"] || null,
+          Latitude: el.lat,
+          Longitude: el.lon,
+        },
+        OperatorInfo: {
+          Title: el.tags?.operator || el.tags?.network || null,
+        },
+        Connections: el.tags?.["socket:type2"] ? [
+          { ConnectionTypeID: 2, PowerKW: parseFloat(el.tags?.["capacity:kw"] || el.tags?.["maxpower"] || 22) || 22, Quantity: parseInt(el.tags?.["socket:type2"]) || 1 },
+        ] : el.tags?.["socket:ccs"] ? [
+          { ConnectionTypeID: 1036, PowerKW: parseFloat(el.tags?.["capacity:kw"] || 50) || 50, Quantity: parseInt(el.tags?.["socket:ccs"]) || 1 },
+        ] : [
+          { ConnectionTypeID: 2, PowerKW: 22, Quantity: 1 },
+        ],
+      }));
+
+    console.log(`[ev-stations] OSM: ${stations.length} stations found`);
+    res.set("Cache-Control", "public, max-age=3600");
+    res.json({ success: true, stations, count: stations.length });
   } catch (e) {
     console.error("[ev-stations] fetch failed:", e.message);
-    // Return 200 with empty array so frontend doesn't crash
     res.json({ success: false, error: e.message, stations: [], count: 0 });
   }
 });
