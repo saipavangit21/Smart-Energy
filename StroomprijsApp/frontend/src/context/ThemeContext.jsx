@@ -1,68 +1,30 @@
 /**
  * context/ThemeContext.jsx
- * Light / Dark theme toggle — uses CSS variables for instant color switching
+ * Light / Dark theme toggle using CSS class injection
  */
 import { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext({ theme: "dark", toggleTheme: () => {} });
 
-const DARK = {
-  "--sp-bg":        "#060B14",
-  "--sp-bg2":       "#0A1220",
-  "--sp-card":      "#0D1626",
-  "--sp-border":    "rgba(255,255,255,0.08)",
-  "--sp-text":      "#E2E8F0",
-  "--sp-muted":     "#64748B",
-  "--sp-soft":      "#94A3B8",
-  "--sp-nav-bg":    "rgba(6,11,20,0.95)",
-  "--sp-input-bg":  "rgba(255,255,255,0.06)",
-  "--sp-shadow":    "0 8px 32px rgba(0,0,0,0.4)",
-  "--sp-teal":      "#0D9488",
-  "--sp-green":     "#00C896",
-};
-
-const LIGHT = {
-  "--sp-bg":        "#F8FAFC",
-  "--sp-bg2":       "#F1F5F9",
-  "--sp-card":      "#FFFFFF",
-  "--sp-border":    "rgba(0,0,0,0.09)",
-  "--sp-text":      "#1E293B",
-  "--sp-muted":     "#64748B",
-  "--sp-soft":      "#475569",
-  "--sp-nav-bg":    "rgba(248,250,252,0.97)",
-  "--sp-input-bg":  "#FFFFFF",
-  "--sp-shadow":    "0 8px 32px rgba(0,0,0,0.1)",
-  "--sp-teal":      "#0D9488",
-  "--sp-green":     "#059669",
-};
-
-function applyTheme(theme) {
-  const vars = theme === "light" ? LIGHT : DARK;
-  const root = document.documentElement;
-  Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
-  root.setAttribute("data-theme", theme);
-  document.body.style.background = vars["--sp-bg"];
-  document.body.style.color = vars["--sp-text"];
-  document.body.style.transition = "background 0.3s, color 0.3s";
-  const rootEl = document.getElementById("root");
-  if (rootEl) {
-    rootEl.style.background = vars["--sp-bg"];
-    rootEl.style.color = vars["--sp-text"];
-  }
-  // Force reflow for immediate visual update
-  document.body.offsetHeight;
-}
-
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem("sp_theme") || "dark";
-    applyTheme(saved);
-    return saved;
+    try { return localStorage.getItem("sp_theme") || "dark"; } catch { return "dark"; }
   });
 
   useEffect(() => {
-    localStorage.setItem("sp_theme", theme);
-    applyTheme(theme);
+    try { localStorage.setItem("sp_theme", theme); } catch {}
+    const root = document.documentElement;
+    root.setAttribute("data-theme", theme);
+
+    if (theme === "light") {
+      document.body.style.cssText = "background:#F8FAFC!important;color:#1E293B!important;";
+      const el = document.getElementById("root");
+      if (el) el.style.cssText = "background:#F8FAFC!important;color:#1E293B!important;";
+    } else {
+      document.body.style.cssText = "background:#060B14;color:#E2E8F0;";
+      const el = document.getElementById("root");
+      if (el) el.style.cssText = "";
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
@@ -74,9 +36,7 @@ export function ThemeProvider({ children }) {
   );
 }
 
-export function useTheme() {
-  return useContext(ThemeContext);
-}
+export function useTheme() { return useContext(ThemeContext); }
 
 export function useColors() {
   const { theme } = useTheme();

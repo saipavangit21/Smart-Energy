@@ -130,7 +130,7 @@ export default function AuthPage({ onBack, onSkip, reason }) {
         )}
 
         {/* Card */}
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "32px 36px", boxShadow: "0 25px 60px rgba(0,0,0,0.5)" }}>
+        <div style={{ background: "#0D1626", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "32px 36px", boxShadow: "0 25px 60px rgba(0,0,0,0.5)" }}>
 
           {/* Tab switcher */}
           <div style={{ display: "flex", background: "rgba(0,0,0,0.3)", borderRadius: 12, padding: 4, marginBottom: 28 }}>
@@ -182,7 +182,7 @@ export default function AuthPage({ onBack, onSkip, reason }) {
           <button onClick={handleSubmit} disabled={loading} style={{
             width: "100%", padding: "14px 0", borderRadius: 12, fontSize: 15, fontWeight: 700,
             border: "none", cursor: loading ? "not-allowed" : "pointer",
-            background: loading ? "rgba(13,148,136,0.5)" : `linear-gradient(135deg, $C.teal, ${C.blue})`,
+            background: loading ? "rgba(13,148,136,0.5)" : "linear-gradient(135deg, #0D9488, #1A56A4)",
             color: C.white, marginTop: 4, transition: "all 0.2s",
             boxShadow: loading ? "none" : "0 4px 20px rgba(13,148,136,0.35)",
           }}>
