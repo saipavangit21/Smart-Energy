@@ -257,6 +257,17 @@ export default function EvChargingPage({ onGetStarted, onOpenCalculator }) {
             </span>
           </h1>
           <p style={{ fontSize: 17, color: C.soft, margin: 0, lineHeight: 1.6 }}>{T.subtitle}</p>
+
+          {/* EV Stations banner */}
+          <div style={{ marginTop: 20, display: "inline-flex", alignItems: "center", gap: 12, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.25)", borderRadius: 14, padding: "12px 18px", cursor: "pointer" }}
+            onClick={() => window.location.href = "/ev-charging-stations-belgium"}>
+            <span style={{ fontSize: 22 }}>🗺️</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#93C5FD" }}>Find charging stations near you</div>
+              <div style={{ fontSize: 11, color: C.muted }}>Interactive map · 500+ Belgian stations · Open now</div>
+            </div>
+            <span style={{ fontSize: 13, color: "#93C5FD", fontWeight: 700, marginLeft: 8 }}>View map →</span>
+          </div>
         </div>
 
         {/* Current price + windows — 2 col */}

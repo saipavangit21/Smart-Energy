@@ -44,12 +44,13 @@ function applyTheme(theme) {
   document.body.style.background = vars["--sp-bg"];
   document.body.style.color = vars["--sp-text"];
   document.body.style.transition = "background 0.3s, color 0.3s";
-  // Also update root div
   const rootEl = document.getElementById("root");
   if (rootEl) {
     rootEl.style.background = vars["--sp-bg"];
     rootEl.style.color = vars["--sp-text"];
   }
+  // Force reflow for immediate visual update
+  document.body.offsetHeight;
 }
 
 export function ThemeProvider({ children }) {
