@@ -155,12 +155,13 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
         onMouseLeave={e => { e.currentTarget.style.color = "#4A6070"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}>
         🚗 EV
       </button>
+      <button onClick={() => window.location.href = "/ev-charging-stations-belgium"} title="EV Stations Map" style={{ display:"flex", alignItems:"center", padding:"8px 12px", borderRadius:10, cursor:"pointer", fontSize:14, border:"1px solid rgba(255,255,255,0.08)", background:"transparent", color:"#4A6070", transition:"all 0.2s" }} onMouseEnter={e=>{e.currentTarget.style.color="#3B82F6";e.currentTarget.style.background="rgba(59,130,246,0.08)";}} onMouseLeave={e=>{e.currentTarget.style.color="#4A6070";e.currentTarget.style.background="transparent";}}>🗺️</button>
 
 
       {/* Electricity button */}
       <button onClick={() => onChange("electricity")} style={{
         display: "flex", alignItems: "center", gap: 7,
-        padding: "8px 18px", borderRadius: 10, cursor: "pointer",
+        padding: isMobile ? "7px 12px" : "8px 18px", borderRadius: 10, cursor: "pointer",
         fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
         transition: "all 0.2s ease",
         border: type === "electricity" ? "1px solid rgba(0,230,180,0.45)" : "1px solid transparent",
@@ -177,7 +178,7 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
           filter: type === "electricity" ? "drop-shadow(0 0 6px rgba(0,230,180,0.8))" : "none",
           transition: "filter 0.2s",
         }}>⚡</span>
-        <span>{TC.electricity || "Electricity"}</span>
+        {!isMobile && <span>{TC.electricity || "Electricity"}</span>}
         {type === "electricity" && (
           <span style={{
             width: 6, height: 6, borderRadius: "50%",
@@ -209,7 +210,7 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
           filter: type === "gas" ? "drop-shadow(0 0 6px rgba(255,140,66,0.8))" : "none",
           transition: "filter 0.2s",
         }}>🔥</span>
-        <span>{TC.gas || "Gas"}</span>
+        {!isMobile && <span>{TC.gas || "Gas"}</span>}
         {type === "gas" && (
           <span style={{
             width: 6, height: 6, borderRadius: "50%",
@@ -234,7 +235,7 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
       }}
         onMouseEnter={e => { e.currentTarget.style.color = "#0D9488"; e.currentTarget.style.border = "1px solid rgba(13,148,136,0.35)"; e.currentTarget.style.background = "rgba(13,148,136,0.08)"; }}
         onMouseLeave={e => { e.currentTarget.style.color = isGuest ? "#0D9488" : "#4A6070"; e.currentTarget.style.border = isGuest ? "1px solid rgba(13,148,136,0.3)" : "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = isGuest ? "rgba(13,148,136,0.08)" : "transparent"; }}>
-        {`🔌 ${TC.calculator || "Calculator"}${isGuest ? " →" : ""}`}
+        {isMobile ? "🔌" : `🔌 ${TC.calculator || "Calculator"}${isGuest ? " →" : ""}`}
       </button>
 
       <style>{`
@@ -286,6 +287,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   const [alertThreshold, setAlertThreshold] = useState(user?.preferences?.alertThreshold || 80);
   const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertEnabled || false);
   const [notification,   setNotification]   = useState(null);
+  const [promos,          setPromos]          = useState([]);
   const [viewMode,       setViewMode]       = useState("graph"); // "graph" | "table"
   const [isMobile,       setIsMobile]       = useState(window.innerWidth < 768);
 
@@ -339,6 +341,12 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
     }
   }, [current, alertThreshold, alertActive]);
 
+  useEffect(() => {
+    fetch("/api/suppliers/promotions").then(r=>r.json()).then(d=>{
+      if(d.success){const all=Object.entries(d.promotions||{}).flatMap(([s,d2])=>(d2.promos||[]).slice(0,1).map(p=>({supplier:s,text:p}))).filter(p=>p.text);setPromos(all);}
+    }).catch(()=>{});
+  }, []);
+
   const changeSupplier     = async s => { setSupplier(s); try { await updatePreferences({ supplier: s }); } catch {} };
   const toggleAlert        = async () => { const next = !alertActive; setAlertActive(next); try { await updatePreferences({ alertEnabled: next, alertThreshold }); } catch {} };
   const saveAlertThreshold = async v => { setAlertThreshold(v); try { await updatePreferences({ alertThreshold: v }); } catch {} };
@@ -369,7 +377,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
 
       {/* Guest banner */}
       {isGuest && (
-        <div style={{ background: "linear-gradient(135deg, rgba(13,148,136,0.1), rgba(26,86,164,0.08))", borderBottom: "1px solid rgba(13,148,136,0.2)", padding: "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ background: "linear-gradient(135deg, rgba(13,148,136,0.1), rgba(26,86,164,0.08))", borderBottom: "1px solid rgba(13,148,136,0.2)", padding: isMobile ? "8px 14px" : "10px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 18 }}>🔔</span>
             <div>
@@ -393,128 +401,6 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           </div>
         </div>
       )}
-      {isMobile && (
-        <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}` }}>
-          <div style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 20 }}>🇧🇪</span>
-            <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
-            <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <ThemeSwitcher />
-            <LangSwitcher />
-            {mwh != null && (
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(0)}</div>
-                <div style={{ fontSize: 9, color: "#556" }}>NOW /MWh</div>
-              </div>
-            )}
-
-            <button onClick={() => setShowMenu(m => !m)} style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
-              {(user?.name || user?.email || "?")[0].toUpperCase()}
-            </button>
-          </div>
-          </div>
-          {/* Energy toggle row */}
-          <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 10px" }}>
-            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
-          </div>
-        </div>
-      )}
-
-      {/* ── DESKTOP HEADER ── */}
-      {!isMobile && (
-        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "16px 18px 0" }}>
-          {/* TOP ROW: EPEX + sign-in flush right */}
-          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <LangSwitcher />
-              {mwh != null && (
-                <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
-                  <div style={{ fontSize: 10, color: "#556", marginBottom: 1 }}>NOW · EPEX Spot</div>
-                  <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(1)}<span style={{ fontSize: 12, color: "#556", fontWeight: 400 }}>/MWh</span></div>
-                  <div style={{ fontSize: 11, color: "#778" }}>{lbl?.emoji} {lbl?.text}{retailKwh ? ` · ${supplier}: €${retailKwh.toFixed(4)}/kWh` : ""}</div>
-                </div>
-              )}
-              <div style={{ position: "relative" }}>
-                {isGuest ? (
-                  <button onClick={onSignIn} style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(13,148,136,0.5)", background: "rgba(13,148,136,0.12)", color: "#0D9488", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.22)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.12)"; }}>
-                    {TC.signIn} →
-                  </button>
-                ) : (
-                  <>
-                    <button onClick={() => setShowMenu(m => !m)} style={{ display: "flex", alignItems: "center", gap: 8, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "9px 14px", cursor: "pointer", color: "#E8EDF5" }}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
-                        {(user?.name || user?.email || "?")[0].toUpperCase()}
-                      </div>
-                      <div style={{ textAlign: "left" }}>
-                        <div style={{ fontSize: 12, fontWeight: 600 }}>{user?.name || TC.account}</div>
-                        <div style={{ fontSize: 10, color: "#556" }}>▾ Menu</div>
-                      </div>
-                    </button>
-                    {showMenu && <DropMenu onProfile={() => { setShowMenu(false); onGoProfile(); }} onLogout={() => { setShowMenu(false); logout(); }} onPrivacy={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />}
-                  </>
-                )}
-              </div>
-          </div>
-          {/* BOTTOM ROW: brand left + energy toggle right */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 26 }}>🇧🇪</span>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: "-1px" }}>SmartPrice</h1>
-              <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
-            </div>
-            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
-          </div>
-        </div>
-      )}
-
-      {/* Mobile dropdown menu */}
-      {isMobile && showMenu && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)" }} onClick={() => setShowMenu(false)}>
-          <div style={{ position: "absolute", top: 60, right: 16, background: "#0D1626", border: `1px solid ${C.border}`, borderRadius: 16, padding: 8, minWidth: 200 }} onClick={e => e.stopPropagation()}>
-            {isGuest ? (
-              <>
-                <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>Browsing as guest</div>
-                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-                <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
-                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-                <MenuBtn icon="👤" label={TC.signIn} onClick={() => { setShowMenu(false); onSignIn(); }} />
-              </>
-            ) : (
-              <>
-                <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>{user?.email || user?.name}</div>
-                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-                <MenuBtn icon="👤" label={TC.myProfile} onClick={() => { setShowMenu(false); onGoProfile(); }} />
-                <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
-                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-                <MenuBtn icon="🚪" label={TC.signOut} onClick={() => { setShowMenu(false); logout(); }} danger />
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: isMobile ? "16px 14px" : "0 18px 24px" }}>
-
-        {/* ── MOBILE: Big current price card ── */}
-        {energyType === "electricity" && isMobile && mwh != null && (
-          <div style={{ background: `linear-gradient(135deg, ${getPriceColor(mwh)}18, ${getPriceColor(mwh)}08)`, border: `1px solid ${getPriceColor(mwh)}33`, borderRadius: 20, padding: "20px 20px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <div style={{ fontSize: 11, color: "#556", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>Right Now · EPEX Spot</div>
-              <div style={{ fontSize: 44, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(1)}</div>
-              <div style={{ fontSize: 12, color: "#667", marginTop: 4 }}>per MWh · {lbl?.emoji} {lbl?.text}</div>
-              {retailKwh && <div style={{ fontSize: 12, color: "#556", marginTop: 2 }}>{supplier}: €{retailKwh.toFixed(4)}/kWh</div>}
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, color: "#445", marginBottom: 8 }}>{new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>
-              {lastFetched && <div style={{ fontSize: 10, color: "#334" }}>Updated {lastFetched.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>}
-            </div>
-          </div>
-        )}
-
         {/* ── MOBILE: Min/Max cards ── */}
         {energyType === "electricity" && isMobile && stats?.today && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
@@ -532,6 +418,19 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             ))}
           </div>
         )}
+
+      {promos.length > 0 && (
+        <div style={{ background: "rgba(245,158,11,0.06)", borderBottom: "1px solid rgba(245,158,11,0.12)", padding: "5px 0", overflow: "hidden", whiteSpace: "nowrap" }}>
+          <div style={{ display: "inline-flex", gap: 40, animation: "sp-ticker 35s linear infinite", paddingLeft: "100%" }}>
+            {[...promos, ...promos].map((p, i) => (
+              <span key={i} style={{ fontSize: 11, color: "#F59E0B", flexShrink: 0 }}>
+                🎁 <strong>{p.supplier.charAt(0).toUpperCase() + p.supplier.slice(1)}</strong>: {p.text}
+              </span>
+            ))}
+          </div>
+          <style>{`@keyframes sp-ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
+        </div>
+      )}
 
         {/* ── DESKTOP: Stats row ── */}
         {energyType === "electricity" && !isMobile && !loading && !error && stats?.today && (
