@@ -128,7 +128,7 @@ function SupplierCompare({ currentMwh, isMobile, energyType }) {
   );
 }
 
-function EnergyToggle({ type, onChange, onOpenCalculator, isGuest }) {
+function EnergyToggle({ type, onChange, onOpenCalculator, isGuest, isMobile }) {
   const { tSection } = useLanguage();
   const TC = tSection("common");
   const L  = tSection("landing");
@@ -411,7 +411,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
               {lastFetched && <div style={{ fontSize: 10, color: "#334", marginLeft: 8 }}>Updated {lastFetched.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>}
             </div>
-            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} isMobile={isMobile} />
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <ThemeSwitcher />
               <LangSwitcher />
@@ -442,7 +442,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
               <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
+              <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} isMobile={isMobile} />
               <ThemeSwitcher />
               <LangSwitcher />
               {!isGuest && (
