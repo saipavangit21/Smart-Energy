@@ -279,7 +279,10 @@ export default function EvChargingPage({ onGetStarted, onOpenCalculator }) {
 
           {/* Best windows */}
           <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 20, padding: "20px 24px" }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>⚡ {T.windowsTitle}</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>⚡ {T.windowsTitle}</div>
+              <a href="/ev-charging-stations-belgium" style={{ fontSize: 11, color: C.teal, background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 20, padding: "4px 12px", textDecoration: "none", fontWeight: 600, whiteSpace: "nowrap" }}>🗺️ Find stations →</a>
+            </div>
             <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>{T.windowsDesc}</div>
             {loading ? (
               <div style={{ color: C.muted, fontSize: 13 }}>Loading…</div>
