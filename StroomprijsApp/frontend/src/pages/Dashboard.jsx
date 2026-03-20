@@ -713,7 +713,6 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         )}
       </div>
 
-      </div>
       {/* ── MOBILE BOTTOM NAV ── */}
       {isMobile && (
         <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:50, background:"rgba(6,11,20,0.97)", backdropFilter:"blur(20px)", borderTop:`1px solid ${C.border}`, display:"flex", padding:"8px 0 12px" }}>
