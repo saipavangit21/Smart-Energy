@@ -394,12 +394,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         </div>
       )}
       {/* Promo ticker */}
-      {promos.length > 0 && (
-        <div style={{ background: "rgba(245,158,11,0.06)", borderBottom: "1px solid rgba(245,158,11,0.15)", padding: "6px 18px", overflow: "hidden", whiteSpace: "nowrap" }}>
-          <div style={{ display: "inline-flex", gap: 32, animation: "ticker 30s linear infinite" }}>
-            {[...promos, ...promos].map((p, i) => (
-              <span key={i} style={{ fontSize: 11, color: "#F59E0B" }}>
-                🎁 <strong>{p.supplier.charAt(0).toUpperCase() + p.supplier.slice(1)}</strong>: {p.text}
+</strong>: {p.text}
               </span>
             ))}
           </div>
