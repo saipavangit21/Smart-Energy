@@ -469,18 +469,6 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
           </div>
         )}
 
-      {promos.length > 0 && (
-        <div style={{ background: "rgba(245,158,11,0.06)", borderBottom: "1px solid rgba(245,158,11,0.12)", padding: "5px 0", overflow: "hidden", whiteSpace: "nowrap" }}>
-          <div style={{ display: "inline-flex", gap: 40, animation: "sp-ticker 35s linear infinite", paddingLeft: "100%" }}>
-            {[...promos, ...promos].map((p, i) => (
-              <span key={i} style={{ fontSize: 11, color: "#F59E0B", flexShrink: 0 }}>
-                🎁 <strong>{p.supplier.charAt(0).toUpperCase() + p.supplier.slice(1)}</strong>: {p.text}
-              </span>
-            ))}
-          </div>
-          <style>{`@keyframes sp-ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
-        </div>
-      )}
 
         {/* ── DESKTOP: Stats row ── */}
         {energyType === "electricity" && !isMobile && !loading && !error && stats?.today && (
