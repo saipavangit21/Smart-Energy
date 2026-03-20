@@ -401,6 +401,63 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
           </div>
         </div>
       )}
+      {/* ── DESKTOP NAV ── */}
+      {!isMobile && (
+        <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 22 }}>🇧🇪</span>
+              <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
+              <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
+              {lastFetched && <div style={{ fontSize: 10, color: "#334", marginLeft: 8 }}>Updated {lastFetched.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>}
+            </div>
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <ThemeSwitcher />
+              <LangSwitcher />
+              {!isGuest ? (
+                <div style={{ position: "relative" }}>
+                  <button onClick={() => setShowMenu(m => !m)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 20, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`, cursor: "pointer", color: "#E2E8F0", fontSize: 13, fontWeight: 600 }}>
+                    👤 {user?.name || "Account"} ▾
+                  </button>
+                  {showMenu && <DropMenu onProfile={onGoProfile} onLogout={() => { logout(); setShowMenu(false); }} onPrivacy={() => { window.dispatchEvent(new CustomEvent("showPrivacy")); setShowMenu(false); }} />}
+                </div>
+              ) : (
+                <button onClick={onSignIn} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, border: "none", color: "#fff", cursor: "pointer" }}>
+                  {TC.signIn || "Sign in"} →
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MOBILE NAV ── */}
+      {isMobile && (
+        <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 20 }}>🇧🇪</span>
+              <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
+              <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
+              <ThemeSwitcher />
+              <LangSwitcher />
+              {!isGuest && (
+                <div style={{ position: "relative" }}>
+                  <button onClick={() => setShowMenu(m => !m)} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", border: `1px solid ${C.border}`, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    👤
+                  </button>
+                  {showMenu && <DropMenu onProfile={onGoProfile} onLogout={() => { logout(); setShowMenu(false); }} onPrivacy={() => { window.dispatchEvent(new CustomEvent("showPrivacy")); setShowMenu(false); }} />}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ flex: 1, padding: isMobile ? "12px 14px" : "20px 24px 20px" }}>
         {/* ── MOBILE: Min/Max cards ── */}
         {energyType === "electricity" && isMobile && stats?.today && (

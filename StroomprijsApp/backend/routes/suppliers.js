@@ -687,8 +687,7 @@ router.get("/scrape", async (req, res) => {
 // ── EV Charging Stations proxy (Open Charge Map) ──────────────
 router.get("/ev-stations", async (req, res) => {
   try {
-    const { lat = 50.5, lng = 4.47, distance = 50, maxresults = 500 } = req.query;
-
+    const { lat = 50.5, lng = 4.47, distance = 150, maxresults = 500 } = req.query;
 
     // Check cache first - stations cached for 24 hours
     const cacheKey = `ev_stations_${lat}_${lng}`;
@@ -700,13 +699,24 @@ router.get("/ev-stations", async (req, res) => {
     }
 
     // Use OpenStreetMap Overpass API - completely free, no key needed
-    const bbox_size = parseFloat(distance) / 111; // approx degrees
-    const south = parseFloat(lat) - bbox_size;
-    const north = parseFloat(lat) + bbox_size;
-    const west  = parseFloat(lng) - bbox_size * 1.5;
-    const east  = parseFloat(lng) + bbox_size * 1.5;
+    // Use fixed Belgium bounding box for default, or user location bbox
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+    const isDefault = (Math.abs(userLat - 50.5) < 0.1 && Math.abs(userLng - 4.47) < 0.1);
+    
+    let south, north, west, east;
+    if (isDefault) {
+      // Full Belgium bounding box
+      south = 49.49; north = 51.51; west = 2.54; east = 6.41;
+    } else {
+      const bbox_size = parseFloat(distance) / 111;
+      south = userLat - bbox_size;
+      north = userLat + bbox_size;
+      west  = userLng - bbox_size * 1.5;
+      east  = userLng + bbox_size * 1.5;
+    }
 
-    const query = `[out:json][timeout:25];(node["amenity"="charging_station"](${south},${west},${north},${east});way["amenity"="charging_station"](${south},${west},${north},${east}););out body ${maxresults};`;
+    const query = `[out:json][timeout:30];(node["amenity"="charging_station"](${south},${west},${north},${east});way["amenity"="charging_station"](${south},${west},${north},${east}););out body ${maxresults};`;
     const url = `https://overpass-api.de/api/interpreter`;
 
     const response = await axios.post(url, query, {
