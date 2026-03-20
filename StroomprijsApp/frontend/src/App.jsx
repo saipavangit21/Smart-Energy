@@ -30,6 +30,7 @@ import EvStationsPage   from "./pages/seo/EvStationsPage";
 import ApiPage           from "./pages/ApiPage";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
+function getFullPath() { return window.location.pathname + window.location.search; }
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -43,12 +44,46 @@ export default function App() {
 
   // After sign-in, an optional callback lets CalculatorPage reveal pending results
   const [postSignInCb, setPostSignInCb] = useState(null);
+  const [promos, setPromos] = useState([
+    { supplier: "Bolt", text: "Geen uitstapvergoeding · Maandelijks opzegbaar" },
+    { supplier: "Engie", text: "Gecombineerde korting stroom + gas" },
+    { supplier: "Luminus", text: "Vaste prijs 24 maanden beschikbaar" },
+    { supplier: "TotalEnergies", text: "5% korting bij gecombineerd contract" },
+    { supplier: "SmartPrice", text: "Overstappen is gratis · Switch for free in 5 minutes →" },
+  ]);
+
+  useEffect(() => {
+    fetch("/api/suppliers/promotions").then(r => r.json()).then(d => {
+      if (d.success) {
+        const all = Object.entries(d.promotions || {}).flatMap(([s, d2]) =>
+          (d2.promos || []).slice(0, 1).map(p => ({ supplier: s, text: p }))
+        ).filter(p => p.text);
+        if (all.length > 0) setPromos([...all, { supplier: "SmartPrice", text: "Overstappen is gratis · Switch for free →" }]);
+      }
+    }).catch(() => {});
+  }, []);
 
   // Listen to browser back/forward
   useEffect(() => {
     const onPop = () => setPath(getPath());
     window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
+
+    // Handle anchor tag clicks for SPA navigation
+    const onClick = (e) => {
+      const a = e.target.closest("a[href]");
+      if (!a) return;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("http") || href.startsWith("mailto") || href.startsWith("#")) return;
+      e.preventDefault();
+      window.history.pushState({}, "", href);
+      setPath(href.split("?")[0]);
+    };
+    document.addEventListener("click", onClick);
+
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      document.removeEventListener("click", onClick);
+    };
   }, []);
 
   // Privacy event from footer links
@@ -91,6 +126,19 @@ export default function App() {
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   // ── Loading spinner ──────────────────────────────────────────
+  const PromoTicker = () => (
+    <div style={{ background: "rgba(245,158,11,0.08)", borderBottom: "1px solid rgba(245,158,11,0.15)", padding: "5px 0", overflow: "hidden", whiteSpace: "nowrap", position: "sticky", top: 0, zIndex: 9999, backdropFilter: "blur(10px)" }}>
+      <div style={{ display: "inline-flex", gap: 48, animation: "sp-ticker 40s linear infinite", paddingLeft: "100%" }}>
+        {[...promos, ...promos].map((p, i) => (
+          <span key={i} style={{ fontSize: 11, color: "#F59E0B", flexShrink: 0 }}>
+            🎁 <strong style={{ color: "#FCD34D" }}>{p.supplier}</strong>: {p.text}
+          </span>
+        ))}
+      </div>
+      <style>{`@keyframes sp-ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
+    </div>
+  );
+
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#060B14", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <div style={{ textAlign: "center" }}>
@@ -155,7 +203,9 @@ export default function App() {
 
   // ── Main dashboard ───────────────────────────────────────────
   return (
-    <Dashboard
+    <>
+      <PromoTicker />
+      <Dashboard
       onGoProfile={user ? () => setPage("profile") : () => { setGuestMode(false); setShowAuth(true); }}
       initialTab={initialTab}
       onTabConsumed={() => setInitialTab("today")}
@@ -163,5 +213,6 @@ export default function App() {
       onSignIn={() => { setGuestMode(false); setShowAuth(true); }}
       onOpenCalculator={(type = "electricity") => navigate(`/calculator/${type}`)}
     />
+    </>
   );
 }

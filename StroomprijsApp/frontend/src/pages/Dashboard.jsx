@@ -287,8 +287,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   const [alertThreshold, setAlertThreshold] = useState(user?.preferences?.alertThreshold || 80);
   const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertEnabled || false);
   const [notification,   setNotification]   = useState(null);
-  const [promos,          setPromos]          = useState([]);
-  const [viewMode,       setViewMode]       = useState("graph"); // "graph" | "table"
+const [viewMode,       setViewMode]       = useState("graph"); // "graph" | "table"
   const [isMobile,       setIsMobile]       = useState(window.innerWidth < 768);
 
   // ── Energy type toggle + URL sync ─────────────────────────
@@ -340,23 +339,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
       setTimeout(() => setNotification(null), 6000);
     }
   }, [current, alertThreshold, alertActive]);
-
-  useEffect(() => {
-    const fallback = [
-      { supplier: "Bolt", text: "Geen uitstapvergoeding · Maandelijks opzegbaar" },
-      { supplier: "Engie", text: "Gecombineerde korting stroom + gas" },
-      { supplier: "Luminus", text: "Vaste prijs 24 maanden beschikbaar" },
-      { supplier: "TotalEnergies", text: "5% korting bij gecombineerd contract" },
-    ];
-    fetch("/api/suppliers/promotions").then(r=>r.json()).then(d=>{
-      if(d.success){
-        const all=Object.entries(d.promotions||{}).flatMap(([s,d2])=>(d2.promos||[]).slice(0,1).map(p=>({supplier:s,text:p}))).filter(p=>p.text);
-        setPromos(all.length > 0 ? all : fallback);
-      } else { setPromos(fallback); }
-    }).catch(()=>{ setPromos(fallback); });
-  }, []);
-
-  const changeSupplier     = async s => { setSupplier(s); try { await updatePreferences({ supplier: s }); } catch {} };
+const changeSupplier     = async s => { setSupplier(s); try { await updatePreferences({ supplier: s }); } catch {} };
   const toggleAlert        = async () => { const next = !alertActive; setAlertActive(next); try { await updatePreferences({ alertEnabled: next, alertThreshold }); } catch {} };
   const saveAlertThreshold = async v => { setAlertThreshold(v); try { await updatePreferences({ alertThreshold: v }); } catch {} };
 
