@@ -392,7 +392,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             </button>
           </div>
         </div>
-              )}
+      )}
       {lastFetched && <div style={{ fontSize: 10, color: "#334", padding: "0 18px 4px" }}>Updated {lastFetched.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>}
 
         {/* ── MOBILE: Min/Max cards ── */}
