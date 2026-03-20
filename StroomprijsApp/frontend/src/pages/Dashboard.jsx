@@ -392,7 +392,124 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
             </button>
           </div>
         </div>
-      )}</div>
+      )}
+      {isMobile && (
+        <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 20 }}>🇧🇪</span>
+            <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
+            <span style={{ fontSize: 9, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 7px", fontWeight: 700 }}>● LIVE</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <ThemeSwitcher />
+            <LangSwitcher />
+            {mwh != null && (
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(0)}</div>
+                <div style={{ fontSize: 9, color: "#556" }}>NOW /MWh</div>
+              </div>
+            )}
+
+            <button onClick={() => setShowMenu(m => !m)} style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+              {(user?.name || user?.email || "?")[0].toUpperCase()}
+            </button>
+          </div>
+          </div>
+          {/* Energy toggle row */}
+          <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 10px" }}>
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
+          </div>
+        </div>
+      )}
+
+      {/* ── DESKTOP HEADER ── */}
+      {!isMobile && (
+        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "16px 18px 0" }}>
+          {/* TOP ROW: EPEX + sign-in flush right */}
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <LangSwitcher />
+              {mwh != null && (
+                <div style={{ background: C.card, border: `1px solid ${getPriceColor(mwh)}44`, borderRadius: 16, padding: "10px 18px", textAlign: "right" }}>
+                  <div style={{ fontSize: 10, color: "#556", marginBottom: 1 }}>NOW · EPEX Spot</div>
+                  <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(1)}<span style={{ fontSize: 12, color: "#556", fontWeight: 400 }}>/MWh</span></div>
+                  <div style={{ fontSize: 11, color: "#778" }}>{lbl?.emoji} {lbl?.text}{retailKwh ? ` · ${supplier}: €${retailKwh.toFixed(4)}/kWh` : ""}</div>
+                </div>
+              )}
+              <div style={{ position: "relative" }}>
+                {isGuest ? (
+                  <button onClick={onSignIn} style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(13,148,136,0.5)", background: "rgba(13,148,136,0.12)", color: "#0D9488", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.22)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.12)"; }}>
+                    {TC.signIn} →
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => setShowMenu(m => !m)} style={{ display: "flex", alignItems: "center", gap: 8, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "9px 14px", cursor: "pointer", color: "#E8EDF5" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
+                        {(user?.name || user?.email || "?")[0].toUpperCase()}
+                      </div>
+                      <div style={{ textAlign: "left" }}>
+                        <div style={{ fontSize: 12, fontWeight: 600 }}>{user?.name || TC.account}</div>
+                        <div style={{ fontSize: 10, color: "#556" }}>▾ Menu</div>
+                      </div>
+                    </button>
+                    {showMenu && <DropMenu onProfile={() => { setShowMenu(false); onGoProfile(); }} onLogout={() => { setShowMenu(false); logout(); }} onPrivacy={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />}
+                  </>
+                )}
+              </div>
+          </div>
+          {/* BOTTOM ROW: brand left + energy toggle right */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 26 }}>🇧🇪</span>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: "-1px" }}>SmartPrice</h1>
+              <span style={{ fontSize: 11, color: energyType === "gas" ? "#FF8C42" : C.green, background: energyType === "gas" ? "rgba(255,140,66,0.1)" : "rgba(0,200,150,0.1)", border: energyType === "gas" ? "1px solid rgba(255,140,66,0.3)" : `1px solid rgba(0,200,150,0.25)`, borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>● LIVE</span>
+            </div>
+            <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile dropdown menu */}
+      {isMobile && showMenu && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)" }} onClick={() => setShowMenu(false)}>
+          <div style={{ position: "absolute", top: 60, right: 16, background: "#0D1626", border: `1px solid ${C.border}`, borderRadius: 16, padding: 8, minWidth: 200 }} onClick={e => e.stopPropagation()}>
+            {isGuest ? (
+              <>
+                <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>Browsing as guest</div>
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="👤" label={TC.signIn} onClick={() => { setShowMenu(false); onSignIn(); }} />
+              </>
+            ) : (
+              <>
+                <div style={{ padding: "10px 14px", fontSize: 12, color: "#445" }}>{user?.email || user?.name}</div>
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="👤" label={TC.myProfile} onClick={() => { setShowMenu(false); onGoProfile(); }} />
+                <MenuBtn icon="🔒" label={TC.privacyPolicy} onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("showPrivacy")); }} />
+                <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
+                <MenuBtn icon="🚪" label={TC.signOut} onClick={() => { setShowMenu(false); logout(); }} danger />
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: isMobile ? "16px 14px" : "0 18px 24px" }}>
+
+        {/* ── MOBILE: Big current price card ── */}
+        {energyType === "electricity" && isMobile && mwh != null && (
+          <div style={{ background: `linear-gradient(135deg, ${getPriceColor(mwh)}18, ${getPriceColor(mwh)}08)`, border: `1px solid ${getPriceColor(mwh)}33`, borderRadius: 20, padding: "20px 20px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 11, color: "#556", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>Right Now · EPEX Spot</div>
+              <div style={{ fontSize: 44, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>€{mwh.toFixed(1)}</div>
+              <div style={{ fontSize: 12, color: "#667", marginTop: 4 }}>per MWh · {lbl?.emoji} {lbl?.text}</div>
+              {retailKwh && <div style={{ fontSize: 12, color: "#556", marginTop: 2 }}>{supplier}: €{retailKwh.toFixed(4)}/kWh</div>}
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, color: "#445", marginBottom: 8 }}>{new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>
               {lastFetched && <div style={{ fontSize: 10, color: "#334" }}>Updated {lastFetched.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>}
             </div>
           </div>
