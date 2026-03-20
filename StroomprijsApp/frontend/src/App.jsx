@@ -126,16 +126,39 @@ export default function App() {
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   // ── Loading spinner ──────────────────────────────────────────
+  const [showPromos, setShowPromos] = useState(false);
+
   const PromoTicker = () => (
-    <div style={{ background: "rgba(245,158,11,0.08)", borderBottom: "1px solid rgba(245,158,11,0.15)", padding: "5px 0", overflow: "hidden", whiteSpace: "nowrap", position: "sticky", top: 0, zIndex: 9999, backdropFilter: "blur(10px)" }}>
-      <div style={{ display: "inline-flex", gap: 48, animation: "sp-ticker 40s linear infinite", paddingLeft: "100%" }}>
-        {[...promos, ...promos].map((p, i) => (
-          <span key={i} style={{ fontSize: 11, color: "#F59E0B", flexShrink: 0 }}>
-            🎁 <strong style={{ color: "#FCD34D" }}>{p.supplier}</strong>: {p.text}
-          </span>
-        ))}
-      </div>
-      <style>{`@keyframes sp-ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }`}</style>
+    <div style={{ position: "fixed", bottom: 80, right: 16, zIndex: 9999 }}>
+      {showPromos && (
+        <div style={{ background: "#0D1626", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 14, padding: "14px 16px", marginBottom: 8, maxWidth: 300, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+          <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>🎁 Current Deals</div>
+          {promos.slice(0, 4).map((p, i) => (
+            <div key={i} style={{ fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4 }}>
+              <strong style={{ color: "#FCD34D" }}>{p.supplier}</strong>: {p.text}
+            </div>
+          ))}
+          <div style={{ fontSize: 10, color: "#475569", marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 8 }}>
+            Overstappen is gratis · <strong style={{ color: "#F59E0B" }}>Switch for free →</strong>
+          </div>
+        </div>
+      )}
+      <button onClick={() => setShowPromos(s => !s)} style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "10px 16px", borderRadius: 30, cursor: "pointer",
+        background: "linear-gradient(135deg, #92400E, #D97706)",
+        border: "none", color: "#FEF3C7", fontSize: 13, fontWeight: 700,
+        boxShadow: "0 4px 20px rgba(245,158,11,0.4)",
+        animation: "promo-flash 2.5s ease-in-out infinite",
+      }}>
+        🎁 Deals {showPromos ? "✕" : "→"}
+      </button>
+      <style>{`
+        @keyframes promo-flash {
+          0%, 100% { box-shadow: 0 4px 20px rgba(245,158,11,0.4); }
+          50% { box-shadow: 0 4px 28px rgba(245,158,11,0.8), 0 0 0 4px rgba(245,158,11,0.15); }
+        }
+      `}</style>
     </div>
   );
 

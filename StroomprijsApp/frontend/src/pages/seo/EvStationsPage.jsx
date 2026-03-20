@@ -299,20 +299,23 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
 
       const maxPower = Math.max(...(station.Connections?.map(c => c.PowerKW || 0) || [0]));
       const isFast = maxPower >= 50;
-      const color = isFast ? "#F97316" : priceCol;
+      const isUltra = maxPower >= 150;
+      const color = isUltra ? "#EF4444" : isFast ? "#F97316" : priceCol;
+      const size = isUltra ? 18 : isFast ? 15 : 12;
 
       const icon = L.divIcon({
         className: "",
         html: `<div style="
-          width:${isFast ? 14 : 10}px;
-          height:${isFast ? 14 : 10}px;
+          width:${size}px;
+          height:${size}px;
           background:${color};
-          border:2px solid rgba(255,255,255,0.8);
+          border:2.5px solid #ffffff;
           border-radius:50%;
-          box-shadow:0 0 6px ${color}88;
+          box-shadow:0 0 8px ${color}, 0 2px 4px rgba(0,0,0,0.4);
+          cursor:pointer;
         "></div>`,
-        iconSize: [isFast ? 14 : 10, isFast ? 14 : 10],
-        iconAnchor: [isFast ? 7 : 5, isFast ? 7 : 5],
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2],
       });
 
       const marker = L.marker([lat, lng], { icon });
@@ -398,11 +401,13 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                   {f.icon} {f.label}
                 </button>
               ))}
-              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: C.orange }} />
+              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff" }} />
+                <span style={{ fontSize: 11, color: C.muted }}>Ultra (&gt;150kW)</span>
+                <div style={{ width: 12, height: 12, borderRadius: "50%", background: C.orange, border: "2px solid #fff" }} />
                 <span style={{ fontSize: 11, color: C.muted }}>Fast (&gt;50kW)</span>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: col }} />
-                <span style={{ fontSize: 11, color: C.muted }}>Standard — {mwh != null ? `€${mwh.toFixed(0)}/MWh now` : "—"}</span>
+                <div style={{ width: 12, height: 12, borderRadius: "50%", background: col, border: "2px solid #fff" }} />
+                <span style={{ fontSize: 11, color: C.muted }}>Standard</span>
               </div>
             </div>
           </div>
