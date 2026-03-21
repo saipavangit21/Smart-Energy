@@ -487,6 +487,28 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
           </div>
         )}
 
+        {/* ── Current price hero ── */}
+        {energyType === "electricity" && mwh != null && (
+          <div style={{ background: `linear-gradient(135deg, ${getPriceColor(mwh)}14, ${getPriceColor(mwh)}05)`, border: `1px solid ${getPriceColor(mwh)}33`, borderRadius: 20, padding: isMobile ? "16px 18px" : "20px 24px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>⚡ Current EPEX Spot</div>
+              <div style={{ fontSize: isMobile ? 36 : 48, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(mwh), lineHeight: 1 }}>
+                €{mwh.toFixed(1)}
+              </div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>/MWh · {lbl?.emoji} {lbl?.text}</div>
+            </div>
+            {retailKwh != null && (
+              <div style={{ textAlign: isMobile ? "left" : "right" }}>
+                <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>{supplier}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "monospace", color: getPriceColor(mwh) }}>
+                  €{retailKwh.toFixed(4)}
+                </div>
+                <div style={{ fontSize: 11, color: C.muted }}>/kWh incl. VAT</div>
+              </div>
+            )}
+          </div>
+        )}
+
 {energyType === "electricity" && (
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 10, color: "#445", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>{T.yourSupplier}</div>
