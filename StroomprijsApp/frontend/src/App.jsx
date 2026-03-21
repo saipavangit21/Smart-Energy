@@ -168,7 +168,7 @@ export default function App() {
           <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>🎁 Current Deals</div>
           {promos.slice(0, 6).map((p, i) => (
             <a key={i} href={p.url || "#"} target="_blank" rel="noopener noreferrer"
-              onClick={(e) => { setShowPromos(false); if (!p.url) { e.preventDefault(); navigate("/calculator/electricity"); } }}
+              onClick={(e) => { e.stopPropagation(); setShowPromos(false); if (!p.url) { e.preventDefault(); navigate("/calculator/electricity"); } }}
               style={{ display: "block", fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4, cursor: "pointer", padding: "6px 8px", borderRadius: 6, textDecoration: "none", transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
