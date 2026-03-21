@@ -763,4 +763,44 @@ router.get("/ev-stations", async (req, res) => {
   }
 });
 
-module.exports = { router, runWeeklyScrape };
+
+
+// ── Promotions ────────────────────────────────────────────────
+const PROMO_FILE = path.join(__dirname, "../data/promotions.json");
+
+function loadPromos() {
+  try {
+    if (fs.existsSync(PROMO_FILE)) return JSON.parse(fs.readFileSync(PROMO_FILE, "utf8"));
+  } catch (e) {}
+  return {
+    bolt:          { promos: ["Geen uitstapvergoeding · Maandelijks opzegbaar", "100% groene stroom beschikbaar"] },
+    engie:         { promos: ["Gecombineerde korting stroom + gas"] },
+    luminus:       { promos: ["Vaste prijs 24 maanden beschikbaar"] },
+    totalenergies: { promos: ["5% korting bij gecombineerd contract"] },
+    eneco:         { promos: ["100% windenergie · Nederlandse moedermaatschappij"] },
+    mega:          { promos: ["Variabel tarief zonder uitstapkosten"] },
+    octaplus:      { promos: ["Belgisch bedrijf · Lokale klantenservice"] },
+  };
+}
+
+router.get("/promotions", (req, res) => {
+  try {
+    const cached = cache.get("promotions");
+    if (cached) return res.json({ success: true, promotions: cached });
+    const promos = loadPromos();
+    cache.set("promotions", promos, 3600);
+    res.json({ success: true, promotions: promos });
+  } catch (e) {
+    res.json({ success: true, promotions: {} });
+  }
+});
+
+// ── Status Banner (maintenance / incidents) ───────────────────
+let statusBannerData = null; // in-memory, reset on restart
+
+router.get("/status-banner", (req, res) => {
+  // Also expose via /api/status-banner (mounted at /api/suppliers)
+  res.json(statusBannerData || { active: false });
+});
+
+module.exports = { router, runWeeklyScrape, setStatusBanner: (d) => { statusBannerData = d; } };

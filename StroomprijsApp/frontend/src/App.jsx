@@ -44,6 +44,14 @@ export default function App() {
 
   // After sign-in, an optional callback lets CalculatorPage reveal pending results
   const [postSignInCb, setPostSignInCb] = useState(null);
+  const [statusBanner, setStatusBanner] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/status-banner")
+      .then(r => r.json())
+      .then(d => { if (d.active) setStatusBanner(d); })
+      .catch(() => {});
+  }, []);
   const [promos, setPromos] = useState([
     { supplier: "Bolt", text: "Geen uitstapvergoeding · Maandelijks opzegbaar" },
     { supplier: "Engie", text: "Gecombineerde korting stroom + gas" },
@@ -128,18 +136,46 @@ export default function App() {
   // ── Loading spinner ──────────────────────────────────────────
   const [showPromos, setShowPromos] = useState(false);
 
+  const StatusBanner = () => {
+    if (!statusBanner) return null;
+    const colors = {
+      maintenance: { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.4)", text: "#F59E0B", icon: "🔧" },
+      incident:    { bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.4)",  text: "#EF4444", icon: "⚠️" },
+      info:        { bg: "rgba(59,130,246,0.12)", border: "rgba(59,130,246,0.4)", text: "#3B82F6", icon: "ℹ️" },
+      resolved:    { bg: "rgba(0,200,150,0.12)",  border: "rgba(0,200,150,0.4)",  text: "#00C896", icon: "✅" },
+    };
+    const c = colors[statusBanner.type] || colors.info;
+    return (
+      <div style={{ background: c.bg, borderBottom: `1px solid ${c.border}`, padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, position: "sticky", top: 0, zIndex: 10000 }}>
+        <span style={{ fontSize: 16 }}>{c.icon}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{statusBanner.title}</span>
+        {statusBanner.message && <span style={{ fontSize: 12, color: c.text, opacity: 0.8 }}>— {statusBanner.message}</span>}
+        {statusBanner.dismissable !== false && (
+          <button onClick={() => setStatusBanner(null)} style={{ marginLeft: 12, background: "none", border: "none", color: c.text, cursor: "pointer", fontSize: 16, opacity: 0.7, padding: "0 4px" }}>✕</button>
+        )}
+      </div>
+    );
+  };
+
   const PromoTicker = () => (
     <div style={{ position: "fixed", bottom: 80, right: 16, zIndex: 9999 }}>
       {showPromos && (
         <div style={{ background: "#0D1626", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 14, padding: "14px 16px", marginBottom: 8, maxWidth: 300, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
           <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>🎁 Current Deals</div>
-          {promos.slice(0, 4).map((p, i) => (
-            <div key={i} style={{ fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4 }}>
+          {promos.slice(0, 5).map((p, i) => (
+            <div key={i} onClick={() => { setShowPromos(false); navigate("/calculator/electricity"); }}
+              style={{ fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4, cursor: "pointer", padding: "4px 8px", borderRadius: 6, transition: "background 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
               <strong style={{ color: "#FCD34D" }}>{p.supplier}</strong>: {p.text}
+              <span style={{ color: "#F59E0B", marginLeft: 6, fontSize: 10 }}>→</span>
             </div>
           ))}
-          <div style={{ fontSize: 10, color: "#475569", marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 8 }}>
-            Overstappen is gratis · <strong style={{ color: "#F59E0B" }}>Switch for free →</strong>
+          <div style={{ fontSize: 10, color: "#475569", marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Overstappen is gratis · Free to switch</span>
+            <button onClick={() => { setShowPromos(false); navigate("/calculator/electricity"); }} style={{ background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", borderRadius: 20, padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+              Compare plans →
+            </button>
           </div>
         </div>
       )}
@@ -227,6 +263,7 @@ export default function App() {
   // ── Main dashboard ───────────────────────────────────────────
   return (
     <>
+      <StatusBanner />
       <PromoTicker />
       <Dashboard
       onGoProfile={user ? () => setPage("profile") : () => { setGuestMode(false); setShowAuth(true); }}
