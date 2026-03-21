@@ -53,20 +53,24 @@ export default function App() {
       .catch(() => {});
   }, []);
   const [promos, setPromos] = useState([
-    { supplier: "Bolt", text: "Geen uitstapvergoeding · Maandelijks opzegbaar" },
-    { supplier: "Engie", text: "Gecombineerde korting stroom + gas" },
-    { supplier: "Luminus", text: "Vaste prijs 24 maanden beschikbaar" },
-    { supplier: "TotalEnergies", text: "5% korting bij gecombineerd contract" },
-    { supplier: "SmartPrice", text: "Overstappen is gratis · Switch for free in 5 minutes →" },
+    { supplier: "Bolt", text: "Geen uitstapvergoeding · Maandelijks opzegbaar", url: "https://www.boltenergie.be/nl/aanbiedingen" },
+    { supplier: "Engie", text: "Gecombineerde korting stroom + gas", url: "https://www.engie.be/nl/thuis/stroom-gas/aanbiedingen" },
+    { supplier: "Luminus", text: "Vaste prijs 24 maanden beschikbaar", url: "https://www.luminus.be/nl/promo" },
+    { supplier: "TotalEnergies", text: "5% korting bij gecombineerd contract", url: "https://www.totalenergies.be/nl/particulieren/aanbiedingen" },
+    { supplier: "SmartPrice", text: "Vergelijk alle plannen gratis", url: null },
   ]);
 
   useEffect(() => {
     fetch("/api/suppliers/promotions").then(r => r.json()).then(d => {
       if (d.success) {
         const all = Object.entries(d.promotions || {}).flatMap(([s, d2]) =>
-          (d2.promos || []).slice(0, 1).map(p => ({ supplier: s, text: p }))
+          (d2.promos || []).slice(0, 1).map(p => ({
+            supplier: s.charAt(0).toUpperCase() + s.slice(1),
+            text: p,
+            url: d2.url || null,
+          }))
         ).filter(p => p.text);
-        if (all.length > 0) setPromos([...all, { supplier: "SmartPrice", text: "Overstappen is gratis · Switch for free →" }]);
+        if (all.length > 0) setPromos([...all, { supplier: "SmartPrice", text: "Vergelijk alle plannen gratis", url: null }]);
       }
     }).catch(() => {});
   }, []);
@@ -162,19 +166,20 @@ export default function App() {
       {showPromos && (
         <div style={{ background: "#0D1626", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 14, padding: "14px 16px", marginBottom: 8, maxWidth: 300, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
           <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>🎁 Current Deals</div>
-          {promos.slice(0, 5).map((p, i) => (
-            <div key={i} onClick={() => { setShowPromos(false); navigate("/calculator/electricity"); }}
-              style={{ fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4, cursor: "pointer", padding: "4px 8px", borderRadius: 6, transition: "background 0.15s" }}
+          {promos.slice(0, 6).map((p, i) => (
+            <a key={i} href={p.url || "#"} target="_blank" rel="noopener noreferrer"
+              onClick={() => setShowPromos(false)}
+              style={{ display: "block", fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4, cursor: "pointer", padding: "6px 8px", borderRadius: 6, textDecoration: "none", transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
               <strong style={{ color: "#FCD34D" }}>{p.supplier}</strong>: {p.text}
-              <span style={{ color: "#F59E0B", marginLeft: 6, fontSize: 10 }}>→</span>
-            </div>
+              <span style={{ color: "#F59E0B", marginLeft: 6, fontSize: 10 }}>↗</span>
+            </a>
           ))}
           <div style={{ fontSize: 10, color: "#475569", marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span>Overstappen is gratis · Free to switch</span>
             <button onClick={() => { setShowPromos(false); navigate("/calculator/electricity"); }} style={{ background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", borderRadius: 20, padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-              Compare plans →
+              🔌 Compare all plans →
             </button>
           </div>
         </div>
