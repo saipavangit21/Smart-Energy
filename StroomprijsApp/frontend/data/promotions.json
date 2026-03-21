@@ -1,0 +1,37 @@
+{
+  "bolt": {
+    "promos": ["Geen uitstapvergoeding · Maandelijks opzegbaar", "100% groene stroom beschikbaar"],
+    "url": "https://www.boltenergie.be/nl/aanbiedingen",
+    "scraped_at": "2026-03-21T00:00:00.000Z"
+  },
+  "engie": {
+    "promos": ["Gecombineerde korting stroom + gas", "100% hernieuwbare energie beschikbaar"],
+    "url": "https://www.engie.be/nl/thuis/stroom-gas/aanbiedingen",
+    "scraped_at": "2026-03-21T00:00:00.000Z"
+  },
+  "luminus": {
+    "promos": ["Vaste prijs 24 maanden beschikbaar", "EDF Groep · Belgische wind & zonne-energie"],
+    "url": "https://www.luminus.be/nl/promo",
+    "scraped_at": "2026-03-21T00:00:00.000Z"
+  },
+  "totalenergies": {
+    "promos": ["5% korting bij gecombineerd stroom + gas contract"],
+    "url": "https://www.totalenergies.be/nl/particulieren/aanbiedingen",
+    "scraped_at": "2026-03-21T00:00:00.000Z"
+  },
+  "eneco": {
+    "promos": ["100% windenergie · Nederlandse moedermaatschappij"],
+    "url": "https://www.eneco.be/nl/aanbiedingen",
+    "scraped_at": "2026-03-21T00:00:00.000Z"
+  },
+  "mega": {
+    "promos": ["Variabel tarief zonder uitstapkosten", "Online beheer · Geen papieren facturen"],
+    "url": "https://www.mega.be/nl/energie",
+    "scraped_at": "2026-03-21T00:00:00.000Z"
+  },
+  "octaplus": {
+    "promos": ["Belgisch bedrijf · Lokale klantenservice", "Flex plan zonder bindende duur"],
+    "url": "https://www.octaplus.be/nl/aanbiedingen",
+    "scraped_at": "2026-03-21T00:00:00.000Z"
+  }
+}
