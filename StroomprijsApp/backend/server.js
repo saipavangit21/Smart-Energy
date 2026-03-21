@@ -123,6 +123,30 @@ if (process.env.RESEND_API_KEY) {
 runWeeklyScrape().catch(e => console.warn("[startup] Initial scrape failed:", e.message));
 setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape failed:", e.message)); }, 7 * 24 * 3600 * 1000);
 
+
+// ── Status Banner API ─────────────────────────────────────────
+let _statusBanner = null;
+
+app.get("/api/status-banner", (req, res) => {
+  res.json(_statusBanner || { active: false });
+});
+
+// Admin: set banner — POST /api/admin/banner
+// Body: { secret, active, type, title, message, dismissable }
+// Types: maintenance | incident | info | resolved
+app.post("/api/admin/banner", (req, res) => {
+  const { secret, active, type, title, message, dismissable } = req.body;
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  if (!active) {
+    _statusBanner = null;
+    return res.json({ success: true, banner: null });
+  }
+  _statusBanner = { active: true, type: type || "info", title, message, dismissable: dismissable !== false };
+  res.json({ success: true, banner: _statusBanner });
+});
+
 app.listen(PORT,()=>{
   console.log(`\n⚡ SmartPrice v2 on port ${PORT}`);
   console.log(`   DB: ${process.env.DATABASE_URL?"✅ Supabase":"❌ No DATABASE_URL"}\n`);
