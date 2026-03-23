@@ -93,6 +93,12 @@ router.post("/register", registerLimiter, async (req, res) => {
     await userStore.saveRefreshToken(tokens.refreshToken, user.id);
 
     setAuthCookies(res, tokens);
+
+    // Send welcome email if user provided email
+    if (email) {
+      sendWelcomeEmail(email, name).catch(() => {});
+    }
+
     res.status(201).json({ success: true, user: userStore.safeUser(user) });
   } catch (err) {
     console.error("Register error:", err);

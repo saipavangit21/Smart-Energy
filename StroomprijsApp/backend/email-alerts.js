@@ -222,3 +222,102 @@ async function checkAndSendGasAlerts(pool) {
 }
 
 module.exports = { checkAndSendAlerts, checkAndSendGasAlerts };
+
+// ── Welcome email ─────────────────────────────────────────────
+async function sendWelcomeEmail(email, name) {
+  if (!RESEND_API_KEY || !email) return;
+  try {
+    await axios.post("https://api.resend.com/emails", {
+      from: "SmartPrice.be <hello@smartprice.be>",
+      to: email,
+      subject: "🎉 Welcome to SmartPrice.be!",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="margin:0;padding:0;background:#060B14;font-family:'Helvetica Neue',Arial,sans-serif;">
+          <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
+            
+            <!-- Header -->
+            <div style="text-align:center;margin-bottom:32px;">
+              <div style="font-size:48px;margin-bottom:12px;">🇧🇪⚡</div>
+              <h1 style="margin:0;font-size:28px;font-weight:900;color:#ffffff;letter-spacing:-1px;">Welcome to SmartPrice.be!</h1>
+              <p style="color:#64748B;font-size:15px;margin-top:8px;">Hey ${name}, you're in! 🎉</p>
+            </div>
+
+            <!-- Main card -->
+            <div style="background:#0D1626;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:28px;margin-bottom:20px;">
+              <p style="color:#E2E8F0;font-size:15px;line-height:1.7;margin:0 0 20px;">
+                You now have access to everything SmartPrice has to offer — live EPEX Spot prices, supplier comparison, price alerts and more.
+              </p>
+
+              <div style="margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                  <span style="font-size:20px;">⚡</span>
+                  <div>
+                    <div style="color:#E2E8F0;font-weight:700;font-size:14px;">Live EPEX Spot prices</div>
+                    <div style="color:#64748B;font-size:12px;">Updated every 15 minutes · hourly chart</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                  <span style="font-size:20px;">🔌</span>
+                  <div>
+                    <div style="color:#E2E8F0;font-weight:700;font-size:14px;">Plan calculator</div>
+                    <div style="color:#64748B;font-size:12px;">Compare all 7 Belgian suppliers with real annual costs</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                  <span style="font-size:20px;">🔔</span>
+                  <div>
+                    <div style="color:#E2E8F0;font-weight:700;font-size:14px;">Price alerts</div>
+                    <div style="color:#64748B;font-size:12px;">Get emailed when electricity drops below your threshold</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:20px;">🚗</span>
+                  <div>
+                    <div style="color:#E2E8F0;font-weight:700;font-size:14px;">EV charging optimizer</div>
+                    <div style="color:#64748B;font-size:12px;">Best hours to charge · save up to €600/year</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <div style="text-align:center;margin-bottom:28px;">
+              <a href="https://smartprice.be" style="display:inline-block;background:linear-gradient(135deg,#0D9488,#1A56A4);color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 32px;border-radius:30px;letter-spacing:0.3px;">
+                Go to Dashboard →
+              </a>
+            </div>
+
+            <!-- Tip -->
+            <div style="background:rgba(0,200,150,0.06);border:1px solid rgba(0,200,150,0.2);border-radius:14px;padding:16px 20px;margin-bottom:28px;">
+              <div style="color:#00C896;font-weight:700;font-size:13px;margin-bottom:6px;">💡 Quick tip</div>
+              <div style="color:#94A3B8;font-size:13px;line-height:1.6;">
+                Set up a price alert in the <strong style="color:#E2E8F0;">Alerts tab</strong> to get notified when electricity prices drop below your threshold. Most Belgian households save €200–400/year by timing their usage.
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="text-align:center;color:#334155;font-size:12px;line-height:1.8;">
+              <div>SmartPrice.be · Belgium's real-time energy price tracker</div>
+              <div>Free · No ads · GDPR compliant · Data stored in EU</div>
+              <div style="margin-top:8px;">
+                <a href="https://smartprice.be/privacy" style="color:#475569;text-decoration:none;">Privacy Policy</a>
+                &nbsp;·&nbsp;
+                <a href="mailto:hello@smartprice.be" style="color:#475569;text-decoration:none;">hello@smartprice.be</a>
+              </div>
+            </div>
+
+          </div>
+        </body>
+        </html>
+      `,
+    }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" } });
+    console.log(`[welcome] Email sent to ${email}`);
+  } catch (e) {
+    console.error("[welcome] Failed:", e.message);
+  }
+}
+
+module.exports.sendWelcomeEmail = sendWelcomeEmail;
