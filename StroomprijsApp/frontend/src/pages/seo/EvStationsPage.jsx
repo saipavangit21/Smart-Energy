@@ -429,7 +429,12 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           </div>
 
           {/* Station detail panel */}
-          {selected && (
+          {selected && (() => {
+            const maxPower = Math.max(...(selected.Connections?.map(c => c.PowerKW || 0) || [22]));
+            const chargeKwh = 30; // typical 30 kWh charge
+            const costNow = mwh != null ? ((mwh / 1000) * chargeKwh * 1.21).toFixed(2) : null; // incl 21% VAT
+            const chargeTime = maxPower > 0 ? (chargeKwh / maxPower * 60).toFixed(0) : null;
+            return (
             <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 20, padding: 20, maxHeight: 545, overflowY: "auto" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.3, flex: 1, paddingRight: 8 }}>
@@ -444,14 +449,33 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 {selected.AddressInfo?.Postcode}
               </div>
 
-              {/* Charging advice */}
-              <div style={{ background: `${col}10`, border: `1px solid ${col}30`, borderRadius: 12, padding: "10px 14px", marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{T.adviceTitle}</div>
-                <div style={{ fontSize: 13, color: col, fontWeight: 700 }}>{getPriceAdvice(mwh, lang)}</div>
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-                  {mwh != null ? `€${mwh.toFixed(1)}/MWh` : "—"}
-                  {" · "}<a href="/ev-charging-belgium" style={{ color: C.teal, textDecoration: "none", fontSize: 11 }}>See all cheap hours →</a>
+              {/* Price + cost estimate */}
+              <div style={{ background: `${col}10`, border: `1px solid ${col}30`, borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>⚡ CURRENT EPEX PRICE</div>
+                    <div style={{ fontSize: 24, fontWeight: 900, fontFamily: "monospace", color: col }}>
+                      €{mwh != null ? mwh.toFixed(1) : "—"}
+                    </div>
+                    <div style={{ fontSize: 10, color: C.muted }}>/MWh</div>
+                  </div>
+                  {costNow && (
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>30 kWh CHARGE COSTS</div>
+                      <div style={{ fontSize: 24, fontWeight: 900, fontFamily: "monospace", color: col }}>
+                        €{costNow}
+                      </div>
+                      <div style={{ fontSize: 10, color: C.muted }}>incl. VAT</div>
+                    </div>
+                  )}
                 </div>
+                <div style={{ fontSize: 12, color: col, fontWeight: 700 }}>{getPriceAdvice(mwh, lang)}</div>
+                {chargeTime && maxPower > 0 && (
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                    ⏱ ~{chargeTime < 60 ? `${chargeTime} min` : `${(chargeTime/60).toFixed(1)}h`} at {maxPower}kW
+                    {" · "}<a href="/ev-charging-belgium" style={{ color: C.teal, textDecoration: "none" }}>See cheapest hours →</a>
+                  </div>
+                )}
               </div>
 
               {/* Operator */}
@@ -470,6 +494,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                     {selected.Connections.slice(0, 6).map((conn, i) => {
                       const power = conn.PowerKW;
                       const isFast = power >= 50;
+                      const connCost = power && mwh != null ? ((mwh / 1000) * chargeKwh * 1.21).toFixed(2) : null;
                       return (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "8px 12px" }}>
                           <div>
@@ -478,11 +503,14 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                             </div>
                             {conn.Quantity > 1 && <div style={{ fontSize: 10, color: C.muted }}>×{conn.Quantity}</div>}
                           </div>
-                          {power && (
-                            <div style={{ fontSize: 13, fontWeight: 800, color: isFast ? C.orange : C.green, fontFamily: "monospace" }}>
-                              {power} kW
-                            </div>
-                          )}
+                          <div style={{ textAlign: "right" }}>
+                            {power && (
+                              <div style={{ fontSize: 13, fontWeight: 800, color: isFast ? C.orange : C.green, fontFamily: "monospace" }}>
+                                {power} kW
+                              </div>
+                            )}
+                            {connCost && <div style={{ fontSize: 10, color: C.muted }}>~€{connCost}/30kWh</div>}
+                          </div>
                         </div>
                       );
                     })}
@@ -497,7 +525,8 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 🗺️ Get directions →
               </a>
             </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* CTA */}
