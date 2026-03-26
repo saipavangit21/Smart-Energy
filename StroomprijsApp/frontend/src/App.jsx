@@ -28,6 +28,7 @@ import CheapestHoursPage from "./pages/seo/CheapestHoursPage";
 import EvChargingPage    from "./pages/seo/EvChargingPage";
 import EvStationsPage   from "./pages/seo/EvStationsPage";
 import ApiPage           from "./pages/ApiPage";
+import SmartAgent        from "./components/SmartAgent";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
 function getFullPath() { return window.location.pathname + window.location.search; }
@@ -85,7 +86,11 @@ export default function App() {
       const a = e.target.closest("a[href]");
       if (!a) return;
       const href = a.getAttribute("href");
-      if (!href || href.startsWith("http") || href.startsWith("mailto") || href.startsWith("#")) return;
+      // Skip external links, mailto, hash, and links with target="_blank"
+      if (!href) return;
+      if (href.startsWith("http") || href.startsWith("https") || href.startsWith("mailto") || href.startsWith("#")) return;
+      if (a.getAttribute("target") === "_blank") return;
+      if (a.getAttribute("data-external") === "true") return;
       e.preventDefault();
       window.history.pushState({}, "", href);
       setPath(href.split("?")[0]);
@@ -167,14 +172,18 @@ export default function App() {
         <div style={{ background: "#0D1626", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 14, padding: "14px 16px", marginBottom: 8, maxWidth: 300, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
           <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>🎁 Current Deals</div>
           {promos.slice(0, 6).map((p, i) => (
-            <a key={i} href={p.url || "#"} target="_blank" rel="noopener noreferrer"
-              onClick={(e) => { e.stopPropagation(); setShowPromos(false); if (!p.url) { e.preventDefault(); navigate("/calculator/electricity"); } }}
-              style={{ display: "block", fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4, cursor: "pointer", padding: "6px 8px", borderRadius: 6, textDecoration: "none", transition: "background 0.15s" }}
+            <div key={i}
+              onClick={() => {
+                setShowPromos(false);
+                if (p.url) window.open(p.url, "_blank", "noopener,noreferrer");
+                else navigate("/calculator/electricity");
+              }}
+              style={{ display: "block", fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4, cursor: "pointer", padding: "6px 8px", borderRadius: 6, transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
               <strong style={{ color: "#FCD34D" }}>{p.supplier}</strong>: {p.text}
-              <span style={{ color: "#F59E0B", marginLeft: 6, fontSize: 10 }}>↗</span>
-            </a>
+              <span style={{ color: p.url ? "#F59E0B" : "#0D9488", marginLeft: 6, fontSize: 10 }}>{p.url ? "↗" : "→"}</span>
+            </div>
           ))}
           <div style={{ fontSize: 10, color: "#475569", marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span>Overstappen is gratis · Free to switch</span>
@@ -270,6 +279,7 @@ export default function App() {
     <>
       <StatusBanner />
       <PromoTicker />
+      <SmartAgent />
       <Dashboard
       onGoProfile={user ? () => setPage("profile") : () => { setGuestMode(false); setShowAuth(true); }}
       initialTab={initialTab}
