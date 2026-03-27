@@ -124,27 +124,34 @@ runWeeklyScrape().catch(e => console.warn("[startup] Initial scrape failed:", e.
 setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape failed:", e.message)); }, 7 * 24 * 3600 * 1000);
 
 
-// ── Status Banner API ─────────────────────────────────────────
-let _statusBanner = null;
+// ── SmartPrice AI Agent proxy ─────────────────────────────────
+app.post("/api/agent/chat", async (req, res) => {
+  try {
+    const { messages, systemPrompt } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ success: false, error: "messages required" });
+    }
 
-app.get("/api/status-banner", (req, res) => {
-  res.json(_statusBanner || { active: false });
-});
+    const response = await axios.post("https://api.anthropic.com/v1/messages", {
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      system: systemPrompt || "You are a helpful SmartPrice.be assistant for Belgian energy prices.",
+      messages: messages.slice(-10), // last 10 messages for context
+    }, {
+      headers: {
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      timeout: 30000,
+    });
 
-// Admin: set banner — POST /api/admin/banner
-// Body: { secret, active, type, title, message, dismissable }
-// Types: maintenance | incident | info | resolved
-app.post("/api/admin/banner", (req, res) => {
-  const { secret, active, type, title, message, dismissable } = req.body;
-  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
-    return res.status(401).json({ success: false, error: "Unauthorized" });
+    const reply = response.data?.content?.[0]?.text || "Sorry, no response.";
+    res.json({ success: true, reply });
+  } catch (e) {
+    console.error("[agent] error:", e.response?.data || e.message);
+    res.status(500).json({ success: false, error: "Agent error: " + e.message });
   }
-  if (!active) {
-    _statusBanner = null;
-    return res.json({ success: true, banner: null });
-  }
-  _statusBanner = { active: true, type: type || "info", title, message, dismissable: dismissable !== false };
-  res.json({ success: true, banner: _statusBanner });
 });
 
 app.listen(PORT,()=>{

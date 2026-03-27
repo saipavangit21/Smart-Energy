@@ -81,48 +81,6 @@ export default function SmartAgent() {
     if (open) setTimeout(() => inputRef.current?.focus(), 300);
   }, [open]);
 
-  const buildSystemPrompt = () => {
-    const price = context?.currentPrice;
-    const stats = context?.todayStats;
-    const cheap = context?.cheapestHours;
-
-    return `You are SmartPrice Assistant, a helpful AI for SmartPrice.be — Belgium's real-time energy price monitoring platform.
-
-LIVE DATA RIGHT NOW:
-- Current EPEX Spot price: ${price != null ? `€${price.toFixed(1)}/MWh` : "unavailable"}
-- Today's min: ${stats?.min != null ? `€${stats.min}/MWh` : "N/A"} | avg: ${stats?.avg != null ? `€${stats.avg}/MWh` : "N/A"} | max: ${stats?.max != null ? `€${stats.max}/MWh` : "N/A"}
-- Cheapest upcoming hours: ${cheap?.map(h => `${new Date(h.timestamp).toLocaleTimeString("en-GB", {hour:"2-digit",minute:"2-digit"})} €${h.price_eur_mwh?.toFixed(0)}/MWh`).join(", ") || "unavailable"}
-- Negative hours today: ${stats?.negative_hours || 0}
-
-ABOUT SMARTPRICE.BE:
-- Free Belgian energy price monitoring platform
-- Shows live EPEX Spot electricity prices updated every 15 minutes
-- TTF natural gas prices
-- Compares all 7 Belgian suppliers: Bolt Energy, Engie, Luminus, TotalEnergies, Eneco, Mega, Octa+
-- 4-step calculator for personalized plan comparison (includes grid costs, VAT, capacity tariff)
-- Price alerts by email when prices drop below threshold
-- EV charging optimizer — shows cheapest hours to charge
-- Interactive map of 500+ Belgian EV charging stations
-- Free public API for Home Assistant integration
-- Trilingual: EN / NL / FR
-
-BELGIAN ENERGY FACTS:
-- Electricity VAT: 6% for residential
-- Flanders capacity tariff: €4.48/kW/month based on quarterly peak
-- EPEX Spot prices vary hourly — cheapest usually 00:00-06:00 and solar peak ~13:00
-- Dynamic contracts track EPEX directly — best for smart home users
-- Typical Belgian household: 3,500 kWh/year electricity, 20,000 kWh/year gas
-
-RESPONSE STYLE:
-- Be concise, friendly and helpful
-- Use €/MWh for wholesale, €/kWh for retail context
-- Give practical advice — when to use appliances, when to charge EV etc.
-- If asked about specific tariffs say to use the SmartPrice calculator
-- Respond in the same language as the user (EN/NL/FR)
-- Keep responses under 150 words unless detailed explanation needed
-- Use emojis sparingly for warmth ⚡🔋🚗`;
-  };
-
   const sendMessage = async (text) => {
     if (!text.trim() || loading) return;
     const userMsg = { role: "user", content: text.trim() };
@@ -132,18 +90,16 @@ RESPONSE STYLE:
     setLoading(true);
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch(`${API}/api/agent/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: buildSystemPrompt(),
           messages: newMessages,
+          systemPrompt: buildSystemPrompt(),
         }),
       });
       const data = await response.json();
-      const reply = data.content?.[0]?.text || "Sorry, I couldn't get a response.";
+      const reply = data.reply || "Sorry, I couldn't get a response.";
       setMessages([...newMessages, { role: "assistant", content: reply }]);
     } catch (e) {
       setMessages([...newMessages, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
