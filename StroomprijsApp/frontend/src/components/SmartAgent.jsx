@@ -90,7 +90,7 @@ export default function SmartAgent() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API}/api/agent/chat`, {
+      const response = await fetch("/api/agent/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
