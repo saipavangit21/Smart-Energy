@@ -52,30 +52,6 @@ export default function App() {
       .then(d => { if (d.active) setStatusBanner(d); })
       .catch(() => {});
   }, []);
-  const [promos, setPromos] = useState([
-    { supplier: "Bolt",          text: "Geen uitstapvergoeding · Maandelijks opzegbaar", url: "https://www.boltenergie.be/nl/aanbiedingen" },
-    { supplier: "Engie",         text: "Gecombineerde korting stroom + gas",             url: "https://www.engie.be/nl/thuis/stroom-gas/aanbiedingen" },
-    { supplier: "Luminus",       text: "Vaste prijs 24 maanden beschikbaar",             url: "https://www.luminus.be/nl/prive/elektriciteit-gas/tarieven" },
-    { supplier: "TotalEnergies", text: "5% korting bij gecombineerd contract",           url: "https://www.totalenergies.be/nl/particulieren/aanbiedingen" },
-    { supplier: "Eneco",         text: "100% windenergie · Nederlandse moedermaatschappij", url: "https://www.eneco.be/nl/energie/stroom-en-gas/tarieven/" },
-    { supplier: "Mega",          text: "Variabel tarief zonder uitstapkosten",           url: "https://www.mega.be/nl/energie/tariefkaarten" },
-    { supplier: "Octaplus",      text: "Belgisch bedrijf · Lokale klantenservice",       url: "https://www.octaplus.be/nl/elektriciteit-aardgas/tarieven" },
-  ]);
-
-  useEffect(() => {
-    fetch("/api/suppliers/promotions").then(r => r.json()).then(d => {
-      if (d.success) {
-        const all = Object.entries(d.promotions || {}).flatMap(([s, d2]) =>
-          (d2.promos || []).slice(0, 1).map(p => ({
-            supplier: s.charAt(0).toUpperCase() + s.slice(1),
-            text: p,
-            url: d2.url || null,
-          }))
-        ).filter(p => p.text && p.url); // only show promos with a real URL
-        if (all.length > 0) setPromos(all);
-      }
-    }).catch(() => {});
-  }, []);
 
   // Listen to browser back/forward
   useEffect(() => {
@@ -144,8 +120,6 @@ export default function App() {
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   // ── Loading spinner ──────────────────────────────────────────
-  const [showPromos, setShowPromos] = useState(false);
-
   const StatusBanner = () => {
     if (!statusBanner) return null;
     const colors = {
@@ -167,47 +141,6 @@ export default function App() {
     );
   };
 
-  const PromoTicker = () => (
-    <div style={{ position: "fixed", bottom: 80, right: 16, zIndex: 9999 }}>
-      {showPromos && (
-        <div style={{ background: "#0D1626", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 14, padding: "14px 16px", marginBottom: 8, maxWidth: 300, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
-          <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>🎁 Current Deals</div>
-          {promos.slice(0, 7).map((p, i) => (
-            <div key={i}
-              onClick={() => { setShowPromos(false); navigate("/calculator/electricity"); }}
-              style={{ display: "block", fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4, cursor: "pointer", padding: "6px 8px", borderRadius: 6, transition: "background 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
-              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <strong style={{ color: "#FCD34D" }}>{p.supplier}</strong>: {p.text}
-              <span style={{ color: "#0D9488", marginLeft: 6, fontSize: 10 }}>→</span>
-            </div>
-          ))}
-          <div style={{ fontSize: 10, color: "#475569", marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span>Overstappen is gratis · Free to switch</span>
-            <button onClick={() => { setShowPromos(false); navigate("/calculator/electricity"); }} style={{ background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", borderRadius: 20, padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-              🔌 Compare all plans →
-            </button>
-          </div>
-        </div>
-      )}
-      <button onClick={() => setShowPromos(s => !s)} style={{
-        display: "flex", alignItems: "center", gap: 8,
-        padding: "10px 16px", borderRadius: 30, cursor: "pointer",
-        background: "linear-gradient(135deg, #92400E, #D97706)",
-        border: "none", color: "#FEF3C7", fontSize: 13, fontWeight: 700,
-        boxShadow: "0 4px 20px rgba(245,158,11,0.4)",
-        animation: "promo-flash 2.5s ease-in-out infinite",
-      }}>
-        🎁 Deals {showPromos ? "✕" : "→"}
-      </button>
-      <style>{`
-        @keyframes promo-flash {
-          0%, 100% { box-shadow: 0 4px 20px rgba(245,158,11,0.4); }
-          50% { box-shadow: 0 4px 28px rgba(245,158,11,0.8), 0 0 0 4px rgba(245,158,11,0.15); }
-        }
-      `}</style>
-    </div>
-  );
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#060B14", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
@@ -275,7 +208,6 @@ export default function App() {
   return (
     <>
       <StatusBanner />
-      <PromoTicker />
       <Dashboard
       onGoProfile={user ? () => setPage("profile") : () => { setGuestMode(false); setShowAuth(true); }}
       initialTab={initialTab}
