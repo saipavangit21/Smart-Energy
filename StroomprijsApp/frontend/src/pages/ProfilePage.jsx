@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useAuth }  from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { SUPPLIERS } from "../utils/priceUtils";
+import EnergyMixSection from "../components/EnergyMixSection";
 
 const C = {
   navy: "#0D1B3E", teal: "#0D9488", white: "#FFFFFF",
@@ -137,6 +138,30 @@ export default function ProfilePage({ onBack, onGoAlerts }) {
             {`🚪 ${TC.signOut || "Sign Out"}`}
           </button>
         </div>
+
+        {/* Tools */}
+        <Section title="🔧 Tools">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+            {[
+              { icon: "🚗", label: "EV Charging Guide", sub: "Tips & costs", href: "/ev-charging-belgium" },
+              { icon: "🗺️", label: "EV Stations Map", sub: "Find chargers nearby", href: "/ev-charging-stations-belgium" },
+              { icon: "🔌", label: "API Docs", sub: "Home Assistant & dev", href: "/api-docs" },
+            ].map(t => (
+              <a key={t.href} href={t.href} style={{ display: "flex", flexDirection: "column", gap: 4, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 12px", textDecoration: "none", transition: "border-color 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(13,148,136,0.4)"}
+                onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"}>
+                <span style={{ fontSize: 22 }}>{t.icon}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#CBD5E1" }}>{t.label}</span>
+                <span style={{ fontSize: 11, color: C.gray }}>{t.sub}</span>
+              </a>
+            ))}
+          </div>
+        </Section>
+
+        {/* Energy Mix */}
+        <Section title="🌿 Energy Mix · Belgium Today">
+          <EnergyMixSection isMobile={window.innerWidth < 768} />
+        </Section>
 
         {/* Danger zone */}
         <Section title={`⚠️ ${P.dangerZone || "Danger Zone"}`}>

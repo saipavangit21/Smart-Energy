@@ -265,7 +265,6 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
     { id: "today",    icon: "📈", label: TC.today },
     { id: "tomorrow", icon: "⏩", label: TC.tomorrow },
     { id: "cheapest", icon: "💚", label: TC.best },
-    { id: "mix",      icon: "🌿", label: "Mix" },
     { id: "compare",  icon: "🏢", label: TC.suppliers },
     { id: "alerts",   icon: "🔔", label: TC.alerts },
   ];
@@ -550,7 +549,6 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
               {tab === "today" && "📈 Today's Prices"}
               {tab === "tomorrow" && "⏩ Tomorrow's Prices"}
               {tab === "cheapest" && "💚 Best Hours"}
-              {tab === "mix"     && "🌿 Energy Mix"}
               {tab === "compare" && "🏢 Suppliers"}
               {tab === "alerts" && "🔔 Alerts"}
           {tab === "history" && "📅 History"}
@@ -752,11 +750,6 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
           <SupplierCompare currentMwh={mwh} isMobile={isMobile} energyType={energyType} />
         )}
 
-        {/* ── Energy Mix ── */}
-        {energyType === "electricity" && tab === "mix" && (
-          <EnergyMixTab isMobile={isMobile} C={C} />
-        )}
-
         {/* ── Alerts ── */}
         {energyType === "electricity" && tab === "alerts" && (
           <AlertsTab
@@ -801,215 +794,6 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
       )}
 
       <style>{`* { box-sizing: border-box; } button { font-family: inherit; } ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }`}</style>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════
-// ENERGY MIX TAB — Generation mix + cross-border flows (ENTSO-E)
-// ══════════════════════════════════════════════════════════════════
-const GEN_SOURCES = [
-  { key: "Nuclear",       color: "#A78BFA", label: "Nuclear" },
-  { key: "Wind Onshore",  color: "#10B981", label: "Wind ↑" },
-  { key: "Wind Offshore", color: "#06B6D4", label: "Wind ⛵" },
-  { key: "Solar",         color: "#FCD34D", label: "Solar" },
-  { key: "Hydro ROR",     color: "#60A5FA", label: "Hydro" },
-  { key: "Hydro Pump",    color: "#3B82F6", label: "Hydro Pump" },
-  { key: "Biomass",       color: "#84CC16", label: "Biomass" },
-  { key: "Fossil Gas",    color: "#94A3B8", label: "Gas" },
-  { key: "Coal",          color: "#6B7280", label: "Coal" },
-  { key: "Lignite",       color: "#57534E", label: "Lignite" },
-  { key: "Waste",         color: "#9CA3AF", label: "Waste" },
-  { key: "Other RE",      color: "#34D399", label: "Other RE" },
-  { key: "Other",         color: "#475569", label: "Other" },
-];
-
-const FLOW_COLORS = { FR: "#3B82F6", NL: "#F97316", GB: "#EF4444", LU: "#8B5CF6" };
-
-function EnergyMixTab({ isMobile, C }) {
-  const [genData,    setGenData]    = useState([]);
-  const [flowData,   setFlowData]   = useState({ hourly: [], borders: [] });
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState(null);
-  const [activeView, setActiveView] = useState("generation"); // "generation" | "flows"
-
-  useEffect(() => {
-    setLoading(true); setError(null);
-    Promise.all([
-      fetch("/api/generation/today").then(r => r.json()),
-      fetch("/api/flows/today").then(r => r.json()),
-    ]).then(([gen, flows]) => {
-      if (gen.success) setGenData(gen.data || []);
-      else setError(gen.error || "Failed to load generation data");
-      if (flows.success) setFlowData({ hourly: flows.hourly || [], borders: flows.borders || [] });
-    }).catch(e => setError(e.message)).finally(() => setLoading(false));
-  }, []);
-
-  // Compute summary stats from latest hour with data
-  const latest = genData[genData.length - 1] || null;
-  const renewPct    = latest?.renewable_pct ?? null;
-  const co2         = latest?.co2_g_kwh ?? null;
-  const totalMW     = latest?.total_mw ?? null;
-
-  // Only show sources that have at least some data
-  const activeSources = GEN_SOURCES.filter(s => genData.some(h => (h[s.key] || 0) > 0));
-
-  const cardStyle = { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px 18px" };
-
-  if (loading) return (
-    <div style={{ textAlign: "center", padding: "60px 0", color: "#556" }}>
-      <div style={{ fontSize: 32, marginBottom: 12 }}>🌿</div>
-      <div>Loading energy mix data…</div>
-    </div>
-  );
-  if (error) return (
-    <div style={{ textAlign: "center", padding: "40px 0" }}>
-      <div style={{ color: "#EF4444", marginBottom: 8 }}>{error}</div>
-      <div style={{ fontSize: 11, color: "#556" }}>ENTSO-E data may take a moment to load</div>
-    </div>
-  );
-
-  return (
-    <div style={{ paddingBottom: 8 }}>
-      {/* Summary KPI row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 16 }}>
-        <div style={{ ...cardStyle, textAlign: "center" }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#10B981" }}>{renewPct != null ? `${renewPct}%` : "—"}</div>
-          <div style={{ fontSize: 10, color: "#556", marginTop: 2 }}>Renewable</div>
-        </div>
-        <div style={{ ...cardStyle, textAlign: "center" }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: co2 != null && co2 < 150 ? "#10B981" : co2 < 300 ? "#F59E0B" : "#EF4444" }}>
-            {co2 != null ? co2 : "—"}
-          </div>
-          <div style={{ fontSize: 10, color: "#556", marginTop: 2 }}>gCO₂/kWh</div>
-        </div>
-        <div style={{ ...cardStyle, textAlign: "center" }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#06B6D4" }}>{totalMW != null ? `${(totalMW/1000).toFixed(1)}` : "—"}</div>
-          <div style={{ fontSize: 10, color: "#556", marginTop: 2 }}>GW output</div>
-        </div>
-      </div>
-
-      {/* View toggle */}
-      <div style={{ display: "flex", background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: 3, gap: 2, marginBottom: 16, width: "fit-content" }}>
-        {[["generation","⚡ Generation"], ["flows","↔ Cross-border"]].map(([v, lbl]) => (
-          <button key={v} onClick={() => setActiveView(v)} style={{ padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.15s", background: activeView === v ? "rgba(255,255,255,0.1)" : "transparent", color: activeView === v ? "#fff" : "#667" }}>
-            {lbl}
-          </button>
-        ))}
-      </div>
-
-      {/* Generation mix chart */}
-      {activeView === "generation" && genData.length > 0 && (
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: isMobile ? "16px 4px 12px" : "20px 8px 12px", marginBottom: 16 }}>
-          <div style={{ paddingLeft: 14, marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>Generation by Source</div>
-            <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>MW · Today · Belgium · ENTSO-E</div>
-          </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={genData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }} stackOffset="none">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="hour_label" tick={{ fill: "#445", fontSize: 9 }} tickLine={false} interval={isMobile ? 3 : 2} />
-              <YAxis tick={{ fill: "#445", fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}GW`} width={36} />
-              <Tooltip
-                contentStyle={{ background: "rgba(8,12,22,0.97)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "10px 14px" }}
-                labelStyle={{ color: "#667", fontSize: 11, marginBottom: 6 }}
-                formatter={(v, name) => [`${Math.round(v).toLocaleString()} MW`, name]}
-              />
-              {activeSources.map(s => (
-                <Area key={s.key} type="monotone" dataKey={s.key} stackId="1" stroke={s.color} fill={s.color} fillOpacity={0.75} strokeWidth={0} name={s.label} />
-              ))}
-            </AreaChart>
-          </ResponsiveContainer>
-
-          {/* Legend */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", padding: "10px 14px 0" }}>
-            {activeSources.map(s => (
-              <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: s.color, flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: "#778" }}>{s.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Generation empty state */}
-      {activeView === "generation" && genData.length === 0 && (
-        <div style={{ textAlign: "center", padding: "40px 0", color: "#556" }}>
-          No generation data yet — ENTSO-E publishes after the hour
-        </div>
-      )}
-
-      {/* CO₂ trend mini chart */}
-      {activeView === "generation" && genData.length > 0 && (
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: isMobile ? "16px 4px 12px" : "20px 8px 12px", marginBottom: 16 }}>
-          <div style={{ paddingLeft: 14, marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>CO₂ Intensity</div>
-            <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>gCO₂/kWh · estimated from generation mix</div>
-          </div>
-          <ResponsiveContainer width="100%" height={120}>
-            <AreaChart data={genData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="hour_label" tick={{ fill: "#445", fontSize: 9 }} tickLine={false} interval={isMobile ? 3 : 2} />
-              <YAxis tick={{ fill: "#445", fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={v => v} width={30} />
-              <Tooltip
-                contentStyle={{ background: "rgba(8,12,22,0.97)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "10px 14px" }}
-                labelStyle={{ color: "#667", fontSize: 11 }}
-                formatter={v => [`${v} gCO₂/kWh`, "CO₂"]}
-              />
-              <Area type="monotone" dataKey="co2_g_kwh" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.15} strokeWidth={2} name="CO₂" dot={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Cross-border flows chart */}
-      {activeView === "flows" && flowData.hourly.length > 0 && (
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: isMobile ? "16px 4px 12px" : "20px 8px 12px", marginBottom: 16 }}>
-          <div style={{ paddingLeft: 14, marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>Cross-border Physical Flows</div>
-            <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>MW · positive = Belgium exports · ENTSO-E A11</div>
-          </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={flowData.hourly} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="hour_label" tick={{ fill: "#445", fontSize: 9 }} tickLine={false} interval={isMobile ? 3 : 2} />
-              <YAxis tick={{ fill: "#445", fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={v => `${v>0?"+":""}${Math.round(v/1000*10)/10}GW`} width={44} />
-              <Tooltip
-                contentStyle={{ background: "rgba(8,12,22,0.97)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "10px 14px" }}
-                labelStyle={{ color: "#667", fontSize: 11, marginBottom: 6 }}
-                formatter={(v, name) => [`${v > 0 ? "+" : ""}${Math.round(v).toLocaleString()} MW`, name]}
-              />
-              <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" />
-              {flowData.borders.map(b => (
-                <Bar key={b} dataKey={b} stackId="net" fill={FLOW_COLORS[b] || "#667"} name={b} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", padding: "10px 14px 0" }}>
-            {flowData.borders.map(b => (
-              <div key={b} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: FLOW_COLORS[b] || "#667", flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: "#778" }}>{b}</span>
-              </div>
-            ))}
-            <span style={{ fontSize: 10, color: "#445", marginLeft: "auto" }}>+export / −import</span>
-          </div>
-        </div>
-      )}
-
-      {/* Flows empty state */}
-      {activeView === "flows" && flowData.hourly.length === 0 && (
-        <div style={{ textAlign: "center", padding: "40px 20px", color: "#556" }}>
-          <div style={{ fontSize: 28, marginBottom: 10 }}>↔</div>
-          <div>Cross-border flow data unavailable</div>
-          <div style={{ fontSize: 11, marginTop: 6, color: "#445" }}>ENTSO-E A11 data may not yet be published for today</div>
-        </div>
-      )}
-
-      <div style={{ fontSize: 10, color: "#334", marginTop: 8 }}>
-        Source: ENTSO-E Transparency Platform · Generation data with ~1h delay · CO₂ estimates via lifecycle factors
-      </div>
     </div>
   );
 }

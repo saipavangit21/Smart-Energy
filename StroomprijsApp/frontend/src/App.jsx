@@ -54,11 +54,13 @@ export default function App() {
       .catch(() => {});
   }, []);
   const [promos, setPromos] = useState([
-    { supplier: "Bolt", text: "Geen uitstapvergoeding · Maandelijks opzegbaar", url: "https://www.boltenergie.be/nl/aanbiedingen" },
-    { supplier: "Engie", text: "Gecombineerde korting stroom + gas", url: "https://www.engie.be/nl/thuis/stroom-gas/aanbiedingen" },
-    { supplier: "Luminus", text: "Vaste prijs 24 maanden beschikbaar", url: "https://www.luminus.be/nl/promo" },
-    { supplier: "TotalEnergies", text: "5% korting bij gecombineerd contract", url: "https://www.totalenergies.be/nl/particulieren/aanbiedingen" },
-    { supplier: "SmartPrice", text: "Vergelijk alle plannen gratis", url: null },
+    { supplier: "Bolt",          text: "Geen uitstapvergoeding · Maandelijks opzegbaar", url: "https://www.boltenergie.be/nl/aanbiedingen" },
+    { supplier: "Engie",         text: "Gecombineerde korting stroom + gas",             url: "https://www.engie.be/nl/thuis/stroom-gas/aanbiedingen" },
+    { supplier: "Luminus",       text: "Vaste prijs 24 maanden beschikbaar",             url: "https://www.luminus.be/nl/prive/elektriciteit-gas/tarieven" },
+    { supplier: "TotalEnergies", text: "5% korting bij gecombineerd contract",           url: "https://www.totalenergies.be/nl/particulieren/aanbiedingen" },
+    { supplier: "Eneco",         text: "100% windenergie · Nederlandse moedermaatschappij", url: "https://www.eneco.be/nl/energie/stroom-en-gas/tarieven/" },
+    { supplier: "Mega",          text: "Variabel tarief zonder uitstapkosten",           url: "https://www.mega.be/nl/energie/tariefkaarten" },
+    { supplier: "Octaplus",      text: "Belgisch bedrijf · Lokale klantenservice",       url: "https://www.octaplus.be/nl/elektriciteit-aardgas/tarieven" },
   ]);
 
   useEffect(() => {
@@ -70,8 +72,8 @@ export default function App() {
             text: p,
             url: d2.url || null,
           }))
-        ).filter(p => p.text);
-        if (all.length > 0) setPromos([...all, { supplier: "SmartPrice", text: "Vergelijk alle plannen gratis", url: null }]);
+        ).filter(p => p.text && p.url); // only show promos with a real URL
+        if (all.length > 0) setPromos(all);
       }
     }).catch(() => {});
   }, []);
@@ -171,18 +173,14 @@ export default function App() {
       {showPromos && (
         <div style={{ background: "#0D1626", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 14, padding: "14px 16px", marginBottom: 8, maxWidth: 300, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
           <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>🎁 Current Deals</div>
-          {promos.slice(0, 6).map((p, i) => (
+          {promos.slice(0, 7).map((p, i) => (
             <div key={i}
-              onClick={() => {
-                setShowPromos(false);
-                if (p.url) window.open(p.url, "_blank", "noopener,noreferrer");
-                else navigate("/calculator/electricity");
-              }}
+              onClick={() => { setShowPromos(false); window.open(p.url, "_blank", "noopener,noreferrer"); }}
               style={{ display: "block", fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4, cursor: "pointer", padding: "6px 8px", borderRadius: 6, transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
               <strong style={{ color: "#FCD34D" }}>{p.supplier}</strong>: {p.text}
-              <span style={{ color: p.url ? "#F59E0B" : "#0D9488", marginLeft: 6, fontSize: 10 }}>{p.url ? "↗" : "→"}</span>
+              <span style={{ color: "#F59E0B", marginLeft: 6, fontSize: 10 }}>↗</span>
             </div>
           ))}
           <div style={{ fontSize: 10, color: "#475569", marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>

@@ -757,13 +757,13 @@ function loadPromos() {
     if (fs.existsSync(PROMO_FILE)) return JSON.parse(fs.readFileSync(PROMO_FILE, "utf8"));
   } catch (e) {}
   return {
-    bolt:          { promos: ["Geen uitstapvergoeding · Maandelijks opzegbaar", "100% groene stroom beschikbaar"] },
-    engie:         { promos: ["Gecombineerde korting stroom + gas"] },
-    luminus:       { promos: ["Vaste prijs 24 maanden beschikbaar"] },
-    totalenergies: { promos: ["5% korting bij gecombineerd contract"] },
-    eneco:         { promos: ["100% windenergie · Nederlandse moedermaatschappij"] },
-    mega:          { promos: ["Variabel tarief zonder uitstapkosten"] },
-    octaplus:      { promos: ["Belgisch bedrijf · Lokale klantenservice"] },
+    bolt:          { url: "https://www.boltenergie.be/nl/aanbiedingen",                          promos: ["Geen uitstapvergoeding · Maandelijks opzegbaar"] },
+    engie:         { url: "https://www.engie.be/nl/thuis/stroom-gas/aanbiedingen",               promos: ["Gecombineerde korting stroom + gas"] },
+    luminus:       { url: "https://www.luminus.be/nl/prive/elektriciteit-gas/tarieven",          promos: ["Vaste prijs 24 maanden beschikbaar"] },
+    totalenergies: { url: "https://www.totalenergies.be/nl/particulieren/aanbiedingen",          promos: ["5% korting bij gecombineerd contract"] },
+    eneco:         { url: "https://www.eneco.be/nl/energie/stroom-en-gas/tarieven/",             promos: ["100% windenergie · Nederlandse moedermaatschappij"] },
+    mega:          { url: "https://www.mega.be/nl/energie/tariefkaarten",                        promos: ["Variabel tarief zonder uitstapkosten"] },
+    octaplus:      { url: "https://www.octaplus.be/nl/elektriciteit-aardgas/tarieven",           promos: ["Belgisch bedrijf · Lokale klantenservice"] },
   };
 }
 
