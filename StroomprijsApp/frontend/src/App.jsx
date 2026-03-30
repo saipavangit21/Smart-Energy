@@ -175,12 +175,12 @@ export default function App() {
           <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 700, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>🎁 Current Deals</div>
           {promos.slice(0, 7).map((p, i) => (
             <div key={i}
-              onClick={() => { setShowPromos(false); window.open(p.url, "_blank", "noopener,noreferrer"); }}
+              onClick={() => { setShowPromos(false); navigate("/calculator/electricity"); }}
               style={{ display: "block", fontSize: 12, color: "#CBD5E1", marginBottom: 6, lineHeight: 1.4, cursor: "pointer", padding: "6px 8px", borderRadius: 6, transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
               <strong style={{ color: "#FCD34D" }}>{p.supplier}</strong>: {p.text}
-              <span style={{ color: "#F59E0B", marginLeft: 6, fontSize: 10 }}>↗</span>
+              <span style={{ color: "#0D9488", marginLeft: 6, fontSize: 10 }}>→</span>
             </div>
           ))}
           <div style={{ fontSize: 10, color: "#475569", marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>

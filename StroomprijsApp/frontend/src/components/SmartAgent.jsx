@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = "";
 
 const SUGGESTED = {
   en: [
@@ -80,6 +80,29 @@ export default function SmartAgent() {
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 300);
   }, [open]);
+
+  const buildSystemPrompt = () => {
+    const price = context?.currentPrice;
+    const stats = context?.todayStats;
+    const cheap = context?.cheapestHours;
+    return [
+      "You are SmartPrice.be's energy assistant for Belgium.",
+      "You help users understand electricity prices, EV charging, and energy saving tips.",
+      "Always answer in the same language the user writes in (NL/FR/EN).",
+      "Be concise — 2-4 sentences unless the user asks for detail.",
+      price != null
+        ? `Current EPEX Spot price: €${price.toFixed(1)}/MWh (€${(price/1000).toFixed(4)}/kWh).`
+        : "Current price data is temporarily unavailable.",
+      stats
+        ? `Today's range: min €${stats.min}/MWh, max €${stats.max}/MWh, avg €${stats.avg}/MWh.`
+        : "",
+      cheap?.length
+        ? `Cheapest upcoming hours: ${cheap.map(h => new Date(h.timestamp).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Brussels" }) + " €" + h.price_eur_mwh.toFixed(0)).join(", ")}.`
+        : "",
+      "Belgium uses EPEX Spot day-ahead prices. Retail = spot + grid + taxes (typically €0.08-0.12/kWh on top).",
+      "Do not make up prices. If you don't know, say so.",
+    ].filter(Boolean).join(" ");
+  };
 
   const sendMessage = async (text) => {
     if (!text.trim() || loading) return;

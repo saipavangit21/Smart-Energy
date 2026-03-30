@@ -163,19 +163,28 @@ async function fetchGenerationMix(today) {
   if (!process.env.ENTSOE_API_KEY) throw new Error("ENTSOE_API_KEY not configured");
   const k = `gen-${today}`; if (cache.has(k)) return cache.get(k);
   const { start, end } = entsoeRange(today);
-  const { data: xml } = await axios.get("https://web-api.tp.entsoe.eu/api", {
-    params: { securityToken: process.env.ENTSOE_API_KEY, documentType: "A75", processType: "A16", in_Domain: BELGIUM_EIC, periodStart: start, periodEnd: end },
-    timeout: 20000, responseType: "text",
-  });
+  let xml;
+  try {
+    // A75 processType A16 = Realised (actual generation, available with ~1h delay)
+    const r = await axios.get("https://web-api.tp.entsoe.eu/api", {
+      params: { securityToken: process.env.ENTSOE_API_KEY, documentType: "A75", processType: "A16", in_Domain: BELGIUM_EIC, periodStart: start, periodEnd: end },
+      timeout: 25000, responseType: "text",
+    });
+    xml = r.data;
+  } catch(e) {
+    console.error("[gen] ENTSO-E A75 error:", e.response?.data?.slice?.(0,300) || e.message);
+    throw new Error("Generation data unavailable: " + (e.response?.status || e.message));
+  }
+  if (xml.includes("No matching data found") || xml.includes("<code>999</code>")) {
+    throw new Error("No generation data published yet for today (ENTSO-E A75 ~1h delay)");
+  }
   const byHour = {};
   const tsRe = /<TimeSeries>([\s\S]*?)<\/TimeSeries>/g; let tm;
   while ((tm = tsRe.exec(xml)) !== null) {
     const ts = tm[1];
     const psrM = ts.match(/<psrType>(B\d+)<\/psrType>/); if (!psrM) continue;
     const name = PSR_MAP[psrM[1]] || psrM[1];
-    // extract only this timeseries' periods
-    const tsPeriods = ts.replace(/<TimeSeries>/g,"").replace(/<\/TimeSeries>/g,"");
-    const pts = parseHourlyPoints(tsPeriods, today);
+    const pts = parseHourlyPoints(ts, today);
     for (const [lbl, qty] of Object.entries(pts)) {
       const h = parseInt(lbl);
       if (!byHour[lbl]) byHour[lbl] = { hour: h, hour_label: lbl };
@@ -183,6 +192,7 @@ async function fetchGenerationMix(today) {
     }
   }
   const result = Object.values(byHour).sort((a, b) => a.hour - b.hour);
+  if (!result.length) throw new Error("No generation data parsed — ENTSO-E A75 may not yet be published");
   cache.set(k, result); return result;
 }
 

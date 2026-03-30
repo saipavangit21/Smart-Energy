@@ -40,17 +40,20 @@ export default function EnergyMixSection({ isMobile }) {
   const [error,      setError]      = useState(null);
   const [activeView, setActiveView] = useState("generation");
 
-  useEffect(() => {
+  const load = () => {
     setLoading(true); setError(null);
     Promise.all([
       fetch("/api/generation/today").then(r => r.json()),
       fetch("/api/flows/today").then(r => r.json()),
     ]).then(([gen, flows]) => {
       if (gen.success) setGenData(gen.data || []);
-      else setError(gen.error || "Failed to load generation data");
+      else { console.error("[EnergyMix] generation error:", gen.error); setError(gen.error || "Failed to load generation data"); }
       if (flows.success) setFlowData({ hourly: flows.hourly || [], borders: flows.borders || [] });
-    }).catch(e => setError(e.message)).finally(() => setLoading(false));
-  }, []);
+      else console.warn("[EnergyMix] flows error:", flows.error);
+    }).catch(e => { console.error("[EnergyMix] fetch error:", e); setError(e.message); }).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
 
   const latest    = genData[genData.length - 1] || null;
   const renewPct  = latest?.renewable_pct ?? null;
@@ -68,7 +71,8 @@ export default function EnergyMixSection({ isMobile }) {
   if (error) return (
     <div style={{ textAlign: "center", padding: "30px 0" }}>
       <div style={{ color: "#EF4444", fontSize: 13, marginBottom: 6 }}>{error}</div>
-      <div style={{ fontSize: 11, color: "#445" }}>ENTSO-E data may take a moment to load</div>
+      <div style={{ fontSize: 11, color: "#445", marginBottom: 12 }}>ENTSO-E generation data may not yet be published for today</div>
+      <button onClick={load} style={{ padding: "7px 18px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "rgba(13,148,136,0.12)", border: "1px solid rgba(13,148,136,0.3)", color: "#0D9488", cursor: "pointer" }}>Retry</button>
     </div>
   );
 
