@@ -14,7 +14,7 @@ import { useLanguage }   from "../context/LanguageContext";
 import { useTheme, useColors } from "../context/ThemeContext";
 import LangSwitcher      from "../components/LangSwitcher";
 import ThemeSwitcher     from "../components/ThemeSwitcher";
-import { usePrices, useCurrentPrice, useCheapestHours } from "../hooks/usePrices";
+import { usePrices, useCheapestHours } from "../hooks/usePrices";
 import { SUPPLIERS, getSupplierPrice, getPriceColor, getPriceLabel } from "../utils/priceUtils";
 import GasTab from "./GasTab";
 
@@ -275,7 +275,9 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   }));
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
   const openCalculator = (type) => isGuest ? onSignIn() : (onOpenCalculator && onOpenCalculator(type));
-  const { current } = useCurrentPrice();
+  // Derive current price from prices array using is_current flag (Brussels-timezone aware)
+  // instead of a separate /api/current call which had a UTC vs CEST mismatch
+  const current = prices.find(p => p.is_current) || prices.filter(p => p.day === "today").slice(-1)[0] || null;
   const cheapest    = useCheapestHours(5);
 
   const [supplier,       setSupplier]       = useState(user?.preferences?.supplier || "Bolt Energy");
