@@ -117,6 +117,150 @@ async function getPrices(s,e) {
   }
 }
 
+// ── Generation mix + Cross-border flows (ENTSO-E) ──────────
+const PSR_MAP = {
+  B01:"Biomass", B02:"Lignite", B04:"Fossil Gas", B05:"Coal",
+  B09:"Geothermal", B10:"Hydro Pump", B11:"Hydro ROR",
+  B14:"Nuclear", B15:"Other RE", B16:"Solar",
+  B17:"Waste", B18:"Wind Offshore", B19:"Wind Onshore", B20:"Other",
+};
+const BELGIUM_EIC = "10YBE----------2";
+const BORDERS = [
+  { code:"FR", eic:"10YFR-RTE------C", name:"France" },
+  { code:"NL", eic:"10YNL----------L", name:"Netherlands" },
+  { code:"GB", eic:"10YGB----------A", name:"UK" },
+  { code:"LU", eic:"10YLU-CEGEDEL-NQ", name:"Luxembourg" },
+];
+
+function entsoeRange(dateStr) {
+  const d = new Date(dateStr + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - 1);
+  return { start: d.toISOString().slice(0,10).replace(/-/g,"") + "2100", end: dateStr.replace(/-/g,"") + "2300" };
+}
+
+function parseHourlyPoints(xml, targetDate) {
+  const out = {};
+  const perRe = /<Period>([\s\S]*?)<\/Period>/g; let pm;
+  while ((pm = perRe.exec(xml)) !== null) {
+    const per = pm[1];
+    const sm = per.match(/<start>(.*?)<\/start>/); if (!sm) continue;
+    const pStart = new Date(sm[1]);
+    const ptRe = /<Point>([\s\S]*?)<\/Point>/g; let pp;
+    while ((pp = ptRe.exec(per)) !== null) {
+      const posM = pp[1].match(/<position>(\d+)<\/position>/);
+      const qtyM = pp[1].match(/<quantity>([\d.]+)<\/quantity>/);
+      if (!posM || !qtyM) continue;
+      const d = new Date(pStart.getTime() + (parseInt(posM[1]) - 1) * 3600000);
+      if (toLocalISODate(d) !== targetDate) continue;
+      const h = getLocalHour(d);
+      const lbl = String(h).padStart(2,"0") + ":00";
+      out[lbl] = (out[lbl] || 0) + parseFloat(qtyM[1]);
+    }
+  }
+  return out;
+}
+
+async function fetchGenerationMix(today) {
+  if (!process.env.ENTSOE_API_KEY) throw new Error("ENTSOE_API_KEY not configured");
+  const k = `gen-${today}`; if (cache.has(k)) return cache.get(k);
+  const { start, end } = entsoeRange(today);
+  const { data: xml } = await axios.get("https://web-api.tp.entsoe.eu/api", {
+    params: { securityToken: process.env.ENTSOE_API_KEY, documentType: "A75", processType: "A16", in_Domain: BELGIUM_EIC, periodStart: start, periodEnd: end },
+    timeout: 20000, responseType: "text",
+  });
+  const byHour = {};
+  const tsRe = /<TimeSeries>([\s\S]*?)<\/TimeSeries>/g; let tm;
+  while ((tm = tsRe.exec(xml)) !== null) {
+    const ts = tm[1];
+    const psrM = ts.match(/<psrType>(B\d+)<\/psrType>/); if (!psrM) continue;
+    const name = PSR_MAP[psrM[1]] || psrM[1];
+    // extract only this timeseries' periods
+    const tsPeriods = ts.replace(/<TimeSeries>/g,"").replace(/<\/TimeSeries>/g,"");
+    const pts = parseHourlyPoints(tsPeriods, today);
+    for (const [lbl, qty] of Object.entries(pts)) {
+      const h = parseInt(lbl);
+      if (!byHour[lbl]) byHour[lbl] = { hour: h, hour_label: lbl };
+      byHour[lbl][name] = (byHour[lbl][name] || 0) + qty;
+    }
+  }
+  const result = Object.values(byHour).sort((a, b) => a.hour - b.hour);
+  cache.set(k, result); return result;
+}
+
+async function fetchOneFlow(outEic, inEic, start, end, today) {
+  const k = `flow-${outEic}-${inEic}-${today}`;
+  if (cache.has(k)) return cache.get(k);
+  try {
+    const { data: xml } = await axios.get("https://web-api.tp.entsoe.eu/api", {
+      params: { securityToken: process.env.ENTSOE_API_KEY, documentType: "A11", out_Domain: outEic, in_Domain: inEic, periodStart: start, periodEnd: end },
+      timeout: 20000, responseType: "text",
+    });
+    const result = parseHourlyPoints(xml, today);
+    cache.set(k, result); return result;
+  } catch { return {}; }
+}
+
+async function fetchFlows(today) {
+  if (!process.env.ENTSOE_API_KEY) throw new Error("ENTSOE_API_KEY not configured");
+  const { start, end } = entsoeRange(today);
+  // For each border fetch export (BE→neighbor) and import (neighbor→BE) in parallel
+  const results = await Promise.all(
+    BORDERS.flatMap(b => [
+      fetchOneFlow(BELGIUM_EIC, b.eic, start, end, today).then(r => ({ border: b, dir: "export", data: r })),
+      fetchOneFlow(b.eic, BELGIUM_EIC, start, end, today).then(r => ({ border: b, dir: "import", data: r })),
+    ])
+  );
+  // Build net flows per hour per border (positive = net export)
+  const byBorder = {};
+  for (const { border, dir, data } of results) {
+    if (!byBorder[border.code]) byBorder[border.code] = { code: border.code, name: border.name, net: {} };
+    for (const [lbl, mw] of Object.entries(data)) {
+      byBorder[border.code].net[lbl] = (byBorder[border.code].net[lbl] || 0) + (dir === "export" ? mw : -mw);
+    }
+  }
+  // Flatten to hourly array
+  const allLabels = [...new Set(Object.values(byBorder).flatMap(b => Object.keys(b.net)))].sort();
+  const hourly = allLabels.map(lbl => {
+    const row = { hour: parseInt(lbl), hour_label: lbl };
+    let totalNet = 0;
+    for (const b of Object.values(byBorder)) {
+      row[b.code] = Math.round(b.net[lbl] || 0);
+      totalNet += row[b.code];
+    }
+    row.total_net = Math.round(totalNet);
+    return row;
+  });
+  return { hourly, borders: BORDERS.map(b => b.code) };
+}
+
+app.get("/api/generation/today", async (req, res) => {
+  try {
+    const { today } = todayAndTomorrow();
+    const data = await fetchGenerationMix(today);
+    // Compute renewable share and CO2 for each hour
+    const CO2 = { Nuclear:12, "Wind Offshore":12, "Wind Onshore":11, Solar:45, "Hydro ROR":24, "Hydro Pump":24, Biomass:230, Lignite:820, Coal:820, "Fossil Gas":490, Waste:300, "Other RE":50, Other:200 };
+    const RENEWABLES = new Set(["Solar","Wind Onshore","Wind Offshore","Hydro ROR","Hydro Pump","Biomass","Other RE","Geothermal"]);
+    const enriched = data.map(h => {
+      let total = 0, renew = 0, co2sum = 0;
+      for (const [k, v] of Object.entries(h)) {
+        if (typeof v !== "number" || k === "hour") continue;
+        total += v;
+        if (RENEWABLES.has(k)) renew += v;
+        co2sum += v * (CO2[k] || 200);
+      }
+      return { ...h, total_mw: Math.round(total), renewable_mw: Math.round(renew), renewable_pct: total > 0 ? Math.round(renew / total * 100) : 0, co2_g_kwh: total > 0 ? Math.round(co2sum / total) : 0 };
+    });
+    res.json({ success: true, data: enriched, fetched_at: new Date().toISOString() });
+  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+app.get("/api/flows/today", async (req, res) => {
+  try {
+    const { today } = todayAndTomorrow();
+    const data = await fetchFlows(today);
+    res.json({ success: true, ...data, fetched_at: new Date().toISOString() });
+  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
 // ── Health check (DB + EPEX + data freshness) ──────────────
 require("./health-route")(app, pool);
 app.get("/api/status-banner", (req, res) => res.json({ active: false }));
