@@ -73,10 +73,46 @@ function computeStats(prices) {
   };
   return { today:calc(prices.filter(p=>p.day==="today")), tomorrow:calc(prices.filter(p=>p.day==="tomorrow")) };
 }
-async function fetchEC(s,e) { const k=`ec-${s}-${e}`; if(cache.has(k)) return cache.get(k); const {data} = await axios.get(`https://api.energy-charts.info/price?bzn=BE&start=${s}&end=${e}`,{timeout:10000}); const prices = data.unix_seconds.map((ts,i)=>({timestamp:new Date(ts*1000).toISOString(),price_eur_mwh:data.price[i],price_eur_kwh:+(data.price[i]/1000).toFixed(6),source:"Energy-Charts"})); cache.set(k,prices); return prices; }
-async function fetchElia(s,e) { const k=`elia-${s}-${e}`; if(cache.has(k)) return cache.get(k); const {data} = await axios.get("https://opendata.elia.be/api/explore/v2.1/catalog/datasets/ods003/records",{timeout:10000,params:{limit:100,order_by:"datetime",where:`datetime >= "${s}T00:00:00" AND datetime <= "${e}T23:59:59"`}}); const prices = (data.results||[]).map(r=>({timestamp:r.datetime,price_eur_mwh:r.price,price_eur_kwh:+(r.price/1000).toFixed(6),source:"Elia Open Data"})); cache.set(k,prices); return prices; }
+async function fetchEC(s,e) { const k=`ec-${s}-${e}`; if(cache.has(k)) return cache.get(k); const {data} = await axios.get(`https://api.energy-charts.info/price?bzn=BE&start=${s}&end=${e}`,{timeout:10000}); const prices = data.unix_seconds.map((ts,i)=>({timestamp:new Date(ts*1000).toISOString(),price_eur_mwh:data.price[i],price_eur_kwh:+(data.price[i]/1000).toFixed(6),source:"Energy-Charts"})); if(!prices.length) throw new Error("Energy-Charts returned empty data"); cache.set(k,prices); return prices; }
+
+async function fetchENTSOE(s,e) {
+  if(!process.env.ENTSOE_API_KEY) throw new Error("ENTSOE_API_KEY not configured");
+  const k=`entsoe-${s}-${e}`; if(cache.has(k)) return cache.get(k);
+  const start=s.replace(/-/g,"")+`0000`, end=e.replace(/-/g,"")+`2300`;
+  const {data:xml} = await axios.get("https://web-api.tp.entsoe.eu/api",{
+    params:{securityToken:process.env.ENTSOE_API_KEY,documentType:"A44",in_Domain:"10YBE----------2",out_Domain:"10YBE----------2",periodStart:start,periodEnd:end},
+    timeout:15000, responseType:"text",
+  });
+  const prices=[];
+  const periodRe=/<Period>([\s\S]*?)<\/Period>/g; let pm;
+  while((pm=periodRe.exec(xml))!==null){
+    const per=pm[1];
+    const sm=per.match(/<start>(.*?)<\/start>/); if(!sm) continue;
+    const pStart=new Date(sm[1]);
+    const pointRe=/<Point>([\s\S]*?)<\/Point>/g; let pp;
+    while((pp=pointRe.exec(per))!==null){
+      const posM=pp[1].match(/<position>(\d+)<\/position>/);
+      const prM=pp[1].match(/<price\.amount>([\d.]+)<\/price\.amount>/);
+      if(!posM||!prM) continue;
+      const ts=new Date(pStart.getTime()+(parseInt(posM[1])-1)*3600000);
+      const mwh=parseFloat(prM[1]);
+      prices.push({timestamp:ts.toISOString(),price_eur_mwh:mwh,price_eur_kwh:+(mwh/1000).toFixed(6),source:"ENTSO-E"});
+    }
+  }
+  if(!prices.length) throw new Error("ENTSO-E returned no prices");
+  cache.set(k,prices); return prices;
+}
+
 function enrich(prices) { const now=new Date(),ts=toISODate(now); return prices.map(p=>{ const d=new Date(p.timestamp); const localDate=toLocalISODate(d); const localHour=getLocalHour(d); const nowHour=getLocalHour(now); const it=localDate===ts; return{...p,day:it?"today":"tomorrow",hour:localHour,hour_label:`${String(localHour).padStart(2,"0")}:00`,is_current:it&&localHour===nowHour,is_negative:p.price_eur_mwh<0,price_category:getPriceCategory(p.price_eur_mwh)}; }); }
-async function getPrices(s,e) { try{return{prices:await fetchEC(s,e),source:"Energy-Charts"};}catch(e1){try{return{prices:await fetchElia(s,e),source:"Elia Open Data"};}catch(e2){throw new Error(`Both failed`);}} }
+async function getPrices(s,e) {
+  try{return{prices:await fetchEC(s,e),source:"Energy-Charts"};}catch(e1){
+    console.warn("[prices] Energy-Charts failed:",e1.message);
+    try{return{prices:await fetchENTSOE(s,e),source:"ENTSO-E"};}catch(e2){
+      console.warn("[prices] ENTSO-E failed:",e2.message);
+      throw new Error("Price data temporarily unavailable. Energy-Charts is down"+(process.env.ENTSOE_API_KEY?"":" — add ENTSOE_API_KEY env var for a reliable fallback")+". Please retry in a few minutes.");
+    }
+  }
+}
 
 // ── Health check (DB + EPEX + data freshness) ──────────────
 require("./health-route")(app, pool);
