@@ -78,7 +78,10 @@ async function fetchEC(s,e) { const k=`ec-${s}-${e}`; if(cache.has(k)) return ca
 async function fetchENTSOE(s,e) {
   if(!process.env.ENTSOE_API_KEY) throw new Error("ENTSOE_API_KEY not configured");
   const k=`entsoe-${s}-${e}`; if(cache.has(k)) return cache.get(k);
-  const start=s.replace(/-/g,"")+`0000`, end=e.replace(/-/g,"")+`2300`;
+  // Start from previous day 21:00 UTC to capture full Brussels midnight (CET=UTC+1, CEST=UTC+2)
+  const startDate=new Date(s+"T00:00:00Z"); startDate.setUTCDate(startDate.getUTCDate()-1);
+  const start=startDate.toISOString().slice(0,10).replace(/-/g,"")+"2100";
+  const end=e.replace(/-/g,"")+`2300`;
   const {data:xml} = await axios.get("https://web-api.tp.entsoe.eu/api",{
     params:{securityToken:process.env.ENTSOE_API_KEY,documentType:"A44",in_Domain:"10YBE----------2",out_Domain:"10YBE----------2",periodStart:start,periodEnd:end},
     timeout:15000, responseType:"text",
