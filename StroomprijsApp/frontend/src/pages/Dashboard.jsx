@@ -345,8 +345,9 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
   const toggleAlert        = async () => { const next = !alertActive; setAlertActive(next); try { await updatePreferences({ alertEnabled: next, alertThreshold }); } catch {} };
   const saveAlertThreshold = async v => { setAlertThreshold(v); try { await updatePreferences({ alertThreshold: v }); } catch {} };
 
-  const todayData = prices.filter(p => p.day === "today");
-  const tomorrowData = prices.filter(p => p.day === "tomorrow");
+  const dedup = arr => Object.values(arr.reduce((acc, p) => { if (!acc[p.hour_label]) acc[p.hour_label] = p; return acc; }, {})).sort((a, b) => a.hour - b.hour);
+  const todayData = dedup(prices.filter(p => p.day === "today"));
+  const tomorrowData = dedup(prices.filter(p => p.day === "tomorrow"));
   const chartData = tab === "tomorrow" ? tomorrowData : todayData;
   const mwh = current?.price_eur_mwh ?? null;
   const lbl = mwh != null ? getPriceLabel(mwh, PL) : null;
@@ -634,12 +635,7 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
                         </tr>
                       </thead>
                       <tbody>
-                        {/* Deduplicate to one row per hour */}
-                        {Object.values(chartData.reduce((acc, row) => {
-                          const key = row.hour_label;
-                          if (!acc[key]) acc[key] = row;
-                          return acc;
-                        }, {})).map((row, i) => {
+                        {chartData.map((row, i) => {
                           const rowMwh = row.price_eur_mwh;
                           const rowLbl = getPriceLabel(rowMwh, PL);
                           const rowCol = getPriceColor(rowMwh);
