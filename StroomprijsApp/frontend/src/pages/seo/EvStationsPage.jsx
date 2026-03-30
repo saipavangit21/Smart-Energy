@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import LangSwitcher from "../../components/LangSwitcher";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "";
 // OCM proxied through backend to avoid CORS issues
 
 const C = {
@@ -190,7 +190,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
         setLocating(false);
         setNearMe(true);
         // Re-fetch stations near user
-        fetch(`${API}/api/suppliers/ev-stations?maxresults=100&lat=${lat}&lng=${lng}&distance=20`)
+        fetch(`/api/suppliers/ev-stations?maxresults=100&lat=${lat}&lng=${lng}&distance=20`)
           .then(r => r.json())
           .then(data => {
             if (data.stations?.length > 0) {
@@ -252,7 +252,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
 
   // Load stations from Open Charge Map
   useEffect(() => {
-    fetch(`${API}/api/suppliers/ev-stations?maxresults=500`)
+    fetch(`${API}/api/suppliers/ev-stations?maxresults=200`)
       .then(r => r.json())
       .then(data => {
         const list = data.stations || [];

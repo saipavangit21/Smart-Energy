@@ -699,12 +699,13 @@ router.get("/ev-stations", async (req, res) => {
       east  = userLng + bbox_size * 1.5;
     }
 
-    const query = `[out:json][timeout:30];(node["amenity"="charging_station"](${south},${west},${north},${east});way["amenity"="charging_station"](${south},${west},${north},${east}););out body ${maxresults};`;
+    const cap = Math.min(parseInt(maxresults) || 200, 300); // cap at 300 for faster queries
+    const query = `[out:json][timeout:55];(node["amenity"="charging_station"](${south},${west},${north},${east});way["amenity"="charging_station"](${south},${west},${north},${east}););out body ${cap};`;
     const url = `https://overpass-api.de/api/interpreter`;
 
     const response = await axios.post(url, query, {
       headers: { "Content-Type": "text/plain", "User-Agent": "SmartPrice.be/1.0" },
-      timeout: 20000,
+      timeout: 60000,
     });
 
     const elements = response.data?.elements || [];
