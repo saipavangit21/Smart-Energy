@@ -320,17 +320,19 @@ setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape f
 
 // ── SmartPrice AI Agent proxy ─────────────────────────────────
 app.post("/api/agent/chat", async (req, res) => {
+  const { messages, systemPrompt } = req.body;
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ success: false, error: "messages required" });
+  }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ success: false, unavailable: true, error: "AI assistant not configured" });
+  }
   try {
-    const { messages, systemPrompt } = req.body;
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ success: false, error: "messages required" });
-    }
-
     const response = await axios.post("https://api.anthropic.com/v1/messages", {
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 800,
       system: systemPrompt || "You are a helpful SmartPrice.be assistant for Belgian energy prices.",
-      messages: messages.slice(-10), // last 10 messages for context
+      messages: messages.slice(-10),
     }, {
       headers: {
         "x-api-key": process.env.ANTHROPIC_API_KEY,
@@ -339,12 +341,18 @@ app.post("/api/agent/chat", async (req, res) => {
       },
       timeout: 30000,
     });
-
     const reply = response.data?.content?.[0]?.text || "Sorry, no response.";
     res.json({ success: true, reply });
   } catch (e) {
-    console.error("[agent] error:", e.response?.data || e.message);
-    res.status(500).json({ success: false, error: "Agent error: " + e.message });
+    const apiErr = e.response?.data?.error;
+    console.error("[agent] error:", apiErr || e.message);
+    if (apiErr?.message?.includes("credit balance")) {
+      return res.status(402).json({ success: false, unavailable: true, error: "credits_depleted" });
+    }
+    if (e.response?.status === 401) {
+      return res.status(503).json({ success: false, unavailable: true, error: "invalid_api_key" });
+    }
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 

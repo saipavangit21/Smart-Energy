@@ -509,7 +509,11 @@ async function runWeeklyScrape() {
 
   saveSeedData(data);
   cache.del("tariffs"); // force reload
-  console.log(`[suppliers] Scrape done — ${totalUpdated} rate(s) updated`);
+  if (totalUpdated > 0) {
+    console.log(`[suppliers] Scrape done — ${totalUpdated} rate(s) updated`);
+  } else {
+    console.log("[suppliers] Scrape done — rates unchanged (supplier sites use JS rendering, seed data in use)");
+  }
   return { updated: totalUpdated, vreg: Object.keys(vreg).length, cmp: Object.keys(cmp).length, direct: Object.keys(direct).length };
 }
 

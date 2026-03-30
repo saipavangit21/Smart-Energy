@@ -41,12 +41,13 @@ export default function SmartAgent() {
   const L = LABELS[lang] || LABELS.en;
   const suggestions = SUGGESTED[lang] || SUGGESTED.en;
 
-  const [open,     setOpen]     = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [input,    setInput]    = useState("");
-  const [loading,  setLoading]  = useState(false);
-  const [context,  setContext]  = useState(null);
-  const [pulse,    setPulse]    = useState(true);
+  const [open,       setOpen]       = useState(false);
+  const [messages,   setMessages]   = useState([]);
+  const [input,      setInput]      = useState("");
+  const [loading,    setLoading]    = useState(false);
+  const [context,    setContext]    = useState(null);
+  const [pulse,      setPulse]      = useState(true);
+  const [unavailable, setUnavailable] = useState(false);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
@@ -122,10 +123,15 @@ export default function SmartAgent() {
         }),
       });
       const data = await response.json();
-      const reply = data.reply || "Sorry, I couldn't get a response.";
-      setMessages([...newMessages, { role: "assistant", content: reply }]);
+      if (data.unavailable) {
+        setUnavailable(true);
+        setMessages([...newMessages, { role: "assistant", content: "⚠️ AI assistant is temporarily unavailable. Please try again later." }]);
+      } else {
+        const reply = data.reply || "Sorry, I couldn't get a response.";
+        setMessages([...newMessages, { role: "assistant", content: reply }]);
+      }
     } catch (e) {
-      setMessages([...newMessages, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
+      setMessages([...newMessages, { role: "assistant", content: "Connection error — please check your internet and try again." }]);
     }
     setLoading(false);
   };
@@ -147,8 +153,15 @@ export default function SmartAgent() {
           display: "flex", flexDirection: "column", maxHeight: 520,
           animation: "agent-slide-in 0.25s ease-out",
         }}>
+          {/* Unavailable banner */}
+          {unavailable && (
+            <div style={{ background: "rgba(245,158,11,0.12)", borderBottom: "1px solid rgba(245,158,11,0.25)", padding: "8px 16px", borderRadius: "20px 20px 0 0", fontSize: 11, color: "#F59E0B", textAlign: "center" }}>
+              ⚠️ AI assistant temporarily offline
+            </div>
+          )}
+
           {/* Header */}
-          <div style={{ padding: "16px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(13,148,136,0.06)", borderRadius: "20px 20px 0 0" }}>
+          <div style={{ padding: "16px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: unavailable ? "transparent" : "rgba(13,148,136,0.06)", borderRadius: unavailable ? "0" : "20px 20px 0 0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#0D9488,#1A56A4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>⚡</div>
               <div>
