@@ -316,36 +316,19 @@ function calcConsumptionFromAppliances(inputs, energyType = "electricity") {
 // ─────────────────────────────────────────────────────────────
 
 // Tier 1: VREG open data — official Flemish regulator tariff database
+// NOTE: vtest.vreg.be requires authentication and is not a public API.
+// Skipping VREG scrape — seed data provides fallback tariffs.
 async function scrapeVREG() {
-  const updates = {};
-  try {
-    // VREG publishes a public JSON/XML API for approved tariffs
-    const urls = [
-      "https://vtest.vreg.be/api/products?productType=ELECTRICITY&region=FLEMISH",
-      "https://vtest.vreg.be/api/products?productType=GAS&region=FLEMISH",
-    ];
-    for (const url of urls) {
-      const energyType = url.includes("GAS") ? "gas" : "electricity";
-      const { data } = await axios.get(url, { headers: { "User-Agent": SCRAPE_UA, "Accept": "application/json" }, timeout: 10000 });
-      const products = Array.isArray(data) ? data : (data.products || data.items || []);
-      for (const p of products) {
-        const name  = (p.supplier || p.supplierName || p.name || "").toLowerCase().replace(/\s+/g, "");
-        const price = parseFloat(p.energyRate || p.rate || p.price || 0);
-        if (name && price > 0.03 && price < 0.5) {
-          const key = `${name}_${energyType}`;
-          updates[key] = { rate: price, type: p.contractType || "variable", name: p.productName || p.name };
-        }
-      }
-    }
-    console.log(`[VREG] Got ${Object.keys(updates).length} tariff entries`);
-  } catch (e) {
-    console.warn("[VREG] scrape failed:", e.message);
-  }
-  return updates;
+  console.log("[VREG] Skipped — no public API available, using seed data");
+  return {};
 }
 
-// Tier 2: CallMePower — Belgian comparison site with clean HTML tables
+// Tier 2: CallMePower — Belgian comparison site
+// NOTE: Site now uses JS rendering — plain HTTP fetch returns no price data.
+// Skipping to avoid 12s timeout on every weekly scrape.
 async function scrapeCallMePower() {
+  console.log("[CallMePower] Skipped — site uses JS rendering, seed data used");
+  return {};
   const updates = {};
   const urls = [
     { url: "https://callmepower.be/nl/energie/leveranciers",  type: "electricity" },
