@@ -28,7 +28,6 @@ import CheapestHoursPage from "./pages/seo/CheapestHoursPage";
 import EvChargingPage    from "./pages/seo/EvChargingPage";
 import EvStationsPage   from "./pages/seo/EvStationsPage";
 import ApiPage           from "./pages/ApiPage";
-import SmartAgent        from "./components/SmartAgent";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
 function getFullPath() { return window.location.pathname + window.location.search; }
@@ -277,7 +276,6 @@ export default function App() {
     <>
       <StatusBanner />
       <PromoTicker />
-      <SmartAgent />
       <Dashboard
       onGoProfile={user ? () => setPage("profile") : () => { setGuestMode(false); setShowAuth(true); }}
       initialTab={initialTab}
