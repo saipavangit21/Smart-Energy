@@ -518,12 +518,33 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 </div>
               )}
 
-              {/* Directions */}
-              <a href={`https://www.google.com/maps/dir/?api=1&destination=${selected.AddressInfo?.Latitude},${selected.AddressInfo?.Longitude}`}
-                target="_blank" rel="noopener noreferrer"
-                style={{ display: "block", textAlign: "center", padding: "10px 0", borderRadius: 10, background: "rgba(13,148,136,0.15)", border: "1px solid rgba(13,148,136,0.3)", color: C.teal, textDecoration: "none", fontSize: 13, fontWeight: 700, marginTop: 8 }}>
-                🗺️ Get directions →
-              </a>
+              {/* Actions row */}
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <a href={`https://www.google.com/maps/dir/?api=1&destination=${selected.AddressInfo?.Latitude},${selected.AddressInfo?.Longitude}`}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ flex: 1, display: "block", textAlign: "center", padding: "10px 0", borderRadius: 10, background: "rgba(13,148,136,0.15)", border: "1px solid rgba(13,148,136,0.3)", color: C.teal, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
+                  🗺️ Directions
+                </a>
+                <button
+                  onClick={() => {
+                    const name = selected.AddressInfo?.Title || "EV station";
+                    const addr = [selected.AddressInfo?.AddressLine1, selected.AddressInfo?.Town].filter(Boolean).join(", ");
+                    const price = mwh != null ? `€${mwh.toFixed(1)}/MWh` : "";
+                    const advice = getPriceAdvice(mwh, lang);
+                    const cost = costNow ? ` · 30kWh costs ~€${costNow}` : "";
+                    const text = `⚡ ${name}${addr ? ` — ${addr}` : ""}\nCurrent EPEX price: ${price}${cost}\n${advice}\n🔗 smartprice.be/ev-charging-stations-belgium`;
+                    if (navigator.share) {
+                      navigator.share({ title: `EV price at ${name}`, text });
+                    } else {
+                      navigator.clipboard?.writeText(text).then(() => alert("Copied to clipboard!")).catch(() => {
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+                      });
+                    }
+                  }}
+                  style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)", color: C.blue, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  📤 Share price
+                </button>
+              </div>
             </div>
             );
           })()}
