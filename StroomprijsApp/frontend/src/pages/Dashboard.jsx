@@ -253,6 +253,8 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest, isMobile }) {
 }
 
 function SharePanel({ currentPrice, userName, onClose, copied, onCopy, refCopied, onCopyRef }) {
+  const { tSection } = useLanguage();
+  const T = tSection("dashboard");
   const shareText = currentPrice != null
     ? `⚡ Belgian electricity is now €${currentPrice.toFixed(1)}/MWh — track live EPEX prices free at https://smartprice.be`
     : `⚡ SmartPrice.be — Live EPEX electricity prices & cheapest hours for Belgium. Free! https://smartprice.be`;
@@ -269,7 +271,7 @@ function SharePanel({ currentPrice, userName, onClose, copied, onCopy, refCopied
   return (
     <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 200, background: "#0A1628", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: "14px", width: 240, boxShadow: "0 12px 40px rgba(0,0,0,0.6)" }}>
       {/* Share header */}
-      <div style={{ fontSize: 11, color: "#445566", marginBottom: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px" }}>Share SmartPrice</div>
+      <div style={{ fontSize: 11, color: "#445566", marginBottom: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px" }}>{T.shareTitle || "Share SmartPrice"}</div>
       {channels.map(ch => (
         <a key={ch.label} href={ch.href} target="_blank" rel="noopener noreferrer"
           onClick={onClose}
@@ -282,20 +284,20 @@ function SharePanel({ currentPrice, userName, onClose, copied, onCopy, refCopied
       ))}
       <button onClick={onCopy} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: copied ? "rgba(0,200,150,0.1)" : "rgba(255,255,255,0.04)", border: "none", width: "100%", cursor: "pointer", marginBottom: 10 }}>
         <span style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(0,200,150,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#00C896", flexShrink: 0 }}>{copied ? "✓" : "🔗"}</span>
-        <span style={{ fontSize: 13, fontWeight: 600, color: copied ? "#00C896" : "#C4D4E0" }}>{copied ? "Copied!" : "Copy link"}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: copied ? "#00C896" : "#C4D4E0" }}>{copied ? (T.copied || "Copied!") : (T.copyLink || "Copy link")}</span>
       </button>
       {/* Refer a friend */}
       <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 10 }}>
-        <div style={{ fontSize: 11, color: "#445566", marginBottom: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px" }}>🎁 Refer a friend</div>
+        <div style={{ fontSize: 11, color: "#445566", marginBottom: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px" }}>🎁 {T.referFriend || "Refer a friend"}</div>
         <div style={{ fontSize: 11, color: "#334455", marginBottom: 8, lineHeight: 1.5 }}>
-          Share your personal link — helps spread the word and grows SmartPrice.
+          {T.referDesc || "Share your personal link — helps spread the word and grows SmartPrice."}
         </div>
         <div style={{ background: "rgba(0,200,150,0.06)", border: "1px solid rgba(0,200,150,0.2)", borderRadius: 8, padding: "7px 10px", fontSize: 11, color: "#00C896", fontFamily: "monospace", marginBottom: 8, wordBreak: "break-all" }}>
           {refUrl}
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           <button onClick={onCopyRef} style={{ flex: 1, padding: "7px 0", borderRadius: 8, background: refCopied ? "rgba(0,200,150,0.2)" : "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.3)", color: "#00C896", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-            {refCopied ? "✓ Copied!" : "Copy link"}
+            {refCopied ? `✓ ${T.copied || "Copied!"}` : (T.copyLink || "Copy link")}
           </button>
           <a href={`https://wa.me/?text=${encodeURIComponent(refText)}`} target="_blank" rel="noopener noreferrer"
             style={{ flex: 1, padding: "7px 0", borderRadius: 8, background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.3)", color: "#25D366", fontSize: 12, fontWeight: 700, cursor: "pointer", textDecoration: "none", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
@@ -566,14 +568,14 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 18 }}>🔌</span>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0" }}>Plan Calculator requires an account</div>
-              <div style={{ fontSize: 12, color: "#64748B" }}>Create a free account in 30 seconds — no credit card needed.</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0" }}>{T.calcBannerTitle || "Plan Calculator requires an account"}</div>
+              <div style={{ fontSize: 12, color: "#64748B" }}>{T.calcBannerSub || "Create a free account in 30 seconds — no credit card needed."}</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
             <button onClick={() => { setCalcBanner(false); onSignIn(); }}
               style={{ padding: "8px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer" }}>
-              Sign in free →
+              {T.signInFree || "Sign in free →"}
             </button>
             <button onClick={() => setCalcBanner(false)}
               style={{ background: "none", border: "none", color: "#64748B", cursor: "pointer", fontSize: 18, padding: "0 4px", lineHeight: 1 }}>

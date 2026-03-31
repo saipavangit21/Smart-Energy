@@ -140,7 +140,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               onMouseEnter={e => { e.currentTarget.style.border = `1px solid ${getPriceColor(parseFloat(liveStats.current))}88`; }}
               onMouseLeave={e => { e.currentTarget.style.border = `1px solid ${getPriceColor(parseFloat(liveStats.current))}44`; }}>
               <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 10, color: "#445566", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 2 }}>Belgium · Now</div>
+                <div style={{ fontSize: 10, color: "#445566", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 2 }}>{L.belgiumNow || "Belgium · Now"}</div>
                 <div style={{ fontSize: 36, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(parseFloat(liveStats.current)), lineHeight: 1 }}>
                   €{liveStats.current}<span style={{ fontSize: 14, color: "#445566", fontWeight: 600 }}>/MWh</span>
                 </div>
@@ -183,10 +183,10 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           {/* SOCIAL PROOF */}
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", marginBottom: 8 }}>
             {[
-              { icon: "🇧🇪", text: "Belgian data" },
-              { icon: "🔒", text: "GDPR compliant" },
-              { icon: "⚡", text: "Updated every 15 min" },
-              { icon: "🆓", text: "Free forever" },
+              { icon: "🇧🇪", text: L.badgeBelgian || "Belgian data" },
+              { icon: "🔒", text: L.badgeGdpr || "GDPR compliant" },
+              { icon: "⚡", text: L.badgeUpdated || "Updated every 15 min" },
+              { icon: "🆓", text: L.badgeFree || "Free forever" },
             ].map(b => (
               <div key={b.text} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#334455" }}>
                 <span>{b.icon}</span><span>{b.text}</span>
@@ -427,7 +427,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           </div>
           {/* SOCIAL SHARE */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 18, marginBottom: 16, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 11, color: "#334455", marginRight: 4 }}>Share SmartPrice:</span>
+            <span style={{ fontSize: 11, color: "#334455", marginRight: 4 }}>{L.shareLabel || "Share SmartPrice:"}</span>
             {[
               { label: "WhatsApp",  icon: "💬", color: "#25D366", href: `https://wa.me/?text=${encodeURIComponent("⚡ SmartPrice.be — Live EPEX electricity prices & cheapest hours for Belgian EV drivers and households. Completely free 🔗 https://smartprice.be")}` },
               { label: "X",         icon: "𝕏",  color: "#fff",    href: `https://twitter.com/intent/tweet?text=${encodeURIComponent("⚡ SmartPrice.be — Live EPEX electricity prices & supplier comparison for Belgium. Free for everyone 🔗 https://smartprice.be")}` },
