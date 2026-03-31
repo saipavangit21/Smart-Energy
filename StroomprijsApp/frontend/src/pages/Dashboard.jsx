@@ -252,6 +252,39 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest, isMobile }) {
   );
 }
 
+const SHARE_CHANNELS = [
+  { label: "WhatsApp", icon: "💬", color: "#25D366", href: (t) => `https://wa.me/?text=${encodeURIComponent(t)}` },
+  { label: "X",        icon: "𝕏",  color: "#fff",    href: (t) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}` },
+  { label: "Facebook", icon: "f",  color: "#1877F2", href: ()  => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://smartprice.be")}` },
+  { label: "LinkedIn", icon: "in", color: "#0A66C2", href: ()  => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://smartprice.be")}` },
+  { label: "Email",    icon: "✉",  color: "#94A3B8", href: (t) => `mailto:?subject=${encodeURIComponent("Live electricity prices — SmartPrice.be")}&body=${encodeURIComponent(t)}` },
+];
+
+function SharePanel({ currentPrice, onClose, copied, onCopy }) {
+  const shareText = currentPrice != null
+    ? `⚡ Belgian electricity is now €${currentPrice.toFixed(1)}/MWh — track live EPEX prices free at https://smartprice.be`
+    : `⚡ SmartPrice.be — Live EPEX electricity prices & cheapest hours for Belgium. Free! https://smartprice.be`;
+  return (
+    <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 200, background: "#0A1628", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "12px", width: 220, boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+      <div style={{ fontSize: 11, color: "#445566", marginBottom: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px" }}>Share SmartPrice</div>
+      {SHARE_CHANNELS.map(ch => (
+        <a key={ch.label} href={ch.href(shareText)} target="_blank" rel="noopener noreferrer"
+          onClick={onClose}
+          style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: `${ch.color}12`, marginBottom: 6, textDecoration: "none" }}
+          onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+          onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
+          <span style={{ width: 26, height: 26, borderRadius: 7, background: `${ch.color}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: ch.color, flexShrink: 0 }}>{ch.icon}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#C4D4E0" }}>{ch.label}</span>
+        </a>
+      ))}
+      <button onClick={onCopy} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: copied ? "rgba(0,200,150,0.1)" : "rgba(255,255,255,0.04)", border: "none", width: "100%", cursor: "pointer", marginTop: 2 }}>
+        <span style={{ width: 26, height: 26, borderRadius: 7, background: "rgba(0,200,150,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#00C896", flexShrink: 0 }}>{copied ? "✓" : "🔗"}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: copied ? "#00C896" : "#C4D4E0" }}>{copied ? "Copied!" : "Copy link"}</span>
+      </button>
+    </div>
+  );
+}
+
 export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn, onOpenCalculator }) {
   // Gate: guests clicking the calculator go to sign-in first
   const { user, updatePreferences, logout, authFetch } = useAuth();
@@ -283,6 +316,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   const [supplier,       setSupplier]       = useState(user?.preferences?.supplier || "Bolt Energy");
   const [tab,            setTab]            = useState(initialTab || "today");
   const [showMenu,       setShowMenu]       = useState(false);
+  const [showShare,      setShowShare]      = useState(false);
+  const [shareCopied,    setShareCopied]    = useState(false);
   const [history,        setHistory]        = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedDay,    setSelectedDay]    = useState(null);
@@ -410,6 +445,26 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <ThemeSwitcher />
               <LangSwitcher />
+              {/* Share button */}
+              <div style={{ position: "relative" }}>
+                <button onClick={() => { setShowShare(s => !s); setShowMenu(false); }}
+                  title="Share SmartPrice"
+                  style={{ width: 34, height: 34, borderRadius: 10, background: showShare ? "rgba(13,148,136,0.2)" : "rgba(255,255,255,0.06)", border: `1px solid ${showShare ? C.teal + "66" : C.border}`, cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  📤
+                </button>
+                {showShare && (
+                  <SharePanel
+                    currentPrice={prices?.find(p => p.is_current)?.price_eur_mwh}
+                    onClose={() => setShowShare(false)}
+                    copied={shareCopied}
+                    onCopy={() => {
+                      const p = prices?.find(p => p.is_current)?.price_eur_mwh;
+                      const text = p != null ? `⚡ Belgian electricity is now €${p.toFixed(1)}/MWh — track live EPEX prices free at https://smartprice.be` : "⚡ SmartPrice.be — Live EPEX electricity prices & cheapest hours for Belgium. Free! https://smartprice.be";
+                      navigator.clipboard?.writeText(text).then(() => { setShareCopied(true); setTimeout(() => { setShareCopied(false); setShowShare(false); }, 1500); });
+                    }}
+                  />
+                )}
+              </div>
               {!isGuest ? (
                 <div style={{ position: "relative" }}>
                   <button onClick={() => setShowMenu(m => !m)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 20, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`, cursor: "pointer", color: "#E2E8F0", fontSize: 13, fontWeight: 600 }}>
@@ -440,6 +495,25 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
               <EnergyToggle type={energyType} onChange={switchType} onOpenCalculator={openCalculator} isGuest={isGuest} isMobile={isMobile} />
               <ThemeSwitcher />
               <LangSwitcher />
+              {/* Mobile share button */}
+              <div style={{ position: "relative" }}>
+                <button onClick={() => { setShowShare(s => !s); setShowMenu(false); }}
+                  style={{ width: 32, height: 32, borderRadius: 10, background: showShare ? "rgba(13,148,136,0.2)" : "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  📤
+                </button>
+                {showShare && (
+                  <SharePanel
+                    currentPrice={prices?.find(p => p.is_current)?.price_eur_mwh}
+                    onClose={() => setShowShare(false)}
+                    copied={shareCopied}
+                    onCopy={() => {
+                      const p = prices?.find(p => p.is_current)?.price_eur_mwh;
+                      const text = p != null ? `⚡ Belgian electricity is now €${p.toFixed(1)}/MWh — track live EPEX prices free at https://smartprice.be` : "⚡ SmartPrice.be — Live EPEX electricity prices & cheapest hours for Belgium. Free! https://smartprice.be";
+                      navigator.clipboard?.writeText(text).then(() => { setShareCopied(true); setTimeout(() => { setShareCopied(false); setShowShare(false); }, 1500); });
+                    }}
+                  />
+                )}
+              </div>
               {!isGuest && (
                 <div style={{ position: "relative" }}>
                   <button onClick={() => setShowMenu(m => !m)} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.08)", border: `1px solid ${C.border}`, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>

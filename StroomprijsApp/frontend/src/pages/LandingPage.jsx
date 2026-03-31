@@ -425,7 +425,26 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               </div>
             </div>
           </div>
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 18, fontSize: 11, color: "#2A3A4A", lineHeight: 2 }}>
+          {/* SOCIAL SHARE */}
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 18, marginBottom: 16, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: "#334455", marginRight: 4 }}>Share SmartPrice:</span>
+            {[
+              { label: "WhatsApp",  icon: "💬", color: "#25D366", href: `https://wa.me/?text=${encodeURIComponent("⚡ SmartPrice.be — Live EPEX electricity prices & cheapest hours for Belgian EV drivers and households. Completely free 🔗 https://smartprice.be")}` },
+              { label: "X",         icon: "𝕏",  color: "#fff",    href: `https://twitter.com/intent/tweet?text=${encodeURIComponent("⚡ SmartPrice.be — Live EPEX electricity prices & supplier comparison for Belgium. Free for everyone 🔗 https://smartprice.be")}` },
+              { label: "Facebook",  icon: "f",  color: "#1877F2", href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://smartprice.be")}` },
+              { label: "LinkedIn",  icon: "in", color: "#0A66C2", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://smartprice.be")}` },
+              { label: "Email",     icon: "✉",  color: "#94A3B8", href: `mailto:?subject=${encodeURIComponent("Check out SmartPrice.be — free Belgian energy price tracker")}&body=${encodeURIComponent("Hi,\n\nI've been using SmartPrice.be to track live electricity prices in Belgium and find the cheapest hours to charge my EV.\n\nIt's completely free — check it out: https://smartprice.be")}` },
+            ].map(s => (
+              <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                title={`Share on ${s.label}`}
+                style={{ width: 32, height: 32, borderRadius: 8, background: `${s.color}15`, border: `1px solid ${s.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: s.color, textDecoration: "none", transition: "all 0.15s", flexShrink: 0 }}
+                onMouseEnter={e => { e.currentTarget.style.background = `${s.color}28`; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = `${s.color}15`; e.currentTarget.style.transform = "translateY(0)"; }}>
+                {s.icon}
+              </a>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: "#2A3A4A", lineHeight: 2 }}>
             {L.footer}<br />
             {L.disclaimer || "Not financial advice."}
           </div>
