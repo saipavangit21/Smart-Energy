@@ -154,7 +154,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
     window.location.href = path;
   };
   const { lang, tSection } = useLanguage();
-  const T = tSection("dashboard");
+  const TD = tSection("dashboard");
   const T = CONTENT[lang] || CONTENT.en;
 
   const mapRef    = useRef(null);
@@ -573,7 +573,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
 
                     return (
                       <div style={{ position: "absolute", bottom: "calc(100% + 8px)", right: 0, zIndex: 200, background: "#0A1628", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "12px", width: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
-                        <div style={{ fontSize: 11, color: "#445566", marginBottom: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px" }}>{T.shareThisPrice || "Share this price"}</div>
+                        <div style={{ fontSize: 11, color: "#445566", marginBottom: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px" }}>{TD.shareThisPrice || "Share this price"}</div>
                         {channels.map(ch => (
                           <a key={ch.label} href={ch.href} target="_blank" rel="noopener noreferrer"
                             onClick={() => setShareOpen(false)}
@@ -593,7 +593,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                           }}
                           style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: copied ? "rgba(0,200,150,0.1)" : "rgba(255,255,255,0.04)", border: "none", width: "100%", cursor: "pointer", marginTop: 2 }}>
                           <span style={{ width: 26, height: 26, borderRadius: 7, background: "rgba(0,200,150,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#00C896", flexShrink: 0 }}>{copied ? "✓" : "🔗"}</span>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: copied ? "#00C896" : "#C4D4E0" }}>{copied ? (T.copied || "Copied!") : (T.copyLink || "Copy link")}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: copied ? "#00C896" : "#C4D4E0" }}>{copied ? (TD.copied || "Copied!") : (TD.copyLink || "Copy link")}</span>
                         </button>
                       </div>
                     );
