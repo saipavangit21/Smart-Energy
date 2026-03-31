@@ -356,6 +356,50 @@ app.post("/api/agent/chat", async (req, res) => {
   }
 });
 
+// ── POST /api/admin/send-template ─────────────────────────────
+// Send a Resend template email (one-off admin use)
+// Body: { secret, template_id, to, data }
+app.post("/api/admin/send-template", async (req, res) => {
+  const { secret, template_id, to, data = {} } = req.body || {};
+
+  // Guard: require ADMIN_SECRET env var to match
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret || secret !== adminSecret) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  if (!template_id || !to) {
+    return res.status(400).json({ success: false, error: "template_id and to are required" });
+  }
+  if (!process.env.RESEND_API_KEY) {
+    return res.status(500).json({ success: false, error: "RESEND_API_KEY not configured" });
+  }
+
+  try {
+    const { data: result } = await axios.post(
+      "https://api.resend.com/emails",
+      {
+        from:        "SmartPrice.be <hello@smartprice.be>",
+        to,
+        template_id,
+        data,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      }
+    );
+    console.log(`[Admin] Template email sent to ${to} — id: ${result?.id}`);
+    res.json({ success: true, id: result?.id });
+  } catch (e) {
+    const msg = e.response?.data?.message || e.message;
+    console.error(`[Admin] send-template failed:`, msg);
+    res.status(500).json({ success: false, error: msg });
+  }
+});
+
 app.listen(PORT,()=>{
   console.log(`\n⚡ SmartPrice v2 on port ${PORT}`);
   console.log(`   DB: ${process.env.DATABASE_URL?"✅ Supabase":"❌ No DATABASE_URL"}\n`);
