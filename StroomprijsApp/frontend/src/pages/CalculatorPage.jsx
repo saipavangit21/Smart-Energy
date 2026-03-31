@@ -872,17 +872,37 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
 }
 
 // ─── Main wizard shell ────────────────────────────────────────
+const CALC_CACHE_KEY = "sp_calc_state";
+
 export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const TC = tSection("common");
   const REGIONS = REGIONS_DATA.map(r => ({ ...r, label: TC[r.id] || r.id }));
-  const [step,    setStep]    = useState(0);
-  const [data,    setData]    = useState({});
+
+  // Restore from sessionStorage on first mount (survives auth redirect)
+  const [step, setStep] = useState(() => {
+    try {
+      const s = JSON.parse(sessionStorage.getItem(CALC_CACHE_KEY));
+      return (s?.step != null && s.step < 4) ? s.step : 0;
+    } catch { return 0; }
+  });
+  const [data, setData] = useState(() => {
+    try {
+      const s = JSON.parse(sessionStorage.getItem(CALC_CACHE_KEY));
+      return s?.data ?? {};
+    } catch { return {}; }
+  });
+
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
   const topRef = useRef(null);
+
+  // Persist step + data whenever they change
+  useEffect(() => {
+    try { sessionStorage.setItem(CALC_CACHE_KEY, JSON.stringify({ step, data })); } catch {}
+  }, [step, data]);
 
   const update = useCallback((patch) => setData(d => ({ ...d, ...patch })), []);
 
@@ -935,7 +955,19 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
     }
   }, [data]);
 
-  const restart = () => { setStep(0); setData({}); setResults(null); setError(null); };
+  const restart = () => {
+    setStep(0); setData({}); setResults(null); setError(null);
+    try { sessionStorage.removeItem(CALC_CACHE_KEY); } catch {}
+  };
+
+  // After sign-in: if user was held at the auth wall (step 3), auto-submit immediately
+  const prevIsGuest = useRef(isGuest);
+  useEffect(() => {
+    if (prevIsGuest.current && !isGuest && step === 3) {
+      submit();
+    }
+    prevIsGuest.current = isGuest;
+  }, [isGuest]);
 
   return (
     <div ref={topRef} style={{ minHeight: "100vh", background: C.bg, color: C.light,
