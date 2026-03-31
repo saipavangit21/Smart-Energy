@@ -32,6 +32,40 @@ const REGIONS_DATA = [
   { id: "brussels",  flag: "🏙️", note: "Sibelga · kWh tariff"   },
 ];
 
+// ─── Supplier brand tiles ─────────────────────────────────────
+const SUPPLIER_BRANDS = {
+  "bolt energy": { abbr: "⚡", color: "#fff",     bg: "#1A1A2E", border: "#00C896" },
+  "bolt":        { abbr: "⚡", color: "#fff",     bg: "#1A1A2E", border: "#00C896" },
+  "engie":       { abbr: "EN", color: "#fff",     bg: "#0066A1" },
+  "luminus":     { abbr: "LU", color: "#1a1a1a",  bg: "#FFB800" },
+  "totalenergies":{ abbr: "TE", color: "#fff",    bg: "#EF3340" },
+  "total":       { abbr: "TE", color: "#fff",     bg: "#EF3340" },
+  "eneco":       { abbr: "EC", color: "#fff",     bg: "#00A651" },
+  "mega":        { abbr: "MG", color: "#fff",     bg: "#7C3AED" },
+  "octa+":       { abbr: "O+", color: "#fff",     bg: "#F97316" },
+  "octa":        { abbr: "O+", color: "#fff",     bg: "#F97316" },
+  "lampiris":    { abbr: "LP", color: "#fff",     bg: "#22C55E" },
+};
+
+function SupplierTile({ name = "", size = 40 }) {
+  const key = name.toLowerCase().trim();
+  const brand = SUPPLIER_BRANDS[key]
+    || Object.entries(SUPPLIER_BRANDS).find(([k]) => key.includes(k))?.[1]
+    || { abbr: name.slice(0, 2).toUpperCase(), color: "#fff", bg: "#1E3A5F" };
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: Math.round(size * 0.25),
+      background: brand.bg, flexShrink: 0,
+      border: brand.border ? `1.5px solid ${brand.border}` : "none",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: brand.abbr.length > 2 ? size * 0.32 : size * 0.3,
+      fontWeight: 900, color: brand.color, letterSpacing: "-0.5px",
+    }}>
+      {brand.abbr}
+    </div>
+  );
+}
+
 // ─── Tiny shared components ────────────────────────────────────
 const Badge = ({ children, color }) => (
   <span style={{ background: color + "22", color, fontSize: 10, fontWeight: 700,
@@ -647,10 +681,7 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
     }}>
       {/* Top row */}
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: accent + "20",
-          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
-          {plan.supplier_logo || "🏢"}
-        </div>
+        <SupplierTile name={plan.supplier_name} size={40} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginBottom: 3 }}>
             {plan.cheapest && <Badge color={C.green}>{CC.bestDeal    || "🏆 BEST DEAL"}</Badge>}
@@ -960,14 +991,10 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
     try { sessionStorage.removeItem(CALC_CACHE_KEY); } catch {}
   };
 
-  // After sign-in: if user was held at the auth wall (step 3), auto-submit immediately
-  const prevIsGuest = useRef(isGuest);
+  // On mount: if user just returned from auth (step=3, now logged in) → auto-submit
   useEffect(() => {
-    if (prevIsGuest.current && !isGuest && step === 3) {
-      submit();
-    }
-    prevIsGuest.current = isGuest;
-  }, [isGuest]);
+    if (!isGuest && step === 3) submit();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div ref={topRef} style={{ minHeight: "100vh", background: C.bg, color: C.light,
