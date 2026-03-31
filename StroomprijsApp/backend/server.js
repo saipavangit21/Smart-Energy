@@ -14,6 +14,7 @@ const authRoutes      = require("./routes/auth");
 const googleRoutes    = require("./routes/google");
 const attachAnalytics = require("./analytics");
 const { checkAndSendAlerts, checkAndSendGasAlerts } = require("./email-alerts");
+const { startUptimeMonitor } = require("./uptime-monitor");
 const { router: gasRoutes } = require("./routes/gas");
 const { router: suppliersRoutes, runWeeklyScrape } = require("./routes/suppliers");
 const pool = require("./db").pool;
@@ -399,4 +400,5 @@ app.post("/api/admin/send-template", async (req, res) => {
 app.listen(PORT,()=>{
   console.log(`\n⚡ SmartPrice v2 on port ${PORT}`);
   console.log(`   DB: ${process.env.DATABASE_URL?"✅ Supabase":"❌ No DATABASE_URL"}\n`);
+  startUptimeMonitor();
 });
