@@ -165,6 +165,14 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
     document.head.appendChild(style);
     return () => style.remove();
   }, []);
+
+  // Close share panel on outside click
+  useEffect(() => {
+    if (!shareOpen) return;
+    const close = (e) => { if (!e.target.closest("[data-share-panel]")) setShareOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [shareOpen]);
   const leafletRef = useRef(null);
   const markersRef = useRef([]);
 
@@ -179,6 +187,8 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
   const [nearMe,    setNearMe]    = useState(false);
   const [userPos,   setUserPos]   = useState(null);
   const [locating,  setLocating]  = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied,    setCopied]    = useState(false);
 
   const findNearMe = () => {
     if (!navigator.geolocation) return;
@@ -525,25 +535,69 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                   style={{ flex: 1, display: "block", textAlign: "center", padding: "10px 0", borderRadius: 10, background: "rgba(13,148,136,0.15)", border: "1px solid rgba(13,148,136,0.3)", color: C.teal, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
                   🗺️ Directions
                 </a>
-                <button
-                  onClick={() => {
-                    const name = selected.AddressInfo?.Title || "EV station";
-                    const addr = [selected.AddressInfo?.AddressLine1, selected.AddressInfo?.Town].filter(Boolean).join(", ");
+                <div data-share-panel style={{ position: "relative" }}>
+                  <button
+                    onClick={() => setShareOpen(o => !o)}
+                    style={{ padding: "10px 14px", borderRadius: 10, background: shareOpen ? "rgba(59,130,246,0.22)" : "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)", color: C.blue, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    📤 Share price
+                  </button>
+
+                  {shareOpen && (() => {
+                    const name  = selected.AddressInfo?.Title || "EV station";
+                    const addr  = [selected.AddressInfo?.AddressLine1, selected.AddressInfo?.Town].filter(Boolean).join(", ");
                     const price = mwh != null ? `€${mwh.toFixed(1)}/MWh` : "";
-                    const advice = getPriceAdvice(mwh, lang);
-                    const cost = costNow ? ` · 30kWh costs ~€${costNow}` : "";
-                    const text = `⚡ ${name}${addr ? ` — ${addr}` : ""}\nCurrent EPEX price: ${price}${cost}\n${advice}\n🔗 smartprice.be/ev-charging-stations-belgium`;
-                    if (navigator.share) {
-                      navigator.share({ title: `EV price at ${name}`, text });
-                    } else {
-                      navigator.clipboard?.writeText(text).then(() => alert("Copied to clipboard!")).catch(() => {
-                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
-                      });
-                    }
-                  }}
-                  style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)", color: C.blue, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
-                  📤 Share price
-                </button>
+                    const cost  = costNow ? ` · 30kWh ~€${costNow}` : "";
+                    const shareText = `⚡ ${name}${addr ? ` — ${addr}` : ""}\nCurrent EPEX price: ${price}${cost}\n🔗 smartprice.be/ev-charging-stations-belgium`;
+                    const encodedText = encodeURIComponent(shareText);
+                    const pageUrl = encodeURIComponent("https://smartprice.be/ev-charging-stations-belgium");
+
+                    const channels = [
+                      {
+                        label: "WhatsApp", icon: "💬", color: "#25D366", bg: "rgba(37,211,102,0.1)",
+                        href: `https://wa.me/?text=${encodedText}`,
+                      },
+                      {
+                        label: "X / Twitter", icon: "𝕏", color: "#fff", bg: "rgba(255,255,255,0.08)",
+                        href: `https://twitter.com/intent/tweet?text=${encodedText}`,
+                      },
+                      {
+                        label: "Facebook", icon: "f", color: "#1877F2", bg: "rgba(24,119,242,0.1)",
+                        href: `https://www.facebook.com/sharer/sharer.php?u=${pageUrl}&quote=${encodedText}`,
+                      },
+                      {
+                        label: "Email", icon: "✉", color: "#94A3B8", bg: "rgba(148,163,184,0.1)",
+                        href: `mailto:?subject=${encodeURIComponent(`EV charging price at ${name}`)}&body=${encodedText}`,
+                      },
+                    ];
+
+                    return (
+                      <div style={{ position: "absolute", bottom: "calc(100% + 8px)", right: 0, zIndex: 200, background: "#0A1628", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "12px", width: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+                        <div style={{ fontSize: 11, color: "#445566", marginBottom: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px" }}>Share this price</div>
+                        {channels.map(ch => (
+                          <a key={ch.label} href={ch.href} target="_blank" rel="noopener noreferrer"
+                            onClick={() => setShareOpen(false)}
+                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: ch.bg, marginBottom: 6, textDecoration: "none", transition: "opacity 0.15s" }}
+                            onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+                            onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
+                            <span style={{ width: 26, height: 26, borderRadius: 7, background: ch.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: ch.color, flexShrink: 0 }}>{ch.icon}</span>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: "#C4D4E0" }}>{ch.label}</span>
+                          </a>
+                        ))}
+                        <button
+                          onClick={() => {
+                            navigator.clipboard?.writeText(shareText).then(() => {
+                              setCopied(true);
+                              setTimeout(() => { setCopied(false); setShareOpen(false); }, 1500);
+                            });
+                          }}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: copied ? "rgba(0,200,150,0.1)" : "rgba(255,255,255,0.04)", border: "none", width: "100%", cursor: "pointer", marginTop: 2 }}>
+                          <span style={{ width: 26, height: 26, borderRadius: 7, background: "rgba(0,200,150,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#00C896", flexShrink: 0 }}>{copied ? "✓" : "🔗"}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: copied ? "#00C896" : "#C4D4E0" }}>{copied ? "Copied!" : "Copy link"}</span>
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
             );
