@@ -111,6 +111,7 @@ async function checkAndSendAlerts(pool) {
 
     for (const user of users) {
       if (!user.threshold || currentPrice >= user.threshold) continue;
+      if (!user.email) { console.warn(`Skipping user id=${user.id} — no email address`); continue; }
       if (user.last_alert_sent) {
         const lastSent = new Date(user.last_alert_sent);
         if (lastSent > new Date(Date.now() - 60 * 60 * 1000)) {

@@ -7,13 +7,20 @@ const { Pool } = require("pg");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+});
+
+// Prevent idle client ETIMEDOUT from crashing Node.js
+pool.on("error", (err) => {
+  console.error("❌ Database pool error (idle client):", err.message);
 });
 
 pool.query("SELECT 1").then(() => {
   console.log("✅ Connected to Supabase PostgreSQL");
 }).catch(err => {
   console.error("❌ Database connection failed:", err.message);
-  process.exit(1);
+  // Don't exit — Railway will provide a healthy DB connection shortly
 });
 
 const userStore = {

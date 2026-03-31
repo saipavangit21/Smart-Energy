@@ -187,7 +187,7 @@ async function fetchTTFPrice() {
     cache.set("ttf_current", result);
     return result;
   } catch (err) {
-    console.error("[Gas] TTF fetch error:", err.message);
+    console.warn("[Gas] TTF fetch unavailable, using fallback:", err.message);
     // Return last known or fallback
     return { price: 34.50, currency: "EUR", unit: "MWh", source: "fallback", timestamp: new Date().toISOString() };
   }
@@ -251,7 +251,7 @@ async function fetchTTFHistory(days = 30) {
     cache.set(key, history, 3600);
     return history;
   } catch (err) {
-    console.error("[Gas] History fetch error:", err.message);
+    console.warn("[Gas] History fetch unavailable, using mock data:", err.message);
     return generateMockHistory(days);
   }
 }
