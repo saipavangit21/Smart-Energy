@@ -154,23 +154,9 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
   };
   const T = CONTENT[lang] || CONTENT.en;
 
+  // Declare all state + refs FIRST — before any useEffect that references them
+  // (avoids TDZ when esbuild renames const declarations in production bundle)
   const mapRef    = useRef(null);
-
-  // Inject Leaflet CSS fix for map container
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.textContent = `.leaflet-container { background: #0a1220; } .leaflet-tile { filter: brightness(0.7) saturate(0.8); }`;
-    document.head.appendChild(style);
-    return () => style.remove();
-  }, []);
-
-  // Close share panel on outside click
-  useEffect(() => {
-    if (!shareOpen) return;
-    const close = (e) => { if (!e.target.closest("[data-share-panel]")) setShareOpen(false); };
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [shareOpen]);
   const leafletRef = useRef(null);
   const markersRef = useRef([]);
 
@@ -187,6 +173,22 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
   const [locating,  setLocating]  = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied,    setCopied]    = useState(false);
+
+  // Inject Leaflet CSS fix for map container
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `.leaflet-container { background: #0a1220; } .leaflet-tile { filter: brightness(0.7) saturate(0.8); }`;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
+
+  // Close share panel on outside click
+  useEffect(() => {
+    if (!shareOpen) return;
+    const close = (e) => { if (!e.target.closest("[data-share-panel]")) setShareOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [shareOpen]);
 
   const findNearMe = () => {
     if (!navigator.geolocation) return;
