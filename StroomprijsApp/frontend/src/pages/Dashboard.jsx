@@ -306,7 +306,11 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
     note:  T[r.noteKey] || "",
   }));
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
-  const openCalculator = (type) => onOpenCalculator && onOpenCalculator(type);
+  const [calcBanner, setCalcBanner] = useState(false);
+  const openCalculator = (type) => {
+    if (isGuest) { setCalcBanner(true); return; }
+    onOpenCalculator && onOpenCalculator(type);
+  };
   // Derive current price from prices array using is_current flag (Brussels-timezone aware)
   // instead of a separate /api/current call which had a UTC vs CEST mismatch
   const current = prices.find(p => p.is_current) || prices.filter(p => p.day === "today").slice(-1)[0] || null;
@@ -522,6 +526,29 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Calculator sign-in banner (guests only) ── */}
+      {calcBanner && (
+        <div style={{ background: "rgba(13,148,136,0.1)", borderBottom: "1px solid rgba(13,148,136,0.25)", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🔌</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0" }}>Plan Calculator requires an account</div>
+              <div style={{ fontSize: 12, color: "#64748B" }}>Create a free account in 30 seconds — no credit card needed.</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+            <button onClick={() => { setCalcBanner(false); onSignIn(); }}
+              style={{ padding: "8px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer" }}>
+              Sign in free →
+            </button>
+            <button onClick={() => setCalcBanner(false)}
+              style={{ background: "none", border: "none", color: "#64748B", cursor: "pointer", fontSize: 18, padding: "0 4px", lineHeight: 1 }}>
+              ✕
+            </button>
           </div>
         </div>
       )}
