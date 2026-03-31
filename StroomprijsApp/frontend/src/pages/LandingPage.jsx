@@ -1,6 +1,6 @@
 /**
  * LandingPage.jsx — SmartPrice.be
- * Redesigned: bold dark-tech aesthetic, calculator showcase, supplier grid, 
+ * Redesigned: bold dark-tech aesthetic, calculator showcase, supplier grid,
  * separate elec/gas CTA buttons, improved FAQ, richer footer.
  */
 import { useState, useEffect } from "react";
@@ -9,17 +9,38 @@ import { useTheme } from "../context/ThemeContext";
 import LangSwitcher   from "../components/LangSwitcher";
 import ThemeSwitcher  from "../components/ThemeSwitcher";
 
-const featureIcons = ["⚡", "🔥", "💚", "🔔", "🔌", "📅"];
-
+// Supplier brand tiles — color matches each supplier's brand identity
 const suppliers = [
-  { name: "Engie",         logo: "🔵" },
-  { name: "Luminus",       logo: "🟡" },
-  { name: "Bolt Energy",   logo: "⚡" },
-  { name: "TotalEnergies", logo: "🔴" },
-  { name: "Eneco",         logo: "🟢" },
-  { name: "Mega",          logo: "🟠" },
-  { name: "Octa+",         logo: "🔷" },
+  { name: "Engie",         abbr: "EN",  color: "#fff", bg: "#0066A1", accent: "#0066A1" },
+  { name: "Luminus",       abbr: "LU",  color: "#1a1a1a", bg: "#FFB800", accent: "#FFB800" },
+  { name: "Bolt",          abbr: "⚡",  color: "#fff", bg: "#1A1A2E", accent: "#00C896", border: "#00C896" },
+  { name: "TotalEnergies", abbr: "TE",  color: "#fff", bg: "#EF3340", accent: "#EF3340" },
+  { name: "Eneco",         abbr: "EC",  color: "#fff", bg: "#00A651", accent: "#00A651" },
+  { name: "Mega",          abbr: "MG",  color: "#fff", bg: "#7C3AED", accent: "#7C3AED" },
+  { name: "Octa+",         abbr: "O+",  color: "#fff", bg: "#F97316", accent: "#F97316" },
 ];
+
+function SupplierLogo({ s }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.03)", border: `1px solid ${s.accent}33`, borderRadius: 14, padding: "10px 16px", transition: "all 0.2s" }}
+      onMouseEnter={e => { e.currentTarget.style.border = `1px solid ${s.accent}66`; e.currentTarget.style.background = `${s.accent}0A`; e.currentTarget.style.transform = "translateY(-2px)"; }}
+      onMouseLeave={e => { e.currentTarget.style.border = `1px solid ${s.accent}33`; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+      <div style={{ width: 34, height: 34, borderRadius: 8, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: s.abbr.length > 2 ? 14 : 13, fontWeight: 900, color: s.color, letterSpacing: "-0.5px", flexShrink: 0 }}>
+        {s.abbr}
+      </div>
+      <span style={{ fontSize: 13, fontWeight: 700, color: "#C4D4E0" }}>{s.name}</span>
+    </div>
+  );
+}
+
+function getPriceColor(mwh) {
+  if (mwh < 0)   return "#10B981";
+  if (mwh < 50)  return "#10B981";
+  if (mwh < 100) return "#84CC16";
+  if (mwh < 150) return "#F59E0B";
+  if (mwh < 200) return "#F97316";
+  return "#EF4444";
+}
 
 export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const { theme } = useTheme();
@@ -45,7 +66,27 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   ];
   const [openFaq, setOpenFaq] = useState(null);
   const [heroVisible, setHeroVisible] = useState(false);
+  const [liveStats, setLiveStats] = useState(null);
+
   useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 60); return () => clearTimeout(t); }, []);
+
+  useEffect(() => {
+    fetch("/api/prices/today")
+      .then(r => r.json())
+      .then(d => {
+        if (d.prices?.length) {
+          const prices = d.prices.map(p => p.price_eur_mwh).filter(p => p != null);
+          const current = d.prices.find(p => p.is_current)?.price_eur_mwh ?? d.prices[d.prices.length - 1]?.price_eur_mwh;
+          setLiveStats({
+            current: current?.toFixed(1),
+            min: Math.min(...prices).toFixed(1),
+            avg: (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(1),
+            max: Math.max(...prices).toFixed(1),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div style={{ minHeight: "100vh", background: "#060B14", color: theme === "light" ? "#1E293B" : "#E8EDF5", fontFamily: "\'DM Sans\', system-ui, sans-serif", overflowX: "hidden" }}>
@@ -93,46 +134,95 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             <br />
             <span style={{ background: "linear-gradient(135deg, #E8EDF5 40%, #1A56A4 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{L.heroLine2 || "for Energy"}</span>
           </h1>
+          {/* LIVE PRICE WIDGET */}
+          {liveStats && (
+            <div onClick={onGetStarted} style={{ display: "inline-flex", alignItems: "center", gap: 16, background: "rgba(0,0,0,0.35)", border: `1px solid ${getPriceColor(parseFloat(liveStats.current))}44`, borderRadius: 20, padding: "14px 24px", marginBottom: 32, cursor: "pointer", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.border = `1px solid ${getPriceColor(parseFloat(liveStats.current))}88`; }}
+              onMouseLeave={e => { e.currentTarget.style.border = `1px solid ${getPriceColor(parseFloat(liveStats.current))}44`; }}>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontSize: 10, color: "#445566", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 2 }}>Belgium · Now</div>
+                <div style={{ fontSize: 36, fontWeight: 900, fontFamily: "monospace", color: getPriceColor(parseFloat(liveStats.current)), lineHeight: 1 }}>
+                  €{liveStats.current}<span style={{ fontSize: 14, color: "#445566", fontWeight: 600 }}>/MWh</span>
+                </div>
+              </div>
+              <div style={{ width: 1, height: 40, background: "rgba(255,255,255,0.07)" }} />
+              <div style={{ display: "flex", gap: 14 }}>
+                {[
+                  { label: "Min", val: liveStats.min, color: "#10B981" },
+                  { label: "Avg", val: liveStats.avg, color: "#F59E0B" },
+                  { label: "Max", val: liveStats.max, color: "#EF4444" },
+                ].map(s => (
+                  <div key={s.label} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 9, color: "#334455", textTransform: "uppercase", letterSpacing: "0.8px" }}>{s.label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>€{s.val}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, color: "#334455" }}>Live →</div>
+            </div>
+          )}
+
           <p style={{ fontSize: "clamp(16px, 2.2vw, 20px)", color: "#6B7E99", maxWidth: 600, margin: "0 auto 42px", lineHeight: 1.75 }}>
             {L.heroDesc || "Track live EPEX & TTF prices, find the cheapest hours, compare all 7 Belgian suppliers, and get alerts when prices drop."}
           </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 24 }}>
             <button onClick={onGetStarted}
               style={{ padding: "16px 38px", borderRadius: 50, fontSize: 16, fontWeight: 800, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer", boxShadow: "0 8px 32px rgba(13,148,136,0.4)", transition: "all 0.2s" }}
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(13,148,136,0.55)"; }}
               onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(13,148,136,0.4)"; }}>
               {L.openDashboard}
             </button>
-          <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
+            <button onClick={() => onOpenCalculator && onOpenCalculator("electricity")}
               style={{ padding: "16px 38px", borderRadius: 50, fontSize: 16, fontWeight: 700, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.4)", color: "#0D9488", cursor: "pointer", transition: "all 0.2s" }}
               onMouseEnter={e => { e.currentTarget.style.background = "rgba(13,148,136,0.2)"; e.currentTarget.style.color = "#fff"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "rgba(13,148,136,0.1)"; e.currentTarget.style.color = "#0D9488"; }}>
               🔌 {L.tryCalculator}
             </button>
           </div>
-          <div style={{ fontSize: 12, color: "#2E3D52" }}>{L.heroBadge || "Free forever · No credit card · GDPR compliant"}</div>
+
+          {/* SOCIAL PROOF */}
+          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", marginBottom: 8 }}>
+            {[
+              { icon: "🇧🇪", text: "Belgian data" },
+              { icon: "🔒", text: "GDPR compliant" },
+              { icon: "⚡", text: "Updated every 15 min" },
+              { icon: "🆓", text: "Free forever" },
+            ].map(b => (
+              <div key={b.text} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#334455" }}>
+                <span>{b.icon}</span><span>{b.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* LIVE STATS */}
-      <section style={{ maxWidth: 960, margin: "0 auto 44px", padding: "0 24px", position: "relative", zIndex: 1 }}>
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "24px 28px", display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 10, color: "#3A4D63", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 10 }}>{L.liveEpex || "Live EPEX Spot · Belgium"}</div>
-            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-              {[{ label: L.statMin || "Today Min", color: "#10B981", val: "~€38" }, { label: L.statAvg || "Today Avg", color: "#F59E0B", val: "~€92" }, { label: L.statMax || "Today Max", color: "#EF4444", val: "~€154" }, { label: L.statGas || "TTF Gas", color: "#F97316", val: "~€35/MWh" }].map(s => (
-                <div key={s.label} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 9, color: "#3A4D63", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 3 }}>{s.label}</div>
-                  <div style={{ fontSize: 19, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>{s.val}</div>
-                </div>
-              ))}
+      {/* LIVE STATS BAR — only shown when liveStats loaded */}
+      {liveStats && (
+        <section style={{ maxWidth: 960, margin: "0 auto 44px", padding: "0 24px", position: "relative", zIndex: 1 }}>
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "20px 28px", display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: 10, color: "#3A4D63", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 10 }}>{L.liveEpex || "Live EPEX Spot · Belgium · Today"}</div>
+              <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                {[
+                  { label: L.statMin || "Min", color: "#10B981", val: `€${liveStats.min}` },
+                  { label: L.statAvg || "Avg", color: "#F59E0B", val: `€${liveStats.avg}` },
+                  { label: L.statMax || "Max", color: "#EF4444", val: `€${liveStats.max}` },
+                  { label: "Now", color: getPriceColor(parseFloat(liveStats.current)), val: `€${liveStats.current}` },
+                ].map(s => (
+                  <div key={s.label} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 9, color: "#3A4D63", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 3 }}>{s.label}</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: s.color, fontFamily: "monospace" }}>{s.val}</div>
+                    <div style={{ fontSize: 9, color: "#2A3A4A" }}>/MWh</div>
+                  </div>
+                ))}
+              </div>
             </div>
+            <button onClick={onGetStarted} style={{ padding: "11px 22px", borderRadius: 12, fontSize: 13, fontWeight: 700, background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.3)", color: "#00C896", cursor: "pointer", whiteSpace: "nowrap" }}>
+              {L.seeLivePrices || "Open live dashboard →"}
+            </button>
           </div>
-          <button onClick={onGetStarted} style={{ padding: "11px 22px", borderRadius: 12, fontSize: 13, fontWeight: 700, background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.3)", color: "#00C896", cursor: "pointer", whiteSpace: "nowrap" }}>
-            {L.seeLivePrices || "See Live Prices →"}
-          </button>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CALCULATOR SHOWCASE */}
       <section style={{ maxWidth: 960, margin: "0 auto 64px", padding: "0 24px", position: "relative", zIndex: 1 }}>
@@ -246,12 +336,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           <p style={{ color: "#556B82", fontSize: 13 }}>{L.coverageSub || "Variable · Fixed · Dynamic — electricity and gas plans"}</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
-          {suppliers.map(s => (
-            <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "10px 18px" }}>
-              <span style={{ fontSize: 18 }}>{s.logo}</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#C4D4E0" }}>{s.name}</span>
-            </div>
-          ))}
+          {suppliers.map(s => <SupplierLogo key={s.name} s={s} />)}
         </div>
       </section>
 
