@@ -252,23 +252,22 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest, isMobile }) {
   );
 }
 
-const SHARE_CHANNELS = [
-  { label: "WhatsApp", icon: "💬", color: "#25D366", href: (t) => `https://wa.me/?text=${encodeURIComponent(t)}` },
-  { label: "X",        icon: "𝕏",  color: "#fff",    href: (t) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}` },
-  { label: "Facebook", icon: "f",  color: "#1877F2", href: ()  => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://smartprice.be")}` },
-  { label: "LinkedIn", icon: "in", color: "#0A66C2", href: ()  => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://smartprice.be")}` },
-  { label: "Email",    icon: "✉",  color: "#94A3B8", href: (t) => `mailto:?subject=${encodeURIComponent("Live electricity prices — SmartPrice.be")}&body=${encodeURIComponent(t)}` },
-];
-
 function SharePanel({ currentPrice, onClose, copied, onCopy }) {
   const shareText = currentPrice != null
     ? `⚡ Belgian electricity is now €${currentPrice.toFixed(1)}/MWh — track live EPEX prices free at https://smartprice.be`
     : `⚡ SmartPrice.be — Live EPEX electricity prices & cheapest hours for Belgium. Free! https://smartprice.be`;
+  const channels = [
+    { label: "WhatsApp", icon: "💬", color: "#25D366", href: `https://wa.me/?text=${encodeURIComponent(shareText)}` },
+    { label: "X",        icon: "𝕏",  color: "#fff",    href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}` },
+    { label: "Facebook", icon: "f",  color: "#1877F2", href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://smartprice.be")}` },
+    { label: "LinkedIn", icon: "in", color: "#0A66C2", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://smartprice.be")}` },
+    { label: "Email",    icon: "✉",  color: "#94A3B8", href: `mailto:?subject=${encodeURIComponent("Live electricity prices — SmartPrice.be")}&body=${encodeURIComponent(shareText)}` },
+  ];
   return (
     <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 200, background: "#0A1628", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "12px", width: 220, boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
       <div style={{ fontSize: 11, color: "#445566", marginBottom: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px" }}>Share SmartPrice</div>
-      {SHARE_CHANNELS.map(ch => (
-        <a key={ch.label} href={ch.href(shareText)} target="_blank" rel="noopener noreferrer"
+      {channels.map(ch => (
+        <a key={ch.label} href={ch.href} target="_blank" rel="noopener noreferrer"
           onClick={onClose}
           style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: `${ch.color}12`, marginBottom: 6, textDecoration: "none" }}
           onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
