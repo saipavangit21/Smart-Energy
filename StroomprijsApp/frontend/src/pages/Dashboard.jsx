@@ -306,7 +306,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
     note:  T[r.noteKey] || "",
   }));
   const { prices, stats, loading, error, lastFetched, source, refetch } = usePrices();
-  const openCalculator = (type) => isGuest ? onSignIn() : (onOpenCalculator && onOpenCalculator(type));
+  const openCalculator = (type) => onOpenCalculator && onOpenCalculator(type);
   // Derive current price from prices array using is_current flag (Brussels-timezone aware)
   // instead of a separate /api/current call which had a UTC vs CEST mismatch
   const current = prices.find(p => p.is_current) || prices.filter(p => p.day === "today").slice(-1)[0] || null;
