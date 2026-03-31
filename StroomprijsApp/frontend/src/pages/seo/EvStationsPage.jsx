@@ -10,49 +10,46 @@ import { useLanguage } from "../../context/LanguageContext";
 import LangSwitcher from "../../components/LangSwitcher";
 
 const API = import.meta.env.VITE_API_URL || "";
-// OCM proxied through backend to avoid CORS issues
-
-const C = {
-  bg:     "#060B14",
-  card:   "#0A1220",
-  card2:  "#0D1626",
-  border: "rgba(255,255,255,0.07)",
-  teal:   "#0D9488",
-  green:  "#00C896",
-  yellow: "#F59E0B",
-  red:    "#EF4444",
-  orange: "#F97316",
-  blue:   "#3B82F6",
-  text:   "#E2E8F0",
-  muted:  "#64748B",
-  soft:   "#94A3B8",
-};
-
-function getPriceColor(mwh) {
-  if (mwh == null) return C.muted;
-  if (mwh < 0)   return "#00E5FF";
-  if (mwh < 50)  return "#00C896";
-  if (mwh < 90)  return "#84CC16";
-  if (mwh < 130) return "#F59E0B";
-  if (mwh < 160) return "#F97316";
-  return "#EF4444";
-}
-
-function getPriceAdvice(mwh, lang) {
-  if (mwh == null) return { en: "Loading...", nl: "Laden...", fr: "Chargement..." }[lang];
-  if (mwh < 50)  return { en: "🟢 Great time to charge — prices very low", nl: "🟢 Goed moment om te laden — prijzen zeer laag", fr: "🟢 Moment idéal pour charger — prix très bas" }[lang];
-  if (mwh < 90)  return { en: "🟡 Good time to charge — prices below average", nl: "🟡 Goed moment — prijzen onder gemiddelde", fr: "🟡 Bon moment — prix inférieurs à la moyenne" }[lang];
-  if (mwh < 130) return { en: "🟠 Average prices — charge if needed", nl: "🟠 Gemiddelde prijzen — laad indien nodig", fr: "🟠 Prix moyens — chargez si nécessaire" }[lang];
-  return { en: "🔴 High prices — wait if possible", nl: "🔴 Hoge prijzen — wacht indien mogelijk", fr: "🔴 Prix élevés — attendez si possible" }[lang];
-}
-
-const CONNECTOR_TYPES = {
-  1: "Type 1 (J1772)", 2: "Type 2", 25: "Type 2 (Tethered)",
-  3: "Chademo", 33: "CCS (Type 1)", 1036: "CCS (Type 2)",
-  8: "Mennekes", 30: "Tesla", 27: "Tesla Supercharger",
-};
 
 export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavigate }) {
+  // All consts kept inside component to prevent Vite/Rollup TDZ bundle errors
+  const C = {
+    bg:     "#060B14",
+    card:   "#0A1220",
+    card2:  "#0D1626",
+    border: "rgba(255,255,255,0.07)",
+    teal:   "#0D9488",
+    green:  "#00C896",
+    yellow: "#F59E0B",
+    red:    "#EF4444",
+    orange: "#F97316",
+    blue:   "#3B82F6",
+    text:   "#E2E8F0",
+    muted:  "#64748B",
+    soft:   "#94A3B8",
+  };
+  const getPriceColor = (mwh) => {
+    if (mwh == null) return C.muted;
+    if (mwh < 0)   return "#00E5FF";
+    if (mwh < 50)  return "#00C896";
+    if (mwh < 90)  return "#84CC16";
+    if (mwh < 130) return "#F59E0B";
+    if (mwh < 160) return "#F97316";
+    return "#EF4444";
+  };
+  const getPriceAdvice = (mwh, l) => {
+    if (mwh == null) return { en: "Loading...", nl: "Laden...", fr: "Chargement..." }[l];
+    if (mwh < 50)  return { en: "🟢 Great time to charge — prices very low", nl: "🟢 Goed moment om te laden — prijzen zeer laag", fr: "🟢 Moment idéal pour charger — prix très bas" }[l];
+    if (mwh < 90)  return { en: "🟡 Good time to charge — prices below average", nl: "🟡 Goed moment — prijzen onder gemiddelde", fr: "🟡 Bon moment — prix inférieurs à la moyenne" }[l];
+    if (mwh < 130) return { en: "🟠 Average prices — charge if needed", nl: "🟠 Gemiddelde prijzen — laad indien nodig", fr: "🟠 Prix moyens — chargez si nécessaire" }[l];
+    return { en: "🔴 High prices — wait if possible", nl: "🔴 Hoge prijzen — wacht indien mogelijk", fr: "🔴 Prix élevés — attendez si possible" }[l];
+  };
+  const CONNECTOR_TYPES = {
+    1: "Type 1 (J1772)", 2: "Type 2", 25: "Type 2 (Tethered)",
+    3: "Chademo", 33: "CCS (Type 1)", 1036: "CCS (Type 2)",
+    8: "Mennekes", 30: "Tesla", 27: "Tesla Supercharger",
+  };
+
   const nav = (path) => {
     // Force full page load to ensure SPA re-renders correctly
     window.location.href = path;
