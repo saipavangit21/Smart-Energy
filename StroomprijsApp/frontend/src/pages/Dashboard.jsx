@@ -657,6 +657,42 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
         </div>
         )}
 
+        {/* ── SMART ACTION CARD ── */}
+        {energyType === "electricity" && mwh != null && cheapest.length > 0 && (() => {
+          const nextBest = cheapest[0];
+          const nextBestH = new Date(nextBest.timestamp);
+          const nextBestHour = nextBestH.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+          const nowIsChap = mwh <= (stats?.today?.avg ?? 120);
+          const savingVsNow = mwh - nextBest.price_eur_mwh;
+          const isNowBest = savingVsNow <= 5; // within €5/MWh = now IS the best window
+          return (
+            <div style={{ marginBottom: 16, background: isNowBest ? "linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.05))" : nowIsChap ? "linear-gradient(135deg,rgba(0,200,150,0.08),rgba(0,200,150,0.03))" : "linear-gradient(135deg,rgba(249,115,22,0.09),rgba(249,115,22,0.03))", border: `1px solid ${isNowBest ? "rgba(16,185,129,0.35)" : nowIsChap ? "rgba(0,200,150,0.25)" : "rgba(249,115,22,0.28)"}`, borderRadius: 18, padding: isMobile ? "14px 16px" : "18px 22px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", color: isNowBest ? "#10B981" : nowIsChap ? "#00C896" : "#F97316", marginBottom: 6 }}>
+                    {isNowBest ? "✅ Best time to act — right now" : nowIsChap ? "🟢 Good time — prices below average" : "⚠️ High prices right now — consider waiting"}
+                  </div>
+                  <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: "#E2E8F0", marginBottom: 4 }}>
+                    {isNowBest
+                      ? `Now is your cheapest upcoming window · €${mwh.toFixed(1)}/MWh`
+                      : nowIsChap
+                      ? `Prices good · Next best window: ${nextBestHour} (€${nextBest.price_eur_mwh.toFixed(1)}/MWh)`
+                      : `Next best window: ${nextBestHour} at €${nextBest.price_eur_mwh.toFixed(1)}/MWh`}
+                  </div>
+                  {!isNowBest && savingVsNow > 0 && (
+                    <div style={{ fontSize: 13, color: "#556B82" }}>
+                      Waiting saves <strong style={{ color: "#10B981" }}>€{(savingVsNow / 1000 * 22).toFixed(2)}</strong> per EV charge vs charging now
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => setTab("cheapest")} style={{ padding: "9px 18px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#94A3B8", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  See all windows →
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── Gas dashboard ── */}
         {energyType === "gas" && (
           <GasTab user={user} isGuest={isGuest} onSignIn={onSignIn} isMobile={isMobile} mobileTab={tab} setMobileTab={setTab} />
@@ -846,31 +882,48 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
 
         {/* ── Best Hours ── */}
         {energyType === "electricity" && tab === "cheapest" && (
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: isMobile ? 16 : 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{T.cheapestHours}</div>
-            <div style={{ fontSize: 12, color: "#556", marginBottom: 16 }}>{T.cheapestSub}</div>
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 3 }}>{T.cheapestHours}</div>
+              <div style={{ fontSize: 12, color: "#556" }}>{T.cheapestSub}</div>
+            </div>
             {cheapest.length === 0 ? <div style={{ color:"#556", textAlign:"center", padding:"30px 0" }}>Loading…</div>
             : cheapest.map((h, i) => {
               const ts = new Date(h.timestamp);
               const lbl_ = getPriceLabel(h.price_eur_mwh, PL);
+              const col = getPriceColor(h.price_eur_mwh);
+              const evSaving = mwh != null ? ((mwh - h.price_eur_mwh) / 1000 * 22).toFixed(2) : null;
+              const isFirst = i === 0;
               return (
-                <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 14px", marginBottom:8, background:"rgba(0,200,150,0.04)", border:"1px solid rgba(0,200,150,0.12)", borderRadius:14 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    <div style={{ width:30, height:30, borderRadius:"50%", background:`rgba(0,200,150,${0.25-i*0.04})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:900, color:C.green }}>{i+1}</div>
-                    <div>
-                      <div style={{ fontWeight:700, fontSize:15 }}>{ts.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} – {new Date(ts.getTime()+3600000).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div>
-                      <div style={{ fontSize:10, color:"#445" }}>{ts.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}</div>
+                <div key={i} style={{ marginBottom: 10, background: isFirst ? `linear-gradient(135deg,${col}14,${col}05)` : "rgba(255,255,255,0.02)", border: `1px solid ${isFirst ? col + "44" : "rgba(255,255,255,0.07)"}`, borderRadius: 18, padding: isMobile ? "16px" : "18px 22px", transition: "all 0.2s" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      {/* Rank badge */}
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: isFirst ? `${col}22` : "rgba(255,255,255,0.05)", border: `1px solid ${isFirst ? col + "55" : "rgba(255,255,255,0.1)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: isFirst ? 16 : 14, fontWeight: 900, color: isFirst ? col : "#445566", flexShrink: 0 }}>
+                        {isFirst ? "✓" : i + 1}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: isMobile ? 17 : 20, letterSpacing: "-0.5px", color: isFirst ? col : "#DDE8F0" }}>
+                          {ts.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} – {new Date(ts.getTime()+3600000).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#445566", marginTop: 2 }}>
+                          {ts.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})} · {lbl_.emoji} {lbl_.text}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ textAlign:"right" }}>
-                    <div style={{ color:getPriceColor(h.price_eur_mwh), fontWeight:800, fontSize:16, fontFamily:"monospace" }}>€{h.price_eur_mwh.toFixed(1)}</div>
-                    <div style={{ fontSize:10, color:"#556" }}>{lbl_.emoji} {lbl_.text}</div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ color: col, fontWeight: 900, fontSize: isMobile ? 22 : 26, fontFamily: "monospace", lineHeight: 1 }}>€{h.price_eur_mwh.toFixed(1)}</div>
+                      <div style={{ fontSize: 10, color: "#445566", marginTop: 2 }}>/MWh</div>
+                      {evSaving != null && parseFloat(evSaving) > 0.01 && (
+                        <div style={{ fontSize: 11, color: "#10B981", fontWeight: 700, marginTop: 3 }}>saves €{evSaving}/charge</div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             })}
             {stats?.today && (
-              <div style={{ marginTop:12, padding:"10px 14px", background:"rgba(0,130,255,0.05)", border:"1px solid rgba(0,130,255,0.12)", borderRadius:12, fontSize:12, color:"#778" }}>
+              <div style={{ marginTop: 4, padding: "12px 16px", background: "rgba(0,130,255,0.06)", border: "1px solid rgba(0,130,255,0.14)", borderRadius: 14, fontSize: 12, color: "#778" }}>
                 {T.savingsTip} <strong style={{color:C.green}}>€{(((stats.today.max-stats.today.min)/1000)*2).toFixed(3)}</strong> today
               </div>
             )}
