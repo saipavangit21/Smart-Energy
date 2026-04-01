@@ -248,6 +248,14 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       <section style={{ maxWidth: 860, margin: "0 auto", padding: "48px 20px 0", position: "relative", zIndex: 1 }}>
         <div style={{ opacity: heroIn ? 1 : 0, transform: heroIn ? "translateY(0)" : "translateY(16px)", transition: "all 0.6s ease" }}>
 
+          {/* Headline */}
+          <h1 style={{ fontSize: "clamp(32px,6vw,62px)", fontWeight: 900, letterSpacing: "-2.5px", lineHeight: 1.05, margin: "0 0 8px", textAlign: "center" }}>
+            <span style={{ background: "linear-gradient(135deg,#fff 20%,#10B981 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Stop paying peak price</span>
+          </h1>
+          <p style={{ fontSize: "clamp(14px,2vw,18px)", color: "#556B82", textAlign: "center", margin: "0 0 28px", fontWeight: 500 }}>
+            We tell you exactly when to charge — and how much you save.
+          </p>
+
           {/* Urgency pill */}
           {urgencyText && (
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
