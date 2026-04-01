@@ -40,11 +40,12 @@ const userStore = {
 
   // ── Create (email/password — email now optional) ─────────────
   async create({ email, passwordHash, name }) {
+    const providers = JSON.stringify({ email: true, google: false, apple: false, itsme: false });
     const { rows } = await pool.query(
-      `INSERT INTO users (email, password_hash, name)
-       VALUES ($1, $2, $3)
+      `INSERT INTO users (email, password_hash, name, providers)
+       VALUES ($1, $2, $3, $4::jsonb)
        RETURNING *`,
-      [email ? email.toLowerCase().trim() : null, passwordHash, name || ""]
+      [email ? email.toLowerCase().trim() : null, passwordHash, name || "", providers]
     );
     return rows[0];
   },

@@ -198,7 +198,7 @@ module.exports = function attachAnalytics(app, pool) {
       const userCount = await pool.query(`
         SELECT COUNT(*) AS total,
           COUNT(*) FILTER (WHERE providers->>'google' = 'true') AS google_users,
-          COUNT(*) FILTER (WHERE providers->>'email'  = 'true') AS email_users,
+          COUNT(*) FILTER (WHERE password_hash IS NOT NULL)     AS email_users,
           COUNT(*) FILTER (WHERE created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Europe/Brussels') AT TIME ZONE 'Europe/Brussels') AS new_today,
           COUNT(*) FILTER (WHERE ${dateFilter}) AS new_in_period
         FROM users
@@ -233,7 +233,7 @@ module.exports = function attachAnalytics(app, pool) {
         SELECT
           id, name, email,
           CASE WHEN providers->>'google' = 'true' THEN true ELSE false END AS google,
-          CASE WHEN providers->>'email'  = 'true' THEN true ELSE false END AS email_auth,
+          CASE WHEN password_hash IS NOT NULL      THEN true ELSE false END AS email_auth,
           created_at
         FROM users
         ORDER BY created_at DESC
