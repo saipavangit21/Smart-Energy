@@ -46,6 +46,7 @@ export default function AuthPage({ onBack, reason }) {
   const A = tSection("auth");
   const [mode,      setMode]      = useState("login");
   const [name,      setName]      = useState("");
+  const [email,     setEmail]     = useState(""); // optional at register
   const [loginId,   setLoginId]   = useState(""); // email or name for login
   const [password,  setPassword]  = useState("");
   const [confirm,   setConfirm]   = useState("");
@@ -62,6 +63,7 @@ export default function AuthPage({ onBack, reason }) {
       if (!password)           { setError(A.errPassword); return; }
       if (password.length < 8) { setError(A.errPasswordLength); return; }
       if (password !== confirm) { setError(A.errPasswordMatch); return; }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError(A.errInvalidEmail || "Enter a valid email address"); return; }
     } else {
       if (!loginId.trim()) { setError(A.errNameOrEmail); return; }
       if (!password)       { setError(A.errEnterPassword); return; }
@@ -74,7 +76,7 @@ export default function AuthPage({ onBack, reason }) {
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginId);
         await login(isEmail ? { email: loginId, password } : { name: loginId, password });
       } else {
-        await register({ name, password });
+        await register({ name, password, email: email.trim() || undefined });
       }
     } catch (err) {
       setError(err.message || A.errGeneric);
@@ -85,7 +87,7 @@ export default function AuthPage({ onBack, reason }) {
 
   const switchMode = m => {
     setMode(m); reset();
-    setName(""); setLoginId(""); setPassword(""); setConfirm("");
+    setName(""); setEmail(""); setLoginId(""); setPassword(""); setConfirm("");
   };
 
   return (
@@ -153,20 +155,20 @@ export default function AuthPage({ onBack, reason }) {
             </div>
           )}
 
-          {/* REGISTER: name + password only */}
+          {/* REGISTER: name + optional email + password */}
           {mode === "register" && (<>
             <Input label={A.yourName} value={name} onChange={setName}
               placeholder={A.namePlaceholder} autoComplete="name"
               hint={A.nameHint} />
+            <Input label={`${A.emailLabel || "Email"} · ${A.optionalLabel || "optional"}`}
+              type="email" value={email} onChange={setEmail}
+              placeholder={A.emailPlaceholder || "your@email.com"}
+              autoComplete="email"
+              hint={A.emailHint || "Add your email to receive daily price alerts"} />
             <Input label={A.password} type="password" value={password} onChange={setPassword}
               placeholder={A.passwordHint} autoComplete="new-password" />
             <Input label={A.confirmPassword} type="password" value={confirm} onChange={setConfirm}
               placeholder={A.confirmPlaceholder} autoComplete="new-password" />
-
-            {/* Email note */}
-            <div style={{ background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#94A3B8", lineHeight: 1.6 }}>
-              💡 <strong style={{ color: "#0D9488" }}>Email is optional.</strong> You can add it later in Alerts if you want price notifications.
-            </div>
           </>)}
 
           {/* LOGIN: name or email + password */}
