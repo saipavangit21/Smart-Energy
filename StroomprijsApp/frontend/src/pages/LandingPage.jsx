@@ -73,7 +73,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   useEffect(() => {
     fetch("/api/prices/today")
       .then(r => r.json())
-      .then(d => { if (d.prices?.length) setPrices(d.prices); })
+      .then(d => { if (d.data?.length) setPrices(d.data); })
       .catch(() => {});
   }, []);
 
@@ -252,9 +252,22 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           <h1 style={{ fontSize: "clamp(32px,6vw,62px)", fontWeight: 900, letterSpacing: "-2.5px", lineHeight: 1.05, margin: "0 0 8px", textAlign: "center" }}>
             <span style={{ background: "linear-gradient(135deg,#fff 20%,#10B981 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Stop paying peak price</span>
           </h1>
-          <p style={{ fontSize: "clamp(14px,2vw,18px)", color: "#556B82", textAlign: "center", margin: "0 0 28px", fontWeight: 500 }}>
+          <p style={{ fontSize: "clamp(14px,2vw,18px)", color: "#556B82", textAlign: "center", margin: "0 0 20px", fontWeight: 500 }}>
             We tell you exactly when to charge — and how much you save.
           </p>
+
+          {/* Product scope row */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginBottom: 28 }}>
+            {[
+              { icon: "⚡", label: "Electricity prices", color: "#F59E0B", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)" },
+              { icon: "🔥", label: "Gas prices",         color: "#F97316", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.25)" },
+              { icon: "🚗", label: "EV charging",        color: "#10B981", bg: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.25)" },
+            ].map(p => (
+              <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 6, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 20, padding: "6px 14px", fontSize: 12, fontWeight: 700, color: p.color }}>
+                <span>{p.icon}</span><span>{p.label}</span>
+              </div>
+            ))}
+          </div>
 
           {/* Urgency pill */}
           {urgencyText && (
