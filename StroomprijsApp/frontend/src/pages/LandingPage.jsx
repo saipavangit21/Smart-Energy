@@ -498,8 +498,10 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               <label style={{ fontSize: 10, color: "#445566", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 700, display: "block", marginBottom: 8 }}>{L.fullByLabel || "Full by:"}</label>
               <select value={needByHour} onChange={e => setNeedByHour(+e.target.value)}
                 style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "9px 12px", color: "#E2E8F0", fontSize: 14, fontWeight: 700, cursor: "pointer", outline: "none" }}>
-                {[5,6,7,8,9,10,11,12].map(h => (
-                  <option key={h} value={h} style={{ background: "#0A1628" }}>{String(h).padStart(2,"0")}:00{h <= 8 ? ` (${L.morningLabel || "morning"})` : ""}</option>
+                {Array.from({ length: 23 }, (_, i) => (new Date().getHours() + 1 + i) % 24).map(h => (
+                  <option key={h} value={h} style={{ background: "#0A1628" }}>
+                    {String(h).padStart(2,"0")}:00{h >= 5 && h <= 9 ? ` ${L.morningLabel || "(morning)"}` : h >= 17 && h <= 20 ? ` ${L.eveningLabel || "(evening)"}` : ""}
+                  </option>
                 ))}
               </select>
             </div>
