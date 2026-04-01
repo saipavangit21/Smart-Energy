@@ -284,101 +284,88 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             </div>
           )}
 
-          {/* ── THE DECISION — this is the headline ── */}
-          {prices.length > 0 && cheapHour != null ? (
-            <div style={{
-              background: "linear-gradient(160deg, rgba(16,185,129,0.1) 0%, rgba(13,148,136,0.05) 50%, rgba(0,0,0,0.4) 100%)",
-              border: "1px solid rgba(16,185,129,0.3)",
-              borderTop: "4px solid #10B981",
-              borderRadius: 24,
-              padding: "36px 36px 32px",
-              marginBottom: 14,
-              boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(16,185,129,0.08)",
-              textAlign: "center",
-            }}>
-              <div style={{ fontSize: 11, color: "#10B981", textTransform: "uppercase", letterSpacing: "3px", fontWeight: 800, marginBottom: 12 }}>
-                ⚡ Cheapest charging time today
-              </div>
+          {/* ── MAIN CARD (zinc style) ── */}
+          <div style={{
+            background: "rgba(24,24,27,0.85)",
+            backdropFilter: "blur(24px)",
+            border: "1px solid rgba(63,63,70,0.8)",
+            borderRadius: 20,
+            boxShadow: "0 24px 48px rgba(0,0,0,0.6)",
+            overflow: "hidden",
+            marginBottom: 14,
+          }}>
+            {prices.length > 0 && cheapHour != null ? (
+              <div style={{ padding: "24px 24px 20px" }}>
 
-              {/* THE BIG ANSWER */}
-              <div style={{ fontSize: "clamp(52px,10vw,96px)", fontWeight: 900, fontFamily: "monospace", color: "#10B981", lineHeight: 1, letterSpacing: "-4px", marginBottom: 8 }}>
-                {fmtHour(cheapHour)}
-                {cheapWindowEnd != null && cheapWindowEnd !== cheapHour + 1
-                  ? <span style={{ opacity: 0.5, fontSize: "0.55em" }}> – {fmtHour(cheapWindowEnd)}</span>
-                  : <span style={{ opacity: 0.5, fontSize: "0.55em" }}> – {fmtHour(cheapHour + 2)}</span>
-                }
-              </div>
+                {/* Price grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                  {/* Cheapest */}
+                  <div style={{ background: "rgba(39,39,42,0.9)", border: "1px solid rgba(63,63,70,0.6)", borderRadius: 14, padding: "16px 18px" }}>
+                    <div style={{ fontSize: 11, color: "#71717a", marginBottom: 6, fontWeight: 600 }}>Cheapest time</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: "#f4f4f5", marginBottom: 4, fontFamily: "monospace", letterSpacing: "-0.5px" }}>
+                      {fmtHour(cheapHour)} – {fmtHour((cheapWindowEnd ?? cheapHour + 2))}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#4ade80" }}>€{retailFmt(cheapMwh)}/kWh</div>
+                  </div>
 
-              <div style={{ fontSize: "clamp(16px,2.5vw,22px)", fontWeight: 700, color: "#10B981", marginBottom: 20, opacity: 0.85 }}>
-                €{cheapMwh?.toFixed(0)}/MWh · €{retailFmt(cheapMwh)}/kWh
-              </div>
-
-              {/* The "you're losing money" line */}
-              {savingToday != null && savingToday > 0.5 && (
-                <div style={{
-                  display: "inline-flex", alignItems: "center", gap: 10,
-                  background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
-                  borderRadius: 14, padding: "10px 20px", marginBottom: 24,
-                }}>
-                  <span style={{ fontSize: 18 }}>💸</span>
-                  <span style={{ fontSize: 15, fontWeight: 800, color: "#EF4444" }}>
-                    Charging now costs €{savingToday.toFixed(2)} more per session
-                  </span>
+                  {/* Most expensive */}
+                  <div style={{ background: "rgba(39,39,42,0.9)", border: "1px solid rgba(63,63,70,0.6)", borderRadius: 14, padding: "16px 18px" }}>
+                    <div style={{ fontSize: 11, color: "#71717a", marginBottom: 6, fontWeight: 600 }}>Most expensive</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: "#f4f4f5", marginBottom: 4, fontFamily: "monospace", letterSpacing: "-0.5px" }}>
+                      {peakH != null ? `${fmtHour(peakH)} – ${fmtHour(peakH + 2)}` : "—"}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#f87171" }}>€{peakMwh != null ? retailFmt(peakMwh) : "—"}/kWh</div>
+                  </div>
                 </div>
-              )}
 
-              <CTAButton style={{ fontSize: 16, padding: "16px 40px" }} />
-
-              <div style={{ fontSize: 11, color: "#334455", marginTop: 12 }}>Free · No account needed to view · 30 sec to set alerts</div>
-            </div>
-          ) : prices.length === 0 ? (
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, padding: "48px", textAlign: "center", marginBottom: 14 }}>
-              <div style={{ fontSize: 14, color: "#334455" }}>Loading live prices…</div>
-            </div>
-          ) : null}
-
-          {/* ── PEAK WARNING ── */}
-          {peakH != null && peakMwh != null && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
-              background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.22)",
-              borderRadius: 16, padding: "14px 22px", marginBottom: 14,
-            }}>
-              <span style={{ fontSize: 20 }}>⚠️</span>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: "#EF4444" }}>Most expensive: {fmtHour(peakH)}</span>
-                <span style={{ fontSize: 13, color: "#6B3A3A", marginLeft: 8 }}>€{peakMwh.toFixed(0)}/MWh · €{retailFmt(peakMwh)}/kWh</span>
-              </div>
-              {cheapMwh && peakMwh && cheapMwh > 0 && (
-                <div style={{ fontSize: 14, fontWeight: 900, color: "#EF4444", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "6px 14px" }}>
-                  {(peakMwh / cheapMwh).toFixed(1)}× more expensive than cheapest
+                {/* Cost comparison block */}
+                <div style={{ background: "rgba(39,39,42,0.9)", border: "1px solid rgba(63,63,70,0.6)", borderRadius: 14, padding: "16px 18px", marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, color: "#71717a", marginBottom: 10, fontWeight: 600 }}>Full charge cost (40 kWh)</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 14, color: "#a1a1aa" }}>At cheapest ({fmtHour(cheapHour)})</span>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: "#4ade80" }}>€{(retailKwh(cheapMwh) * 40).toFixed(2)}</span>
+                  </div>
+                  {currentMwh != null && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                      <span style={{ fontSize: 14, color: "#a1a1aa" }}>Right now ({fmtHour(nowH)})</span>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: currentCol }}>€{(retailKwh(currentMwh) * 40).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {savingToday != null && savingToday > 0.3 && (
+                    <div style={{ borderTop: "1px solid rgba(63,63,70,0.5)", paddingTop: 10, fontSize: 15, fontWeight: 700, color: "#4ade80" }}>
+                      → You save €{savingToday.toFixed(2)} per charge
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* ── NOW vs CHEAPEST context ── */}
-          {currentMwh != null && cheapMwh != null && !cheapNow && (
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14,
-            }}>
-              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 18px" }}>
-                <div style={{ fontSize: 10, color: "#445566", textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: 700, marginBottom: 6 }}>Right now</div>
-                <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: currentCol, lineHeight: 1 }}>€{currentMwh.toFixed(0)}<span style={{ fontSize: 13, fontWeight: 600, color: "#445566" }}>/MWh</span></div>
-                <div style={{ fontSize: 12, color: "#445566", marginTop: 3 }}>€{retailFmt(currentMwh)}/kWh</div>
+                {/* Action */}
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#60a5fa", marginBottom: 14 }}>
+                    👉 Charge before {fmtHour(cheapWindowEnd ?? cheapHour + 2)} to save money
+                  </div>
+                  <CTAButton style={{ width: "100%", fontSize: 15, padding: "14px 0", borderRadius: 14 }} />
+                  <div style={{ fontSize: 11, color: "#3f3f46", marginTop: 10 }}>Free · No account needed · 30 sec to set alerts</div>
+                </div>
+
               </div>
-              <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 14, padding: "14px 18px" }}>
-                <div style={{ fontSize: 10, color: "#10B981", textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: 700, marginBottom: 6 }}>At {fmtHour(cheapHour ?? 0)}</div>
-                <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: "#10B981", lineHeight: 1 }}>€{cheapMwh.toFixed(0)}<span style={{ fontSize: 13, fontWeight: 600, color: "#10B981", opacity: 0.7 }}>/MWh</span></div>
-                <div style={{ fontSize: 12, color: "#10B981", opacity: 0.7, marginTop: 3 }}>€{retailFmt(cheapMwh)}/kWh</div>
+            ) : (
+              <div style={{ padding: "52px 24px", textAlign: "center" }}>
+                <div style={{ fontSize: 13, color: "#52525b" }}>Loading live prices…</div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Urgency footer */}
+            {urgencyText && (
+              <div style={{ borderTop: "1px solid rgba(63,63,70,0.5)", padding: "12px 24px", textAlign: "center", fontSize: 13, fontWeight: 700, color: cheapNow ? "#4ade80" : cheapSoon ? "#fbbf24" : "#71717a" }}>
+                {urgencyText}
+              </div>
+            )}
+          </div>
 
           {/* Trust */}
-          <div style={{ display: "flex", gap: 18, justifyContent: "center", flexWrap: "wrap", marginBottom: 8, paddingBottom: 4 }}>
+          <div style={{ display: "flex", gap: 18, justifyContent: "center", flexWrap: "wrap", marginBottom: 8 }}>
             {["🇧🇪 Belgian data", "🆓 Free forever", "⚡ Every 15 min", "🔒 GDPR"].map(b => (
-              <span key={b} style={{ fontSize: 11, color: "#2A3A4A" }}>{b}</span>
+              <span key={b} style={{ fontSize: 11, color: "#3f3f46" }}>{b}</span>
             ))}
           </div>
 
