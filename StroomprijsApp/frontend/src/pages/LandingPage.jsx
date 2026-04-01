@@ -63,6 +63,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const [chargerKw,  setChargerKw]  = useState(7.4);
   const [planResult, setPlanResult] = useState(null);
   const [tick,       setTick]       = useState(0); // for live countdown
+  const [leadEmail,  setLeadEmail]  = useState("");
+  const [leadState,  setLeadState]  = useState("idle"); // idle | loading | done | error
   const planRef = useRef(null);
 
   // ── Effects ───────────────────────────────────────────────────────────
@@ -185,6 +187,21 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
     { q: L.faq3Q, a: L.faq3A },
     { q: L.faq4Q, a: L.faq4A },
   ];
+
+  async function submitLead(e) {
+    e.preventDefault();
+    if (!leadEmail || leadState === "loading" || leadState === "done") return;
+    setLeadState("loading");
+    try {
+      const r = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: leadEmail, source: "landing" }),
+      });
+      if (r.ok) setLeadState("done");
+      else setLeadState("error");
+    } catch { setLeadState("error"); }
+  }
 
   const CTAButton = ({ label = "Get my cheapest charging plan →", style = {} }) => (
     <button onClick={onGetStarted} style={{
@@ -348,9 +365,71 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
+          EMAIL CAPTURE
+      ══════════════════════════════════════════════════════════════════ */}
+      <section style={{ maxWidth: 860, margin: "24px auto 0", padding: "0 20px", position: "relative", zIndex: 1 }}>
+        <div style={{
+          background: leadState === "done"
+            ? "linear-gradient(135deg,rgba(16,185,129,0.13),rgba(13,148,136,0.07))"
+            : "linear-gradient(135deg,rgba(13,148,136,0.1),rgba(26,86,164,0.06))",
+          border: `1px solid ${leadState === "done" ? "rgba(16,185,129,0.4)" : "rgba(13,148,136,0.28)"}`,
+          borderRadius: 20, padding: "24px 28px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
+          transition: "all 0.4s ease",
+        }}>
+          {leadState === "done" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 28 }}>✅</span>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "#10B981" }}>You're on the list</div>
+                <div style={{ fontSize: 13, color: "#445566", marginTop: 3 }}>We'll alert you when tomorrow's cheapest window is published — every day at 13:00 CET.</div>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={submitLead} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#E2E8F0", marginBottom: 6 }}>
+                  🔔 Alert me when the cheapest window opens
+                </div>
+                <div style={{ fontSize: 12, color: "#445566" }}>Daily at 13:00 CET · No spam · Unsubscribe anytime</div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flex: 1, minWidth: 260 }}>
+                <input
+                  type="email"
+                  required
+                  placeholder="your@email.com"
+                  value={leadEmail}
+                  onChange={e => setLeadEmail(e.target.value)}
+                  style={{
+                    flex: 1, padding: "11px 16px", borderRadius: 12, fontSize: 14,
+                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)",
+                    color: "#E2E8F0", outline: "none", fontFamily: "inherit",
+                  }}
+                  onFocus={e => e.target.style.border = "1px solid rgba(16,185,129,0.5)"}
+                  onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.15)"}
+                />
+                <button type="submit" disabled={leadState === "loading"} style={{
+                  padding: "11px 22px", borderRadius: 12, fontSize: 13, fontWeight: 800,
+                  background: "linear-gradient(135deg,#10B981,#0D9488)", border: "none",
+                  color: "#fff", cursor: leadState === "loading" ? "wait" : "pointer",
+                  whiteSpace: "nowrap", boxShadow: "0 4px 16px rgba(16,185,129,0.35)",
+                  opacity: leadState === "loading" ? 0.7 : 1, transition: "all 0.2s",
+                }}>
+                  {leadState === "loading" ? "…" : "Notify me →"}
+                </button>
+              </div>
+              {leadState === "error" && (
+                <div style={{ width: "100%", fontSize: 12, color: "#EF4444" }}>Something went wrong — try again or email hello@smartprice.be</div>
+              )}
+            </form>
+          )}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
           EV CHARGE PLANNER
       ══════════════════════════════════════════════════════════════════ */}
-      <section ref={planRef} style={{ maxWidth: 860, margin: "40px auto 0", padding: "0 20px", position: "relative", zIndex: 1 }}>
+      <section ref={planRef} style={{ maxWidth: 860, margin: "28px auto 0", padding: "0 20px", position: "relative", zIndex: 1 }}>
         <Tile accent="#00C896" icon="🔋" label="EV Charge Planner — tell us your battery, we find the window">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 22 }}>
             <div>

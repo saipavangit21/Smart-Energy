@@ -275,6 +275,62 @@ app.get("/api/flows/today", async (req, res) => {
 // ── Health check (DB + EPEX + data freshness) ──────────────
 require("./health-route")(app, pool);
 app.get("/api/status-banner", (req, res) => res.json({ active: false }));
+
+// ── Email lead capture ────────────────────────────────────────
+app.post("/api/leads", async (req, res) => {
+  const { email, source = "landing" } = req.body;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, error: "Invalid email" });
+  }
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS leads (
+        id         SERIAL PRIMARY KEY,
+        email      TEXT UNIQUE NOT NULL,
+        source     TEXT DEFAULT 'landing',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    const { rows } = await pool.query(
+      `INSERT INTO leads (email, source) VALUES ($1, $2)
+       ON CONFLICT (email) DO UPDATE SET source = EXCLUDED.source
+       RETURNING id, created_at, (xmax = 0) AS is_new`,
+      [email.toLowerCase().trim(), source]
+    );
+    const isNew = rows[0].is_new;
+    // Send welcome email via Resend if API key present and it's a new lead
+    if (isNew && process.env.RESEND_API_KEY) {
+      await axios.post("https://api.resend.com/emails", {
+        from: process.env.FROM_EMAIL || "alerts@smartprice.be",
+        to: email,
+        subject: "⚡ SmartPrice — you're on the list",
+        html: `
+          <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#060B14;color:#E8EDF5;border-radius:16px">
+            <div style="font-size:28px;margin-bottom:8px">⚡</div>
+            <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#10B981">You're in.</h1>
+            <p style="color:#6B8099;font-size:15px;line-height:1.7;margin:0 0 20px">
+              Every day at <strong style="color:#E8EDF5">13:00 CET</strong> we publish tomorrow's prices.<br>
+              We'll alert you when the <strong style="color:#10B981">cheapest charging window</strong> opens for Belgium.
+            </p>
+            <a href="https://smartprice.be" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#10B981,#0D9488);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
+              View live prices →
+            </a>
+            <p style="margin-top:28px;font-size:11px;color:#334455">
+              SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#334455">Privacy</a> · You can unsubscribe anytime by replying "unsubscribe"
+            </p>
+          </div>
+        `,
+      }, {
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+        timeout: 8000,
+      }).catch(e => console.warn("[leads] Resend failed:", e.message));
+    }
+    res.json({ success: true, is_new: isNew });
+  } catch (e) {
+    console.error("[leads]", e.message);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+});
 app.get("/api/prices/today",async(req,res)=>{ try{const{today,tomorrow}=todayAndTomorrow();const{prices,source}=await getPrices(today,tomorrow);const d=enrich(prices);res.json({success:true,source,data:d,stats:computeStats(d),fetched_at:new Date().toISOString()});}catch(e){res.status(500).json({success:false,error:e.message});} });
 app.get("/api/current",async(req,res)=>{ try{const{today,tomorrow}=todayAndTomorrow();const{prices}=await getPrices(today,tomorrow);const enriched=enrich(prices);const c=enriched.find(p=>p.is_current)||enriched.filter(p=>p.day==="today").slice(-1)[0];res.json({success:true,current:c,timestamp:new Date().toISOString()});}catch(e){res.status(500).json({success:false,error:e.message});} });
 app.get("/api/cheapest",async(req,res)=>{ try{const n=parseInt(req.query.hours||"5");const{today,tomorrow}=todayAndTomorrow();const{prices}=await getPrices(today,tomorrow);const now=new Date();const c=[...prices.filter(p=>new Date(p.timestamp)>=now)].sort((a,b)=>a.price_eur_mwh-b.price_eur_mwh).slice(0,n);res.json({success:true,cheapest_hours:c});}catch(e){res.status(500).json({success:false,error:e.message});} });
