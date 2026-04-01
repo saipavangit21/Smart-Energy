@@ -63,8 +63,11 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const [chargerKw,  setChargerKw]  = useState(7.4);
   const [planResult, setPlanResult] = useState(null);
   const [tick,       setTick]       = useState(0); // for live countdown
+  const [hasSolar,   setHasSolar]   = useState(false);
   const [leadEmail,  setLeadEmail]  = useState("");
   const [leadState,  setLeadState]  = useState("idle"); // idle | loading | done | error
+  const [fluviusEmail,  setFluviusEmail]  = useState("");
+  const [fluviusState,  setFluviusState]  = useState("idle");
   const planRef = useRef(null);
 
   // ── Effects ───────────────────────────────────────────────────────────
@@ -187,6 +190,21 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
     { q: L.faq3Q, a: L.faq3A },
     { q: L.faq4Q, a: L.faq4A },
   ];
+
+  async function submitFluvius(e) {
+    e.preventDefault();
+    if (!fluviusEmail || fluviusState === "loading" || fluviusState === "done") return;
+    setFluviusState("loading");
+    try {
+      const r = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: fluviusEmail, source: "fluvius_waitlist" }),
+      });
+      if (r.ok) setFluviusState("done");
+      else setFluviusState("error");
+    } catch { setFluviusState("error"); }
+  }
 
   async function submitLead(e) {
     e.preventDefault();
@@ -337,6 +355,32 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                     </div>
                   )}
                 </div>
+
+                {/* Solar toggle */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, padding: "10px 14px", background: hasSolar ? "rgba(251,191,36,0.08)" : "rgba(255,255,255,0.03)", border: `1px solid ${hasSolar ? "rgba(251,191,36,0.3)" : "rgba(63,63,70,0.5)"}`, borderRadius: 12, cursor: "pointer", transition: "all 0.2s" }}
+                  onClick={() => setHasSolar(s => !s)}>
+                  <div style={{ width: 36, height: 20, borderRadius: 10, background: hasSolar ? "#f59e0b" : "rgba(63,63,70,0.8)", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                    <div style={{ position: "absolute", top: 2, left: hasSolar ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.4)" }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: hasSolar ? "#fbbf24" : "#71717a" }}>
+                    ☀️ I have solar panels
+                  </span>
+                  {hasSolar && cheapMwh != null && (
+                    <span style={{ fontSize: 11, color: "#a16207", marginLeft: "auto" }}>capacity tariff applies</span>
+                  )}
+                </div>
+
+                {/* Solar capacity tariff warning */}
+                {hasSolar && cheapMwh != null && (
+                  <div style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 12, padding: "12px 14px", marginBottom: 14 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#fbbf24", marginBottom: 4 }}>☀️ Capacity tariff (Fluvius) impact</div>
+                    <div style={{ fontSize: 12, color: "#a16207", lineHeight: 1.7 }}>
+                      Charging at peak ({fmtHour(peakH ?? 19)}) sets your monthly peak demand — adding ~<strong style={{ color: "#fbbf24" }}>€20–30</strong> to your Fluvius bill.<br />
+                      Charging at {fmtHour(cheapHour)} avoids this. <span style={{ color: "#fbbf24", fontWeight: 700 }}>Real saving: €{((savingToday ?? 0) + 22).toFixed(0)}/month.</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: "#713f12", marginTop: 6 }}>Full Fluvius integration coming soon →</div>
+                  </div>
+                )}
 
                 {/* Action */}
                 <div style={{ textAlign: "center" }}>
@@ -598,6 +642,60 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             ))}
           </div>
         </Tile>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          FLUVIUS TEASER
+      ══════════════════════════════════════════════════════════════════ */}
+      <section style={{ maxWidth: 860, margin: "28px auto 0", padding: "0 20px", position: "relative", zIndex: 1 }}>
+        <div style={{ background: "linear-gradient(135deg,rgba(251,191,36,0.08),rgba(245,158,11,0.04))", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 20, padding: "28px 28px 24px", boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.35)", borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 800, color: "#fbbf24", marginBottom: 12, letterSpacing: "1px", textTransform: "uppercase" }}>
+                ⚡ Coming soon
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "#f4f4f5", marginBottom: 8, letterSpacing: "-0.3px" }}>
+                Fluvius capacity tariff integration
+              </div>
+              <div style={{ fontSize: 13, color: "#71717a", lineHeight: 1.75, marginBottom: 16 }}>
+                Since 2023, Belgian households with a smart meter pay a <strong style={{ color: "#a1a1aa" }}>capacity tariff</strong> — your monthly grid bill is based on your highest 15-min peak.<br /><br />
+                Charging your EV at the wrong hour doesn't just cost more per kWh — it raises your <strong style={{ color: "#fbbf24" }}>entire month's Fluvius bill by €20–30</strong>.<br /><br />
+                We're building full Fluvius integration to show you the <em>real</em> cost of every charging decision.
+              </div>
+              <form onSubmit={submitFluvius} style={{ display: "flex", gap: 8 }}>
+                {fluviusState === "done" ? (
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24" }}>✅ You're on the Fluvius waitlist</div>
+                ) : (
+                  <>
+                    <input
+                      type="email" required placeholder="your@email.com"
+                      value={fluviusEmail} onChange={e => setFluviusEmail(e.target.value)}
+                      style={{ flex: 1, padding: "10px 14px", borderRadius: 10, fontSize: 13, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(251,191,36,0.3)", color: "#e4e4e7", outline: "none", fontFamily: "inherit" }}
+                      onFocus={e => e.target.style.border = "1px solid rgba(251,191,36,0.6)"}
+                      onBlur={e => e.target.style.border = "1px solid rgba(251,191,36,0.3)"}
+                    />
+                    <button type="submit" disabled={fluviusState === "loading"} style={{ padding: "10px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", color: "#1c1917", cursor: "pointer", whiteSpace: "nowrap", opacity: fluviusState === "loading" ? 0.7 : 1 }}>
+                      {fluviusState === "loading" ? "…" : "Notify me →"}
+                    </button>
+                  </>
+                )}
+              </form>
+            </div>
+            <div style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 14, padding: "16px 18px", minWidth: 180 }}>
+              <div style={{ fontSize: 11, color: "#a16207", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>What we'll show</div>
+              {[
+                "Real cost incl. capacity tariff",
+                "Optimal charge time for solar owners",
+                "Monthly peak demand tracker",
+                "Fluvius bill simulator",
+              ].map(f => (
+                <div key={f} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#78716c", marginBottom: 7 }}>
+                  <span style={{ color: "#f59e0b" }}>→</span> {f}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
