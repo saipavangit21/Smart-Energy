@@ -213,16 +213,8 @@ export default function AuthPage({ onBack, reason }) {
             Continue with Google
           </button>
 
-          {/* 3rd: itsme */}
-          <button disabled style={{
-            width: "100%", padding: "12px 0", borderRadius: 12, fontSize: 15, fontWeight: 600,
-            border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)",
-            color: "#334155", cursor: "not-allowed", marginTop: 8,
-          }}>
-            🔵 itsme — coming soon
-          </button>
 
-          <div style={{ fontSize: 11, color: "#334155", textAlign: "center", marginTop: 16 }}>
+<div style={{ fontSize: 11, color: "#334155", textAlign: "center", marginTop: 16 }}>
             🔒 No email required · GDPR compliant · Belgium
           </div>
         </div>
