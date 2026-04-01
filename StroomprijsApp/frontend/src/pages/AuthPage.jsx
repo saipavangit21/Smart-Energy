@@ -40,7 +40,7 @@ function Input({ label, type = "text", value, onChange, placeholder, autoComplet
   );
 }
 
-export default function AuthPage({ onBack, onSkip, reason }) {
+export default function AuthPage({ onBack, reason }) {
   const { login, register } = useAuth();
   const { tSection } = useLanguage();
   const A = tSection("auth");
@@ -189,18 +189,6 @@ export default function AuthPage({ onBack, onSkip, reason }) {
             {loading ? A.pleaseWait : mode === "login" ? A.signInBtn : A.registerBtn}
           </button>
 
-          {/* 1st: Skip — most prominent alternative */}
-          {onSkip && (
-            <button onClick={onSkip} style={{
-              width: "100%", padding: "13px 0", borderRadius: 12, fontSize: 14, fontWeight: 700,
-              border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)",
-              color: "#CBD5E1", cursor: "pointer", marginTop: 16, transition: "all 0.2s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#fff"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#CBD5E1"; }}>
-              👤 Continue as Guest
-            </button>
-          )}
 
           {/* Divider */}
           <div style={{ position: "relative", textAlign: "center", margin: "20px 0 16px" }}>

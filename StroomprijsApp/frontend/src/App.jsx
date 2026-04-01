@@ -40,7 +40,6 @@ export default function App() {
   const [page,        setPage]        = useState("dashboard");
   const [initialTab,  setInitialTab]  = useState("today");
   const [showAuth,    setShowAuth]    = useState(false);
-  const [guestMode,   setGuestMode]   = useState(false);
 
   // After sign-in, an optional callback lets CalculatorPage reveal pending results
   const [postSignInCb, setPostSignInCb] = useState(null);
@@ -91,7 +90,6 @@ export default function App() {
   useEffect(() => {
     if (user) {
       setShowAuth(false);
-      setGuestMode(false);
       if (postSignInCb) { postSignInCb(); setPostSignInCb(null); }
     }
   }, [user]);
@@ -160,7 +158,6 @@ export default function App() {
     if (showAuth) return (
       <AuthPage
         onBack={() => setShowAuth(false)}
-        onSkip={() => { setShowAuth(false); setGuestMode(true); }}
         reason={{
           icon: energyType === "gas" ? "🔥" : "⚡",
           title: "Sign in to see your results",
@@ -179,11 +176,10 @@ export default function App() {
   }
 
   // ── Logged-out main flow ─────────────────────────────────────
-  if (!user && !guestMode) {
+  if (!user) {
     if (showAuth) return (
       <AuthPage
         onBack={() => setShowAuth(false)}
-        onSkip={() => { setShowAuth(false); setGuestMode(true); }}
       />
     );
     return (
@@ -209,11 +205,11 @@ export default function App() {
     <>
       <StatusBanner />
       <Dashboard
-      onGoProfile={user ? () => setPage("profile") : () => { setGuestMode(false); setShowAuth(true); }}
+      onGoProfile={() => setPage("profile")}
       initialTab={initialTab}
       onTabConsumed={() => setInitialTab("today")}
-      isGuest={!user}
-      onSignIn={() => { setGuestMode(false); setShowAuth(true); }}
+      isGuest={false}
+      onSignIn={() => setShowAuth(true)}
       onOpenCalculator={(type = "electricity") => navigate(`/calculator/${type}`)}
     />
     </>
