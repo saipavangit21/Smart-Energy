@@ -68,6 +68,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const [leadState,  setLeadState]  = useState("idle"); // idle | loading | done | error
   const [fluviusEmail,  setFluviusEmail]  = useState("");
   const [fluviusState,  setFluviusState]  = useState("idle");
+  const [fetchedAt,     setFetchedAt]     = useState(null);
   const planRef = useRef(null);
 
   // ── Effects ───────────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   useEffect(() => {
     fetch("/api/prices/today")
       .then(r => r.json())
-      .then(d => { if (d.data?.length) setPrices(d.data); })
+      .then(d => { if (d.data?.length) { setPrices(d.data); setFetchedAt(d.fetched_at || new Date().toISOString()); } })
       .catch(() => {});
   }, []);
 
@@ -175,6 +176,14 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
     }
   }
 
+  // "Updated X min ago" — recalculates every tick (every 60s)
+  const updatedMinsAgo = fetchedAt ? Math.max(0, Math.floor((Date.now() - new Date(fetchedAt).getTime()) / 60000)) : null;
+  const updatedStr = updatedMinsAgo === null ? null : updatedMinsAgo === 0 ? "just now" : `${updatedMinsAgo} min ago`;
+
+  // Habit trigger: tomorrow's prices publish around 14:00 CET
+  const tomorrowPublishHour = 14;
+  const showTomorrowTeaser = prices.length > 0 && nowH < tomorrowPublishHour;
+
   const SUPPLIERS = [
     { name: "Engie",         abbr: "EN", color: "#fff",    bg: "#0066A1", accent: "#0066A1" },
     { name: "Luminus",       abbr: "LU", color: "#1a1a1a", bg: "#FFB800", accent: "#FFB800" },
@@ -222,7 +231,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
     } catch { setLeadState("error"); }
   }
 
-  const CTAButton = ({ label = "Get my cheapest charging plan →", style = {} }) => (
+  const CTAButton = ({ label = "Start saving on every charge →", style = {} }) => (
     <button onClick={onGetStarted} style={{
       padding: "14px 32px", borderRadius: 50, fontSize: 15, fontWeight: 800,
       background: "linear-gradient(135deg,#10B981,#0D9488)", border: "none",
@@ -324,7 +333,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                     <div style={{ fontSize: 20, fontWeight: 700, color: "#f4f4f5", marginBottom: 4, fontFamily: "monospace", letterSpacing: "-0.5px" }}>
                       {fmtHour(cheapHour)} – {fmtHour((cheapWindowEnd ?? cheapHour + 2))}
                     </div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#4ade80" }}>€{retailFmt(cheapMwh)}/kWh</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#4ade80", animation: "priceGlow 3s ease-in-out infinite" }}>€{retailFmt(cheapMwh)}/kWh</div>
                   </div>
 
                   {/* Most expensive */}
@@ -387,7 +396,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#60a5fa", marginBottom: 14 }}>
                     {(L.chargeBeforeCta || "👉 Charge before {x} to save money").replace("{x}", fmtHour(cheapWindowEnd ?? cheapHour + 2))}
                   </div>
-                  <CTAButton label={L.mainCta || "Get my cheapest charging plan →"} style={{ width: "100%", fontSize: 15, padding: "14px 0", borderRadius: 14 }} />
+                  <CTAButton label={L.mainCta || "Start saving on every charge →"} style={{ width: "100%", fontSize: 15, padding: "14px 0", borderRadius: 14 }} />
                   <div style={{ fontSize: 11, color: "#3f3f46", marginTop: 10 }}>{L.freeNote || "Free · No account needed · 30 sec to set alerts"}</div>
                 </div>
 
@@ -398,13 +407,27 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               </div>
             )}
 
-            {/* Urgency footer */}
-            {urgencyText && (
-              <div style={{ borderTop: "1px solid rgba(63,63,70,0.5)", padding: "12px 24px", textAlign: "center", fontSize: 13, fontWeight: 700, color: cheapNow ? "#4ade80" : cheapSoon ? "#fbbf24" : "#71717a" }}>
-                {urgencyText}
-              </div>
-            )}
+            {/* Card footer — trust signal + live timestamp */}
+            <div style={{ borderTop: "1px solid rgba(63,63,70,0.5)", padding: "10px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+              <span style={{ fontSize: 11, color: "#52525b" }}>
+                Based on real-time Belgian EPEX electricity prices
+              </span>
+              {updatedStr && (
+                <span style={{ fontSize: 11, color: "#3f3f46", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", display: "inline-block", animation: "dot-pulse 2s ease-in-out infinite" }} />
+                  Updated {updatedStr}
+                </span>
+              )}
+            </div>
           </div>
+
+          {/* Habit trigger — tomorrow's prices */}
+          {showTomorrowTeaser && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 12, marginTop: 10, fontSize: 12, color: "#60a5fa", fontWeight: 600 }}>
+              <span>📅</span>
+              <span>Tomorrow's cheapest hours publish at {String(tomorrowPublishHour).padStart(2,"0")}:00 — check back then</span>
+            </div>
+          )}
 
           {/* Trust */}
           <div style={{ display: "flex", gap: 18, justifyContent: "center", flexWrap: "wrap", marginBottom: 8 }}>
@@ -788,7 +811,19 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         </div>
       </footer>
 
-      <style>{`* { box-sizing: border-box; } input[type=range] { height: 4px; } select option { background: #0A1628; }`}</style>
+      <style>{`
+        * { box-sizing: border-box; }
+        input[type=range] { height: 4px; }
+        select option { background: #0A1628; }
+        @keyframes priceGlow {
+          0%, 100% { text-shadow: 0 0 0px transparent; }
+          50% { text-shadow: 0 0 14px rgba(74,222,128,0.65); }
+        }
+        @keyframes dot-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.7); }
+        }
+      `}</style>
     </div>
   );
 }
