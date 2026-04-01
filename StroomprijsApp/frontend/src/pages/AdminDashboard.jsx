@@ -108,6 +108,7 @@ export default function AdminDashboard() {
   const [period,    setPeriod]    = useState(30);
   const [analytics, setAnalytics] = useState(null);
   const [users,     setUsers]     = useState(null);
+  const [leads,     setLeads]     = useState(null);
   const [loading,   setLoading]   = useState(false);
   const [copied,    setCopied]    = useState("");
   const [userSearch, setUserSearch] = useState("");
@@ -121,11 +122,12 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [aRes, uRes] = await Promise.all([
+      const [aRes, uRes, lRes] = await Promise.all([
         fetch(`${API}/api/admin/analytics?days=${period}`, { headers: hdrs(s) }),
         fetch(`${API}/api/admin/users`,                    { headers: hdrs(s) }),
+        fetch(`${API}/api/admin/leads`,                    { headers: hdrs(s) }),
       ]);
-      const [aData, uData] = await Promise.all([aRes.json(), uRes.json()]);
+      const [aData, uData, lData] = await Promise.all([aRes.json(), uRes.json(), lRes.json()]);
       if (aRes.status === 401 || !aData.success) {
         // Only sign out on 401 - not on other errors
         if (aRes.status === 401) {
@@ -136,6 +138,7 @@ export default function AdminDashboard() {
       }
       setAnalytics(aData);
       if (uData.success) setUsers(uData.users);
+      if (lData.success) setLeads(lData.leads);
       setAuthed(true);
       localStorage.setItem("sp_admin_secret", s || secret);
     } catch (e) {
@@ -293,6 +296,7 @@ export default function AdminDashboard() {
             { id: "goals",     label: "🎯 Goals" },
             { id: "analytics", label: "📊 Analytics" },
             { id: "users",     label: `👥 Users (${users?.length || 0})` },
+            { id: "leads",     label: `📧 Leads (${leads?.length || 0})` },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               padding: "8px 18px", borderRadius: 9, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", transition: "all 0.2s",
@@ -417,6 +421,42 @@ export default function AdminDashboard() {
 
             <div style={{ fontSize: 12, color: C.muted, marginTop: 12, textAlign: "center" }}>
               {(users || []).filter(u => u.email).length} of {users?.length || 0} users have email · {(users || []).filter(u => u.google).length} Google · {(users || []).filter(u => u.email_auth).length} email auth
+            </div>
+          </div>
+        )}
+
+        {tab === "leads" && (
+          <div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ fontSize: 14, color: C.muted, flex: 1 }}>
+                {leads?.length || 0} email leads captured from landing page
+              </div>
+              <button
+                onClick={() => {
+                  const emails = (leads || []).map(l => l.email).join("\n");
+                  navigator.clipboard.writeText(emails);
+                  setCopied("leads");
+                  setTimeout(() => setCopied(""), 1500);
+                }}
+                style={{ padding: "9px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", background: copied === "leads" ? C.green : C.teal, color: "#fff", transition: "background 0.2s" }}
+              >
+                {copied === "leads" ? "✓ Copied!" : `📋 Copy all emails`}
+              </button>
+            </div>
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 120px", padding: "10px 20px", background: "rgba(255,255,255,0.04)", borderBottom: `1px solid ${C.border}`, fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8 }}>
+                <span>Email</span><span>Source</span><span>Captured</span>
+              </div>
+              {(leads || []).length === 0
+                ? <div style={{ padding: "32px 20px", textAlign: "center", color: C.muted, fontSize: 14 }}>No leads yet — email capture is live on the landing page.</div>
+                : (leads || []).map((l, i) => (
+                  <div key={l.id} style={{ display: "grid", gridTemplateColumns: "1fr 120px 120px", padding: "12px 20px", borderBottom: i < leads.length - 1 ? `1px solid ${C.border}` : "none", alignItems: "center", fontSize: 13 }}>
+                    <span style={{ color: C.text, fontFamily: "monospace", fontSize: 12 }}>{l.email}</span>
+                    <span style={{ color: C.muted, fontSize: 12 }}>{l.source || "landing"}</span>
+                    <span style={{ color: C.muted, fontSize: 12 }}>{since(l.created_at)}</span>
+                  </div>
+                ))
+              }
             </div>
           </div>
         )}

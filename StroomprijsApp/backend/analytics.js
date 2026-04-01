@@ -244,5 +244,23 @@ module.exports = function attachAnalytics(app, pool) {
     }
   });
 
+  // Admin leads list endpoint
+  app.get("/api/admin/leads", async (req, res) => {
+    const secret = req.headers["x-admin-secret"];
+    if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    try {
+      const result = await pool.query(`
+        SELECT id, email, source, created_at
+        FROM leads
+        ORDER BY created_at DESC
+      `);
+      res.json({ success: true, leads: result.rows, total: result.rows.length });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
   console.log("   Analytics: enabled");
 };
