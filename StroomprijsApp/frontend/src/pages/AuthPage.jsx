@@ -217,7 +217,7 @@ export default function AuthPage({ onBack, reason }) {
 
 
 <div style={{ fontSize: 11, color: "#334155", textAlign: "center", marginTop: 16 }}>
-            🔒 No email required · GDPR compliant · Belgium
+            🔒 GDPR compliant · Belgium
           </div>
         </div>
       </div>
