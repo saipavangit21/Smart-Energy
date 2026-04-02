@@ -1,8 +1,8 @@
 /**
  * pages/AuthPage.jsx
- * Login + Register — email is optional, only asked when enabling alerts
- * Register: name + password only
- * Login: name OR email + password
+ * Login + Register — email required for both
+ * Register: name + email + password
+ * Login: email + password
  */
 
 import { useState } from "react";
@@ -46,8 +46,7 @@ export default function AuthPage({ onBack, reason }) {
   const A = tSection("auth");
   const [mode,      setMode]      = useState("login");
   const [name,      setName]      = useState("");
-  const [email,     setEmail]     = useState(""); // optional at register
-  const [loginId,   setLoginId]   = useState(""); // email or name for login
+  const [email,     setEmail]     = useState("");
   const [password,  setPassword]  = useState("");
   const [confirm,   setConfirm]   = useState("");
   const [error,     setError]     = useState("");
@@ -55,31 +54,33 @@ export default function AuthPage({ onBack, reason }) {
 
   const reset = () => setError("");
 
+  const isValidEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
   const handleSubmit = async () => {
     reset();
 
     if (mode === "register") {
-      if (!name.trim())        { setError(A.errName); return; }
-      if (!password)           { setError(A.errPassword); return; }
-      if (password.length < 8) { setError(A.errPasswordLength); return; }
-      if (password !== confirm) { setError(A.errPasswordMatch); return; }
-      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError(A.errInvalidEmail || "Enter a valid email address"); return; }
+      if (!name.trim())           { setError(A.errName || "Please enter your name"); return; }
+      if (!email.trim())          { setError(A.errEmail || "Please enter your email"); return; }
+      if (!isValidEmail(email))   { setError(A.errInvalidEmail || "Enter a valid email address"); return; }
+      if (!password)              { setError(A.errPassword || "Please enter a password"); return; }
+      if (password.length < 8)    { setError(A.errPasswordLength || "Password must be at least 8 characters"); return; }
+      if (password !== confirm)   { setError(A.errPasswordMatch || "Passwords do not match"); return; }
     } else {
-      if (!loginId.trim()) { setError(A.errNameOrEmail); return; }
-      if (!password)       { setError(A.errEnterPassword); return; }
+      if (!email.trim())          { setError(A.errEmail || "Please enter your email"); return; }
+      if (!isValidEmail(email))   { setError(A.errInvalidEmail || "Enter a valid email address"); return; }
+      if (!password)              { setError(A.errEnterPassword || "Please enter your password"); return; }
     }
 
     setLoading(true);
     try {
       if (mode === "login") {
-        // Detect if loginId is email or name
-        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginId);
-        await login(isEmail ? { email: loginId, password } : { name: loginId, password });
+        await login({ email: email.trim().toLowerCase(), password });
       } else {
-        await register({ name, password, email: email.trim() || undefined });
+        await register({ name: name.trim(), email: email.trim().toLowerCase(), password });
       }
     } catch (err) {
-      setError(err.message || A.errGeneric);
+      setError(err.message || A.errGeneric || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -87,7 +88,7 @@ export default function AuthPage({ onBack, reason }) {
 
   const switchMode = m => {
     setMode(m); reset();
-    setName(""); setEmail(""); setLoginId(""); setPassword(""); setConfirm("");
+    setName(""); setEmail(""); setPassword(""); setConfirm("");
   };
 
   return (
@@ -100,7 +101,7 @@ export default function AuthPage({ onBack, reason }) {
       <div style={{ width: "100%", maxWidth: 440 }}>
         {onBack && (
           <button onClick={onBack} style={{ background: "none", border: "none", color: "#556", cursor: "pointer", fontSize: 13, marginBottom: 16, padding: 0, display: "flex", alignItems: "center", gap: 6 }}>
-            ← Back to home
+            {A.backHome || "← Back to home"}
           </button>
         )}
 
@@ -112,7 +113,7 @@ export default function AuthPage({ onBack, reason }) {
           <div style={{ fontSize: 14, color: "#64748B", marginTop: 6 }}>{A.subtitle}</div>
         </div>
 
-        {/* Context banner — shown when user is redirected for a reason */}
+        {/* Context banner */}
         {reason && (
           <div style={{
             background: "rgba(13,148,136,0.12)", border: "1px solid rgba(13,148,136,0.3)",
@@ -121,12 +122,8 @@ export default function AuthPage({ onBack, reason }) {
           }}>
             <span style={{ fontSize: 22, flexShrink: 0 }}>{reason.icon || "🔐"}</span>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", marginBottom: 3 }}>
-                {reason.title}
-              </div>
-              <div style={{ fontSize: 13, color: "#64748B", lineHeight: 1.6 }}>
-                {reason.body}
-              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#E2E8F0", marginBottom: 3 }}>{reason.title}</div>
+              <div style={{ fontSize: 13, color: "#64748B", lineHeight: 1.6 }}>{reason.body}</div>
             </div>
           </div>
         )}
@@ -143,7 +140,7 @@ export default function AuthPage({ onBack, reason }) {
                 background: mode === m ? "rgba(255,255,255,0.1)" : "transparent",
                 color: mode === m ? C.white : "#64748B",
               }}>
-                {m === "login" ? A.signInTab : A.registerTab}
+                {m === "login" ? (A.signInTab || "Sign In") : (A.registerTab || "Create Account")}
               </button>
             ))}
           </div>
@@ -155,29 +152,25 @@ export default function AuthPage({ onBack, reason }) {
             </div>
           )}
 
-          {/* REGISTER: name + optional email + password */}
+          {/* REGISTER */}
           {mode === "register" && (<>
-            <Input label={A.yourName} value={name} onChange={setName}
-              placeholder={A.namePlaceholder} autoComplete="name"
-              hint={A.nameHint} />
-            <Input label={`${A.emailLabel || "Email"} · ${A.optionalLabel || "optional"}`}
-              type="email" value={email} onChange={setEmail}
-              placeholder={A.emailPlaceholder || "your@email.com"}
-              autoComplete="email"
-              hint={A.emailHint || "Add your email to receive daily price alerts"} />
-            <Input label={A.password} type="password" value={password} onChange={setPassword}
-              placeholder={A.passwordHint} autoComplete="new-password" />
-            <Input label={A.confirmPassword} type="password" value={confirm} onChange={setConfirm}
-              placeholder={A.confirmPlaceholder} autoComplete="new-password" />
+            <Input label={A.yourName || "Your Name"} value={name} onChange={setName}
+              placeholder={A.namePlaceholder || "Jan Janssen"} autoComplete="name" />
+            <Input label={A.emailLabel || "Email"} type="email" value={email} onChange={setEmail}
+              placeholder={A.emailPlaceholder || "jan@example.be"} autoComplete="email"
+              hint={A.emailHint || "Used to log in and receive price alerts"} />
+            <Input label={A.password || "Password"} type="password" value={password} onChange={setPassword}
+              placeholder={A.passwordHint || "Min. 8 characters"} autoComplete="new-password" />
+            <Input label={A.confirmPassword || "Confirm Password"} type="password" value={confirm} onChange={setConfirm}
+              placeholder={A.confirmPlaceholder || "Repeat your password"} autoComplete="new-password" />
           </>)}
 
-          {/* LOGIN: name or email + password */}
+          {/* LOGIN */}
           {mode === "login" && (<>
-            <Input label={A.nameOrEmail} value={loginId} onChange={setLoginId}
-              placeholder={A.nameOrEmailPlaceholder} autoComplete="username"
-              hint={A.nameOrEmailHint} />
-            <Input label={A.password} type="password" value={password} onChange={setPassword}
-              placeholder={A.passwordPlaceholder} autoComplete="current-password" />
+            <Input label={A.emailLabel || "Email"} type="email" value={email} onChange={setEmail}
+              placeholder={A.emailPlaceholder || "jan@example.be"} autoComplete="email" />
+            <Input label={A.password || "Password"} type="password" value={password} onChange={setPassword}
+              placeholder={A.passwordLoginHint || "Your password"} autoComplete="current-password" />
           </>)}
 
           {/* Submit */}
@@ -188,9 +181,8 @@ export default function AuthPage({ onBack, reason }) {
             color: C.white, marginTop: 4, transition: "all 0.2s",
             boxShadow: loading ? "none" : "0 4px 20px rgba(13,148,136,0.35)",
           }}>
-            {loading ? A.pleaseWait : mode === "login" ? A.signInBtn : A.registerBtn}
+            {loading ? (A.pleaseWait || "Please wait…") : mode === "login" ? (A.signInBtn || "Sign In →") : (A.registerBtn || "Create Account →")}
           </button>
-
 
           {/* Divider */}
           <div style={{ position: "relative", textAlign: "center", margin: "20px 0 16px" }}>
@@ -198,7 +190,7 @@ export default function AuthPage({ onBack, reason }) {
             <span style={{ position: "relative", background: "#0D1626", fontSize: 12, color: "#475569", padding: "0 12px" }}>or sign in with</span>
           </div>
 
-          {/* 2nd: Google */}
+          {/* Google */}
           <button onClick={() => window.location.href = "/auth/google"} style={{
             width: "100%", padding: "12px 0", borderRadius: 12, fontSize: 15, fontWeight: 600,
             border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)", color: "#fff",
@@ -215,8 +207,7 @@ export default function AuthPage({ onBack, reason }) {
             Continue with Google
           </button>
 
-
-<div style={{ fontSize: 11, color: "#334155", textAlign: "center", marginTop: 16 }}>
+          <div style={{ fontSize: 11, color: "#334155", textAlign: "center", marginTop: 16 }}>
             🔒 GDPR compliant · Belgium
           </div>
         </div>

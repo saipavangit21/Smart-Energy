@@ -79,13 +79,12 @@ router.post("/register", registerLimiter, async (req, res) => {
   try {
     const { email, password, name } = req.body;
     if (!name || !name.trim())  return res.status(400).json({ success: false, error: "Name is required" });
+    if (!email || !email.trim()) return res.status(400).json({ success: false, error: "Email is required" });
+    if (!isValidEmail(email))   return res.status(400).json({ success: false, error: "Invalid email address" });
     if (!password)              return res.status(400).json({ success: false, error: "Password is required" });
     if (password.length < 8)   return res.status(400).json({ success: false, error: "Password must be at least 8 characters" });
 
-    if (email) {
-      if (!isValidEmail(email)) return res.status(400).json({ success: false, error: "Invalid email address" });
-      if (await userStore.findByEmail(email)) return res.status(409).json({ success: false, error: "Email already registered" });
-    }
+    if (await userStore.findByEmail(email)) return res.status(409).json({ success: false, error: "Email already registered" });
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await userStore.create({ email: email || null, passwordHash, name });
@@ -111,14 +110,15 @@ router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { email, password, name } = req.body;
     if (!password)               return res.status(400).json({ success: false, error: "Password is required" });
-    if (!email && !name)         return res.status(400).json({ success: false, error: "Email or name is required" });
+    if (!email && !name)         return res.status(400).json({ success: false, error: "Email is required" });
 
+    // Email login preferred; name kept as fallback for legacy accounts without email
     const user = email
       ? await userStore.findByEmail(email)
       : await userStore.findByName(name);
 
     if (!user || !(await bcrypt.compare(password, user.password_hash)))
-      return res.status(401).json({ success: false, error: "Invalid credentials" });
+      return res.status(401).json({ success: false, error: "Invalid email or password" });
 
     const tokens = generateTokens(user.id);
     await userStore.saveRefreshToken(tokens.refreshToken, user.id);
