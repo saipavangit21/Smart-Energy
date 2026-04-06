@@ -132,7 +132,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const currentMwh = current?.price_eur_mwh ?? null;
   const currentCol = priceColor(currentMwh);
 
-  const upcoming   = prices.filter(p => new Date(p.timestamp_utc || p.timestamp).getHours() >= nowH);
+  const startOfCurrentHour = new Date(nowDate); startOfCurrentHour.setMinutes(0, 0, 0);
+  const upcoming   = prices.filter(p => new Date(p.timestamp_utc || p.timestamp) >= startOfCurrentHour);
   const sorted     = [...upcoming].sort((a, b) => a.price_eur_mwh - b.price_eur_mwh);
   const cheapEntry = sorted[0];
   const cheapHour  = cheapEntry ? new Date(cheapEntry.timestamp_utc || cheapEntry.timestamp).getHours() : null;
