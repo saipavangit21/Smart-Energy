@@ -276,6 +276,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       <section style={{ maxWidth: 860, margin: "0 auto", padding: "48px 20px 0", position: "relative", zIndex: 1 }}>
         <div style={{ opacity: heroIn ? 1 : 0, transform: heroIn ? "translateY(0)" : "translateY(16px)", transition: "all 0.6s ease" }}>
 
+          {/* Context label */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 20, padding: "5px 14px", fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>
+              <span>⚡</span><span>Live Belgian electricity prices — updated every 15 min</span>
+            </div>
+          </div>
+
           {/* Headline */}
           <h1 style={{ fontSize: "clamp(32px,6vw,62px)", fontWeight: 900, letterSpacing: "-2.5px", lineHeight: 1.05, margin: "0 0 8px", textAlign: "center" }}>
             <span style={{ background: "linear-gradient(135deg,#fff 20%,#10B981 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{L.headline || "Stop paying peak price"}</span>
@@ -324,6 +331,14 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           }}>
             {prices.length > 0 && cheapHour != null ? (
               <div style={{ padding: "24px 24px 20px" }}>
+
+                {/* Card header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>
+                    <span>⚡</span><span>Electricity · EPEX Spot Belgium</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "#52525b", fontWeight: 600 }}>Today's prices</div>
+                </div>
 
                 {/* Price grid */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
