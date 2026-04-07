@@ -132,22 +132,26 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const currentMwh = current?.price_eur_mwh ?? null;
   const currentCol = priceColor(currentMwh);
 
-  const startOfCurrentHour = new Date(nowDate); startOfCurrentHour.setMinutes(0, 0, 0);
-  const upcoming   = prices.filter(p => new Date(p.timestamp_utc || p.timestamp) >= startOfCurrentHour);
-  const sorted     = [...upcoming].sort((a, b) => a.price_eur_mwh - b.price_eur_mwh);
-  const cheapEntry = sorted[0];
-  const cheapHour  = cheapEntry ? new Date(cheapEntry.timestamp_utc || cheapEntry.timestamp).getHours() : null;
-  const cheapMwh   = cheapEntry?.price_eur_mwh ?? null;
+  // Use backend-computed `hour` (Brussels timezone) — never rely on browser getHours() for price slots
+  const currentHour = current?.hour ?? nowH;
+  const upcoming    = prices.filter(p => p.hour != null ? p.hour >= currentHour && p.day === "today" || p.day === "tomorrow" : false);
+  const sorted      = [...upcoming].sort((a, b) => a.price_eur_mwh - b.price_eur_mwh);
+
+  // Skip current hour for "cheapest" so we always show a FUTURE window to act on
+  const futureOnly  = sorted.filter(p => !(p.is_current));
+  const cheapEntry  = futureOnly[0] || sorted[0];
+  const cheapHour   = cheapEntry?.hour ?? null;
+  const cheapMwh    = cheapEntry?.price_eur_mwh ?? null;
+  const cheapIsNow  = cheapEntry?.is_current ?? false;
 
   // Cheap window = cheapest 2 consecutive hours
   let cheapWindowEnd = cheapHour != null ? cheapHour + 1 : null;
-  if (cheapHour != null && sorted[1]) {
-    const h1 = new Date(sorted[1].timestamp_utc || sorted[1].timestamp).getHours();
-    if (Math.abs(h1 - cheapHour) <= 1) cheapWindowEnd = Math.max(cheapHour, h1) + 1;
+  if (cheapHour != null && futureOnly[1] && Math.abs(futureOnly[1].hour - cheapHour) <= 1) {
+    cheapWindowEnd = Math.max(cheapHour, futureOnly[1].hour) + 1;
   }
 
   const peakEntry  = [...upcoming].sort((a, b) => b.price_eur_mwh - a.price_eur_mwh)[0];
-  const peakH      = peakEntry ? new Date(peakEntry.timestamp_utc || peakEntry.timestamp).getHours() : null;
+  const peakH      = peakEntry?.hour ?? null;
   const peakMwh    = peakEntry?.price_eur_mwh ?? null;
 
   // Savings: assume 40kWh fill-up for a typical EV
@@ -345,9 +349,11 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                   {/* Cheapest */}
                   <div style={{ background: "rgba(39,39,42,0.9)", border: "1px solid rgba(63,63,70,0.6)", borderRadius: 14, padding: "16px 18px" }}>
-                    <div style={{ fontSize: 11, color: "#71717a", marginBottom: 6, fontWeight: 600 }}>{L.cheapestTimeLabel || "Cheapest time"}</div>
+                    <div style={{ fontSize: 11, color: "#71717a", marginBottom: 6, fontWeight: 600 }}>
+                      {cheapIsNow ? "⚡ Cheapest — plug in now" : (cheapEntry?.day === "tomorrow" ? "Best window (tomorrow)" : "Best window today")}
+                    </div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: "#f4f4f5", marginBottom: 4, fontFamily: "monospace", letterSpacing: "-0.5px" }}>
-                      {fmtHour(cheapHour)} – {fmtHour((cheapWindowEnd ?? cheapHour + 2))}
+                      {cheapIsNow ? "Right now!" : `${fmtHour(cheapHour)} – ${fmtHour((cheapWindowEnd ?? cheapHour + 2))}`}
                     </div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: "#4ade80", animation: "priceGlow 3s ease-in-out infinite" }}>€{retailFmt(cheapMwh)}/kWh</div>
                   </div>
@@ -366,7 +372,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 <div style={{ background: "rgba(39,39,42,0.9)", border: "1px solid rgba(63,63,70,0.6)", borderRadius: 14, padding: "16px 18px", marginBottom: 14 }}>
                   <div style={{ fontSize: 11, color: "#71717a", marginBottom: 10, fontWeight: 600 }}>{L.fullChargeLabel || "Full charge cost (40 kWh)"}</div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <span style={{ fontSize: 14, color: "#a1a1aa" }}>{L.cheapestTimeLabel || "Cheapest"} ({fmtHour(cheapHour)})</span>
+                    <span style={{ fontSize: 14, color: "#a1a1aa" }}>{cheapIsNow ? "Now (cheapest)" : `Best window (${fmtHour(cheapHour)})`}</span>
                     <span style={{ fontSize: 16, fontWeight: 700, color: "#4ade80" }}>€{(retailKwh(cheapMwh) * 40).toFixed(2)}</span>
                   </div>
                   {currentMwh != null && (
