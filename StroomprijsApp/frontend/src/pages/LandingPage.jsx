@@ -69,6 +69,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const [fluviusEmail,  setFluviusEmail]  = useState("");
   const [fluviusState,  setFluviusState]  = useState("idle");
   const [fetchedAt,     setFetchedAt]     = useState(null);
+  const [gasCurrent,    setGasCurrent]    = useState(null);
   const planRef = useRef(null);
 
   // ── Effects ───────────────────────────────────────────────────────────
@@ -78,6 +79,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
     fetch("/api/prices/today")
       .then(r => r.json())
       .then(d => { if (d.data?.length) { setPrices(d.data); setFetchedAt(d.fetched_at || new Date().toISOString()); } })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/gas/current")
+      .then(r => r.json())
+      .then(d => { if (d.success && d.ttf) setGasCurrent({ price: d.ttf.price, ttf_cEkWh: d.ttf_cEkWh }); })
       .catch(() => {});
   }, []);
 
@@ -458,6 +466,45 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             ))}
           </div>
 
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          GAS PRICE TILE
+      ══════════════════════════════════════════════════════════════════ */}
+      <section style={{ maxWidth: 860, margin: "20px auto 0", padding: "0 20px", position: "relative", zIndex: 1 }}>
+        <div style={{
+          background: "rgba(24,24,27,0.85)", backdropFilter: "blur(20px)",
+          border: "1px solid rgba(249,115,22,0.25)", borderRadius: 18,
+          padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14,
+        }}>
+          {/* Left — label + price */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 22 }}>🔥</span>
+              <div>
+                <div style={{ fontSize: 11, color: "#71717a", fontWeight: 700, marginBottom: 2 }}>TTF Natural Gas · Today</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "#f97316", fontFamily: "monospace", letterSpacing: "-0.5px" }}>
+                  {gasCurrent ? `€${gasCurrent.price?.toFixed(1)}/MWh` : "—"}
+                </div>
+                {gasCurrent?.ttf_cEkWh != null && (
+                  <div style={{ fontSize: 12, color: "#78716c", marginTop: 1 }}>= {gasCurrent.ttf_cEkWh.toFixed(3)} c€/kWh energy</div>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Right — bill breakdown hint + CTA */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 12, color: "#57534e", lineHeight: 1.5 }}>
+              <span style={{ color: "#f97316", fontWeight: 700 }}>~40%</span> of your gas bill<br />tracks this price
+            </div>
+            <a href="/calculator/gas" style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.35)",
+              borderRadius: 12, padding: "8px 16px", fontSize: 13, fontWeight: 700, color: "#f97316",
+              textDecoration: "none",
+            }}>Compare gas plans →</a>
+          </div>
         </div>
       </section>
 
