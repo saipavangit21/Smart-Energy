@@ -4,23 +4,26 @@
 
 ## TEMPLATE A — English (fleet/leasing/importers)
 
-**Subject:** SmartPrice.be — Live EPEX Prices for EV Fleet Drivers in Belgium
+**Subject:** Happy Easter from SmartPrice.be — a free EV charging tool for your customers
 
 Hi {{First Name}},
 
-I'm the founder of **SmartPrice.be** — a free Belgian tool that shows live EPEX electricity prices and tells EV drivers exactly when to charge to save money.
+Happy Easter! I hope you and the {{Company}} team have a restful long weekend.
 
-Given {{Company}}'s focus on electric vehicles, I think this could add real value for your customers or fleet drivers:
+A quick note before the holiday — I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV drivers save money by showing them exactly when electricity is cheapest to charge.
 
-**What SmartPrice offers:**
-- ⚡ Live day-ahead EPEX Spot prices for Belgium, updated hourly
-- 🟢 "Best hours to charge" — cheapest 5-hour windows each day
+We've just launched some significant updates I thought would be relevant to {{Company}}:
+
+**What's new on SmartPrice:**
+- ⚡ Live hour-by-hour EPEX Spot prices for Belgium (updated every 15 min)
+- 🔋 **Live EV charge planner** — shows the 23 cheapest upcoming charge windows, ranked
 - 🗺️ Map of all public EV charging stations in Belgium with live price context
-- 📊 7-day price history + tomorrow's prices (published at 13:00 CET)
-- 🆓 Completely free, no account needed
+- 📊 Plan calculator — compares all Belgian electricity suppliers based on real usage
+- 🤖 AI energy assistant — answers charging and tariff questions instantly
+- 🆓 Completely free, no account needed for core features
 
-**Why it matters:**
-Electricity prices in Belgium vary from −€50/MWh to +€400/MWh on the same day. An EV driver who charges at peak hours pays 5–8× more than one who uses the optimal window. SmartPrice makes that decision effortless.
+**Why it matters for your customers:**
+Belgian electricity prices swing from −€50/MWh to +€400/MWh on the same day. An EV driver charging at peak hours pays 5–8× more than one using the optimal window. SmartPrice makes the right choice effortless.
 
 I'd love to explore:
 - A link or widget in your customer portal or app
@@ -31,7 +34,7 @@ No cost, no commitment.
 
 👉 smartprice.be
 
-Happy to jump on a 20-minute call — just reply and I'll find a slot.
+Enjoy the Easter break — happy to chat when you're back.
 
 Best,
 [Your Name]
@@ -41,23 +44,26 @@ SmartPrice.be
 
 ## TEMPLATE B — Dutch (Flemish contacts: VW, Audi, Hyundai, Kia, Belfius, FEBIAC, RENTA)
 
-**Onderwerp:** SmartPrice.be — Live EPEX-prijzen voor EV-rijders in België
+**Onderwerp:** Fijne paasdagen van SmartPrice.be — gratis EV-laadtool voor uw klanten
 
 Dag {{First Name}},
 
-Ik ben de oprichter van **SmartPrice.be** — een gratis Belgische tool die live EPEX-elektriciteitsprijzen toont en EV-rijders precies vertelt wanneer ze het goedkoopst kunnen laden.
+Fijne paasdagen! Ik hoop dat u en het {{Company}}-team kunnen genieten van een welverdiend verlof.
 
-Gezien de EV-focus van {{Company}} denk ik dat dit een echte meerwaarde kan zijn voor uw klanten of chauffeurs.
+Een korte boodschap voor de feestdagen — ik ben de oprichter van **SmartPrice.be**, een gratis Belgisch platform dat EV-rijders helpt besparen door hen exact te tonen wanneer stroom het goedkoopst is om te laden.
 
-**Wat SmartPrice biedt:**
-- ⚡ Live day-ahead EPEX Spot-prijzen voor België
-- 🟢 De 5 goedkoopste laaduren van de dag
-- 🗺️ Kaart van alle openbare laadpalen in België
-- 📊 7-daagse prijsgeschiedenis + prijzen van morgen
-- 🆓 Volledig gratis, geen account nodig
+We hebben net een aantal belangrijke updates gelanceerd die relevant zijn voor {{Company}}:
 
-**Waarom het telt:**
-Elektriciteitsprijzen in België variëren van −€50/MWh tot +€400/MWh op dezelfde dag. Een EV-rijder die op het verkeerde moment laadt, betaalt 5–8× meer. SmartPrice maakt de beste keuze moeiteloos.
+**Nieuw op SmartPrice:**
+- ⚡ Live EPEX Spot-prijzen per uur voor België (elke 15 min bijgewerkt)
+- 🔋 **Live EV-laadplanner** — toont de 23 goedkoopste komende laadmomenten, gerangschikt
+- 🗺️ Kaart van alle openbare laadpalen in België met live prijscontext
+- 📊 Tariefvergelijker — vergelijkt alle Belgische elektriciteitsleveranciers op basis van uw verbruik
+- 🤖 AI-energieassistent — beantwoordt laad- en tariefvragen direct
+- 🆓 Volledig gratis, geen account nodig voor de basisfuncties
+
+**Waarom het telt voor uw klanten:**
+Elektriciteitsprijzen in België variëren van −€50/MWh tot +€400/MWh op dezelfde dag. Een EV-rijder die op het verkeerde moment laadt, betaalt 5–8× meer. SmartPrice maakt de juiste keuze moeiteloos.
 
 Ik zou graag bekijken of we kunnen samenwerken:
 - Een widget of link in uw klantenportaal of app
@@ -68,7 +74,7 @@ Geen kosten, geen verplichtingen.
 
 👉 smartprice.be
 
-Ik plan graag een gesprek van 20 minuten — stuur me gewoon een reply.
+Geniet van de paasvakantie — ik hoor graag van u wanneer u terug bent.
 
 Met vriendelijke groet,
 [Uw naam]
@@ -78,34 +84,37 @@ SmartPrice.be
 
 ## TEMPLATE C — French (Wallonia contacts: Peugeot, Renault, FEBIAC fr)
 
-**Objet :** SmartPrice.be — Prix EPEX en direct pour les conducteurs VE en Belgique
+**Objet :** Joyeuses Pâques de SmartPrice.be — un outil gratuit de recharge VE pour vos clients
 
 Bonjour {{First Name}},
 
-Je suis le fondateur de **SmartPrice.be** — un outil belge gratuit qui affiche les prix EPEX de l'électricité en temps réel et indique aux conducteurs de VE quand charger pour économiser le plus.
+Joyeuses Pâques ! J'espère que vous et l'équipe de {{Company}} profitez bien de ce long week-end.
 
-Compte tenu de la stratégie EV de {{Company}}, je pense que cela pourrait apporter une réelle valeur ajoutée à vos clients ou conducteurs de flotte.
+Un petit message avant les fêtes — je suis le fondateur de **SmartPrice.be**, une plateforme belge gratuite qui aide les conducteurs de VE à économiser en leur indiquant exactement quand l'électricité est la moins chère pour recharger.
 
-**Ce que SmartPrice propose :**
-- ⚡ Prix EPEX Spot day-ahead en direct pour la Belgique
-- 🟢 Les 5 heures les moins chères pour charger chaque jour
-- 🗺️ Carte de toutes les bornes de recharge publiques en Belgique
-- 📊 Historique 7 jours + prix de demain (publiés à 13h CET)
-- 🆓 Entièrement gratuit, sans inscription
+Nous venons de lancer plusieurs mises à jour importantes qui me semblent pertinentes pour {{Company}} :
 
-**Pourquoi c'est important :**
-Les prix de l'électricité en Belgique varient de −50 €/MWh à +400 €/MWh dans la même journée. Un conducteur qui charge aux heures de pointe paie 5 à 8 fois plus. SmartPrice rend ce choix simple.
+**Les nouveautés de SmartPrice :**
+- ⚡ Prix EPEX Spot en direct heure par heure pour la Belgique (mis à jour toutes les 15 min)
+- 🔋 **Planificateur de recharge VE en direct** — affiche les 23 prochaines fenêtres de recharge les moins chères, classées
+- 🗺️ Carte de toutes les bornes de recharge publiques en Belgique avec contexte de prix en direct
+- 📊 Comparateur de plans — compare tous les fournisseurs d'électricité belges selon votre consommation réelle
+- 🤖 Assistant IA énergie — répond instantanément aux questions sur la recharge et les tarifs
+- 🆓 Entièrement gratuit, sans inscription pour les fonctionnalités de base
+
+**Pourquoi c'est important pour vos clients :**
+Les prix de l'électricité en Belgique varient de −50 €/MWh à +400 €/MWh dans la même journée. Un conducteur qui charge aux heures de pointe paie 5 à 8 fois plus. SmartPrice rend le bon choix évident.
 
 Je serais ravi d'explorer :
 - Un widget ou lien dans votre portail client ou app
-- Une page co-brandée "charge intelligente" pour vos acheteurs VE
+- Une page co-brandée "recharge intelligente" pour vos acheteurs VE
 - Un flux API pour votre système de gestion de flotte
 
 Sans frais, sans engagement.
 
 👉 smartprice.be
 
-Je suis disponible pour un appel de 20 minutes — répondez simplement à cet email.
+Profitez bien des fêtes de Pâques — je serai ravi d'échanger à votre retour.
 
 Cordialement,
 [Votre nom]
@@ -130,6 +139,8 @@ SmartPrice.be
 **Subject:** Affiliate partnership proposal — SmartPrice.be
 
 Hi Bolt Energy team,
+
+Hope you had a good Easter break.
 
 I'm the founder of **SmartPrice.be** — a free Belgian platform that shows live EPEX electricity and TTF gas prices, and helps households compare energy suppliers to find the best deal.
 
@@ -156,6 +167,8 @@ SmartPrice.be | hello@smartprice.be | smartprice.be
 
 Dag Eneco-team,
 
+Ik hoop dat u prettige paasdagen heeft gehad.
+
 Ik ben de oprichter van **SmartPrice.be** — een gratis Belgisch platform dat live EPEX-elektriciteitsprijzen toont en gezinnen helpt om de beste energieleverancier te vinden via een persoonlijke vergelijker.
 
 Eneco staat elke maand bij onze topresultaten voor klanten die waarde hechten aan groene energie. Onze vergelijker wordt gebruikt door [X.XXX] Belgische bezoekers per maand, en Eneco-doorkliks genereren we momenteel zonder enige tracking of vergoeding.
@@ -178,6 +191,8 @@ SmartPrice.be | hello@smartprice.be | smartprice.be
 **Subject:** Affiliate samenwerking voorstel — SmartPrice.be
 
 Dag Mega-team,
+
+Ik hoop dat u prettige paasdagen heeft gehad.
 
 Ik ben de oprichter van **SmartPrice.be**, een gratis vergelijkingsplatform voor Belgische energieprijzen. Mega valt bij onze gebruikers regelmatig op als de goedkoopste optie voor het energietarief — wat logisch is gezien jullie scherpe c€/kWh-prijs.
 
@@ -202,6 +217,8 @@ SmartPrice.be | hello@smartprice.be | smartprice.be
 
 Bonjour,
 
+J'espère que vous avez passé de joyeuses Pâques.
+
 Je suis le fondateur de **SmartPrice.be** — une plateforme belge gratuite qui affiche les prix EPEX en temps réel et aide les ménages à comparer les fournisseurs d'énergie pour trouver la meilleure offre.
 
 Engie figure régulièrement parmi les résultats les mieux notés dans notre comparateur, utilisé par [X.XXX] visiteurs belges par mois. Actuellement, nous redirigeons ce trafic vers engie.be sans aucun système de suivi ni de rémunération des conversions.
@@ -224,6 +241,8 @@ SmartPrice.be | hello@smartprice.be | smartprice.be
 **Subject:** Affiliate partnership — SmartPrice.be
 
 Hi Luminus team,
+
+Hope you had a good Easter break.
 
 I'm the founder of **SmartPrice.be** — a free Belgian energy price comparison platform reaching [X,XXX] monthly visitors. Luminus regularly features as a top recommendation in our electricity and gas calculator.
 
@@ -248,6 +267,8 @@ SmartPrice.be | hello@smartprice.be | smartprice.be
 
 Bonjour,
 
+J'espère que vous avez passé de joyeuses Pâques.
+
 Je suis le fondateur de **SmartPrice.be**, un comparateur d'énergie belge gratuit consulté par [X.XXX] visiteurs par mois. TotalEnergies est régulièrement mis en avant dans notre outil en tant qu'option tarifaire fixe compétitive.
 
 Nous envoyons actuellement du trafic qualifié vers totalenergies.be sans suivi de conversion. Je souhaite établir un partenariat affilié pour formaliser cette relation et commissionner les activations générées par SmartPrice.
@@ -265,6 +286,8 @@ SmartPrice.be | hello@smartprice.be | smartprice.be
 **Subject:** Affiliate samenwerking — SmartPrice.be
 
 Dag Octa+-team,
+
+Ik hoop dat u prettige paasdagen heeft gehad.
 
 Ik ben de oprichter van **SmartPrice.be**, een Belgisch vergelijkingsplatform voor energieprijzen. Als onafhankelijke Belgische leverancier past Octa+ perfect bij ons publiek van bewuste energieverbruikers.
 
@@ -286,7 +309,9 @@ SmartPrice.be | hello@smartprice.be | smartprice.be
 - [ ] Fill in `[YOUR NAME]` / `[UW NAAM]` / `[VOTRE NOM]`
 - [ ] Fill in `[MONTH YEAR]` if referencing a time period
 - [ ] Send from hello@smartprice.be (not personal email — looks more credible)
-- [ ] Send Mon–Thu 9–11am (best open rates)
+- [ ] **Easter window:** Send EV templates (A/B/C) on Fri 4 Apr before 11am, or Tue 8 Apr after the holiday — avoid Sat/Sun/Mon (Easter Sunday is 6 Apr 2026)
+- [ ] **Supplier affiliate emails:** Send Tue 8 Apr or Wed 9 Apr — post-holiday re-open day gets strong open rates
+- [ ] Send Mon–Thu 9–11am for non-seasonal sends
 - [ ] Log each send date in a spreadsheet
 - [ ] Follow up once after 7 days with: *"Just checking if this reached the right person — happy to share more details about SmartPrice traffic if useful."*
 - [ ] Once approved: send affiliate link to hello@smartprice.be so I can update the calculator buttons

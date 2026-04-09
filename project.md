@@ -13,7 +13,10 @@ If you have a "dynamic" electricity contract in Belgium (like Bolt, Engie Spot, 
 **What SmartPrice does:**
 - Shows you the price for every hour of today and tomorrow
 - Tells you the cheapest 3–5 hours (best time for washing machine, EV charging, dishwasher)
+- Plans your EV charging with a live hour-by-hour charge planner on the landing page
 - Sends you an email alert when prices drop below a level you choose
+- Compares all Belgian electricity and gas suppliers with your actual usage
+- Answers energy questions via a built-in AI assistant
 - Works like a native app on your phone — no app store needed
 
 **Who it's for:**
@@ -128,8 +131,8 @@ OAuth is a standard protocol for "login with another service". Here's what happe
 7. You're logged in — we never see your Google password
 ```
 
-### Email is Optional
-Most apps force you to give an email at signup. SmartPrice only asks for a name and password. Email is only collected if you want price alert notifications — and only then, only for sending alerts.
+### Email Required
+Registration requires an email address and password. Email is used for login and for optional price alert notifications. It is never shared or used for marketing.
 
 ---
 
@@ -166,15 +169,15 @@ GDPR (General Data Protection Regulation) is EU law that gives people control ov
 
 **1. Data Minimisation — only collect what you need**
 SmartPrice collects:
-- Name (to identify you)
+- Email (to identify you and for login)
 - Password hash (to authenticate you)
-- Email — only if you want alerts, only when you ask for it
+- Email lead (optional, collected on landing page before sign-up — stored separately)
 - Your alert preferences (threshold, chosen supplier)
 
 We do NOT collect: location, browsing behaviour, device fingerprints, advertising IDs.
 
 **2. Purpose Limitation — only use data for what you said**
-Your email is used only to send price alerts. It is never shared, sold, or used for marketing.
+Your email is used for login and optionally to send price alerts. Lead emails (landing page capture) are used only to follow up on your interest in the product. No data is shared, sold, or used for third-party marketing.
 
 **3. Storage Limitation — don't keep data forever**
 Users can delete their account at any time. Deletion removes all data including refresh tokens.
@@ -238,10 +241,10 @@ Even without certification, many ISO 27001 controls are already implemented:
 "It's like a real-time dashboard for Belgian electricity spot prices. It fetches wholesale market data from public sources every 15 minutes, shows you a colour-coded hourly chart, and emails you when prices drop below your chosen threshold. No subscription, no ads, free to use."
 
 ### To a developer:
-"React + Vite frontend on Vercel, Node/Express backend on Railway EU, PostgreSQL on Supabase. Fetches EPEX Spot prices via Elia Open Data and Energy-Charts API with 15-min NodeCache. Cookie-based auth with httpOnly JWT, bcrypt passwords, refresh token rotation. PWA with service worker. Google OAuth with cross-origin token exchange pattern."
+"React + Vite frontend on Vercel, Node/Express backend on Railway EU, PostgreSQL on Supabase. Fetches EPEX Spot prices via Energy-Charts API with 15-min NodeCache. Cookie-based auth with httpOnly JWT, bcrypt passwords, refresh token rotation. PWA with service worker. Google OAuth with cross-origin token exchange. Email-required registration. Lead capture table, admin analytics + leads endpoints, Claude Haiku AI assistant endpoint, social sharing, referral links. ENTSO-E generation/flows, TTF gas via OilPriceAPI."
 
 ### To a recruiter / hiring manager:
-"I built and deployed a full-stack production application from scratch — React frontend, Node.js REST API, PostgreSQL database, Google OAuth, email notifications via Resend, PWA, and HTTPS cookie-based authentication. It handles real users, real data, and is live at smartprice.be. The codebase covers auth security (httpOnly cookies, bcrypt, token rotation), CORS, rate limiting, and GDPR compliance."
+"I built and deployed a full-stack production application from scratch — React frontend, Node.js REST API, PostgreSQL database, Google OAuth, email notifications via Resend, PWA, and HTTPS cookie-based authentication. It handles real users, real data, and is live at smartprice.be. The codebase covers auth security (httpOnly cookies, bcrypt, token rotation), CORS, rate limiting, GDPR compliance, i18n (EN/NL/FR), Claude AI integration, lead capture, referral system, and a public API used by Home Assistant users."
 
 ### To an investor:
-"SmartPrice.be is a free tool for Belgian dynamic electricity contract holders — a market that's growing as more suppliers push spot-price contracts. We have real-time EPEX Spot data, price alerts, and a mobile-installable app. Phase 2 adds a real bill calculator (unique vs competitors). Phase 3 monetises via affiliate referrals (€30–80 per supplier switch). The main competitor, Mijnenergie.be (owned by DPG Media), doesn't cover dynamic contracts — that's our differentiation."
+"SmartPrice.be is a free tool for Belgian dynamic electricity contract holders — a market that's growing as more suppliers push spot-price contracts. We have real-time EPEX Spot data, price alerts, a live EV charge planner, a full supplier plan calculator (electricity + gas), and a mobile-installable app. We capture email leads on the landing page and have a referral system in place. Phase 3 monetises via affiliate referrals (€30–80 per supplier switch). The main competitor, Mijnenergie.be (owned by DPG Media), doesn't cover dynamic contracts — that's our differentiation. We also expose a free public API used by Home Assistant users, extending our reach to the smart-home segment."

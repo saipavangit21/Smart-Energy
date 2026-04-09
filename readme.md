@@ -11,10 +11,17 @@ Live: **[smartprice.be](https://smartprice.be)** · API Docs: **[smartprice.be/a
 - **Live EPEX Spot prices** — hourly Belgian electricity prices, updated every 15 minutes
 - **TTF gas prices** — real-time natural gas prices via ICE/TTF index
 - **5 cheapest hours today** — optimal windows for EV charging, washing machine, dishwasher
+- **EV charge planner** — on the landing page, shows the best upcoming hours to charge (all 23 upcoming hours ranked)
 - **Plan calculator** — compare all Belgian electricity and gas suppliers with personalised annual cost including grid fees and VAT
+- **Supplier comparison** — side-by-side Belgian supplier comparison page
 - **Price alerts** — email notification when prices drop below your threshold
 - **Energy mix** — Belgium's real-time generation by source (nuclear, solar, wind, gas…), CO₂ intensity, and cross-border flows via ENTSO-E
+- **Solar toggle** — toggle solar generation view; Fluvius capacity tariff teaser
 - **EV stations map** — all public charging stations in Belgium with live price context and share button
+- **AI assistant** — Claude Haiku-powered energy assistant (requires ANTHROPIC_API_KEY)
+- **Email lead capture** — landing page widget collects interested visitors before sign-up
+- **Social sharing** — share buttons on landing page footer, dashboard nav, and EV station cards
+- **Referral links** — personalised referral link per user on EV stations page
 - **Uptime monitoring** — backend pings the frontend every 5 minutes and emails an alert on failure/recovery
 - **Public API** — free REST API for Home Assistant, Node-RED, and developer integrations
 - **Trilingual** — EN / NL / FR
@@ -30,6 +37,7 @@ Live: **[smartprice.be](https://smartprice.be)** · API Docs: **[smartprice.be/a
 | Database | PostgreSQL | Supabase (Ireland) |
 | Email | Resend (hello@smartprice.be) | Resend |
 | Auth | JWT + Google OAuth | Self-hosted on Railway |
+| AI assistant | Claude Haiku (Anthropic API) | External API |
 | Electricity data | Energy-Charts.info / ENTSO-E | External API |
 | Gas data | OilPriceAPI (TTF) | External API |
 
@@ -41,21 +49,27 @@ Live: **[smartprice.be](https://smartprice.be)** · API Docs: **[smartprice.be/a
 Smart Energy/
 ├── readme.md
 ├── project.md
+├── SmartPrice_Technical_Documentation.docx
+├── SmartPrice_Runbook_v2.docx
+├── SmartPrice_Knowledge_Base.docx
+├── SmartPrice_Investor_Document.docx
 ├── outreach/
 │   ├── email_templates.md          # EN/NL/FR outreach email templates
-│   └── ev_outreach_contacts.csv    # 20 Belgian auto industry contacts
+│   └── ev_outreach_contacts.csv    # Belgian auto industry contacts
 │
 └── StroomprijsApp/
     ├── frontend/                   # React + Vite frontend
     │   ├── src/
     │   │   ├── pages/
     │   │   │   ├── Dashboard.jsx           # Electricity price dashboard (tabs: prices, calculator, gas)
-    │   │   │   ├── LandingPage.jsx         # Marketing landing page
+    │   │   │   ├── LandingPage.jsx         # Marketing landing page (decision engine + EV planner)
     │   │   │   ├── CalculatorPage.jsx      # 4-step plan calculator
-    │   │   │   ├── AuthPage.jsx            # Login / register
+    │   │   │   ├── AuthPage.jsx            # Login / register (email-only)
+    │   │   │   ├── AuthCallback.jsx        # Google OAuth callback handler
     │   │   │   ├── ProfilePage.jsx         # User profile, settings, energy mix, tools
     │   │   │   ├── GasTab.jsx              # Gas price dashboard (TTF + supplier comparison)
-    │   │   │   ├── AdminDashboard.jsx      # Admin analytics (secret-protected)
+    │   │   │   ├── SupplierCompare.jsx     # Side-by-side supplier comparison
+    │   │   │   ├── AdminDashboard.jsx      # Admin analytics + leads (secret-protected)
     │   │   │   ├── PrivacyPolicy.jsx       # GDPR privacy policy (EN/NL/FR)
     │   │   │   ├── ApiPage.jsx             # API documentation page
     │   │   │   └── seo/
@@ -77,11 +91,13 @@ Smart Energy/
     │   └── vercel.json                     # Proxy /api/* and /auth/* to Railway
     │
     └── backend/                    # Node.js + Express API
-        ├── server.js               # Express app, ENTSO-E endpoints, admin endpoints
+        ├── server.js               # Express app, ENTSO-E endpoints, leads, agent, admin
         ├── db.js                   # PostgreSQL pool (Supabase)
         ├── analytics.js            # Event tracking + admin endpoints
         ├── email-alerts.js         # Hourly price alert checker + email sender (Resend)
         ├── uptime-monitor.js       # Pings smartprice.be every 5 min, alerts on down/recovery
+        ├── middleware/
+        │   └── auth.js             # requireAuth JWT middleware
         ├── data/
         │   └── tariffs.json        # Supplier tariff seed data
         └── routes/
@@ -122,10 +138,13 @@ All endpoints accessible via `smartprice.be/api/*` (proxied by Vercel).
 |--------|------|------|-------------|
 | GET | `/api/current` | None | Current EPEX price |
 | GET | `/api/prices/today` | None | All 24h prices + stats |
+| GET | `/api/prices/history` | None | Historical EPEX prices |
 | GET | `/api/cheapest?hours=N` | None | N cheapest upcoming hours |
 | GET | `/api/health` | None | System health check |
+| GET | `/api/status-banner` | None | Site-wide status banner (active: false) |
 | GET | `/api/generation/today` | None | Belgium generation mix (ENTSO-E A75) |
 | GET | `/api/flows/today` | None | Cross-border physical flows (ENTSO-E A11) |
+| GET | `/api/user/dashboard` | JWT | Personalised dashboard data (prices + user prefs) |
 
 ### Gas
 
@@ -146,12 +165,28 @@ All endpoints accessible via `smartprice.be/api/*` (proxied by Vercel).
 | POST | `/api/suppliers/calculate-gas` | JWT | Gas plan results |
 | POST | `/api/suppliers/scrape` | Admin secret | Trigger tariff scrape |
 
+### Leads
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/leads` | None | Capture email lead from landing page |
+
+### AI Assistant
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/agent/chat` | None | Claude Haiku energy assistant chat |
+
+Body: `{ messages: [{role, content}], systemPrompt? }`  
+Returns 503 if `ANTHROPIC_API_KEY` not set; 402 if credits depleted.
+
 ### Admin
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/api/admin/analytics?days=N` | Admin secret | Analytics summary |
 | GET | `/api/admin/users` | Admin secret | User list |
+| GET | `/api/admin/leads` | Admin secret | Email leads list |
 | POST | `/api/admin/send-template` | Admin secret | Send one-off email via Resend |
 
 #### `/api/admin/send-template` body
@@ -180,14 +215,26 @@ Or with a Resend template UUID:
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/auth/register` | None | Email registration |
-| POST | `/auth/login` | None | Email or name login |
+| POST | `/auth/register` | None | Email registration (email required) |
+| POST | `/auth/login` | None | Email login |
+| POST | `/auth/exchange` | None | Exchange OAuth code for JWT tokens |
+| POST | `/auth/refresh` | None | Refresh access token |
+| POST | `/auth/logout` | None | Invalidate refresh token |
 | GET | `/auth/me` | JWT | Current user |
-| PUT | `/auth/preferences` | JWT | Update preferences |
+| PUT | `/auth/preferences` | JWT | Update alert/supplier preferences |
+| PUT | `/auth/profile` | JWT | Update display name |
+| PUT | `/auth/change-password` | JWT | Change password |
 | DELETE | `/auth/delete-account` | JWT | Delete account |
 | GET | `/auth/google` | None | Google OAuth start |
 | GET | `/auth/google/callback` | None | Google OAuth callback |
-| POST | `/auth/refresh` | None | Refresh access token |
+
+---
+
+## Authentication
+
+Registration requires **email + password**. Email is mandatory (used for login and optional price alerts). Google OAuth is also supported.
+
+> **Note:** Older docs described email as optional — this changed in April 2026. Email is now required at registration.
 
 ---
 
@@ -203,6 +250,7 @@ GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 ADMIN_SECRET=...                        # Must match Vercel VITE_ADMIN_SECRET
 RESEND_API_KEY=...                      # Resend API key (domain: smartprice.be)
+ANTHROPIC_API_KEY=...                   # Claude Haiku for AI assistant (optional — returns 503 if missing)
 FRONTEND_URL=https://smartprice.be
 FRONTEND_URL_PROD=https://smartprice.be # Used by uptime monitor
 ENTSOE_API_KEY=...                      # ENTSO-E transparency platform token
@@ -217,6 +265,17 @@ VITE_API_URL=https://smart-energy-production-aef3.up.railway.app
 VITE_ADMIN_SECRET=...                   # Must match Railway ADMIN_SECRET
 VITE_GOOGLE_CLIENT_ID=...
 ```
+
+---
+
+## DNS Configuration
+
+DNS managed via Cloudflare. SPF records must be **single merged records** per subdomain (RFC 7208 — multiple SPF records cause `permerror`).
+
+| Name | Type | Content |
+|------|------|---------|
+| `smartprice.be` | TXT | `v=spf1 a mx include:spf.cloudemail.be include:_spf.mx.cloudflare.net -all` |
+| `send` | TXT | `v=spf1 include:amazonses.com ~all` |
 
 ---
 
@@ -349,6 +408,7 @@ Translation sections: `common`, `landing`, `dashboard`, `auth`, `alerts`, `calcu
 | VREG tariff scraper | Disabled — API requires authentication (401). Fallback to seed data. |
 | OilPriceAPI TTF | Requires paid plan for live data. Fallback price €34.50/MWh used on free tier. |
 | ENTSO-E generation data | ~1 hour delay. Error state shows retry button in UI. |
+| AI assistant | Returns 503 if ANTHROPIC_API_KEY not set; 402 if Anthropic credits depleted. |
 
 ---
 
