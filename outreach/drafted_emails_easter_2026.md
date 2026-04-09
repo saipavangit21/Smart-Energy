@@ -1,6 +1,6 @@
 # SmartPrice.be — April 2026 Outreach Drafts
 **Ready to send · April 2026**
-Send from: hello@smartprice.be
+Send from: info@smartprice.be
 Send date: Wed 9 Apr (send today)
 
 ---
@@ -36,7 +36,7 @@ Ik plan graag een gesprek van 20 minuten — stuur me gewoon een reply.
 
 Met vriendelijke groet,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
@@ -67,6 +67,7 @@ Ik zou graag bekijken of we kunnen samenwerken:
 - Een widget of link in uw klantenportaal of communicatie naar leden
 - Een co-branded "slim laden"-pagina voor wagenparkbeheerders
 - Een API-koppeling voor wagenparkbeheersystemen
+- Een ingebedde widget in uw chauffeurs-app — geen ontwikkelwerk van uw kant
 
 Geen kosten, geen verplichtingen.
 
@@ -76,7 +77,7 @@ Ik plan graag een gesprek van 20 minuten — stuur me gewoon een reply.
 
 Met vriendelijke groet,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
@@ -107,6 +108,7 @@ I'd love to explore:
 - A link or widget in your customer portal or owner app
 - A co-branded "smart charging" page for VW/Audi/Porsche/Škoda EV buyers
 - An API feed for your fleet management tools
+- An embeddable widget for your driver app or portal — lightweight, no dev work on your side
 
 No cost, no commitment.
 
@@ -116,12 +118,12 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 4. Volvo Car Belgium — English
-**To:** fleet.belgium@volvocars.com
+**To:** vcbfleet@volvocars.com / alessio.lietaert@volvocars.com
 **Subject:** SmartPrice.be — smart charging for your XC40/EX30/EX90 drivers
 
 Hi Volvo Car Belgium team,
@@ -141,7 +143,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV driv
 **Why it matters:**
 Belgian electricity prices swing from −€50/MWh to +€400/MWh on the same day. SmartPrice makes the optimal charge window obvious — a genuine value-add for every Volvo EV owner.
 
-I'd love to explore a link or widget in your customer portal, or a co-branded smart charging page for Volvo EV buyers. No cost, no commitment.
+I'd love to explore a link or widget in your customer portal, a co-branded smart charging page for Volvo EV buyers, or an embeddable widget in the Volvo app — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -149,12 +151,12 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 5. BMW Group Belgium — English
-**To:** fleet@bmw.be
+**To:** corporate.sales.belux@bmw.be
 **Subject:** SmartPrice.be — smart charging for iX, i4 and i5 drivers
 
 Hi BMW Group Belgium team,
@@ -174,7 +176,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV driv
 **Why it matters:**
 Belgian electricity prices swing from −€50/MWh to +€400/MWh on the same day. An EV driver charging at peak pays 5–8× more than one using the optimal window. SmartPrice makes that decision effortless.
 
-I'd love to explore a link in your My BMW app or customer portal, or a co-branded smart charging page. No cost, no commitment.
+I'd love to explore a link in your My BMW app or customer portal, a co-branded smart charging page, or an embeddable widget — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -182,12 +184,12 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 6. Mercedes-Benz Belgium — English
-**To:** fleet@mercedes-benz.be
+**To:** steve.vanslype@mercedes-benz.com
 **Subject:** SmartPrice.be — smart charging for EQS, EQA and EQB drivers
 
 Hi Mercedes-Benz Belgium team,
@@ -206,7 +208,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV driv
 
 Belgian electricity prices swing from −€50/MWh to +€400/MWh on the same day. SmartPrice makes the optimal charge window obvious — a genuine value-add for your EV customers.
 
-I'd love to explore a partnership: a link in your customer portal, a co-branded smart charging page, or an API feed for your fleet tools. No cost, no commitment.
+I'd love to explore a partnership: a link in your customer portal, a co-branded smart charging page, an API feed for your fleet tools, or an embeddable widget — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -214,7 +216,7 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
@@ -238,7 +240,7 @@ Ik ben de oprichter van **SmartPrice.be**, een gratis Belgisch platform dat EV-r
 
 Elektriciteitsprijzen variëren van −€50/MWh tot +€400/MWh op dezelfde dag. Een ID.4-rijder die op het verkeerde moment laadt, betaalt 5–8× meer. SmartPrice maakt de juiste keuze moeiteloos.
 
-Ik zou graag een link of widget in uw klantenportaal of FleetServices-omgeving bekijken. Geen kosten, geen verplichtingen.
+Ik zou graag een link of widget in uw klantenportaal of FleetServices-omgeving bekijken, of een ingebedde widget in uw chauffeurs-app — geen ontwikkelwerk van uw kant. Geen kosten, geen verplichtingen.
 
 👉 smartprice.be
 
@@ -246,7 +248,7 @@ Ik plan graag een gesprek van 20 minuten — stuur me gewoon een reply.
 
 Met vriendelijke groet,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
@@ -270,7 +272,7 @@ Ik ben de oprichter van **SmartPrice.be**, een gratis Belgisch platform dat EV-r
 
 Elektriciteitsprijzen variëren van −€50/MWh tot +€400/MWh op dezelfde dag. SmartPrice maakt de optimale laadkeuze moeiteloos — een echte meerwaarde voor elke Audi EV-klant.
 
-Ik zou graag een link in uw myAudi-portaal of een co-branded "slim laden"-pagina bekijken. Geen kosten, geen verplichtingen.
+Ik zou graag een link in uw myAudi-portaal, een co-branded "slim laden"-pagina, of een ingebedde widget in uw app bekijken — geen ontwikkelwerk van uw kant. Geen kosten, geen verplichtingen.
 
 👉 smartprice.be
 
@@ -278,12 +280,12 @@ Ik plan graag een gesprek van 20 minuten — stuur me gewoon een reply.
 
 Met vriendelijke groet,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 9. Peugeot Belgium — French
-**To:** fleet@peugeot.be
+**To:** info.be@peugeot.com
 **Subject:** SmartPrice.be — recharge intelligente pour vos clients e-208 et e-2008
 
 Bonjour l'équipe Peugeot Belgique,
@@ -302,7 +304,7 @@ Je suis le fondateur de **SmartPrice.be**, une plateforme belge gratuite qui aid
 
 Les prix de l'électricité en Belgique varient de −50 €/MWh à +400 €/MWh dans la même journée. SmartPrice rend le bon choix évident — une vraie valeur ajoutée pour chaque client VE Peugeot.
 
-Je serais ravi d'explorer un lien ou widget dans votre portail client, ou une page co-brandée "recharge intelligente". Sans frais, sans engagement.
+Je serais ravi d'explorer un lien ou widget dans votre portail client, une page co-brandée "recharge intelligente", ou un widget intégrable dans votre app — sans travail de développement de votre côté. Sans frais, sans engagement.
 
 👉 smartprice.be
 
@@ -310,12 +312,12 @@ Je suis disponible pour un appel de 20 minutes — répondez simplement à cet e
 
 Cordialement,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 10. Toyota Belgium — English
-**To:** fleet@toyota.be
+**To:** steve.nys@toyota.be / fleet@toyota.be
 **Subject:** SmartPrice.be — smart charging for your bZ4X and hybrid customers
 
 Hi Toyota Belgium team,
@@ -334,7 +336,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV and 
 
 Belgian electricity prices swing from −€50/MWh to +€400/MWh on the same day. SmartPrice makes the optimal charge window effortless to find — useful for bZ4X owners and every PHEV driver.
 
-I'd love to explore a link in your Toyota Owner portal or a co-branded smart charging page. No cost, no commitment.
+I'd love to explore a link in your Toyota Owner portal, a co-branded smart charging page, or an embeddable widget in your app — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -342,12 +344,13 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
-## 11. ALD Automotive Belgium — English
-**To:** contact@aldautomotive.be
+## 11. ALD Automotive / Ayvens Belgium — English
+**To:** be@ayvens.com
+**Note:** ALD Automotive + LeasePlan merged into Ayvens (2023) — aldautomotive.be redirects to ayvens.com/en-be
 **Subject:** SmartPrice.be — free EV charging tool for your fleet drivers
 
 Hi ALD Automotive Belgium team,
@@ -371,6 +374,7 @@ I'd love to explore:
 - A link or widget in your ALD driver portal or app
 - An API feed for your fleet cost tracking system
 - A co-branded "smart charging" page for your EV fleet customers
+- An embeddable widget for your driver app — lightweight, no dev work on your side
 
 No cost, no commitment.
 
@@ -380,12 +384,12 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 12. Arval Belgium — English
-**To:** info.be@arval.com
+**To:** servicecenter@arval.be
 **Subject:** SmartPrice.be — free EV charging optimiser for your fleet drivers
 
 Hi Arval Belgium team,
@@ -404,7 +408,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV driv
 
 Across a large EV fleet, directing drivers to charge at the right hours creates meaningful TCO savings without hardware investment.
 
-I'd love to explore a link in your Arval driver app or portal, or an API feed for your fleet cost platform. No cost, no commitment.
+I'd love to explore a link in your Arval driver app or portal, an API feed for your fleet cost platform, or an embeddable widget — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -412,12 +416,13 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
-## 13. LeasePlan Belgium — English
-**To:** info@leaseplan.be
+## 13. LeasePlan / Ayvens Belgium — English
+**To:** be@ayvens.com
+**Note:** LeasePlan merged with ALD into Ayvens — same contact as #11 above, skip if already sent
 **Subject:** SmartPrice.be — free EV charging optimiser for LeasePlan drivers
 
 Hi LeasePlan Belgium team,
@@ -434,7 +439,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV driv
 - 🤖 AI energy assistant — answers charging and tariff questions instantly
 - 🆓 Completely free — no integration cost
 
-I'd love to explore a link in your driver app, an API feed for your fleet platform, or a co-branded smart charging guide. No cost, no commitment.
+I'd love to explore a link in your driver app, an API feed for your fleet platform, a co-branded smart charging guide, or an embeddable widget — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -442,7 +447,7 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
@@ -466,7 +471,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV driv
 
 Belgian electricity prices swing from −€50/MWh to +€400/MWh on the same day. Directing fleet drivers to the right charge window creates real TCO savings.
 
-I'd love to explore a link in your Alphabet driver portal or an API integration with your fleet cost tools. No cost, no commitment.
+I'd love to explore a link in your Alphabet driver portal, an API integration with your fleet cost tools, or an embeddable widget — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -474,12 +479,12 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 15. Belfius Lease — Dutch
-**To:** info@belfiuslease.be
+**To:** autolease@mobility.belfius.be
 **Subject:** SmartPrice.be — gratis EV-laadtool voor uw wagenparkklanten
 
 Dag Belfius Lease-team,
@@ -498,7 +503,7 @@ Ik ben de oprichter van **SmartPrice.be**, een gratis Belgisch platform dat EV-r
 
 Elektriciteitsprijzen variëren van −€50/MWh tot +€400/MWh op dezelfde dag. Door wagenparkrijders op het juiste moment te laten laden, creëert u een meetbare TCO-besparing zonder hardware-investering.
 
-Ik zou graag een link in uw klantportaal of een API-koppeling met uw wagenparkbeheersysteem bekijken. Geen kosten, geen verplichtingen.
+Ik zou graag een link in uw klantportaal, een API-koppeling met uw wagenparkbeheersysteem, of een ingebedde widget in uw app bekijken — geen ontwikkelwerk van uw kant. Geen kosten, geen verplichtingen.
 
 👉 smartprice.be
 
@@ -506,12 +511,13 @@ Ik plan graag een gesprek van 20 minuten — stuur me gewoon een reply.
 
 Met vriendelijke groet,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 16. Hyundai Belgium — English
-**To:** fleet@hyundai.be
+**To:** steven.schurmann@astara.com
+**Note:** Distributed via Astara. No public fleet@ email — form fallback: https://www.hyundai.com/be/fr/professionnels/fleet-manager/contact.html
 **Subject:** SmartPrice.be — smart charging for IONIQ 5 and IONIQ 6 drivers
 
 Hi Hyundai Belgium team,
@@ -530,7 +536,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV driv
 
 Hyundai's EV share in Belgium is growing fast — SmartPrice gives your customers a practical edge on running costs that competitors can't offer out of the box.
 
-I'd love to explore a link in your Bluelink app or customer portal, or a co-branded smart charging page. No cost, no commitment.
+I'd love to explore a link in your Bluelink app or customer portal, a co-branded smart charging page, or an embeddable widget — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -538,12 +544,12 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 17. Kia Belgium — English
-**To:** fleet@kia.be
+**To:** jf.mailleux@kia.be / fleet@kia.be
 **Subject:** SmartPrice.be — smart charging for EV6 and EV9 drivers
 
 Hi Kia Belgium team,
@@ -562,7 +568,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV driv
 
 EV6 and EV9 have strong real-world range — pairing them with SmartPrice means your customers also master the cost side of ownership.
 
-I'd love to explore a link in your Kia Connect app or customer portal, or a co-branded smart charging page. No cost, no commitment.
+I'd love to explore a link in your Kia Connect app or customer portal, a co-branded smart charging page, or an embeddable widget — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -570,12 +576,12 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 18. Renault Belgium — French
-**To:** fleet.renault@renault.be
+**To:** fleet@renault.be
 **Subject:** SmartPrice.be — recharge intelligente pour vos clients Zoé et Mégane E-Tech
 
 Bonjour l'équipe Renault Belgique,
@@ -594,7 +600,7 @@ Je suis le fondateur de **SmartPrice.be**, une plateforme belge gratuite qui aid
 
 Les prix de l'électricité en Belgique varient de −50 €/MWh à +400 €/MWh dans la même journée. SmartPrice rend le bon choix évident — une vraie valeur ajoutée pour chaque client VE Renault.
 
-Je serais ravi d'explorer un lien dans votre portail My Renault, ou une page co-brandée "recharge intelligente" pour vos acheteurs VE. Sans frais, sans engagement.
+Je serais ravi d'explorer un lien dans votre portail My Renault, une page co-brandée "recharge intelligente", ou un widget intégrable dans votre app — sans travail de développement de votre côté. Sans frais, sans engagement.
 
 👉 smartprice.be
 
@@ -602,12 +608,13 @@ Je suis disponible pour un appel de 20 minutes — répondez simplement à cet e
 
 Cordialement,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 19. Stellantis Belgium — English
-**To:** fleet.be@stellantis.com
+**To:** info.be@peugeot.com
+**Note:** No Stellantis BE fleet email exists — Peugeot BE is the main entry point. Fallback: https://www.stellantisfleethub.com/contact
 **Subject:** SmartPrice.be — smart charging for Citroën, Opel and Fiat EV customers
 
 Hi Stellantis Belgium team,
@@ -626,7 +633,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that helps EV driv
 
 Belgian electricity prices swing from −€50/MWh to +€400/MWh on the same day. SmartPrice makes the right charge window obvious — a genuine value-add for every Stellantis EV buyer.
 
-I'd love to explore a link in your customer portals across Citroën, Opel and Fiat, or a co-branded smart charging page. No cost, no commitment.
+I'd love to explore a link in your customer portals across Citroën, Opel and Fiat, a co-branded smart charging page, or an embeddable widget — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -634,12 +641,12 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 
 ## 20. Tesla Belgium — English
-**To:** belgium@tesla.com
+**To:** EnterpriseBE@tesla.com
 **Subject:** SmartPrice.be — EPEX price data for Model 3 and Model Y owners
 
 Hi Tesla Belgium team,
@@ -658,7 +665,7 @@ I'm the founder of **SmartPrice.be**, a free Belgian platform that shows live EP
 
 Tesla's scheduled charging feature is powerful — SmartPrice gives owners the market data to set the right window every day. The two tools are complementary.
 
-I'd love to explore a mention in Tesla Belgium's owner communications or social channels. No cost, no commitment.
+I'd love to explore a mention in Tesla Belgium's owner communications, an API feed into your fleet cost tools, or an embeddable widget in the Tesla app — no dev work on your side. No cost, no commitment.
 
 👉 smartprice.be
 
@@ -666,7 +673,7 @@ Happy to jump on a quick call or exchange details by email.
 
 Best,
 Monika
-SmartPrice.be | hello@smartprice.be
+SmartPrice.be | info@smartprice.be
 
 ---
 

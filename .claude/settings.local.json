@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.volvocars.com)",
+      "WebFetch(domain:www.bmw.be)",
+      "WebFetch(domain:www.febiac.be)",
+      "WebFetch(domain:www.renta.be)",
+      "WebFetch(domain:www.dieteren.be)",
+      "WebFetch(domain:www.mercedes-benz.be)",
+      "WebFetch(domain:www.vw.be)",
+      "WebFetch(domain:www.audi.be)",
+      "WebFetch(domain:www.peugeot.be)",
+      "WebSearch",
+      "WebFetch(domain:www.tesla.com)",
+      "WebFetch(domain:www.arval.be)",
+      "WebFetch(domain:www.aldautomotive.be)",
+      "WebFetch(domain:www.alphabet.com)",
+      "WebFetch(domain:www.ayvens.com)",
+      "WebFetch(domain:www.kia.com)",
+      "WebFetch(domain:professionals.renault.be)",
+      "WebFetch(domain:www.belfius-lease.be)",
+      "WebFetch(domain:www.fleet.be)",
+      "WebFetch(domain:www.volkswagen.be)",
+      "WebFetch(domain:www.hyundai.com)",
+      "WebFetch(domain:www.leaseplan.com)",
+      "WebFetch(domain:www.stellantis.com)",
+      "WebFetch(domain:www.stellantisfleet.com)",
+      "WebFetch(domain:www.dieterengroup.com)"
+    ]
+  }
+}
