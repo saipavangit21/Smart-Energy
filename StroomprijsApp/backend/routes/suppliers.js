@@ -704,29 +704,35 @@ router.get("/ev-stations", async (req, res) => {
     }
 
     const cap = Math.min(parseInt(maxresults) || 200, 300); // cap at 300 for faster queries
-    const query = `[out:json][timeout:55];(node["amenity"="charging_station"](${south},${west},${north},${east});way["amenity"="charging_station"](${south},${west},${north},${east}););out body ${cap};`;
+    // Use 'out center' instead of 'out body' — returns centroid only for ways (much faster)
+    // [maxsize] limits response payload; [timeout:30] fails fast instead of hanging
+    const query = `[out:json][timeout:30][maxsize:8000000];(node["amenity"="charging_station"](${south},${west},${north},${east});way["amenity"="charging_station"](${south},${west},${north},${east}););out center ${cap};`;
     const url = `https://overpass-api.de/api/interpreter`;
 
     const response = await axios.post(url, query, {
       headers: { "Content-Type": "text/plain", "User-Agent": "SmartPrice.be/1.0" },
-      timeout: 60000,
+      timeout: 35000, // 35s HTTP timeout (Overpass has 30s query timeout)
     });
 
     const elements = response.data?.elements || [];
 
     // Normalize to OCM-like format for frontend compatibility
     const stations = elements
-      .filter(el => el.lat && el.lon)
+      .filter(el => (el.lat && el.lon) || (el.center?.lat && el.center?.lon))
       .slice(0, parseInt(maxresults))
-      .map(el => ({
+      .map(el => {
+        // nodes have lat/lon directly; ways have el.center.lat/lon (from 'out center')
+        const lat = el.lat ?? el.center?.lat;
+        const lon = el.lon ?? el.center?.lon;
+        return {
         id: el.id,
         AddressInfo: {
           Title: el.tags?.name || el.tags?.operator || "Charging Station",
           AddressLine1: el.tags?.["addr:street"] ? `${el.tags["addr:street"]} ${el.tags["addr:housenumber"] || ""}`.trim() : null,
           Town: el.tags?.["addr:city"] || el.tags?.["addr:town"] || null,
           Postcode: el.tags?.["addr:postcode"] || null,
-          Latitude: el.lat,
-          Longitude: el.lon,
+          Latitude: lat,
+          Longitude: lon,
         },
         OperatorInfo: {
           Title: el.tags?.operator || el.tags?.network || null,
@@ -738,7 +744,8 @@ router.get("/ev-stations", async (req, res) => {
         ] : [
           { ConnectionTypeID: 2, PowerKW: 22, Quantity: 1 },
         ],
-      }));
+      };
+      });
 
     console.log(`[ev-stations] OSM: ${stations.length} stations found`);
     // Cache for 24 hours - stations don't change often
@@ -790,5 +797,51 @@ router.get("/status-banner", (req, res) => {
   // Also expose via /api/status-banner (mounted at /api/suppliers)
   res.json(statusBannerData || { active: false });
 });
+
+// Pre-warm EV stations cache on module load (runs once when server starts)
+// This ensures the first real user doesn't wait 30s for the Overpass API cold fetch
+setTimeout(() => {
+  if (cache.get("ev_stations_be")) return; // already cached
+  const BE_BBOX = "49.49,2.54,51.51,6.41";
+  const query = `[out:json][timeout:30][maxsize:8000000];(node["amenity"="charging_station"](${BE_BBOX});way["amenity"="charging_station"](${BE_BBOX}););out center 300;`;
+  axios.post("https://overpass-api.de/api/interpreter", query, {
+    headers: { "Content-Type": "text/plain", "User-Agent": "SmartPrice.be/1.0 (prewarm)" },
+    timeout: 35000,
+  }).then(r => {
+    const elements = r.data?.elements || [];
+    const stations = elements
+      .filter(el => (el.lat && el.lon) || (el.center?.lat && el.center?.lon))
+      .slice(0, 300)
+      .map(el => {
+        const lat = el.lat ?? el.center?.lat;
+        const lon = el.lon ?? el.center?.lon;
+        return {
+          id: el.id,
+          AddressInfo: {
+            Title: el.tags?.name || el.tags?.operator || "Charging Station",
+            AddressLine1: el.tags?.["addr:street"] ? `${el.tags["addr:street"]} ${el.tags["addr:housenumber"] || ""}`.trim() : null,
+            Town: el.tags?.["addr:city"] || el.tags?.["addr:town"] || null,
+            Postcode: el.tags?.["addr:postcode"] || null,
+            Latitude: lat,
+            Longitude: lon,
+          },
+          OperatorInfo: { Title: el.tags?.operator || el.tags?.network || null },
+          Connections: el.tags?.["socket:type2"] ? [
+            { ConnectionTypeID: 2, PowerKW: parseFloat(el.tags?.["capacity:kw"] || el.tags?.["maxpower"] || 22) || 22, Quantity: parseInt(el.tags?.["socket:type2"]) || 1 },
+          ] : el.tags?.["socket:ccs"] ? [
+            { ConnectionTypeID: 1036, PowerKW: parseFloat(el.tags?.["capacity:kw"] || 50) || 50, Quantity: parseInt(el.tags?.["socket:ccs"]) || 1 },
+          ] : [
+            { ConnectionTypeID: 2, PowerKW: 22, Quantity: 1 },
+          ],
+        };
+      });
+    if (stations.length > 0) {
+      cache.set("ev_stations_be", stations, 86400);
+      console.log(`[ev-stations] prewarm complete: ${stations.length} stations cached`);
+    }
+  }).catch(e => {
+    console.warn("[ev-stations] prewarm skipped (non-critical):", e.message);
+  });
+}, 8000); // 8s after module load — let server fully start first
 
 module.exports = { router, runWeeklyScrape, setStatusBanner: (d) => { statusBannerData = d; } };

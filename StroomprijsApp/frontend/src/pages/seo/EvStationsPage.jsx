@@ -72,7 +72,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
       filterFree: "Free",
       stationsFound: "stations found",
       loadingMap: "Loading map...",
-      loadingStations: "Loading stations...",
+      loadingStations: "Fetching live station data from OpenStreetMap…",
       connectors: "Connectors",
       power: "Power",
       operator: "Operator",
