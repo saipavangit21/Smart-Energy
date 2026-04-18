@@ -13,7 +13,7 @@ for (const key of required) {
 const authRoutes      = require("./routes/auth");
 const googleRoutes    = require("./routes/google");
 const attachAnalytics = require("./analytics");
-const { checkAndSendAlerts, checkAndSendGasAlerts } = require("./email-alerts");
+const { checkAndSendAlerts, checkAndSendGasAlerts, sendWeeklyDigest } = require("./email-alerts");
 const { startUptimeMonitor } = require("./uptime-monitor");
 const { router: gasRoutes } = require("./routes/gas");
 const { router: suppliersRoutes, runWeeklyScrape } = require("./routes/suppliers");
@@ -373,6 +373,26 @@ if (process.env.RESEND_API_KEY) {
 // Weekly tariff scrape — runs at startup then every 7 days
 runWeeklyScrape().catch(e => console.warn("[startup] Initial scrape failed:", e.message));
 setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape failed:", e.message)); }, 7 * 24 * 3600 * 1000);
+
+// Weekly digest email — every Monday at 08:00 Brussels time
+if (process.env.RESEND_API_KEY) {
+  function scheduleWeeklyDigest() {
+    const now = new Date();
+    const brussels = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Brussels", weekday: "short", hour: "numeric", minute: "numeric", hour12: false,
+    }).formatToParts(now).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+    const dayNum = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(brussels.weekday);
+    const daysUntilMon = dayNum === 1 ? (parseInt(brussels.hour) < 8 ? 0 : 7) : (8 - dayNum) % 7 || 7;
+    const hoursUntil8am = daysUntilMon === 0 ? (8 - parseInt(brussels.hour)) : (daysUntilMon * 24 + 8 - parseInt(brussels.hour));
+    const msUntil = (hoursUntil8am * 60 - parseInt(brussels.minute)) * 60 * 1000;
+    setTimeout(() => {
+      sendWeeklyDigest(pool).catch(e => console.error("[weekly-digest] Error:", e.message));
+      setInterval(() => sendWeeklyDigest(pool).catch(e => console.error("[weekly-digest] Error:", e.message)), 7 * 24 * 3600 * 1000);
+    }, msUntil);
+    console.log(`   Weekly digest: ⏰ Next send in ~${Math.round(msUntil/3600000)}h (Monday 08:00 Brussels)`);
+  }
+  scheduleWeeklyDigest();
+}
 
 
 // ── SmartPrice AI Agent proxy ─────────────────────────────────

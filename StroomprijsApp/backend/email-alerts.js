@@ -322,3 +322,179 @@ async function sendWelcomeEmail(email, name) {
 }
 
 module.exports.sendWelcomeEmail = sendWelcomeEmail;
+
+// ── Admin notification: new user registered ────────────────────
+async function sendAdminNewUserNotification(name, email, totalUsers) {
+  const adminEmail = process.env.ALERT_ADMIN_EMAIL || "info@smartprice.be";
+  if (!RESEND_API_KEY) return;
+  const now = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TZ, dateStyle: "medium", timeStyle: "short",
+  }).format(new Date());
+  try {
+    await axios.post("https://api.resend.com/emails", {
+      from: "SmartPrice.be <info@smartprice.be>",
+      to: adminEmail,
+      subject: `🎉 New user registered — ${name}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;background:#060B14;color:#E2E8F0;padding:32px;max-width:480px;border-radius:16px;">
+          <h2 style="margin:0 0 16px;color:#00C896;">🎉 New SmartPrice.be registration</h2>
+          <table style="border-collapse:collapse;width:100%;">
+            <tr><td style="color:#64748B;padding:6px 0;width:100px;">Name</td><td style="color:#fff;font-weight:700;">${name}</td></tr>
+            <tr><td style="color:#64748B;padding:6px 0;">Email</td><td style="color:#fff;">${email || "<em>not provided</em>"}</td></tr>
+            <tr><td style="color:#64748B;padding:6px 0;">Time</td><td style="color:#fff;">${now} (Brussels)</td></tr>
+            <tr><td style="color:#64748B;padding:6px 0;">Total users</td><td style="color:#fff;font-weight:700;">${totalUsers}</td></tr>
+          </table>
+          <div style="margin-top:20px;">
+            <a href="https://smartprice.be/admin" style="background:#0D9488;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;">View Admin Dashboard →</a>
+          </div>
+        </div>
+      `,
+    }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" } });
+    console.log(`[admin-notify] New user notification sent for ${name}`);
+  } catch (e) {
+    console.error("[admin-notify] Failed:", e.message);
+  }
+}
+module.exports.sendAdminNewUserNotification = sendAdminNewUserNotification;
+
+// ── Weekly digest email to all users ──────────────────────────
+async function sendWeeklyDigest(pool) {
+  if (!RESEND_API_KEY) return;
+  try {
+    // Get all users with email addresses
+    const { rows: users } = await pool.query(
+      "SELECT id, name, email FROM users WHERE email IS NOT NULL AND email != '' ORDER BY created_at"
+    );
+    if (users.length === 0) { console.log("[weekly-digest] No email users found"); return; }
+
+    // Fetch last 7 days of electricity prices from Energy-Charts.info
+    const today = toLocalISODate(new Date());
+    const sevenDaysAgo = toLocalISODate(new Date(Date.now() - 7 * 24 * 3600 * 1000));
+    let weekStats = null;
+    try {
+      const url = `https://api.energy-charts.info/price?bzn=BE&start=${sevenDaysAgo}T00%3A00%2B01%3A00&end=${today}T23%3A59%2B01%3A00`;
+      const r = await axios.get(url, { timeout: 15000 });
+      const prices = r.data?.price || [];
+      const valid = prices.filter(p => p != null && !isNaN(p));
+      if (valid.length > 0) {
+        const avg = valid.reduce((a, b) => a + b, 0) / valid.length;
+        const min = Math.min(...valid);
+        const max = Math.max(...valid);
+        const negative = valid.filter(p => p < 0).length;
+        weekStats = { avg: avg.toFixed(1), min: min.toFixed(1), max: max.toFixed(1), negative, total: valid.length };
+      }
+    } catch (e) {
+      console.warn("[weekly-digest] Could not fetch price data:", e.message);
+    }
+
+    // Price trend label
+    const avgMwh = weekStats ? parseFloat(weekStats.avg) : null;
+    const trendColor = avgMwh == null ? "#64748B" : avgMwh < 50 ? "#00C896" : avgMwh < 100 ? "#84CC16" : avgMwh < 140 ? "#F59E0B" : "#EF4444";
+    const trendLabel = avgMwh == null ? "—" : avgMwh < 50 ? "Very low ✅" : avgMwh < 100 ? "Below average 🟡" : avgMwh < 140 ? "Average 🟠" : "High ⚠️";
+
+    const weekLabel = (() => {
+      const d = new Date(); d.setDate(d.getDate() - 7);
+      return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" }).format(d) + " – " +
+             new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" }).format(new Date());
+    })();
+
+    const statsHtml = weekStats ? `
+      <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+        <tr>
+          <td style="padding:10px;background:#0D1626;border-radius:10px;text-align:center;width:25%;">
+            <div style="font-size:22px;font-weight:900;color:${trendColor};">€${weekStats.avg}</div>
+            <div style="font-size:11px;color:#64748B;margin-top:4px;">Avg/MWh</div>
+          </td>
+          <td style="width:8px;"></td>
+          <td style="padding:10px;background:#0D1626;border-radius:10px;text-align:center;width:25%;">
+            <div style="font-size:22px;font-weight:900;color:#00C896;">€${weekStats.min}</div>
+            <div style="font-size:11px;color:#64748B;margin-top:4px;">Min/MWh</div>
+          </td>
+          <td style="width:8px;"></td>
+          <td style="padding:10px;background:#0D1626;border-radius:10px;text-align:center;width:25%;">
+            <div style="font-size:22px;font-weight:900;color:#EF4444;">€${weekStats.max}</div>
+            <div style="font-size:11px;color:#64748B;margin-top:4px;">Max/MWh</div>
+          </td>
+          <td style="width:8px;"></td>
+          <td style="padding:10px;background:#0D1626;border-radius:10px;text-align:center;width:25%;">
+            <div style="font-size:22px;font-weight:900;color:#3B82F6;">${weekStats.negative}</div>
+            <div style="font-size:11px;color:#64748B;margin-top:4px;">Negative hrs</div>
+          </td>
+        </tr>
+      </table>
+      <div style="background:rgba(0,200,150,0.06);border:1px solid rgba(0,200,150,0.15);border-radius:10px;padding:12px 16px;margin-top:12px;">
+        <span style="color:#64748B;font-size:12px;">Week trend: </span>
+        <span style="color:${trendColor};font-weight:700;font-size:13px;">${trendLabel}</span>
+        ${weekStats.negative > 0 ? `<div style="color:#3B82F6;font-size:12px;margin-top:4px;">💡 ${weekStats.negative} hours with negative prices — electricity was free (or paid to consume)</div>` : ""}
+      </div>` : `<div style="color:#64748B;padding:16px;text-align:center;">Price data temporarily unavailable</div>`;
+
+    let sent = 0;
+    for (const user of users) {
+      try {
+        await axios.post("https://api.resend.com/emails", {
+          from: "SmartPrice.be <info@smartprice.be>",
+          to: user.email,
+          subject: `⚡ SmartPrice Weekly — Belgium electricity recap (${weekLabel})`,
+          html: `
+            <!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+            <body style="margin:0;padding:0;background:#060B14;font-family:'Helvetica Neue',Arial,sans-serif;">
+              <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
+
+                <div style="text-align:center;margin-bottom:28px;">
+                  <div style="font-size:36px;margin-bottom:10px;">⚡🇧🇪</div>
+                  <h1 style="margin:0;font-size:22px;font-weight:900;color:#fff;">Belgium Electricity — Weekly Recap</h1>
+                  <p style="color:#64748B;font-size:13px;margin-top:6px;">${weekLabel}</p>
+                </div>
+
+                <div style="background:#0A1220;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:24px;margin-bottom:20px;">
+                  <div style="font-size:13px;font-weight:700;color:#94A3B8;margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;">📊 Last week's EPEX Spot Belgium</div>
+                  ${statsHtml}
+                </div>
+
+                <div style="background:#0A1220;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:24px;margin-bottom:20px;">
+                  <div style="font-size:13px;font-weight:700;color:#94A3B8;margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;">💡 What this means for you</div>
+                  <div style="color:#E2E8F0;font-size:14px;line-height:1.7;">
+                    ${avgMwh != null && avgMwh < 80
+                      ? "Great week for EV charging and high-consumption appliances — prices were well below the €100/MWh average. If you have a dynamic contract, you saved significantly."
+                      : avgMwh != null && avgMwh > 130
+                      ? "Expensive week — if you have a dynamic contract, try to shift heavy usage (EV, washing machine, dishwasher) to nights and weekends when prices typically drop."
+                      : "Typical week for Belgian electricity prices. Best savings come from charging EVs and running appliances during off-peak hours (typically 23:00–07:00)."}
+                  </div>
+                </div>
+
+                <div style="text-align:center;margin-bottom:24px;">
+                  <a href="${APP_URL}" style="display:inline-block;background:linear-gradient(135deg,#0D9488,#1A56A4);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 28px;border-radius:30px;">
+                    See live prices now →
+                  </a>
+                  &nbsp;
+                  <a href="${APP_URL}/ev-charging-belgium" style="display:inline-block;background:rgba(255,255,255,0.06);color:#94A3B8;text-decoration:none;font-weight:600;font-size:14px;padding:12px 20px;border-radius:30px;border:1px solid rgba(255,255,255,0.1);">
+                    EV charging times
+                  </a>
+                </div>
+
+                <div style="text-align:center;color:#334155;font-size:11px;line-height:1.8;">
+                  <div>SmartPrice.be · Free · No ads · GDPR compliant · Data stored in EU</div>
+                  <div style="margin-top:6px;">
+                    <a href="https://smartprice.be/privacy" style="color:#475569;text-decoration:none;">Privacy</a>
+                    &nbsp;·&nbsp;
+                    <a href="mailto:info@smartprice.be" style="color:#475569;text-decoration:none;">Unsubscribe</a>
+                  </div>
+                </div>
+
+              </div>
+            </body></html>
+          `,
+        }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" } });
+        sent++;
+        // Small delay between sends to avoid rate limiting
+        await new Promise(r => setTimeout(r, 200));
+      } catch (e) {
+        console.error(`[weekly-digest] Failed to send to ${user.email}:`, e.message);
+      }
+    }
+    console.log(`[weekly-digest] Sent to ${sent}/${users.length} users`);
+  } catch (e) {
+    console.error("[weekly-digest] Fatal error:", e.message);
+  }
+}
+module.exports.sendWeeklyDigest = sendWeeklyDigest;

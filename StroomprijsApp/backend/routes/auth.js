@@ -10,6 +10,7 @@ const jwt        = require("jsonwebtoken");
 const rateLimit  = require("express-rate-limit");
 const userStore  = require("../db");
 const { requireAuth } = require("../middleware/auth");
+const { sendWelcomeEmail, sendAdminNewUserNotification } = require("../email-alerts");
 
 const router = express.Router();
 
@@ -93,10 +94,14 @@ router.post("/register", registerLimiter, async (req, res) => {
 
     setAuthCookies(res, tokens);
 
-    // Send welcome email if user provided email
+    // Send welcome email to the new user
     if (email) {
       sendWelcomeEmail(email, name).catch(() => {});
     }
+    // Notify admin about new registration
+    userStore.count().then(total => {
+      sendAdminNewUserNotification(name, email, total).catch(() => {});
+    }).catch(() => {});
 
     res.status(201).json({ success: true, user: userStore.safeUser(user) });
   } catch (err) {
