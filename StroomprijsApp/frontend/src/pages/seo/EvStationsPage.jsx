@@ -169,6 +169,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
   const [error,     setError]     = useState(null);
   const [filters,   setFilters]   = useState({ fast: false, type2: false, ccs: false });
   const [nearMe,    setNearMe]    = useState(false);
+  const [cheapHours, setCheapHours] = useState([]);
   const [userPos,   setUserPos]   = useState(null);
   const [locating,  setLocating]  = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -225,10 +226,13 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
     );
   };
 
-  // Load EPEX price
+  // Load EPEX price + cheapest upcoming hours
   useEffect(() => {
     fetch(`${API}/api/current`).then(r => r.json())
       .then(d => { if (d.success) setCurrent(d.current); })
+      .catch(() => {});
+    fetch(`${API}/api/cheapest?hours=5`).then(r => r.json())
+      .then(d => { if (d.cheapest_hours?.length) setCheapHours(d.cheapest_hours.slice(0, 3)); })
       .catch(() => {});
   }, []);
 
@@ -423,6 +427,54 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           </div>
         </div>
 
+        {/* Best hours to charge today */}
+        {cheapHours.length > 0 && (
+          <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 16, padding: "18px 22px", marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: C.green }}>
+                🔋 {lang === "nl" ? "Goedkoopste laadmomenten vandaag" : lang === "fr" ? "Meilleures heures de recharge aujourd'hui" : "Best hours to charge today"}
+              </div>
+              <a href="/ev-charging-belgium" onClick={e => { e.preventDefault(); window.location.href = "/ev-charging-belgium"; }}
+                style={{ fontSize: 12, color: C.teal, textDecoration: "none", fontWeight: 600 }}>
+                {lang === "nl" ? "Volledig overzicht →" : lang === "fr" ? "Voir tout →" : "Full planner →"}
+              </a>
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {cheapHours.map((h, i) => {
+                const hMwh = h.price_eur_mwh ?? h.price;
+                const hCol = getPriceColor(hMwh);
+                const label = i === 0
+                  ? (lang === "nl" ? "Goedkoopst" : lang === "fr" ? "Moins cher" : "Cheapest")
+                  : i === 1
+                  ? (lang === "nl" ? "2e keuze" : lang === "fr" ? "2e choix" : "2nd best")
+                  : (lang === "nl" ? "3e keuze" : lang === "fr" ? "3e choix" : "3rd best");
+                return (
+                  <div key={i} style={{ flex: "1 1 100px", background: i === 0 ? `${hCol}12` : "rgba(255,255,255,0.03)", border: `1px solid ${i === 0 ? hCol + "40" : C.border}`, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
+                    <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{label}</div>
+                    <div style={{ fontSize: 22, fontWeight: 900, fontFamily: "monospace", color: hCol }}>
+                      {h.hour != null ? `${String(h.hour).padStart(2,"0")}:00` : "—"}
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: hCol, marginTop: 2 }}>
+                      €{hMwh != null ? hMwh.toFixed(0) : "—"}<span style={{ fontSize: 10, fontWeight: 400, color: C.muted }}>/MWh</span>
+                    </div>
+                    {hMwh != null && <div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>~€{((hMwh/1000)*30*1.21).toFixed(2)}/30kWh</div>}
+                  </div>
+                );
+              })}
+              {/* CTA card */}
+              <div style={{ flex: "1 1 120px", background: "rgba(13,148,136,0.07)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 12, padding: "12px 14px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 8, cursor: "pointer" }}
+                onClick={() => window.location.href = "/?register=1"}>
+                <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, textAlign: "center" }}>
+                  🔔 {lang === "nl" ? "Krijg een melding als de prijs daalt" : lang === "fr" ? "Alerte quand le prix baisse" : "Get alerted when price drops"}
+                </div>
+                <div style={{ fontSize: 11, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, color: "#fff", padding: "5px 12px", borderRadius: 20, fontWeight: 700 }}>
+                  {lang === "nl" ? "Gratis aanmelden →" : lang === "fr" ? "S'inscrire →" : "Sign up free →"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Map + sidebar */}
         <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 340px" : "1fr", gap: 16, marginBottom: 24 }}>
 
@@ -483,7 +535,12 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 {chargeTime && maxPower > 0 && (
                   <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
                     ⏱ ~{chargeTime < 60 ? `${chargeTime} min` : `${(chargeTime/60).toFixed(1)}h`} at {maxPower}kW
-                    {" · "}<a href="/ev-charging-belgium" style={{ color: C.teal, textDecoration: "none" }}>See cheapest hours →</a>
+                  </div>
+                )}
+                {cheapHours.length > 0 && cheapHours[0].hour != null && (
+                  <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(0,200,150,0.07)", borderRadius: 8, fontSize: 11, color: C.green, fontWeight: 600 }}>
+                    💡 {lang === "nl" ? `Goedkoopste thuislaadtijd vandaag: ${String(cheapHours[0].hour).padStart(2,"0")}:00 (€${cheapHours[0].price_eur_mwh?.toFixed(0) ?? cheapHours[0].price?.toFixed(0)}/MWh)` : lang === "fr" ? `Meilleure heure de recharge: ${String(cheapHours[0].hour).padStart(2,"0")}:00` : `Cheapest home charging today: ${String(cheapHours[0].hour).padStart(2,"0")}:00 (€${cheapHours[0].price_eur_mwh?.toFixed(0) ?? cheapHours[0].price?.toFixed(0)}/MWh)`}
+                    {" "}<a href="/ev-charging-belgium" onClick={e => { e.preventDefault(); window.location.href = "/ev-charging-belgium"; }} style={{ color: C.teal, textDecoration: "none" }}>Full planner →</a>
                   </div>
                 )}
               </div>
