@@ -142,23 +142,24 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest, isMobile }) {
       border: "1px solid rgba(255,255,255,0.07)",
       boxShadow: "inset 0 1px 3px rgba(0,0,0,0.4)",
     }}>
-      {/* EV Charging button */}
-      <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{
-        display: "flex", alignItems: "center", gap: 6,
-        padding: "8px 16px", borderRadius: 10, cursor: "pointer",
-        fontSize: 13, fontWeight: 800, letterSpacing: "0.2px",
+      {/* EV tab */}
+      <button onClick={() => onChange("ev")} style={{
+        display: "flex", alignItems: "center", gap: 7,
+        padding: isMobile ? "7px 12px" : "8px 18px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
         transition: "all 0.2s ease",
-        border: "1px solid rgba(0,200,150,0.4)",
-        background: "rgba(0,200,150,0.1)", color: "#00C896",
-      }}
-        onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,200,150,0.18)"; e.currentTarget.style.borderColor = "rgba(0,200,150,0.6)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,200,150,0.1)"; e.currentTarget.style.borderColor = "rgba(0,200,150,0.4)"; }}>
-        🔋 {isMobile ? "EV" : "EV Charging"}
-      </button>
-      <button onClick={() => window.location.href = "/ev-charging-stations-belgium"} title="EV Stations Map" style={{ display:"flex", alignItems:"center", gap: 5, padding:"8px 14px", borderRadius:10, cursor:"pointer", fontSize:13, fontWeight:700, border:"1px solid rgba(59,130,246,0.35)", background:"rgba(59,130,246,0.08)", color:"#3B82F6", transition:"all 0.2s" }}
-        onMouseEnter={e=>{e.currentTarget.style.background="rgba(59,130,246,0.16)";e.currentTarget.style.borderColor="rgba(59,130,246,0.55)";}}
-        onMouseLeave={e=>{e.currentTarget.style.background="rgba(59,130,246,0.08)";e.currentTarget.style.borderColor="rgba(59,130,246,0.35)";}}>
-        🗺️ {isMobile ? "" : "Stations"}
+        border: type === "ev" ? "1px solid rgba(0,200,150,0.5)" : "1px solid transparent",
+        background: type === "ev"
+          ? "linear-gradient(135deg, #062E1A 0%, #0A3D22 100%)"
+          : "transparent",
+        color: type === "ev" ? "#00C896" : "#4A6070",
+        boxShadow: type === "ev"
+          ? "0 0 16px rgba(0,200,150,0.2), inset 0 1px 0 rgba(0,200,150,0.15)"
+          : "none",
+      }}>
+        <span style={{ fontSize: 15, filter: type === "ev" ? "drop-shadow(0 0 6px rgba(0,200,150,0.8))" : "none", transition: "filter 0.2s" }}>🔋</span>
+        {!isMobile && <span>EV</span>}
+        {type === "ev" && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#00C896", boxShadow: "0 0 8px #00C896", marginLeft: 2, animation: "pulse-elec 2s infinite" }} />}
       </button>
 
 
@@ -313,6 +314,142 @@ function SharePanel({ currentPrice, userName, onClose, copied, onCopy, refCopied
   );
 }
 
+function EvTab({ mwh, cheapest, prices, isMobile, stats }) {
+  const C = { bg: "#060B14", card: "rgba(255,255,255,0.03)", card2: "#0A1220", border: "rgba(255,255,255,0.08)", green: "#00C896", teal: "#0D9488", blue: "#3B82F6", muted: "#64748B", soft: "#94A3B8" };
+  const getPriceColor = (v) => { if (v == null) return C.muted; if (v < 0) return "#00E5FF"; if (v < 50) return "#00C896"; if (v < 90) return "#84CC16"; if (v < 130) return "#F59E0B"; if (v < 160) return "#F97316"; return "#EF4444"; };
+  const col = getPriceColor(mwh);
+
+  const chargeKwh = 50; // typical EV 50 kWh session
+  const costNow = mwh != null ? ((mwh / 1000) * chargeKwh * 1.21).toFixed(2) : null;
+
+  const todayWindows = cheapest.filter(h => h.day === "today" || h.day == null).slice(0, 8);
+  const tomorrowWindows = cheapest.filter(h => h.day === "tomorrow").slice(0, 5);
+  const allWindows = cheapest.slice(0, 8);
+  const windows = todayWindows.length > 0 ? todayWindows : allWindows;
+
+  const cheapestMwh = windows[0]?.price_eur_mwh;
+  const saving = mwh != null && cheapestMwh != null ? ((mwh - cheapestMwh) / 1000 * chargeKwh * 1.21) : null;
+
+  return (
+    <div style={{ paddingBottom: 32 }}>
+
+      {/* Hero stats */}
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+        <div style={{ background: `${col}12`, border: `1px solid ${col}35`, borderRadius: 16, padding: "16px 18px" }}>
+          <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6, fontWeight: 700 }}>⚡ EPEX now</div>
+          <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: col }}>
+            {mwh != null ? `€${mwh.toFixed(0)}` : "—"}
+          </div>
+          <div style={{ fontSize: 11, color: C.muted }}>/MWh</div>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px" }}>
+          <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6, fontWeight: 700 }}>🔋 Cost per 50kWh</div>
+          <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: col }}>
+            {costNow ? `€${costNow}` : "—"}
+          </div>
+          <div style={{ fontSize: 11, color: C.muted }}>incl. 21% VAT</div>
+        </div>
+        <div style={{ background: "rgba(0,200,150,0.06)", border: "1px solid rgba(0,200,150,0.2)", borderRadius: 16, padding: "16px 18px" }}>
+          <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6, fontWeight: 700 }}>💡 Best window</div>
+          <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: C.green }}>
+            {windows[0]?.hour != null ? `${String(windows[0].hour).padStart(2,"0")}:00` : "—"}
+          </div>
+          <div style={{ fontSize: 11, color: C.muted }}>
+            {cheapestMwh != null ? `€${cheapestMwh.toFixed(0)}/MWh` : "today"}
+          </div>
+        </div>
+        <div style={{ background: saving > 0 ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.02)", border: saving > 0 ? "1px solid rgba(16,185,129,0.25)" : `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px" }}>
+          <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6, fontWeight: 700 }}>💰 Saving if you wait</div>
+          <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: saving > 0 ? "#10B981" : C.muted }}>
+            {saving != null ? `€${saving.toFixed(2)}` : "—"}
+          </div>
+          <div style={{ fontSize: 11, color: C.muted }}>per 50kWh charge</div>
+        </div>
+      </div>
+
+      {/* Cheapest windows */}
+      <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 18, padding: "20px 22px", marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 800 }}>🔋 Cheapest hours to charge</div>
+          <div style={{ fontSize: 11, color: C.muted }}>Ranked by EPEX price · 50kWh session</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {windows.map((h, i) => {
+            const hMwh = h.price_eur_mwh;
+            const hCol = getPriceColor(hMwh);
+            const hCost = hMwh != null ? ((hMwh / 1000) * chargeKwh * 1.21).toFixed(2) : null;
+            const hSaving = mwh != null && hMwh != null ? ((mwh - hMwh) / 1000 * chargeKwh * 1.21) : null;
+            const isNow = h.is_current;
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, background: i === 0 ? `${hCol}10` : "rgba(255,255,255,0.02)", border: `1px solid ${i === 0 ? hCol + "35" : C.border}` }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: C.muted, width: 20, textAlign: "center" }}>#{i + 1}</div>
+                <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "monospace", color: hCol, minWidth: 60 }}>
+                  {h.hour != null ? `${String(h.hour).padStart(2,"0")}:00` : "—"}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: hCol }}>€{hMwh?.toFixed(0)}/MWh</div>
+                  {hCost && <div style={{ fontSize: 11, color: C.muted }}>~€{hCost} per 50kWh charge</div>}
+                </div>
+                {hSaving > 0.05 && !isNow && (
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#10B981", background: "rgba(16,185,129,0.1)", padding: "3px 10px", borderRadius: 20 }}>
+                    saves €{hSaving.toFixed(2)}
+                  </div>
+                )}
+                {isNow && <div style={{ fontSize: 11, fontWeight: 700, color: hCol, background: `${hCol}15`, padding: "3px 10px", borderRadius: 20 }}>NOW</div>}
+                {h.day === "tomorrow" && <div style={{ fontSize: 11, color: C.muted }}>tomorrow</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tomorrow preview */}
+      {tomorrowWindows.length > 0 && (
+        <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 18, padding: "18px 22px", marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 12, color: C.soft }}>📅 Tomorrow's best windows</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {tomorrowWindows.map((h, i) => {
+              const hMwh = h.price_eur_mwh;
+              const hCol = getPriceColor(hMwh);
+              return (
+                <div key={i} style={{ flex: "1 1 80px", textAlign: "center", padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, fontFamily: "monospace", color: hCol }}>{h.hour != null ? `${String(h.hour).padStart(2,"0")}:00` : "—"}</div>
+                  <div style={{ fontSize: 12, color: hCol, fontWeight: 700 }}>€{hMwh?.toFixed(0)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Quick links */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <button onClick={() => window.location.href = "/ev-charging-stations-belgium"} style={{ flex: "1 1 140px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.3)", color: "#E2E8F0" }}>
+          <span style={{ fontSize: 24 }}>🗺️</span>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.blue }}>Stations Map</div>
+            <div style={{ fontSize: 11, color: C.muted }}>All public chargers in Belgium</div>
+          </div>
+        </button>
+        <button onClick={() => window.location.href = "/calculator/electricity?ev=1"} style={{ flex: "1 1 140px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", color: "#E2E8F0" }}>
+          <span style={{ fontSize: 24 }}>⚡</span>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#F59E0B" }}>Compare EV Plans</div>
+            <div style={{ fontSize: 11, color: C.muted }}>Find cheapest supplier for your EV</div>
+          </div>
+        </button>
+        <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{ flex: "1 1 140px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.3)", color: "#E2E8F0" }}>
+          <span style={{ fontSize: 24 }}>📊</span>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.green }}>Full EV Guide</div>
+            <div style={{ fontSize: 11, color: C.muted }}>Tips, savings, Belgium data</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGuest, onSignIn, onOpenCalculator }) {
   // Gate: guests clicking the calculator go to sign-in first
   const { user, updatePreferences, logout, authFetch } = useAuth();
@@ -363,7 +500,8 @@ const [viewMode,       setViewMode]       = useState("graph"); // "graph" | "tab
   // ── Energy type toggle + URL sync ─────────────────────────
   const getInitialType = () => {
     const params = new URLSearchParams(window.location.search);
-    return params.get("type") === "gas" ? "gas" : "electricity";
+    const t = params.get("type");
+    return t === "gas" ? "gas" : t === "ev" ? "ev" : "electricity";
   };
   const [energyType, setEnergyType] = useState(getInitialType);
 
@@ -702,37 +840,9 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
           );
         })()}
 
-        {/* ── EV quick-access strip (logged-in, electricity view) ── */}
-        {energyType === "electricity" && user && !isGuest && (
-          <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-            <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{ flex: "1 1 160px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.3)", color: "#E2E8F0", textAlign: "left", transition: "all 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(0,200,150,0.15)"}
-              onMouseLeave={e => e.currentTarget.style.background = "rgba(0,200,150,0.08)"}>
-              <span style={{ fontSize: 28 }}>🔋</span>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#00C896" }}>EV Charge Planner</div>
-                <div style={{ fontSize: 11, color: "#64748B", marginTop: 1 }}>Best hours to charge today</div>
-              </div>
-            </button>
-            <button onClick={() => window.location.href = "/ev-charging-stations-belgium"} style={{ flex: "1 1 160px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.3)", color: "#E2E8F0", textAlign: "left", transition: "all 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(59,130,246,0.15)"}
-              onMouseLeave={e => e.currentTarget.style.background = "rgba(59,130,246,0.08)"}>
-              <span style={{ fontSize: 28 }}>🗺️</span>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#3B82F6" }}>Charging Stations Map</div>
-                <div style={{ fontSize: 11, color: "#64748B", marginTop: 1 }}>All public stations in Belgium</div>
-              </div>
-            </button>
-            <button onClick={() => window.location.href = "/calculator/electricity?ev=1"} style={{ flex: "1 1 160px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", color: "#E2E8F0", textAlign: "left", transition: "all 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(245,158,11,0.15)"}
-              onMouseLeave={e => e.currentTarget.style.background = "rgba(245,158,11,0.08)"}>
-              <span style={{ fontSize: 28 }}>⚡</span>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#F59E0B" }}>Compare EV Plans</div>
-                <div style={{ fontSize: 11, color: "#64748B", marginTop: 1 }}>Find cheapest supplier for your EV</div>
-              </div>
-            </button>
-          </div>
+        {/* ── EV dashboard ── */}
+        {energyType === "ev" && (
+          <EvTab mwh={mwh} cheapest={cheapest} prices={prices} isMobile={isMobile} stats={stats} />
         )}
 
         {/* ── Gas dashboard ── */}
