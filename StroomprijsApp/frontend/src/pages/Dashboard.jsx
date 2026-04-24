@@ -142,20 +142,24 @@ function EnergyToggle({ type, onChange, onOpenCalculator, isGuest, isMobile }) {
       border: "1px solid rgba(255,255,255,0.07)",
       boxShadow: "inset 0 1px 3px rgba(0,0,0,0.4)",
     }}>
-      {/* EV button */}
+      {/* EV Charging button */}
       <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{
-        display: "flex", alignItems: "center", gap: 5,
-        padding: "8px 14px", borderRadius: 10, cursor: "pointer",
-        fontSize: 13, fontWeight: 700, letterSpacing: "0.2px",
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "8px 16px", borderRadius: 10, cursor: "pointer",
+        fontSize: 13, fontWeight: 800, letterSpacing: "0.2px",
         transition: "all 0.2s ease",
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "transparent", color: "#4A6070",
+        border: "1px solid rgba(0,200,150,0.4)",
+        background: "rgba(0,200,150,0.1)", color: "#00C896",
       }}
-        onMouseEnter={e => { e.currentTarget.style.color = "#00C896"; e.currentTarget.style.border = "1px solid rgba(0,200,150,0.35)"; e.currentTarget.style.background = "rgba(0,200,150,0.08)"; }}
-        onMouseLeave={e => { e.currentTarget.style.color = "#4A6070"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"; e.currentTarget.style.background = "transparent"; }}>
-        🚗 EV
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,200,150,0.18)"; e.currentTarget.style.borderColor = "rgba(0,200,150,0.6)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,200,150,0.1)"; e.currentTarget.style.borderColor = "rgba(0,200,150,0.4)"; }}>
+        🔋 {isMobile ? "EV" : "EV Charging"}
       </button>
-      <button onClick={() => window.location.href = "/ev-charging-stations-belgium"} title="EV Stations Map" style={{ display:"flex", alignItems:"center", padding:"8px 12px", borderRadius:10, cursor:"pointer", fontSize:14, border:"1px solid rgba(255,255,255,0.08)", background:"transparent", color:"#4A6070", transition:"all 0.2s" }} onMouseEnter={e=>{e.currentTarget.style.color="#3B82F6";e.currentTarget.style.background="rgba(59,130,246,0.08)";}} onMouseLeave={e=>{e.currentTarget.style.color="#4A6070";e.currentTarget.style.background="transparent";}}>🗺️</button>
+      <button onClick={() => window.location.href = "/ev-charging-stations-belgium"} title="EV Stations Map" style={{ display:"flex", alignItems:"center", gap: 5, padding:"8px 14px", borderRadius:10, cursor:"pointer", fontSize:13, fontWeight:700, border:"1px solid rgba(59,130,246,0.35)", background:"rgba(59,130,246,0.08)", color:"#3B82F6", transition:"all 0.2s" }}
+        onMouseEnter={e=>{e.currentTarget.style.background="rgba(59,130,246,0.16)";e.currentTarget.style.borderColor="rgba(59,130,246,0.55)";}}
+        onMouseLeave={e=>{e.currentTarget.style.background="rgba(59,130,246,0.08)";e.currentTarget.style.borderColor="rgba(59,130,246,0.35)";}}>
+        🗺️ {isMobile ? "" : "Stations"}
+      </button>
 
 
       {/* Electricity button */}
@@ -680,18 +684,56 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
                       : `Next best window: ${nextBestHour} at €${nextBest.price_eur_mwh.toFixed(1)}/MWh`}
                   </div>
                   {!isNowBest && savingVsNow > 0 && (
-                    <div style={{ fontSize: 13, color: "#556B82" }}>
-                      Waiting saves <strong style={{ color: "#10B981" }}>€{(savingVsNow / 1000 * 22).toFixed(2)}</strong> per EV charge vs charging now
+                    <div style={{ fontSize: 13, color: "#556B82", marginTop: 4 }}>
+                      🔋 Waiting saves <strong style={{ color: "#10B981", fontSize: 14 }}>€{(savingVsNow / 1000 * 22).toFixed(2)}</strong> per EV charge vs charging now
                     </div>
                   )}
                 </div>
-                <button onClick={() => setTab("cheapest")} style={{ padding: "9px 18px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#94A3B8", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-                  See all windows →
-                </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
+                  <button onClick={() => setTab("cheapest")} style={{ padding: "9px 18px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#94A3B8", cursor: "pointer", whiteSpace: "nowrap" }}>
+                    See all windows →
+                  </button>
+                  <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700, background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.35)", color: "#00C896", cursor: "pointer", whiteSpace: "nowrap" }}>
+                    🔋 EV planner →
+                  </button>
+                </div>
               </div>
             </div>
           );
         })()}
+
+        {/* ── EV quick-access strip (logged-in, electricity view) ── */}
+        {energyType === "electricity" && user && !isGuest && (
+          <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+            <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{ flex: "1 1 160px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.3)", color: "#E2E8F0", textAlign: "left", transition: "all 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(0,200,150,0.15)"}
+              onMouseLeave={e => e.currentTarget.style.background = "rgba(0,200,150,0.08)"}>
+              <span style={{ fontSize: 28 }}>🔋</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#00C896" }}>EV Charge Planner</div>
+                <div style={{ fontSize: 11, color: "#64748B", marginTop: 1 }}>Best hours to charge today</div>
+              </div>
+            </button>
+            <button onClick={() => window.location.href = "/ev-charging-stations-belgium"} style={{ flex: "1 1 160px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.3)", color: "#E2E8F0", textAlign: "left", transition: "all 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(59,130,246,0.15)"}
+              onMouseLeave={e => e.currentTarget.style.background = "rgba(59,130,246,0.08)"}>
+              <span style={{ fontSize: 28 }}>🗺️</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#3B82F6" }}>Charging Stations Map</div>
+                <div style={{ fontSize: 11, color: "#64748B", marginTop: 1 }}>All public stations in Belgium</div>
+              </div>
+            </button>
+            <button onClick={() => window.location.href = "/calculator/electricity?ev=1"} style={{ flex: "1 1 160px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", color: "#E2E8F0", textAlign: "left", transition: "all 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(245,158,11,0.15)"}
+              onMouseLeave={e => e.currentTarget.style.background = "rgba(245,158,11,0.08)"}>
+              <span style={{ fontSize: 28 }}>⚡</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#F59E0B" }}>Compare EV Plans</div>
+                <div style={{ fontSize: 11, color: "#64748B", marginTop: 1 }}>Find cheapest supplier for your EV</div>
+              </div>
+            </button>
+          </div>
+        )}
 
         {/* ── Gas dashboard ── */}
         {energyType === "gas" && (
