@@ -3,7 +3,7 @@
  * Public API documentation for Home Assistant / developers
  * Route: /api-docs
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LangSwitcher from "../components/LangSwitcher";
 
 const API = "https://smartprice.be";
@@ -66,6 +66,15 @@ function Endpoint({ method, path, desc, params, response }) {
 }
 
 export default function ApiPage({ onGetStarted }) {
+  useEffect(() => {
+    document.title = "Free Belgian Energy Price API — EPEX Spot, EV, Gas | SmartPrice.be";
+    const desc = document.querySelector("meta[name='description']");
+    if (desc) desc.setAttribute("content", "Free REST API for live Belgian EPEX Spot electricity prices, TTF gas prices, and EV charging data. Works with Home Assistant, Node-RED, and any developer integration.");
+    const canonical = document.querySelector("link[rel='canonical']");
+    if (canonical) canonical.setAttribute("href", "https://smartprice.be/api-docs");
+    return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
+  }, []);
+
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 

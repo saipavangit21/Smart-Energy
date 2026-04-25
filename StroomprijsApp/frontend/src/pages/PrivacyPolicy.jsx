@@ -2,6 +2,7 @@
  * PrivacyPolicy.jsx — GDPR compliant privacy policy modal
  * Updated: March 2026 — NL/FR translations, gas prices, referral disclosure
  */
+import { useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
 
 const POLICIES = {
@@ -171,6 +172,15 @@ const POLICIES = {
 export default function PrivacyPolicy({ onClose }) {
   const { lang } = useLanguage();
   const P = POLICIES[lang] || POLICIES.en;
+
+  useEffect(() => {
+    document.title = "Privacy Policy | SmartPrice.be";
+    const desc = document.querySelector("meta[name='description']");
+    if (desc) desc.setAttribute("content", "SmartPrice.be privacy policy — GDPR compliant. Learn how we handle your data, price alerts, and account information.");
+    const canonical = document.querySelector("link[rel='canonical']");
+    if (canonical) canonical.setAttribute("href", "https://smartprice.be/privacy");
+    return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
+  }, []);
 
   return (
     <div style={{

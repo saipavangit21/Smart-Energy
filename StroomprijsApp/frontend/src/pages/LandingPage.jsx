@@ -54,6 +54,14 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const { tSection } = useLanguage();
   const L = tSection("landing");
 
+  useEffect(() => {
+    document.title = "SmartPrice.be — Live Belgian Electricity & Gas Prices | Free";
+    const desc = document.querySelector("meta[name='description']");
+    if (desc) desc.setAttribute("content", "Track live EPEX Spot electricity prices in Belgium, compare all suppliers, find the cheapest hours to charge your EV, and set price alerts. 100% free.");
+    const canonical = document.querySelector("link[rel='canonical']");
+    if (canonical) canonical.setAttribute("href", "https://smartprice.be/");
+  }, []);
+
   // ── State ─────────────────────────────────────────────────────────────
   const [prices,     setPrices]     = useState([]);
   const [heroIn,     setHeroIn]     = useState(false);
