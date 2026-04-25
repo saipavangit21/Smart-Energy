@@ -175,6 +175,15 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
   const [shareOpen, setShareOpen] = useState(false);
   const [copied,    setCopied]    = useState(false);
 
+  useEffect(() => {
+    document.title = "EV Charging Stations Belgium — All Public Chargers Map | SmartPrice.be";
+    const desc = document.querySelector("meta[name='description']");
+    if (desc) desc.setAttribute("content", "Map of all public EV charging stations in Belgium with live EPEX electricity prices. Find the nearest fast charger and the cheapest time to charge.");
+    const canonical = document.querySelector("link[rel='canonical']");
+    if (canonical) canonical.setAttribute("href", "https://smartprice.be/ev-charging-stations-belgium");
+    return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
+  }, []);
+
   // Inject Leaflet CSS fix for map container
   useEffect(() => {
     const style = document.createElement("style");

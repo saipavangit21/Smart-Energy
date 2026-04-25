@@ -95,6 +95,15 @@ export default function EpexBelgiumPage({ onGetStarted, onOpenCalculator }) {
   const { lang } = useLanguage();
   const T = CONTENT[lang] || CONTENT.en;
 
+  useEffect(() => {
+    document.title = "EPEX Spot Belgium — Live Electricity Price Today | SmartPrice.be";
+    const desc = document.querySelector("meta[name='description']");
+    if (desc) desc.setAttribute("content", "Live EPEX Spot electricity price for Belgium, updated every 15 minutes. See today's hourly chart, cheapest hours, and compare all Belgian suppliers.");
+    const canonical = document.querySelector("link[rel='canonical']");
+    if (canonical) canonical.setAttribute("href", "https://smartprice.be/epex-price-belgium");
+    return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
+  }, []);
+
   const [prices, setPrices]   = useState([]);
   const [stats, setStats]     = useState(null);
   const [current, setCurrent] = useState(null);
