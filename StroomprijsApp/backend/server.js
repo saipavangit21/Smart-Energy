@@ -12,6 +12,7 @@ for (const key of required) {
 
 const authRoutes      = require("./routes/auth");
 const googleRoutes    = require("./routes/google");
+const teslaRoutes     = require("./routes/tesla");
 const attachAnalytics = require("./analytics");
 const { checkAndSendAlerts, checkAndSendGasAlerts, sendWeeklyDigest } = require("./email-alerts");
 const { startUptimeMonitor } = require("./uptime-monitor");
@@ -51,6 +52,8 @@ attachAnalytics(app, pool);
 
 app.use("/auth", authRoutes);
 app.use("/auth/google", googleRoutes);
+app.use("/auth/tesla", teslaRoutes);
+app.use("/api/tesla", teslaRoutes);
 app.use("/api/gas", gasRoutes);
 app.use("/api/suppliers", suppliersRoutes);
 

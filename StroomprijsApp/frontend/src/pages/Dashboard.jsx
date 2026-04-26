@@ -314,13 +314,52 @@ function SharePanel({ currentPrice, userName, onClose, copied, onCopy, refCopied
   );
 }
 
-function EvTab({ mwh, cheapest, prices, isMobile, stats }) {
-  const C = { bg: "#060B14", card: "rgba(255,255,255,0.03)", card2: "#0A1220", border: "rgba(255,255,255,0.08)", green: "#00C896", teal: "#0D9488", blue: "#3B82F6", muted: "#64748B", soft: "#94A3B8" };
+function EvTab({ mwh, cheapest, prices, isMobile, stats, user }) {
+  const C = { bg: "#060B14", card: "rgba(255,255,255,0.03)", card2: "#0A1220", border: "rgba(255,255,255,0.08)", green: "#00C896", teal: "#0D9488", blue: "#3B82F6", red: "#EF4444", muted: "#64748B", soft: "#94A3B8" };
   const getPriceColor = (v) => { if (v == null) return C.muted; if (v < 0) return "#00E5FF"; if (v < 50) return "#00C896"; if (v < 90) return "#84CC16"; if (v < 130) return "#F59E0B"; if (v < 160) return "#F97316"; return "#EF4444"; };
   const col = getPriceColor(mwh);
 
+  const [tesla, setTesla] = useState(null);
+  const [teslaLoading, setTeslaLoading] = useState(false);
+  const [teslaError, setTeslaError] = useState(null);
+
+  // Check Tesla connection + URL params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tesla_connected") === "1") {
+      window.history.replaceState({}, "", "/?type=ev");
+      fetchTesla();
+    } else if (params.get("tesla_error")) {
+      setTeslaError("Tesla connection failed — please try again.");
+      window.history.replaceState({}, "", "/?type=ev");
+    } else if (user && !user.isGuest) {
+      fetchTesla();
+    }
+  }, [user]);
+
+  const fetchTesla = () => {
+    setTeslaLoading(true);
+    fetch("/api/tesla/vehicle", { credentials: "include" })
+      .then(r => r.json())
+      .then(d => { setTesla(d); setTeslaLoading(false); })
+      .catch(() => setTeslaLoading(false));
+  };
+
+  const connectTesla = () => { window.location.href = "/auth/tesla"; };
+  const disconnectTesla = () => {
+    fetch("/api/tesla/disconnect", { method: "DELETE", credentials: "include" })
+      .then(() => setTesla({ success: true, connected: false }));
+  };
+
   const chargeKwh = 50; // typical EV 50 kWh session
   const costNow = mwh != null ? ((mwh / 1000) * chargeKwh * 1.21).toFixed(2) : null;
+
+  // If Tesla connected, use actual battery level for personalised cost
+  const batteryLevel = tesla?.vehicle?.battery_level;
+  const chargeLimit  = tesla?.vehicle?.charge_limit_soc ?? 80;
+  const kwhNeeded    = batteryLevel != null ? ((chargeLimit - batteryLevel) / 100 * 75) : chargeKwh;
+  const personalCostNow     = mwh != null ? ((mwh / 1000) * kwhNeeded * 1.21).toFixed(2) : null;
+  const personalCostCheapest = cheapest[0]?.price_eur_mwh != null ? ((cheapest[0].price_eur_mwh / 1000) * kwhNeeded * 1.21).toFixed(2) : null;
 
   const todayWindows = cheapest.filter(h => h.day === "today" || h.day == null).slice(0, 8);
   const tomorrowWindows = cheapest.filter(h => h.day === "tomorrow").slice(0, 5);
@@ -366,6 +405,63 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats }) {
           <div style={{ fontSize: 11, color: C.muted }}>per 50kWh charge</div>
         </div>
       </div>
+
+      {/* Tesla connection card */}
+      {user && !user.isGuest && (
+        <div style={{ background: C.card2, border: `1px solid ${tesla?.vehicle ? "rgba(0,200,150,0.3)" : C.border}`, borderRadius: 18, padding: "18px 22px", marginBottom: 16 }}>
+          {teslaLoading ? (
+            <div style={{ fontSize: 13, color: C.muted }}>Checking Tesla connection…</div>
+          ) : tesla?.vehicle ? (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.green, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>🚗 {tesla.vehicle.name} · Connected</div>
+                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                    <div>
+                      <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: C.green }}>{tesla.vehicle.battery_level ?? "—"}%</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>Battery · {tesla.vehicle.battery_range_km ? `~${tesla.vehicle.battery_range_km}km` : ""}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: C.soft }}>{chargeLimit}%</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>Charge limit</div>
+                    </div>
+                    {tesla.vehicle.charging_state && tesla.vehicle.charging_state !== "Disconnected" && (
+                      <div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: tesla.vehicle.charging_state === "Charging" ? C.green : C.muted }}>{tesla.vehicle.charging_state}</div>
+                        {tesla.vehicle.minutes_to_full > 0 && <div style={{ fontSize: 11, color: C.muted }}>{Math.round(tesla.vehicle.minutes_to_full / 60)}h {tesla.vehicle.minutes_to_full % 60}m to full</div>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <button onClick={disconnectTesla} style={{ fontSize: 11, color: C.muted, background: "transparent", border: `1px solid ${C.border}`, padding: "5px 12px", borderRadius: 20, cursor: "pointer" }}>Disconnect</button>
+              </div>
+              {personalCostNow && personalCostCheapest && cheapest[0]?.hour != null && (
+                <div style={{ marginTop: 14, padding: "12px 16px", background: "rgba(0,200,150,0.06)", border: "1px solid rgba(0,200,150,0.2)", borderRadius: 12 }}>
+                  <div style={{ fontSize: 13, color: "#E2E8F0", lineHeight: 1.7 }}>
+                    Charging from <strong style={{ color: C.green }}>{tesla.vehicle.battery_level}% → {chargeLimit}%</strong> (~{kwhNeeded.toFixed(0)}kWh needed)
+                  </div>
+                  <div style={{ fontSize: 13, marginTop: 6, display: "flex", gap: 20, flexWrap: "wrap" }}>
+                    <span>Now: <strong style={{ color: col }}>€{personalCostNow}</strong></span>
+                    <span>At {String(cheapest[0].hour).padStart(2,"0")}:00: <strong style={{ color: C.green }}>€{personalCostCheapest}</strong></span>
+                    <span style={{ color: "#10B981", fontWeight: 700 }}>Save €{(parseFloat(personalCostNow) - parseFloat(personalCostCheapest)).toFixed(2)} by waiting</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>🚗 Connect your Tesla</div>
+                <div style={{ fontSize: 12, color: C.muted }}>See personalised charging cost based on your actual battery level</div>
+                {teslaError && <div style={{ fontSize: 12, color: C.red, marginTop: 4 }}>{teslaError}</div>}
+              </div>
+              <button onClick={connectTesla} style={{ padding: "10px 22px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg,#0D9488,#1A56A4)", color: "#fff", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+                Connect Tesla →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Cheapest windows */}
       <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 18, padding: "20px 22px", marginBottom: 16 }}>
@@ -842,7 +938,7 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
 
         {/* ── EV dashboard ── */}
         {energyType === "ev" && (
-          <EvTab mwh={mwh} cheapest={cheapest} prices={prices} isMobile={isMobile} stats={stats} />
+          <EvTab mwh={mwh} cheapest={cheapest} prices={prices} isMobile={isMobile} stats={stats} user={user} />
         )}
 
         {/* ── Gas dashboard ── */}
