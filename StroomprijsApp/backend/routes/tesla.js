@@ -12,9 +12,9 @@ const { requireAuth } = require("../middleware/auth");
 
 const CLIENT_ID     = process.env.TESLA_CLIENT_ID;
 const CLIENT_SECRET = process.env.TESLA_CLIENT_SECRET;
-const BACKEND_URL   = process.env.BACKEND_URL  || "https://smart-energy-production-aef3.up.railway.app";
 const FRONTEND_URL  = process.env.FRONTEND_URL || "https://smartprice.be";
-const REDIRECT_URI  = `${BACKEND_URL}/auth/tesla/callback`;
+// Vercel proxies /auth/* → Railway, so Tesla must redirect to smartprice.be/auth/tesla/callback
+const REDIRECT_URI  = `${FRONTEND_URL}/auth/tesla/callback`;
 const TESLA_AUTH    = "https://auth.tesla.com/oauth2/v3";
 const TESLA_API     = "https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1";
 
