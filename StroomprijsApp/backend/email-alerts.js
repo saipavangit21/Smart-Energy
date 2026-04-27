@@ -372,7 +372,7 @@ async function sendWeeklyDigest(pool) {
     try {
       const r = await axios.get(`${APP_URL}/api/prices/history?days=7`, { timeout: 20000 });
       const days = r.data?.days || [];
-      const allPrices = days.flatMap(d => (d.hourly || []).map(h => h.price_eur_mwh)).filter(p => p != null && !isNaN(p));
+      const allPrices = days.flatMap(d => (d.prices || d.hourly || []).map(h => h.price_eur_mwh)).filter(p => p != null && !isNaN(p));
       if (allPrices.length > 0) {
         const avg = allPrices.reduce((a, b) => a + b, 0) / allPrices.length;
         const min = Math.min(...allPrices);
