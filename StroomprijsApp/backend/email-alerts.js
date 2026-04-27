@@ -459,6 +459,18 @@ async function sendWeeklyDigest(pool) {
                   </div>
                 </div>
 
+                <!-- Tesla feature highlight -->
+                <div style="background:rgba(0,200,150,0.07);border:1px solid rgba(0,200,150,0.25);border-radius:16px;padding:20px 24px;margin-bottom:20px;">
+                  <div style="font-size:13px;font-weight:800;color:#00C896;margin-bottom:8px;">🚗 New: Connect your Tesla to SmartPrice</div>
+                  <div style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:14px;">
+                    Open the <strong style="color:#E2E8F0;">EV tab</strong> on SmartPrice, click <strong style="color:#E2E8F0;">"Connect your Tesla"</strong> and instantly see:<br>
+                    <em style="color:#00C896;">"Your Model 3 is at 45% — charging to 80% now costs €8.20. Wait until 23:00 for €3.10. Save €5.10."</em>
+                  </div>
+                  <a href="${APP_URL}/?type=ev" style="display:inline-block;background:linear-gradient(135deg,#0D9488,#1A56A4);color:#fff;text-decoration:none;font-weight:700;font-size:13px;padding:10px 22px;border-radius:30px;">
+                    Connect my Tesla →
+                  </a>
+                </div>
+
                 <div style="text-align:center;margin-bottom:24px;">
                   <a href="${APP_URL}" style="display:inline-block;background:linear-gradient(135deg,#0D9488,#1A56A4);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 28px;border-radius:30px;">
                     See live prices now →
