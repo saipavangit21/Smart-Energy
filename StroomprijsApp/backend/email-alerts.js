@@ -367,21 +367,18 @@ async function sendWeeklyDigest(pool) {
     );
     if (users.length === 0) { console.log("[weekly-digest] No email users found"); return; }
 
-    // Fetch last 7 days of electricity prices from Energy-Charts.info
-    const today = toLocalISODate(new Date());
-    const sevenDaysAgo = toLocalISODate(new Date(Date.now() - 7 * 24 * 3600 * 1000));
+    // Fetch last 7 days using SmartPrice's own history endpoint (has caching + fallbacks)
     let weekStats = null;
     try {
-      const url = `https://api.energy-charts.info/price?bzn=BE&start=${sevenDaysAgo}T00%3A00%2B01%3A00&end=${today}T23%3A59%2B01%3A00`;
-      const r = await axios.get(url, { timeout: 15000 });
-      const prices = r.data?.price || [];
-      const valid = prices.filter(p => p != null && !isNaN(p));
-      if (valid.length > 0) {
-        const avg = valid.reduce((a, b) => a + b, 0) / valid.length;
-        const min = Math.min(...valid);
-        const max = Math.max(...valid);
-        const negative = valid.filter(p => p < 0).length;
-        weekStats = { avg: avg.toFixed(1), min: min.toFixed(1), max: max.toFixed(1), negative, total: valid.length };
+      const r = await axios.get(`${APP_URL}/api/prices/history?days=7`, { timeout: 20000 });
+      const days = r.data?.days || [];
+      const allPrices = days.flatMap(d => (d.hourly || []).map(h => h.price_eur_mwh)).filter(p => p != null && !isNaN(p));
+      if (allPrices.length > 0) {
+        const avg = allPrices.reduce((a, b) => a + b, 0) / allPrices.length;
+        const min = Math.min(...allPrices);
+        const max = Math.max(...allPrices);
+        const negative = allPrices.filter(p => p < 0).length;
+        weekStats = { avg: avg.toFixed(1), min: min.toFixed(1), max: max.toFixed(1), negative, total: allPrices.length };
       }
     } catch (e) {
       console.warn("[weekly-digest] Could not fetch price data:", e.message);

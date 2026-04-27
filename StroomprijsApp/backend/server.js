@@ -476,6 +476,16 @@ app.post("/api/admin/send-template", async (req, res) => {
   }
 });
 
+// Manual trigger: POST /api/admin/send-weekly-digest { secret }
+app.post("/api/admin/send-weekly-digest", async (req, res) => {
+  const { secret } = req.body || {};
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  res.json({ success: true, message: "Weekly digest sending in background…" });
+  sendWeeklyDigest(pool).catch(e => console.error("[weekly-digest] Manual trigger error:", e.message));
+});
+
 app.listen(PORT,()=>{
   console.log(`\n⚡ SmartPrice v2 on port ${PORT}`);
   console.log(`   DB: ${process.env.DATABASE_URL?"✅ Supabase":"❌ No DATABASE_URL"}\n`);
