@@ -51,7 +51,7 @@ function Tile({ accent = "#0D9488", icon, label, children, onClick, style = {} }
 }
 
 export default function LandingPage({ onGetStarted, onOpenCalculator }) {
-  const { tSection } = useLanguage();
+  const { tSection, lang } = useLanguage();
   const L = tSection("landing");
 
   useEffect(() => {
@@ -296,6 +296,31 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       ══════════════════════════════════════════════════════════════════ */}
       <section style={{ maxWidth: 860, margin: "0 auto", padding: "48px 20px 0", position: "relative", zIndex: 1 }}>
         <div style={{ opacity: heroIn ? 1 : 0, transform: heroIn ? "translateY(0)" : "translateY(16px)", transition: "all 0.6s ease" }}>
+
+          {/* Negative price alert banner */}
+          {currentMwh != null && currentMwh < 0 && (
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 10,
+                background: "linear-gradient(135deg,rgba(0,229,255,0.12),rgba(0,200,150,0.08))",
+                border: "1px solid rgba(0,229,255,0.45)",
+                borderRadius: 30, padding: "10px 22px",
+                fontSize: 14, fontWeight: 800, color: "#00E5FF",
+                boxShadow: "0 0 24px rgba(0,229,255,0.2)",
+                animation: "pulse-elec 2s infinite",
+                cursor: "pointer",
+              }} onClick={onGetStarted}>
+                <span style={{ fontSize: 20 }}>⚡</span>
+                <span>
+                  Electricity is <strong>FREE</strong> right now — {currentMwh.toFixed(1)} €/MWh
+                  &nbsp;·&nbsp;
+                  <span style={{ textDecoration: "underline" }}>
+                    {lang === "nl" ? "Laad nu op →" : lang === "fr" ? "Rechargez maintenant →" : "Charge now →"}
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Context label */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
