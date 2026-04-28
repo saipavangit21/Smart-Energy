@@ -9,21 +9,27 @@ Live: **[smartprice.be](https://smartprice.be)** · API Docs: **[smartprice.be/a
 ## What It Does
 
 - **Live EPEX Spot prices** — hourly Belgian electricity prices, updated every 15 minutes
-- **TTF gas prices** — real-time natural gas prices via ICE/TTF index
+- **Negative price alert banner** — pulsing banner on landing page when EPEX price goes below €0/MWh
+- **TTF gas prices** — real-time natural gas prices via ICE/TTF index; compact tile on landing page
 - **5 cheapest hours today** — optimal windows for EV charging, washing machine, dishwasher
-- **EV charge planner** — on the landing page, shows the best upcoming hours to charge (all 23 upcoming hours ranked)
+- **EV tab** — 3rd main dashboard tab (alongside Electricity and Gas) with hero stats, ranked charge windows, tomorrow preview, and quick links
+- **EV charge planner** — landing page + dedicated `/ev-charging-belgium` page showing 23 upcoming hours ranked
+- **Tesla Fleet API integration** — OAuth connect flow; personalised charging cost card (*"Your Model 3 at 45% — charge now €8.20, wait until 23:00 for €3.10"*)
+- **EV stations map** — all public charging stations in Belgium via OpenStreetMap/Overpass (pre-warmed cache), best hours panel, sign-up CTA, home charging nudge
 - **Plan calculator** — compare all Belgian electricity and gas suppliers with personalised annual cost including grid fees and VAT
 - **Supplier comparison** — side-by-side Belgian supplier comparison page
 - **Price alerts** — email notification when prices drop below your threshold
+- **Weekly digest email** — sent every Monday 08:00 Brussels time to all registered email users with last week's EPEX stats and Tesla feature highlight
+- **Admin new-user notifications** — email to `ALERT_ADMIN_EMAIL` on every new registration (name, email, total count)
 - **Energy mix** — Belgium's real-time generation by source (nuclear, solar, wind, gas…), CO₂ intensity, and cross-border flows via ENTSO-E
 - **Solar toggle** — toggle solar generation view; Fluvius capacity tariff teaser
-- **EV stations map** — all public charging stations in Belgium with live price context and share button
 - **AI assistant** — Claude Haiku-powered energy assistant (requires ANTHROPIC_API_KEY)
 - **Email lead capture** — landing page widget collects interested visitors before sign-up
 - **Social sharing** — share buttons on landing page footer, dashboard nav, and EV station cards
 - **Referral links** — personalised referral link per user on EV stations page
 - **Uptime monitoring** — backend pings the frontend every 5 minutes and emails an alert on failure/recovery
 - **Public API** — free REST API for Home Assistant, Node-RED, and developer integrations
+- **SEO** — robots.txt, sitemap.xml, unique title + meta description per page, Schema.org structured data
 - **Trilingual** — EN / NL / FR
 
 ---
@@ -35,8 +41,8 @@ Live: **[smartprice.be](https://smartprice.be)** · API Docs: **[smartprice.be/a
 | Frontend | React + Vite | Vercel (CDN) |
 | Backend | Node.js + Express | Railway (EU West, Amsterdam) |
 | Database | PostgreSQL | Supabase (Ireland) |
-| Email | Resend (hello@smartprice.be) | Resend |
-| Auth | JWT + Google OAuth | Self-hosted on Railway |
+| Email | Resend (info@smartprice.be) | Resend |
+| Auth | JWT + Google OAuth + Tesla Fleet API | Self-hosted on Railway |
 | AI assistant | Claude Haiku (Anthropic API) | External API |
 | Electricity data | Energy-Charts.info / ENTSO-E | External API |
 | Gas data | OilPriceAPI (TTF) | External API |
@@ -61,8 +67,8 @@ Smart Energy/
     ├── frontend/                   # React + Vite frontend
     │   ├── src/
     │   │   ├── pages/
-    │   │   │   ├── Dashboard.jsx           # Electricity price dashboard (tabs: prices, calculator, gas)
-    │   │   │   ├── LandingPage.jsx         # Marketing landing page (decision engine + EV planner)
+    │   │   │   ├── Dashboard.jsx           # Main dashboard — tabs: ⚡ Electricity, 🔥 Gas, 🔋 EV (Tesla connect card)
+    │   │   │   ├── LandingPage.jsx         # Landing page — decision engine, EV planner, gas tile, negative price banner
     │   │   │   ├── CalculatorPage.jsx      # 4-step plan calculator
     │   │   │   ├── AuthPage.jsx            # Login / register (email-only)
     │   │   │   ├── AuthCallback.jsx        # Google OAuth callback handler
@@ -103,7 +109,8 @@ Smart Energy/
         └── routes/
             ├── auth.js             # JWT auth + Google OAuth
             ├── gas.js              # TTF gas prices + Belgian supplier comparison
-            ├── suppliers.js        # Electricity tariff calculation + weekly scraper
+            ├── suppliers.js        # Electricity tariff calculation + weekly scraper + EV stations (OSM/Overpass)
+            ├── tesla.js            # Tesla Fleet API OAuth + vehicle data
             └── google.js           # Google OAuth handler
 ```
 
@@ -188,6 +195,7 @@ Returns 503 if `ANTHROPIC_API_KEY` not set; 402 if credits depleted.
 | GET | `/api/admin/users` | Admin secret | User list |
 | GET | `/api/admin/leads` | Admin secret | Email leads list |
 | POST | `/api/admin/send-template` | Admin secret | Send one-off email via Resend |
+| POST | `/api/admin/send-weekly-digest` | Admin secret | Manually trigger weekly digest to all email users |
 
 #### `/api/admin/send-template` body
 
@@ -227,6 +235,15 @@ Or with a Resend template UUID:
 | DELETE | `/auth/delete-account` | JWT | Delete account |
 | GET | `/auth/google` | None | Google OAuth start |
 | GET | `/auth/google/callback` | None | Google OAuth callback |
+| GET | `/auth/tesla` | JWT | Tesla Fleet API OAuth start |
+| GET | `/auth/tesla/callback` | None | Tesla OAuth callback — stores tokens in user preferences |
+
+### Tesla Vehicle
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/tesla/vehicle` | JWT | Vehicle battery level, charging state, range |
+| DELETE | `/api/tesla/disconnect` | JWT | Remove stored Tesla tokens |
 
 ---
 
@@ -255,7 +272,9 @@ FRONTEND_URL=https://smartprice.be
 FRONTEND_URL_PROD=https://smartprice.be # Used by uptime monitor
 ENTSOE_API_KEY=...                      # ENTSO-E transparency platform token
 OIL_PRICE_API_KEY=...                   # OilPriceAPI key for TTF gas prices (optional — falls back to €34.50/MWh)
-ALERT_ADMIN_EMAIL=hello@smartprice.be   # Email to receive uptime alerts
+TESLA_CLIENT_ID=...                     # Tesla Fleet API client ID (from developer.tesla.com)
+TESLA_CLIENT_SECRET=...                 # Tesla Fleet API client secret
+ALERT_ADMIN_EMAIL=info@smartprice.be    # Email to receive uptime alerts + new user notifications
 ```
 
 ### Vercel (Frontend)
@@ -397,7 +416,7 @@ Translation sections: `common`, `landing`, `dashboard`, `auth`, `alerts`, `calcu
 | Generation mix / flows | [ENTSO-E Transparency Platform](https://transparency.entsoe.eu) | Hourly |
 | Gas TTF prices | [OilPriceAPI](https://oilpriceapi.com) | Daily (fallback: €34.50/MWh) |
 | Supplier tariffs | Supplier websites + VREG/CWaPE | Weekly scrape |
-| EV stations | [OpenChargeMap API](https://openchargemap.org) | Real-time |
+| EV stations | [OpenStreetMap Overpass API](https://overpass-api.de) | 24h cache (pre-warmed on startup) |
 
 ---
 
@@ -420,4 +439,4 @@ Private repository. All rights reserved. © 2026 SmartPrice.be
 
 ## Contact
 
-hello@smartprice.be · smartprice.be
+info@smartprice.be · smartprice.be
