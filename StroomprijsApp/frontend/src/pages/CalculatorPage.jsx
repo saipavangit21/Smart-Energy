@@ -915,7 +915,7 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
     document.title = "Electricity & Gas Plan Calculator Belgium | SmartPrice.be";
     const desc = document.querySelector("meta[name='description']");
     if (desc) desc.setAttribute("content", "Compare all Belgian electricity and gas suppliers with your real annual cost including grid fees and VAT. Free 4-step calculator for households.");
-    const canonical = document.querySelector("link[rel='canonical']");
+    const canonical = document.getElementById('canonical-tag');
     if (canonical) canonical.setAttribute("href", "https://smartprice.be/calculator/electricity");
     return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
   }, []);

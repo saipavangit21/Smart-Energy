@@ -182,7 +182,7 @@ export default function EvChargingPage({ onGetStarted, onOpenCalculator }) {
     document.title = "EV Charging Belgium — Best Hours & Cheapest Times | SmartPrice.be";
     const desc = document.querySelector("meta[name='description']");
     if (desc) desc.setAttribute("content", "When is the cheapest time to charge your electric car in Belgium? Live EPEX prices, EV charge planner, and map of all public charging stations. Free.");
-    const canonical = document.querySelector("link[rel='canonical']");
+    const canonical = document.getElementById('canonical-tag');
     if (canonical) canonical.setAttribute("href", "https://smartprice.be/ev-charging-belgium");
     return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
   }, []);
