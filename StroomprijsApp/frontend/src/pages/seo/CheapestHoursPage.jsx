@@ -91,7 +91,7 @@ export default function CheapestHoursPage({ onGetStarted, onOpenCalculator }) {
     document.title = "Cheapest Electricity Hours Belgium Today | SmartPrice.be";
     const desc = document.querySelector("meta[name='description']");
     if (desc) desc.setAttribute("content", "Find the cheapest hours to use electricity in Belgium today. Live EPEX Spot prices ranked by hour — perfect for EV charging, washing machines, and dishwashers.");
-    const canonical = document.querySelector("link[rel='canonical']");
+    const canonical = document.getElementById('canonical-tag');
     if (canonical) canonical.setAttribute("href", "https://smartprice.be/cheapest-electricity-hours-belgium");
     return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
   }, []);

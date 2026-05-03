@@ -177,7 +177,7 @@ export default function PrivacyPolicy({ onClose }) {
     document.title = "Privacy Policy | SmartPrice.be";
     const desc = document.querySelector("meta[name='description']");
     if (desc) desc.setAttribute("content", "SmartPrice.be privacy policy — GDPR compliant. Learn how we handle your data, price alerts, and account information.");
-    const canonical = document.querySelector("link[rel='canonical']");
+    const canonical = document.getElementById('canonical-tag');
     if (canonical) canonical.setAttribute("href", "https://smartprice.be/privacy");
     return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
   }, []);

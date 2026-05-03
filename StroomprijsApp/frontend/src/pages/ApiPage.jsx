@@ -70,7 +70,7 @@ export default function ApiPage({ onGetStarted }) {
     document.title = "Free Belgian Energy Price API — EPEX Spot, EV, Gas | SmartPrice.be";
     const desc = document.querySelector("meta[name='description']");
     if (desc) desc.setAttribute("content", "Free REST API for live Belgian EPEX Spot electricity prices, TTF gas prices, and EV charging data. Works with Home Assistant, Node-RED, and any developer integration.");
-    const canonical = document.querySelector("link[rel='canonical']");
+    const canonical = document.getElementById('canonical-tag');
     if (canonical) canonical.setAttribute("href", "https://smartprice.be/api-docs");
     return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
   }, []);
