@@ -200,7 +200,8 @@ module.exports = function attachAnalytics(app, pool) {
           COUNT(*) FILTER (WHERE providers->>'google' = 'true') AS google_users,
           COUNT(*) FILTER (WHERE password_hash IS NOT NULL)     AS email_users,
           COUNT(*) FILTER (WHERE created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Europe/Brussels') AT TIME ZONE 'Europe/Brussels') AS new_today,
-          COUNT(*) FILTER (WHERE ${dateFilter}) AS new_in_period
+          COUNT(*) FILTER (WHERE ${dateFilter}) AS new_in_period,
+          COUNT(*) FILTER (WHERE preferences->>'tesla_access_token' IS NOT NULL) AS tesla_connected
         FROM users
       `);
 
@@ -234,6 +235,7 @@ module.exports = function attachAnalytics(app, pool) {
           id, name, email,
           CASE WHEN providers->>'google' = 'true' THEN true ELSE false END AS google,
           CASE WHEN password_hash IS NOT NULL      THEN true ELSE false END AS email_auth,
+          CASE WHEN preferences->>'tesla_access_token' IS NOT NULL THEN true ELSE false END AS tesla_connected,
           created_at
         FROM users
         ORDER BY created_at DESC
