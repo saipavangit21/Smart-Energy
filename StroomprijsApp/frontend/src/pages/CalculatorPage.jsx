@@ -1,14 +1,14 @@
-/**
- * CalculatorPage.jsx — SmartPrice.be
+﻿/**
+ * CalculatorPage.jsx â€” SmartPrice.be
  * 4-step energy plan wizard
- * Step 1: Energy types   → Step 2: Appliances → Step 3: Usage & situation → Step 4: Your details → Results
+ * Step 1: Energy types   â†’ Step 2: Appliances â†’ Step 3: Usage & situation â†’ Step 4: Your details â†’ Results
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher from "../components/LangSwitcher";
 
-// ─── Design tokens ────────────────────────────────────────────
+// â”€â”€â”€ Design tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const C = {
   bg:     "#060B14",
   panel:  "#0A1628",
@@ -27,15 +27,15 @@ const C = {
 };
 
 const REGIONS_DATA = [
-  { id: "flanders", flag: "🔶", note: "Fluvius · capacity tariff" },
-  { id: "wallonia",  flag: "🔷", note: "ORES/RESA · kWh tariff"  },
-  { id: "brussels",  flag: "🏙️", note: "Sibelga · kWh tariff"   },
+  { id: "flanders", flag: "ðŸ”¶", note: "Fluvius Â· capacity tariff" },
+  { id: "wallonia",  flag: "ðŸ”·", note: "ORES/RESA Â· kWh tariff"  },
+  { id: "brussels",  flag: "ðŸ™ï¸", note: "Sibelga Â· kWh tariff"   },
 ];
 
-// ─── Supplier brand tiles ─────────────────────────────────────
+// â”€â”€â”€ Supplier brand tiles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SUPPLIER_BRANDS = {
-  "bolt energy": { abbr: "⚡", color: "#fff",     bg: "#1A1A2E", border: "#00C896" },
-  "bolt":        { abbr: "⚡", color: "#fff",     bg: "#1A1A2E", border: "#00C896" },
+  "bolt energy": { abbr: "âš¡", color: "#fff",     bg: "#1A1A2E", border: "#00C896" },
+  "bolt":        { abbr: "âš¡", color: "#fff",     bg: "#1A1A2E", border: "#00C896" },
   "engie":       { abbr: "EN", color: "#fff",     bg: "#0066A1" },
   "luminus":     { abbr: "LU", color: "#1a1a1a",  bg: "#FFB800" },
   "totalenergies":{ abbr: "TE", color: "#fff",    bg: "#EF3340" },
@@ -66,7 +66,7 @@ function SupplierTile({ name = "", size = 40 }) {
   );
 }
 
-// ─── Tiny shared components ────────────────────────────────────
+// â”€â”€â”€ Tiny shared components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const Badge = ({ children, color }) => (
   <span style={{ background: color + "22", color, fontSize: 10, fontWeight: 700,
     padding: "2px 8px", borderRadius: 6, whiteSpace: "nowrap", letterSpacing: "0.3px" }}>
@@ -108,17 +108,17 @@ const Btn = ({ onClick, disabled, children, variant = "primary", style: s = {} }
   );
 };
 
-// ─── Step progress indicator ───────────────────────────────────
+// â”€â”€â”€ Step progress indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // STEP_META moved inside StepBar component
 
 function StepBar({ step }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
   const STEP_META = [
-    { label: CC.step1 || "Energy",     icon: "⚡" },
-    { label: CC.step2 || "Appliances", icon: "🏠" },
-    { label: CC.step3 || "Usage",      icon: "📊" },
-    { label: CC.step4 || "Details",    icon: "👤" },
+    { label: CC.step1 || "Energy",     icon: "âš¡" },
+    { label: CC.step2 || "Appliances", icon: "ðŸ " },
+    { label: CC.step3 || "Usage",      icon: "ðŸ“Š" },
+    { label: CC.step4 || "Details",    icon: "ðŸ‘¤" },
   ];
   return (
     <div style={{ padding: "12px 0 16px" }}>
@@ -141,7 +141,7 @@ function StepBar({ step }) {
                   color: done || active ? "#fff" : C.muted,
                   boxShadow: active ? `0 0 18px ${C.teal}55` : "none",
                 }}>
-                  {done ? "✓" : s.icon}
+                  {done ? "âœ“" : s.icon}
                 </div>
                 <div style={{ fontSize: 10, fontWeight: 600, color: done ? C.green : active ? C.light : C.muted, whiteSpace: "nowrap" }}>
                   {s.label}
@@ -166,7 +166,7 @@ function StepBar({ step }) {
   );
 }
 
-// ─── STEP 1 · Energy types ────────────────────────────────────
+// â”€â”€â”€ STEP 1 Â· Energy types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // ENERGY_OPTIONS moved inside Step1
 
 function Step1({ data, onChange, onNext }) {
@@ -174,11 +174,11 @@ function Step1({ data, onChange, onNext }) {
   const CC = tSection("calculator");
   const TC = tSection("common");
   const ENERGY_OPTIONS = [
-    { id: "electricity", icon: "⚡", label: CC.energyElecLabel  || "Electricity",  color: C.teal,   desc: CC.energyElecDesc  || "EPEX Spot dynamic, variable or fixed plans" },
-    { id: "gas",         icon: "🔥", label: CC.energyGasLabel   || "Natural Gas",  color: C.orange, desc: CC.energyGasDesc   || "TTF-linked or fixed gas supplier plans" },
-    { id: "solar",       icon: "☀️", label: CC.energySolarLabel || "Solar Panels", color: C.yellow, desc: CC.energySolarDesc || "I have solar — factor in self-consumption" },
-    { id: "ev",          icon: "🚗", label: CC.energyEvLabel    || "Electric Car", color: C.cyan,   desc: CC.energyEvDesc    || "EV charging shapes my peak demand" },
-    { id: "heatpump",    icon: "🌡️", label: CC.energyHpLabel   || "Heat Pump",    color: C.purple, desc: CC.energyHpDesc    || "Heat pump for heating and/or cooling" },
+    { id: "electricity", icon: "âš¡", label: CC.energyElecLabel  || "Electricity",  color: C.teal,   desc: CC.energyElecDesc  || "EPEX Spot dynamic, variable or fixed plans" },
+    { id: "gas",         icon: "ðŸ”¥", label: CC.energyGasLabel   || "Natural Gas",  color: C.orange, desc: CC.energyGasDesc   || "TTF-linked or fixed gas supplier plans" },
+    { id: "solar",       icon: "â˜€ï¸", label: CC.energySolarLabel || "Solar Panels", color: C.yellow, desc: CC.energySolarDesc || "I have solar â€” factor in self-consumption" },
+    { id: "ev",          icon: "ðŸš—", label: CC.energyEvLabel    || "Electric Car", color: C.cyan,   desc: CC.energyEvDesc    || "EV charging shapes my peak demand" },
+    { id: "heatpump",    icon: "ðŸŒ¡ï¸", label: CC.energyHpLabel   || "Heat Pump",    color: C.purple, desc: CC.energyHpDesc    || "Heat pump for heating and/or cooling" },
   ];
   const sel = data.energyTypes || [];
   const toggle = (id) => onChange({ energyTypes: sel.includes(id) ? sel.filter(x => x !== id) : [...sel, id] });
@@ -216,7 +216,7 @@ function Step1({ data, onChange, onNext }) {
                 background: on ? opt.color : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                {on && <span style={{ color: "#fff", fontSize: 11, lineHeight: 1 }}>✓</span>}
+                {on && <span style={{ color: "#fff", fontSize: 11, lineHeight: 1 }}>âœ“</span>}
               </div>
             </div>
           );
@@ -226,16 +226,16 @@ function Step1({ data, onChange, onNext }) {
       {sel.length > 0 && !canGo && (
         <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
           borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#F87171", marginBottom: 16 }}>
-          {CC.selectEnergyWarning || "⚠ Please select at least Electricity or Gas to get plan quotes."}
+          {CC.selectEnergyWarning || "âš  Please select at least Electricity or Gas to get plan quotes."}
         </div>
       )}
 
-      <Btn onClick={onNext} disabled={!canGo}>{CC.continueBtn || "Continue →"}</Btn>
+      <Btn onClick={onNext} disabled={!canGo}>{CC.continueBtn || "Continue â†’"}</Btn>
     </div>
   );
 }
 
-// ─── STEP 2 · Appliances ──────────────────────────────────────
+// â”€â”€â”€ STEP 2 Â· Appliances â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Step2({ data, onChange, onNext, onBack }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
@@ -288,8 +288,8 @@ function Step2({ data, onChange, onNext, onBack }) {
 
   if (loading) return (
     <div style={{ textAlign: "center", padding: "60px 0" }}>
-      <div style={{ fontSize: 28, marginBottom: 12, animation: "spin 1.5s linear infinite" }}>⚡</div>
-      <div style={{ color: C.muted, fontSize: 14 }}>Loading appliances…</div>
+      <div style={{ fontSize: 28, marginBottom: 12, animation: "spin 1.5s linear infinite" }}>âš¡</div>
+      <div style={{ color: C.muted, fontSize: 14 }}>Loading appliancesâ€¦</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -310,12 +310,12 @@ function Step2({ data, onChange, onNext, onBack }) {
           display: "flex", alignItems: "center", justifyContent: "center",
           transition: "all 0.15s",
         }}>
-          {sel.selected && <span style={{ color: accent, fontSize: 12, lineHeight: 1, fontWeight: 800 }}>✓</span>}
+          {sel.selected && <span style={{ color: accent, fontSize: 12, lineHeight: 1, fontWeight: 800 }}>âœ“</span>}
         </div>
         <span style={{ fontSize: 20, flexShrink: 0 }}>{a.icon}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ color: C.light, fontSize: 13, fontWeight: 600 }}>{a.label}</div>
-          <div style={{ color: C.muted, fontSize: 11 }}>{a.kwh_per_use} {CC.kwhPerUse || "kWh/use"}{a.peak_kw ? ` · ${CC.peak || "peak"} ${a.peak_kw} kW` : ""}</div>
+          <div style={{ color: C.muted, fontSize: 11 }}>{a.kwh_per_use} {CC.kwhPerUse || "kWh/use"}{a.peak_kw ? ` Â· ${CC.peak || "peak"} ${a.peak_kw} kW` : ""}</div>
         </div>
         {/* counter */}
         {sel.selected && (
@@ -324,9 +324,9 @@ function Step2({ data, onChange, onNext, onBack }) {
               width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.border}`,
               background: "rgba(255,255,255,0.05)", color: sel.uses <= 1 ? "#334" : C.light,
               fontSize: 16, cursor: "pointer", lineHeight: 1, flexShrink: 0,
-            }}>−</button>
+            }}>âˆ’</button>
             <div style={{ textAlign: "center", minWidth: 38 }}>
-              <div style={{ color: C.light, fontWeight: 800, fontSize: 14 }}>{sel.uses}×</div>
+              <div style={{ color: C.light, fontWeight: 800, fontSize: 14 }}>{sel.uses}Ã—</div>
               <div style={{ color: C.muted, fontSize: 9, lineHeight: 1 }}>{CC.perWeek || "per week"}</div>
             </div>
             <button onClick={() => onSet(a.id, { uses: Math.min(21, sel.uses + 1) })} style={{
@@ -339,7 +339,7 @@ function Step2({ data, onChange, onNext, onBack }) {
       </div>
       {sel.selected && a.tip && (
         <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}`, color: C.muted, fontSize: 11, lineHeight: 1.5 }}>
-          💡 {a.tip}
+          ðŸ’¡ {a.tip}
         </div>
       )}
     </div>
@@ -356,14 +356,14 @@ function Step2({ data, onChange, onNext, onBack }) {
       {hasSolar && (
         <div style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.22)",
           borderRadius: 12, padding: "11px 14px", marginBottom: 16, fontSize: 12, color: C.yellow, lineHeight: 1.6 }}>
-          ☀️ <strong>Solar detected</strong> — we'll factor in self-consumption and net metering in step 3.
+          â˜€ï¸ <strong>Solar detected</strong> â€” we'll factor in self-consumption and net metering in step 3.
         </div>
       )}
 
       {hasElec && elecList.length > 0 && (
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.teal }}>{CC.elecAppliances || "⚡ Electricity appliances"}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.teal }}>{CC.elecAppliances || "âš¡ Electricity appliances"}</div>
             <div style={{ fontSize: 11, color: C.muted }}>{`${selectedElec} ${CC.selected || "selected"}`}</div>
           </div>
           {elecList.map(a => (
@@ -375,7 +375,7 @@ function Step2({ data, onChange, onNext, onBack }) {
       {hasGas && gasList.length > 0 && (
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.orange }}>{CC.gasAppliances   || "🔥 Gas appliances"}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.orange }}>{CC.gasAppliances   || "ðŸ”¥ Gas appliances"}</div>
             <div style={{ fontSize: 11, color: C.muted }}>{`${selectedGas} ${CC.selected || "selected"}`}</div>
           </div>
           {gasList.map(a => (
@@ -386,24 +386,24 @@ function Step2({ data, onChange, onNext, onBack }) {
 
       <div style={{ display: "flex", gap: 10 }}>
         <Btn onClick={onBack} variant="ghost" style={{ flex: 1 }}>{CC.back}</Btn>
-        <div style={{ flex: 3 }}><Btn onClick={onNext}>Continue — Usage & Situation →</Btn></div>
+        <div style={{ flex: 3 }}><Btn onClick={onNext}>Continue â€” Usage & Situation â†’</Btn></div>
       </div>
     </div>
   );
 }
 
-// ─── STEP 3 · Usage & situation ───────────────────────────────
+// â”€â”€â”€ STEP 3 Â· Usage & situation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const HOUSEHOLD = [
-  { id: "1",   label: "1 person",    icon: "👤", sub: "Studio / flat" },
-  { id: "2",   label: "2 people",    icon: "👥", sub: "Couple" },
-  { id: "3-4", label: "3–4 people",  icon: "👨‍👩‍👧", sub: "Family home" },
-  { id: "5+",  label: "5+ people",   icon: "👨‍👩‍👧‍👦", sub: "Large family" },
+  { id: "1",   label: "1 person",    icon: "ðŸ‘¤", sub: "Studio / flat" },
+  { id: "2",   label: "2 people",    icon: "ðŸ‘¥", sub: "Couple" },
+  { id: "3-4", label: "3â€“4 people",  icon: "ðŸ‘¨â€ðŸ‘©â€ðŸ‘§", sub: "Family home" },
+  { id: "5+",  label: "5+ people",   icon: "ðŸ‘¨â€ðŸ‘©â€ðŸ‘§â€ðŸ‘¦", sub: "Large family" },
 ];
 const CONTRACT_TYPES = [
-  { id: "cheapest", icon: "💸", label: "Just the cheapest", sub: "Show all types, ranked by price" },
-  { id: "variable", icon: "📈", label: "Variable rate",     sub: "Moves monthly with the market" },
-  { id: "fixed",    icon: "🔒", label: "Fixed rate",        sub: "Locked price for 1–3 years" },
-  { id: "dynamic",  icon: "⚡", label: "Dynamic (EPEX)",    sub: "Hourly spot prices — best with SmartPrice" },
+  { id: "cheapest", icon: "ðŸ’¸", label: "Just the cheapest", sub: "Show all types, ranked by price" },
+  { id: "variable", icon: "ðŸ“ˆ", label: "Variable rate",     sub: "Moves monthly with the market" },
+  { id: "fixed",    icon: "ðŸ”’", label: "Fixed rate",        sub: "Locked price for 1â€“3 years" },
+  { id: "dynamic",  icon: "âš¡", label: "Dynamic (EPEX)",    sub: "Hourly spot prices â€” best with SmartPrice" },
 ];
 
 function Step3({ data, onChange, onNext, onBack }) {
@@ -412,16 +412,16 @@ function Step3({ data, onChange, onNext, onBack }) {
   const TC = tSection("common");
   const REGIONS = REGIONS_DATA.map(r => ({ ...r, label: TC[r.id] || r.id }));
   const HOUSEHOLD_SIZES = [
-    { id: "1",   label: CC.household1Label  || "1 person",   icon: "👤", sub: CC.household1Sub  || "Studio / flat" },
-    { id: "2",   label: CC.household2Label  || "2 people",   icon: "👥", sub: CC.household2Sub  || "Couple" },
-    { id: "3-4", label: CC.household34Label || "3–4 people", icon: "👨‍👩‍👧", sub: CC.household34Sub || "Family home" },
-    { id: "5+",  label: CC.household5Label  || "5+ people",  icon: "👨‍👩‍👧‍👦", sub: CC.household5Sub  || "Large family" },
+    { id: "1",   label: CC.household1Label  || "1 person",   icon: "ðŸ‘¤", sub: CC.household1Sub  || "Studio / flat" },
+    { id: "2",   label: CC.household2Label  || "2 people",   icon: "ðŸ‘¥", sub: CC.household2Sub  || "Couple" },
+    { id: "3-4", label: CC.household34Label || "3â€“4 people", icon: "ðŸ‘¨â€ðŸ‘©â€ðŸ‘§", sub: CC.household34Sub || "Family home" },
+    { id: "5+",  label: CC.household5Label  || "5+ people",  icon: "ðŸ‘¨â€ðŸ‘©â€ðŸ‘§â€ðŸ‘¦", sub: CC.household5Sub  || "Large family" },
   ];
   const CONTRACT_TYPES = [
-    { id: "cheapest", icon: "💸", label: CC.contractCheapestLabel || "Just the cheapest", sub: CC.contractCheapestSub || "Show all types, ranked by price" },
-    { id: "variable", icon: "📈", label: CC.contractVariableLabel || "Variable rate",     sub: CC.contractVariableSub || "Moves monthly with the market" },
-    { id: "fixed",    icon: "🔒", label: CC.contractFixedLabel    || "Fixed rate",        sub: CC.contractFixedSub    || "Locked price for 1–3 years" },
-    { id: "dynamic",  icon: "⚡", label: CC.contractDynamicLabel  || "Dynamic (EPEX)",    sub: CC.contractDynamicSub  || "Hourly spot prices — best with SmartPrice" },
+    { id: "cheapest", icon: "ðŸ’¸", label: CC.contractCheapestLabel || "Just the cheapest", sub: CC.contractCheapestSub || "Show all types, ranked by price" },
+    { id: "variable", icon: "ðŸ“ˆ", label: CC.contractVariableLabel || "Variable rate",     sub: CC.contractVariableSub || "Moves monthly with the market" },
+    { id: "fixed",    icon: "ðŸ”’", label: CC.contractFixedLabel    || "Fixed rate",        sub: CC.contractFixedSub    || "Locked price for 1â€“3 years" },
+    { id: "dynamic",  icon: "âš¡", label: CC.contractDynamicLabel  || "Dynamic (EPEX)",    sub: CC.contractDynamicSub  || "Hourly spot prices â€” best with SmartPrice" },
   ];
   const set = (k, v) => onChange({ [k]: v });
   const hasSolar = (data.energyTypes || []).includes("solar");
@@ -447,7 +447,7 @@ function Step3({ data, onChange, onNext, onBack }) {
           border: `2px solid ${on ? accent : C.border}`, background: on ? accent : "transparent",
           display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s",
         }}>
-          {on && <span style={{ color: "#fff", fontSize: 10, lineHeight: 1 }}>✓</span>}
+          {on && <span style={{ color: "#fff", fontSize: 10, lineHeight: 1 }}>âœ“</span>}
         </div>
       </button>
     );
@@ -463,7 +463,7 @@ function Step3({ data, onChange, onNext, onBack }) {
 
       {/* Region */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>{CC.yourRegion || "📍 Your region"}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>{CC.yourRegion || "ðŸ“ Your region"}</div>
         <div style={{ display: "flex", gap: 8 }}>
           {REGIONS.map(r => {
             const on = data.region === r.id;
@@ -484,7 +484,7 @@ function Step3({ data, onChange, onNext, onBack }) {
 
       {/* Household */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>{CC.householdSize || "🏠 Household size"}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>{CC.householdSize || "ðŸ  Household size"}</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           {HOUSEHOLD.map(h => {
             const on = data.householdSize === h.id;
@@ -505,14 +505,14 @@ function Step3({ data, onChange, onNext, onBack }) {
 
       {/* Contract type */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>📋 Contract preference</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.soft, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>ðŸ“‹ Contract preference</div>
         {CONTRACT_TYPES.map(c => <PickRow key={c.id} item={c} field="contractPref" />)}
       </div>
 
       {/* Solar detail */}
       {hasSolar && (
         <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 12, padding: 14, marginBottom: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.yellow, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>☀️ Solar details</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: C.yellow, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>â˜€ï¸ Solar details</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {[["solarKwp", "System size (kWp)", "e.g. 6"], ["solarYield", "Annual yield (kWh)", "e.g. 5000"]].map(([key, label, ph]) => (
               <div key={key}>
@@ -530,7 +530,7 @@ function Step3({ data, onChange, onNext, onBack }) {
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "13px 16px", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: C.light }}>🌿 Green energy only</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.light }}>ðŸŒ¿ Green energy only</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Only show 100% renewable electricity plans</div>
           </div>
           <Toggle value={data.greenOnly || false} onChange={v => set("greenOnly", v)} />
@@ -539,14 +539,14 @@ function Step3({ data, onChange, onNext, onBack }) {
 
       <div style={{ display: "flex", gap: 10 }}>
         <Btn onClick={onBack} variant="ghost" style={{ flex: 1 }}>{CC.back}</Btn>
-        <div style={{ flex: 3 }}><Btn onClick={onNext} disabled={!canGo}>Continue — Your Details →</Btn></div>
+        <div style={{ flex: 3 }}><Btn onClick={onNext} disabled={!canGo}>Continue â€” Your Details â†’</Btn></div>
       </div>
     </div>
   );
 }
 
-// ─── STEP 4 · Personal details ────────────────────────────────
-// ─── Field — defined OUTSIDE Step4 so it never remounts on re-render ─
+// â”€â”€â”€ STEP 4 Â· Personal details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€â”€ Field â€” defined OUTSIDE Step4 so it never remounts on re-render â”€
 function Field({ label, required, fieldKey, type = "text", placeholder, hint, prefix, value, onChange }) {
   return (
     <div>
@@ -596,11 +596,11 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
 
   // Summary of what they picked
   const chips = [
-    ...(data.energyTypes || []).map(t => ({ label: (CC.energyTypeLabels || {})[t] || { electricity: "⚡ Electricity", gas: "🔥 Gas", solar: "☀️ Solar", ev: "🚗 EV", heatpump: "🌡️ Heat Pump" }[t] || t, color: C.teal })),
-    data.region      && { label: "📍 " + ((CC.regionLabels || {})[data.region] || data.region.charAt(0).toUpperCase() + data.region.slice(1)), color: C.muted },
-    data.householdSize && { label: "🏠 " + data.householdSize + " " + (data.householdSize === "1" ? (CC.householdSuffix || "person") : (CC.householdSuffixPlural || "persons")), color: C.muted },
-    data.contractPref  && { label: "📋 " + data.contractPref,  color: C.muted },
-    data.greenOnly     && { label: "🌿 Green",                  color: C.green },
+    ...(data.energyTypes || []).map(t => ({ label: (CC.energyTypeLabels || {})[t] || { electricity: "âš¡ Electricity", gas: "ðŸ”¥ Gas", solar: "â˜€ï¸ Solar", ev: "ðŸš— EV", heatpump: "ðŸŒ¡ï¸ Heat Pump" }[t] || t, color: C.teal })),
+    data.region      && { label: "ðŸ“ " + ((CC.regionLabels || {})[data.region] || data.region.charAt(0).toUpperCase() + data.region.slice(1)), color: C.muted },
+    data.householdSize && { label: "ðŸ  " + data.householdSize + " " + (data.householdSize === "1" ? (CC.householdSuffix || "person") : (CC.householdSuffixPlural || "persons")), color: C.muted },
+    data.contractPref  && { label: "ðŸ“‹ " + data.contractPref,  color: C.muted },
+    data.greenOnly     && { label: "ðŸŒ¿ Green",                  color: C.green },
   ].filter(Boolean);
 
   return (
@@ -611,7 +611,7 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
           {isGuest ? TC.register || "Create your free account" : CC.calculate || "Ready to calculate!"}
         </h2>
         <p style={{ margin: 0, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>
-          {isGuest ? CC.signInSub || "Free account — no spam, ever." : CC.signInSub2 || "We already have your details — just hit Calculate."}
+          {isGuest ? CC.signInSub || "Free account â€” no spam, ever." : CC.signInSub2 || "We already have your details â€” just hit Calculate."}
         </p>
       </div>
 
@@ -637,23 +637,23 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
           placeholder="jan@example.be" hint={CC.emailHint || "We'll send your plan comparison here."}
           value={data.email || ""} onChange={set} />
         <Field fieldKey="postcode" label={TC.postcode || "Postcode"} placeholder="e.g. 2000"
-          hint={CC.postcodeHint || "Optional — improves accuracy."}
+          hint={CC.postcodeHint || "Optional â€” improves accuracy."}
           value={data.postcode || ""} onChange={set} />
         <Field fieldKey="currentBill" type="number" label={TC.currentBill || "Current monthly bill"}
-          prefix="€" placeholder="e.g. 180" hint={CC.currentBillHint || "Optional — we'll calculate your potential savings."}
+          prefix="â‚¬" placeholder="e.g. 180" hint={CC.currentBillHint || "Optional â€” we'll calculate your potential savings."}
           value={data.currentBill || ""} onChange={set} />
       </div>
 
       <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${C.border}`,
         borderRadius: 10, padding: "10px 14px", marginBottom: 20, fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
-        {CC.gdprNote || "🔒 Your data is stored securely in the EU (GDPR compliant)."}
+        {CC.gdprNote || "ðŸ”’ Your data is stored securely in the EU (GDPR compliant)."}
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
         <Btn onClick={onBack} variant="ghost" style={{ flex: 1 }}>{CC.back}</Btn>
         <div style={{ flex: 3 }}>
           <Btn onClick={onSubmit} disabled={loading || !canGo}>
-            {loading ? `⚡ ${CC.calculating}` : `🔍 ${CC.calculate} →`}
+            {loading ? `âš¡ ${CC.calculating}` : `ðŸ” ${CC.calculate} â†’`}
           </Btn>
         </div>
       </div>
@@ -661,7 +661,7 @@ function Step4({ data, onChange, onSubmit, onBack, loading, isGuest }) {
   );
 }
 
-// ─── Plan card ────────────────────────────────────────────────
+// â”€â”€â”€ Plan card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
 
   const { tSection } = useLanguage();
@@ -684,28 +684,28 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
         <SupplierTile name={plan.supplier_name} size={40} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginBottom: 3 }}>
-            {plan.cheapest && <Badge color={C.green}>{CC.bestDeal    || "🏆 BEST DEAL"}</Badge>}
+            {plan.cheapest && <Badge color={C.green}>{CC.bestDeal    || "ðŸ† BEST DEAL"}</Badge>}
             <span style={{ fontSize: 13, fontWeight: 700, color: C.light }}>{plan.supplier_name}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
             <span style={{ fontSize: 12, color: C.muted }}>{plan.plan_name}</span>
             <Badge color={accent}>{plan.type?.charAt(0).toUpperCase() + plan.type?.slice(1)}</Badge>
-            {plan.green && <Badge color={C.green}>🌿 Green</Badge>}
+            {plan.green && <Badge color={C.green}>ðŸŒ¿ Green</Badge>}
           </div>
         </div>
         <div style={{ textAlign: "right", flexShrink: 0 }}>
           <div style={{ fontSize: 20, fontWeight: 900, color: plan.cheapest ? C.green : C.light, fontFamily: "monospace" }}>
-            €{plan.costs.total}
+            â‚¬{plan.costs.total}
           </div>
-          <div style={{ fontSize: 11, color: C.muted }}>€{plan.costs.monthly}/mo</div>
+          <div style={{ fontSize: 11, color: C.muted }}>â‚¬{plan.costs.monthly}/mo</div>
           {savingsAmt != null && savingsAmt > 0 && (
-            <div style={{ fontSize: 10, color: C.green, fontWeight: 700 }}>save €{Math.round(savingsAmt)}/yr</div>
+            <div style={{ fontSize: 10, color: C.green, fontWeight: 700 }}>save â‚¬{Math.round(savingsAmt)}/yr</div>
           )}
           {savingsAmt != null && savingsAmt < 0 && (
-            <div style={{ fontSize: 10, color: C.red }}>+€{Math.round(Math.abs(savingsAmt))}/yr vs current</div>
+            <div style={{ fontSize: 10, color: C.red }}>+â‚¬{Math.round(Math.abs(savingsAmt))}/yr vs current</div>
           )}
         </div>
-        <span style={{ color: C.muted, fontSize: 11, marginLeft: 2 }}>{isOpen ? "▲" : "▼"}</span>
+        <span style={{ color: C.muted, fontSize: 11, marginLeft: 2 }}>{isOpen ? "â–²" : "â–¼"}</span>
       </div>
 
       {/* Expanded breakdown */}
@@ -717,7 +717,7 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
               [CC.standing   || "Standing", plan.costs.standing, C.muted], ["VAT", plan.costs.vat, C.muted]].map(([l, v, col]) => (
               <div key={l} style={{ background: C.panel, borderRadius: 9, padding: "9px 10px", textAlign: "center" }}>
                 <div style={{ fontSize: 10, color: C.muted, marginBottom: 3 }}>{l}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: col, fontFamily: "monospace" }}>€{v}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: col, fontFamily: "monospace" }}>â‚¬{v}</div>
               </div>
             ))}
           </div>
@@ -725,7 +725,7 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
           <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
             <div style={{ flex: 1, background: C.panel, borderRadius: 9, padding: "9px 12px" }}>
               <div style={{ fontSize: 10, color: C.muted }}>All-in tariff</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: accent, fontFamily: "monospace" }}>{plan.costs.perKwh} c€/kWh</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: accent, fontFamily: "monospace" }}>{plan.costs.perKwh} câ‚¬/kWh</div>
             </div>
             <div style={{ flex: 1, background: C.panel, borderRadius: 9, padding: "9px 12px" }}>
               <div style={{ fontSize: 10, color: C.muted }}>Contract</div>
@@ -742,7 +742,7 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
           )}
           {/* Highlights */}
           {plan.highlights?.map(h => (
-            <div key={h} style={{ fontSize: 12, color: C.muted, marginBottom: 3 }}>✓ {h}</div>
+            <div key={h} style={{ fontSize: 12, color: C.muted, marginBottom: 3 }}>âœ“ {h}</div>
           ))}
           {/* CTA */}
           <a href={plan.supplier_url || "#"} target="_blank" rel="noopener noreferrer"
@@ -750,7 +750,7 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
             style={{ display: "block", marginTop: 10, background: accent + "18", border: `1px solid ${accent}44`,
               color: accent, borderRadius: 10, padding: "11px 0", textAlign: "center",
               fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-            Visit {plan.supplier_name} →
+            Visit {plan.supplier_name} â†’
           </a>
         </div>
       )}
@@ -758,7 +758,7 @@ function PlanCard({ plan, rank, expanded, setExpanded, savings }) {
   );
 }
 
-// ─── Results page ─────────────────────────────────────────────
+// â”€â”€â”€ Results page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Results({ results, data, onRestart, isGuest, onSignIn }) {
   const { tSection } = useLanguage();
   const CC = tSection("calculator");
@@ -795,7 +795,7 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
           <div key={b.id} style={{ marginBottom: 6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 2 }}>
               <span style={{ color: C.light }}>{b.icon} {AP[b.id]?.label || b.label}</span>
-              <span style={{ color: C.muted }}>{b.annual_kwh} kWh · {b.pct}%</span>
+              <span style={{ color: C.muted }}>{b.annual_kwh} kWh Â· {b.pct}%</span>
             </div>
             <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
               <div style={{ height: "100%", width: `${Math.min(100, b.pct)}%`, background: accent, borderRadius: 2 }} />
@@ -812,7 +812,7 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
       <div style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.1),rgba(13,148,136,0.08))",
         border: `1px solid ${C.green}44`, borderRadius: 18, padding: "20px 22px", marginBottom: 22 }}>
         <div style={{ fontSize: 10, color: C.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>
-          {`🎉 ${CC.resultsTitle || "Your personalised plan comparison"}`}
+          {`ðŸŽ‰ ${CC.resultsTitle || "Your personalised plan comparison"}`}
         </div>
         <div style={{ fontSize: 18, fontWeight: 900, color: C.light, marginBottom: annualBill ? 8 : 0 }}>
           {data.firstName ? `${(CC.hiUser || "Hi {name}! ").replace("{name}", data.firstName)}` : ""}{CC.resultsSub || "Here are the best plans for your profile."}
@@ -821,17 +821,17 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 10 }}>
             <div>
               <div style={{ fontSize: 10, color: C.muted }}>Current spend</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: C.light, fontFamily: "monospace" }}>€{Math.round(annualBill)}/yr</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: C.light, fontFamily: "monospace" }}>â‚¬{Math.round(annualBill)}/yr</div>
             </div>
             <div>
               <div style={{ fontSize: 10, color: C.muted }}>Best plan found</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: C.green, fontFamily: "monospace" }}>€{results.electricity.results[0].costs.total}/yr</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: C.green, fontFamily: "monospace" }}>â‚¬{results.electricity.results[0].costs.total}/yr</div>
             </div>
             {annualBill > results.electricity.results[0].costs.total && (
               <div>
                 <div style={{ fontSize: 10, color: C.muted }}>Potential saving</div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: C.green, fontFamily: "monospace" }}>
-                  €{Math.round(annualBill - results.electricity.results[0].costs.total)}/yr
+                  â‚¬{Math.round(annualBill - results.electricity.results[0].costs.total)}/yr
                 </div>
               </div>
             )}
@@ -839,14 +839,14 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
         )}
       </div>
 
-      {/* Sign-in nudge — shown only to guests, after they've seen value */}
+      {/* Sign-in nudge â€” shown only to guests, after they've seen value */}
       {isGuest && (
         <div style={{ background: "linear-gradient(135deg,rgba(13,148,136,0.08),rgba(26,86,164,0.06))",
           border: "1px solid rgba(13,148,136,0.25)", borderRadius: 14, padding: "16px 18px", marginBottom: 20,
           display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#E2E8F0", marginBottom: 3 }}>
-              💾 Save your results & get alerts
+              ðŸ’¾ Save your results & get alerts
             </div>
             <div style={{ fontSize: 12, color: "#556B82", lineHeight: 1.5 }}>
               Sign in free to save this comparison, get emailed when prices drop, and revisit anytime.
@@ -855,7 +855,7 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
           <button onClick={onSignIn} style={{ padding: "10px 22px", borderRadius: 20, fontSize: 13, fontWeight: 700,
             background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", cursor: "pointer",
             whiteSpace: "nowrap", boxShadow: "0 4px 16px rgba(13,148,136,0.35)" }}>
-            Sign In Free →
+            Sign In Free â†’
           </button>
         </div>
       )}
@@ -864,9 +864,9 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
       {hasElec && (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, marginTop: 4 }}>
-            <span style={{ fontSize: 18 }}>⚡</span>
+            <span style={{ fontSize: 18 }}>âš¡</span>
             <span style={{ fontSize: 15, fontWeight: 800, color: C.teal }}>{CC.electricityPlans || "Electricity Plans"}</span>
-            <span style={{ fontSize: 11, color: C.muted }}>· {`${results.electricity.results?.length} ${CC.plansFound || "plans found"}`}</span>
+            <span style={{ fontSize: 11, color: C.muted }}>Â· {`${results.electricity.results?.length} ${CC.plansFound || "plans found"}`}</span>
           </div>
           <ConsumptionCard cons={results.electricity.consumption} isGas={false} />
           {results.electricity.results?.map((plan, i) => (
@@ -880,9 +880,9 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
       {hasGas && (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, marginTop: 20 }}>
-            <span style={{ fontSize: 18 }}>🔥</span>
+            <span style={{ fontSize: 18 }}>ðŸ”¥</span>
             <span style={{ fontSize: 15, fontWeight: 800, color: C.orange }}>{CC.gasPlans || "Gas Plans"}</span>
-            <span style={{ fontSize: 11, color: C.muted }}>· {`${results.gas.results?.length} ${CC.plansFound || "plans found"}`}</span>
+            <span style={{ fontSize: 11, color: C.muted }}>Â· {`${results.gas.results?.length} ${CC.plansFound || "plans found"}`}</span>
           </div>
           <ConsumptionCard cons={results.gas.consumption} isGas={true} />
           {results.gas.results?.map((plan, i) => (
@@ -894,15 +894,15 @@ function Results({ results, data, onRestart, isGuest, onSignIn }) {
 
       <div style={{ textAlign: "center", margin: "20px 0", fontSize: 11, color: C.muted, lineHeight: 1.8 }}>
         {CC.costDisclaimer || "Annual cost includes energy + grid + levies + VAT."}<br/>
-        {CC.tariffsNote || "Tariffs scraped weekly · Always verify on supplier website before switching."}
+        {CC.tariffsNote || "Tariffs scraped weekly Â· Always verify on supplier website before switching."}
       </div>
 
-      <Btn onClick={onRestart} variant="ghost">{`↺ ${CC.restartBtn || "Start a new calculation"}`}</Btn>
+      <Btn onClick={onRestart} variant="ghost">{`â†º ${CC.restartBtn || "Start a new calculation"}`}</Btn>
     </div>
   );
 }
 
-// ─── Main wizard shell ────────────────────────────────────────
+// â”€â”€â”€ Main wizard shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CALC_CACHE_KEY = "sp_calc_state";
 
 export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
@@ -915,9 +915,9 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
     document.title = "Electricity & Gas Plan Calculator Belgium | SmartPrice.be";
     const desc = document.querySelector("meta[name='description']");
     if (desc) desc.setAttribute("content", "Compare all Belgian electricity and gas suppliers with your real annual cost including grid fees and VAT. Free 4-step calculator for households.");
-    const canonical = document.querySelector("link[rel='canonical']");
+    const canonical = document.getElementById('canonical-tag');
     if (canonical) canonical.setAttribute("href", "https://smartprice.be/calculator/electricity");
-    return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
+    return () => { document.title = "SmartPrice.be â€” Belgium Real-Time Electricity & Gas Prices"; };
   }, []);
 
   // Restore from sessionStorage on first mount (survives auth redirect)
@@ -1000,7 +1000,7 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
     try { sessionStorage.removeItem(CALC_CACHE_KEY); } catch {}
   };
 
-  // On mount: if user just returned from auth (step=3, now logged in) → auto-submit
+  // On mount: if user just returned from auth (step=3, now logged in) â†’ auto-submit
   useEffect(() => {
     if (!isGuest && step === 3) submit();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1009,7 +1009,7 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
     <div ref={topRef} style={{ minHeight: "100vh", background: C.bg, color: C.light,
       fontFamily: "'DM Sans', system-ui, sans-serif", paddingBottom: 80 }}>
 
-      {/* ── Sticky nav ─────────────────────────────────────── */}
+      {/* â”€â”€ Sticky nav â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ position: "sticky", top: 0, zIndex: 100,
         background: "rgba(6,11,20,0.97)", backdropFilter: "blur(24px)",
         borderBottom: `1px solid ${C.border}` }}>
@@ -1020,9 +1020,9 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
               <button onClick={() => go(step - 1)} style={{
                 background: "transparent", border: `1px solid ${C.border}`,
                 color: C.muted, borderRadius: 8, padding: "5px 12px", fontSize: 12, cursor: "pointer",
-              }}>←</button>
+              }}>â†</button>
             )}
-            <span style={{ fontSize: 18 }}>🇧🇪</span>
+            <span style={{ fontSize: 18 }}>ðŸ‡§ðŸ‡ª</span>
             <span style={{ fontSize: 15, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
             <span style={{ fontSize: 9, color: C.muted, background: "rgba(255,255,255,0.05)",
               border: `1px solid ${C.border}`, borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>
@@ -1034,7 +1034,7 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
             {!isGuest && (
               <span style={{ fontSize: 11, color: C.green, background: "rgba(16,185,129,0.1)",
                 border: "1px solid rgba(16,185,129,0.25)", borderRadius: 20, padding: "3px 10px", fontWeight: 700 }}>
-                ✓ Signed in
+                âœ“ Signed in
               </span>
             )}
             <button onClick={onBack} style={{ background: "transparent", border: `1px solid ${C.border}`,
@@ -1050,13 +1050,13 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
         )}
       </div>
 
-      {/* ── Main content ───────────────────────────────────── */}
+      {/* â”€â”€ Main content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ maxWidth: 580, margin: "0 auto", padding: "28px 16px" }}>
 
         {error && (
           <div style={{ background: "rgba(239,68,68,0.09)", border: "1px solid rgba(239,68,68,0.3)",
             borderRadius: 12, padding: "12px 16px", marginBottom: 18, color: "#F87171", fontSize: 13, lineHeight: 1.6 }}>
-            ⚠ {error}
+            âš  {error}
           </div>
         )}
 
@@ -1065,12 +1065,12 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
         {step === 2 && <Step3 data={data} onChange={update} onNext={() => isGuest ? go(3) : go(3)} onBack={() => go(1)} />}
         {step === 3 && isGuest && (
           <div style={{ textAlign: "center", padding: "48px 24px" }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>🔐</div>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>ðŸ”</div>
             <div style={{ fontSize: 22, fontWeight: 900, color: C.light, marginBottom: 10 }}>
               Sign in to see your results
             </div>
             <div style={{ fontSize: 14, color: C.muted, maxWidth: 360, margin: "0 auto 28px", lineHeight: 1.7 }}>
-              Your plan comparison is ready. Create a free account to unlock it — no credit card, takes 30 seconds.
+              Your plan comparison is ready. Create a free account to unlock it â€” no credit card, takes 30 seconds.
             </div>
             <button onClick={onSignIn} style={{
               padding: "14px 36px", borderRadius: 50, fontSize: 15, fontWeight: 800,
@@ -1078,13 +1078,13 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
               color: "#fff", cursor: "pointer", boxShadow: "0 8px 32px rgba(13,148,136,0.4)",
               marginBottom: 16, display: "block", width: "100%", maxWidth: 320, margin: "0 auto 16px",
             }}>
-              Sign In Free — See My Results →
+              Sign In Free â€” See My Results â†’
             </button>
             <button onClick={() => go(2)} style={{
               background: "transparent", border: "none", color: C.muted,
               fontSize: 13, cursor: "pointer", textDecoration: "underline",
             }}>
-              ← Go back
+              â† Go back
             </button>
           </div>
         )}
@@ -1092,12 +1092,12 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
         {step === 4 && results && !isGuest && <Results results={results} data={data} onRestart={restart} isGuest={false} onSignIn={onSignIn} />}
         {step === 4 && results && isGuest && (
           <div style={{ textAlign: "center", padding: "48px 24px" }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>🔐</div>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>ðŸ”</div>
             <div style={{ fontSize: 22, fontWeight: 900, color: C.light, marginBottom: 10 }}>
               Sign in to see your results
             </div>
             <div style={{ fontSize: 14, color: C.muted, maxWidth: 360, margin: "0 auto 28px", lineHeight: 1.7 }}>
-              Your plan comparison is ready. Create a free account to unlock it — no credit card, takes 30 seconds.
+              Your plan comparison is ready. Create a free account to unlock it â€” no credit card, takes 30 seconds.
             </div>
             <button onClick={onSignIn} style={{
               padding: "14px 36px", borderRadius: 50, fontSize: 15, fontWeight: 800,
@@ -1105,13 +1105,13 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
               color: "#fff", cursor: "pointer", boxShadow: "0 8px 32px rgba(13,148,136,0.4)",
               display: "block", width: "100%", maxWidth: 320, margin: "0 auto 16px",
             }}>
-              Sign In Free — See My Results →
+              Sign In Free â€” See My Results â†’
             </button>
             <button onClick={restart} style={{
               background: "transparent", border: "none", color: C.muted,
               fontSize: 13, cursor: "pointer", textDecoration: "underline",
             }}>
-              ↺ Start over
+              â†º Start over
             </button>
           </div>
         )}

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * pages/ApiPage.jsx
  * Public API documentation for Home Assistant / developers
  * Route: /api-docs
@@ -23,7 +23,7 @@ function Code({ children, lang = "json" }) {
       </pre>
       <button onClick={() => { navigator.clipboard.writeText(children); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
         style={{ position: "absolute", top: 8, right: 8, background: copied ? C.green : "rgba(255,255,255,0.08)", border: `1px solid ${C.border}`, color: "#fff", borderRadius: 8, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>
-        {copied ? "✓" : "Copy"}
+        {copied ? "âœ“" : "Copy"}
       </button>
     </div>
   );
@@ -46,7 +46,7 @@ function Endpoint({ method, path, desc, params, response }) {
       <div onClick={() => setOpen(o => !o)} style={{ padding: "14px 20px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
         <span style={{ fontSize: 11, fontWeight: 800, color: methodColor, background: `${methodColor}18`, border: `1px solid ${methodColor}44`, borderRadius: 6, padding: "3px 8px", fontFamily: "monospace", flexShrink: 0 }}>{method}</span>
         <span style={{ fontSize: 13, fontFamily: "monospace", color: "#7DD3FC", flex: 1 }}>{path}</span>
-        <span style={{ fontSize: 12, color: C.muted, flexShrink: 0 }}>{open ? "▲" : "▼"}</span>
+        <span style={{ fontSize: 12, color: C.muted, flexShrink: 0 }}>{open ? "â–²" : "â–¼"}</span>
       </div>
       {open && (
         <div style={{ padding: "0 20px 20px", borderTop: `1px solid ${C.border}` }}>
@@ -67,12 +67,12 @@ function Endpoint({ method, path, desc, params, response }) {
 
 export default function ApiPage({ onGetStarted }) {
   useEffect(() => {
-    document.title = "Free Belgian Energy Price API — EPEX Spot, EV, Gas | SmartPrice.be";
+    document.title = "Free Belgian Energy Price API â€” EPEX Spot, EV, Gas | SmartPrice.be";
     const desc = document.querySelector("meta[name='description']");
     if (desc) desc.setAttribute("content", "Free REST API for live Belgian EPEX Spot electricity prices, TTF gas prices, and EV charging data. Works with Home Assistant, Node-RED, and any developer integration.");
-    const canonical = document.querySelector("link[rel='canonical']");
+    const canonical = document.getElementById('canonical-tag');
     if (canonical) canonical.setAttribute("href", "https://smartprice.be/api-docs");
-    return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
+    return () => { document.title = "SmartPrice.be â€” Belgium Real-Time Electricity & Gas Prices"; };
   }, []);
 
   return (
@@ -81,7 +81,7 @@ export default function ApiPage({ onGetStarted }) {
       {/* Nav */}
       <nav style={{ borderBottom: `1px solid ${C.border}`, padding: "14px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(6,11,20,0.9)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 50 }}>
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.text }}>
-          <span>🇧🇪</span>
+          <span>ðŸ‡§ðŸ‡ª</span>
           <span style={{ fontSize: 16, fontWeight: 900 }}>SmartPrice</span>
           <span style={{ fontSize: 10, color: C.teal, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>API</span>
         </a>
@@ -96,7 +96,7 @@ export default function ApiPage({ onGetStarted }) {
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 30, padding: "5px 14px", fontSize: 12, color: C.teal, fontWeight: 700, marginBottom: 16 }}>
-            🔓 Free · No API key required · CC BY 4.0
+            ðŸ”“ Free Â· No API key required Â· CC BY 4.0
           </div>
           <h1 style={{ fontSize: "clamp(28px,5vw,48px)", fontWeight: 900, letterSpacing: "-1.5px", margin: "0 0 16px", lineHeight: 1.1 }}>
             <span style={{ background: `linear-gradient(135deg,#fff 40%,${C.teal})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
@@ -116,7 +116,7 @@ export default function ApiPage({ onGetStarted }) {
         </div>
 
         {/* Home Assistant section */}
-        <Section title="🏠 Home Assistant Integration">
+        <Section title="ðŸ  Home Assistant Integration">
           <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 20 }}>
             Add SmartPrice live EPEX prices to Home Assistant using the <strong style={{ color: C.text }}>RESTful sensor</strong> integration. No custom component needed.
           </p>
@@ -126,7 +126,7 @@ export default function ApiPage({ onGetStarted }) {
     name: "EPEX Spot Belgium"
     resource: ${API}/api/current
     value_template: "{{ value_json.current.price_eur_mwh }}"
-    unit_of_measurement: "€/MWh"
+    unit_of_measurement: "â‚¬/MWh"
     scan_interval: 900  # every 15 minutes
     json_attributes:
       - current
@@ -135,12 +135,12 @@ export default function ApiPage({ onGetStarted }) {
     name: "Belgium Cheapest Hours"
     resource: ${API}/api/cheapest?hours=5
     value_template: "{{ value_json.cheapest_hours[0].price_eur_mwh }}"
-    unit_of_measurement: "€/MWh"
+    unit_of_measurement: "â‚¬/MWh"
     scan_interval: 3600  # every hour
     json_attributes:
       - cheapest_hours`}</Code>
 
-          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>Automation example — start EV charging at cheapest hour</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>Automation example â€” start EV charging at cheapest hour</div>
           <Code>{`automation:
   - alias: "Start EV charging at cheapest hour"
     trigger:
@@ -157,12 +157,12 @@ export default function ApiPage({ onGetStarted }) {
           entity_id: switch.ev_charger`}</Code>
 
           <div style={{ background: "rgba(13,148,136,0.06)", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: C.muted, lineHeight: 1.7 }}>
-            💡 <strong style={{ color: C.text }}>Pro tip:</strong> Use the <code style={{ color: C.teal }}>/api/cheapest</code> endpoint to get the next 5 cheapest windows and automate scheduling. Combine with <code style={{ color: C.teal }}>input_boolean</code> helpers to enable/disable smart charging.
+            ðŸ’¡ <strong style={{ color: C.text }}>Pro tip:</strong> Use the <code style={{ color: C.teal }}>/api/cheapest</code> endpoint to get the next 5 cheapest windows and automate scheduling. Combine with <code style={{ color: C.teal }}>input_boolean</code> helpers to enable/disable smart charging.
           </div>
         </Section>
 
         {/* Endpoints */}
-        <Section title="📡 Endpoints">
+        <Section title="ðŸ“¡ Endpoints">
           <Endpoint
             method="GET"
             path="/api/current"
@@ -251,13 +251,13 @@ export default function ApiPage({ onGetStarted }) {
         </Section>
 
         {/* Rate limits */}
-        <Section title="⚡ Rate Limits & Usage">
+        <Section title="âš¡ Rate Limits & Usage">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12, marginBottom: 20 }}>
             {[
-              { label: "Rate limit", value: "60 req/min", icon: "🔄" },
-              { label: "Authentication", value: "None required", icon: "🔓" },
-              { label: "Price updates", value: "Every 15 min", icon: "🕐" },
-              { label: "Data license", value: "CC BY 4.0", icon: "📄" },
+              { label: "Rate limit", value: "60 req/min", icon: "ðŸ”„" },
+              { label: "Authentication", value: "None required", icon: "ðŸ”“" },
+              { label: "Price updates", value: "Every 15 min", icon: "ðŸ•" },
+              { label: "Data license", value: "CC BY 4.0", icon: "ðŸ“„" },
             ].map(s => (
               <div key={s.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" }}>
                 <div style={{ fontSize: 20, marginBottom: 8 }}>{s.icon}</div>
@@ -272,7 +272,7 @@ export default function ApiPage({ onGetStarted }) {
         </Section>
 
         {/* Node-RED example */}
-        <Section title="🔴 Node-RED / n8n / Other">
+        <Section title="ðŸ”´ Node-RED / n8n / Other">
           <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 16 }}>
             Use a simple HTTP Request node pointed at any endpoint. No headers required.
           </p>
@@ -287,7 +287,7 @@ const category = msg.payload.current.price_category;
 
 if (price < 50) {
   // Send "cheap" notification
-  msg.payload = \`🟢 Cheap electricity: €\${price}/MWh\`;
+  msg.payload = \`ðŸŸ¢ Cheap electricity: â‚¬\${price}/MWh\`;
   return [msg, null];
 } else {
   msg.payload = null;
@@ -297,8 +297,8 @@ if (price < 50) {
 
         <div style={{ textAlign: "center", fontSize: 12, color: C.muted, paddingTop: 24, borderTop: `1px solid ${C.border}` }}>
           Questions? <a href="mailto:hello@smartprice.be" style={{ color: C.teal }}>hello@smartprice.be</a>
-          {" · "}Data: Energy-Charts.info · Elia Open Data (CC BY 4.0)
-          {" · "}<a href="/" style={{ color: C.teal }}>SmartPrice.be</a>
+          {" Â· "}Data: Energy-Charts.info Â· Elia Open Data (CC BY 4.0)
+          {" Â· "}<a href="/" style={{ color: C.teal }}>SmartPrice.be</a>
         </div>
       </div>
     </div>
