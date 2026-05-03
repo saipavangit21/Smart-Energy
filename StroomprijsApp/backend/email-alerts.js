@@ -481,6 +481,25 @@ async function sendWeeklyDigest(pool) {
                   </a>
                 </div>
 
+                <!-- Share ask -->
+                <div style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.25);border-radius:16px;padding:20px 24px;margin-bottom:20px;text-align:center;">
+                  <div style="font-size:15px;font-weight:800;color:#F59E0B;margin-bottom:8px;">📢 Know someone who'd find this useful?</div>
+                  <div style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:16px;">
+                    SmartPrice is free and built for Belgian households, EV drivers, and anyone on a dynamic electricity contract.<br>
+                    If this weekly recap is useful to you, forward it to a friend or share the link below.
+                  </div>
+                  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                    <a href="https://wa.me/?text=${encodeURIComponent('⚡ SmartPrice.be — free live Belgian electricity prices, cheapest EV charging hours & Tesla integration. Check it out: https://smartprice.be')}"
+                       style="display:inline-block;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#25D366;text-decoration:none;font-weight:700;font-size:13px;padding:9px 18px;border-radius:20px;">
+                      💬 Share on WhatsApp
+                    </a>
+                    <a href="mailto:?subject=${encodeURIComponent('Free Belgian electricity price tracker')}&body=${encodeURIComponent('Hey, I thought you might find this useful — SmartPrice.be shows live EPEX electricity prices for Belgium and the cheapest hours to charge your EV. Completely free: https://smartprice.be')}"
+                       style="display:inline-block;background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.25);color:#94A3B8;text-decoration:none;font-weight:700;font-size:13px;padding:9px 18px;border-radius:20px;">
+                      ✉ Forward by email
+                    </a>
+                  </div>
+                </div>
+
                 <div style="text-align:center;color:#334155;font-size:11px;line-height:1.8;">
                   <div>SmartPrice.be · Free · No ads · GDPR compliant · Data stored in EU</div>
                   <div style="margin-top:6px;">
