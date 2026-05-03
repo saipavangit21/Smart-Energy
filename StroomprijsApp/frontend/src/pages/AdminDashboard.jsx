@@ -272,6 +272,7 @@ export default function AdminDashboard() {
           <StatCard label="Calculator Runs" value={Number(calcRuns) + Number(calcGasRuns)} sub={`⚡ ${fmt(calcRuns)} elec · 🔥 ${fmt(calcGasRuns)} gas`} color={C.yellow} />
           <StatCard label="Page Views" value={pageViews} sub={period === 1 ? "today (since midnight)" : `last ${period} days`} color={C.blue} />
           <StatCard label="Users with Email" value={(users || []).filter(u => u.email).length} sub="can receive alerts" color={C.green} />
+          <StatCard label="Tesla Connected" value={(users || []).filter(u => u.tesla_connected).length} sub={`of ${totalUsers} registered users`} color="#00E5FF" />
           <StatCard label="EV Page Views" value={evPageViews} sub={period === 1 ? "today" : `last ${period}d`} color={C.teal} />
           <StatCard label="SEO Page Views" value={seoPageViews} sub={period === 1 ? "today" : `last ${period}d`} color={C.blue} />
         </div>
@@ -397,7 +398,8 @@ export default function AdminDashboard() {
                     {/* Auth method */}
                     <span>
                       {u.google    && <span style={{ fontSize: 11, background: "rgba(26,86,164,0.3)", color: "#7EB3FF", borderRadius: 6, padding: "2px 7px", marginRight: 3 }}>G</span>}
-                      {u.email_auth && <span style={{ fontSize: 11, background: "rgba(13,148,136,0.3)", color: C.teal,   borderRadius: 6, padding: "2px 7px" }}>✉</span>}
+                      {u.email_auth && <span style={{ fontSize: 11, background: "rgba(13,148,136,0.3)", color: C.teal,   borderRadius: 6, padding: "2px 7px", marginRight: 3 }}>✉</span>}
+                      {u.tesla_connected && <span style={{ fontSize: 11, background: "rgba(0,229,255,0.15)", color: "#00E5FF", borderRadius: 6, padding: "2px 7px" }}>🚗 Tesla</span>}
                     </span>
 
                     {/* Joined */}
