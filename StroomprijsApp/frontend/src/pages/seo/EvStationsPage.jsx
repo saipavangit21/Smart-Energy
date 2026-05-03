@@ -1,4 +1,4 @@
-﻿/**
+/**
  * pages/seo/EvStationsPage.jsx
  * Route: /ev-charging-stations-belgium
  * SEO: "ev charging stations belgium", "laadpalen belgie", "bornes recharge belgique"
@@ -39,10 +39,10 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
   };
   const getPriceAdvice = (mwh, l) => {
     if (mwh == null) return { en: "Loading...", nl: "Laden...", fr: "Chargement..." }[l];
-    if (mwh < 50)  return { en: "ðŸŸ¢ Great time to charge â€” prices very low", nl: "ðŸŸ¢ Goed moment om te laden â€” prijzen zeer laag", fr: "ðŸŸ¢ Moment idÃ©al pour charger â€” prix trÃ¨s bas" }[l];
-    if (mwh < 90)  return { en: "ðŸŸ¡ Good time to charge â€” prices below average", nl: "ðŸŸ¡ Goed moment â€” prijzen onder gemiddelde", fr: "ðŸŸ¡ Bon moment â€” prix infÃ©rieurs Ã  la moyenne" }[l];
-    if (mwh < 130) return { en: "ðŸŸ  Average prices â€” charge if needed", nl: "ðŸŸ  Gemiddelde prijzen â€” laad indien nodig", fr: "ðŸŸ  Prix moyens â€” chargez si nÃ©cessaire" }[l];
-    return { en: "ðŸ”´ High prices â€” wait if possible", nl: "ðŸ”´ Hoge prijzen â€” wacht indien mogelijk", fr: "ðŸ”´ Prix Ã©levÃ©s â€” attendez si possible" }[l];
+    if (mwh < 50)  return { en: "🟢 Great time to charge — prices very low", nl: "🟢 Goed moment om te laden — prijzen zeer laag", fr: "🟢 Moment idéal pour charger — prix très bas" }[l];
+    if (mwh < 90)  return { en: "🟡 Good time to charge — prices below average", nl: "🟡 Goed moment — prijzen onder gemiddelde", fr: "🟡 Bon moment — prix inférieurs à la moyenne" }[l];
+    if (mwh < 130) return { en: "🟠 Average prices — charge if needed", nl: "🟠 Gemiddelde prijzen — laad indien nodig", fr: "🟠 Prix moyens — chargez si nécessaire" }[l];
+    return { en: "🔴 High prices — wait if possible", nl: "🔴 Hoge prijzen — wacht indien mogelijk", fr: "🔴 Prix élevés — attendez si possible" }[l];
   };
   const CONNECTOR_TYPES = {
     1: "Type 1 (J1772)", 2: "Type 2", 25: "Type 2 (Tethered)",
@@ -72,26 +72,26 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
       filterFree: "Free",
       stationsFound: "stations found",
       loadingMap: "Loading map...",
-      loadingStations: "Fetching live station data from OpenStreetMapâ€¦",
+      loadingStations: "Fetching live station data from OpenStreetMap…",
       connectors: "Connectors",
       power: "Power",
       operator: "Operator",
       status: "Status",
       available: "Available",
       unknown: "Unknown",
-      faqTitle: "EV Charging in Belgium â€” FAQ",
+      faqTitle: "EV Charging in Belgium — FAQ",
       faq: [
         { q: "How many public EV charging stations are in Belgium?", a: "Belgium has over 30,000 public charging points as of 2026, with the highest density in Flanders. The network is expanding rapidly with EU targets requiring stations every 60km on major roads by 2026." },
-        { q: "What is the cheapest network to charge an EV in Belgium?", a: "Pricing varies by network and time. Allego, Eneco E-Mobility, and Bolt Charge are among the major operators. However, the cheapest charging is always at home with a dynamic contract â€” see our EV Charging page for optimal home charging times." },
+        { q: "What is the cheapest network to charge an EV in Belgium?", a: "Pricing varies by network and time. Allego, Eneco E-Mobility, and Bolt Charge are among the major operators. However, the cheapest charging is always at home with a dynamic contract — see our EV Charging page for optimal home charging times." },
         { q: "Do I need an RFID card or app to charge in Belgium?", a: "Most Belgian stations accept RFID cards (Charge Card, Plugsurfing, ENGIE Card) and apps. Many newer stations also accept contactless bank card payment. The Plugsurfing and Chargemap apps work across most Belgian networks." },
         { q: "What connector types are used in Belgium?", a: "Type 2 (Mennekes) is the standard AC connector in Belgium. For DC fast charging, CCS (Combined Charging System) is dominant. CHAdeMO is available but being phased out. Tesla Superchargers use CCS in newer installations." },
       ],
-      cta: "Compare electricity plans for EV owners â†’",
+      cta: "Compare electricity plans for EV owners →",
       ctaSub: "Find the cheapest supplier for your charging usage",
     },
     nl: {
-      title: "EV Laadpalen in BelgiÃ«",
-      desc: "Vind alle openbare laadpalen in BelgiÃ« met live EPEX elektriciteitsprijzen. Weet wanneer het goedkoopst is om te laden.",
+      title: "EV Laadpalen in België",
+      desc: "Vind alle openbare laadpalen in België met live EPEX elektriciteitsprijzen. Weet wanneer het goedkoopst is om te laden.",
       currentPrice: "Huidige EPEX-prijs",
       adviceTitle: "Laadadvies nu",
       mapTitle: "Openbare laadpalen",
@@ -110,14 +110,14 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
       status: "Status",
       available: "Beschikbaar",
       unknown: "Onbekend",
-      faqTitle: "EV Laden in BelgiÃ« â€” FAQ",
+      faqTitle: "EV Laden in België — FAQ",
       faq: [
-        { q: "Hoeveel openbare laadpalen zijn er in BelgiÃ«?", a: "BelgiÃ« heeft meer dan 30.000 openbare laadpunten in 2026, met de hoogste dichtheid in Vlaanderen. Het netwerk groeit snel met EU-doelstellingen voor laadpalen elke 60km op hoofdwegen." },
-        { q: "Welk netwerk is het goedkoopst om een EV op te laden in BelgiÃ«?", a: "Tarieven variÃ«ren per netwerk en tijdstip. Allego, Eneco E-Mobility en Bolt Charge zijn grote operators. Het goedkoopste laden is echter altijd thuis met een dynamisch contract â€” zie onze EV-pagina voor optimale laadtijden." },
-        { q: "Heb ik een RFID-kaart of app nodig om te laden in BelgiÃ«?", a: "De meeste Belgische laadpalen accepteren RFID-kaarten (Charge Card, Plugsurfing, ENGIE Card) en apps. Veel nieuwere stations accepteren ook contactloos bankkaart betalen." },
-        { q: "Welke stekkertypen worden gebruikt in BelgiÃ«?", a: "Type 2 (Mennekes) is de standaard AC-aansluiting in BelgiÃ«. Voor DC snelladen domineert CCS. CHAdeMO is beschikbaar maar wordt uitgefaseerd. Tesla Superchargers gebruiken CCS bij nieuwere installaties." },
+        { q: "Hoeveel openbare laadpalen zijn er in België?", a: "België heeft meer dan 30.000 openbare laadpunten in 2026, met de hoogste dichtheid in Vlaanderen. Het netwerk groeit snel met EU-doelstellingen voor laadpalen elke 60km op hoofdwegen." },
+        { q: "Welk netwerk is het goedkoopst om een EV op te laden in België?", a: "Tarieven variëren per netwerk en tijdstip. Allego, Eneco E-Mobility en Bolt Charge zijn grote operators. Het goedkoopste laden is echter altijd thuis met een dynamisch contract — zie onze EV-pagina voor optimale laadtijden." },
+        { q: "Heb ik een RFID-kaart of app nodig om te laden in België?", a: "De meeste Belgische laadpalen accepteren RFID-kaarten (Charge Card, Plugsurfing, ENGIE Card) en apps. Veel nieuwere stations accepteren ook contactloos bankkaart betalen." },
+        { q: "Welke stekkertypen worden gebruikt in België?", a: "Type 2 (Mennekes) is de standaard AC-aansluiting in België. Voor DC snelladen domineert CCS. CHAdeMO is beschikbaar maar wordt uitgefaseerd. Tesla Superchargers gebruiken CCS bij nieuwere installaties." },
       ],
-      cta: "Vergelijk elektriciteitsplannen voor EV-rijders â†’",
+      cta: "Vergelijk elektriciteitsplannen voor EV-rijders →",
       ctaSub: "Vind de goedkoopste leverancier voor uw laadverbruik",
     },
     fr: {
@@ -126,35 +126,35 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
       currentPrice: "Prix EPEX actuel",
       adviceTitle: "Conseil de charge maintenant",
       mapTitle: "Bornes de recharge publiques",
-      mapDesc: "Cliquez sur une borne pour les dÃ©tails",
+      mapDesc: "Cliquez sur une borne pour les détails",
       filtersTitle: "Filtres",
       filterFast: "Rapide (>50kW)",
       filterType2: "Type 2",
       filterCCS: "CCS",
       filterFree: "Gratuit",
-      stationsFound: "bornes trouvÃ©es",
+      stationsFound: "bornes trouvées",
       loadingMap: "Chargement de la carte...",
       loadingStations: "Chargement des bornes...",
       connectors: "Connecteurs",
       power: "Puissance",
-      operator: "OpÃ©rateur",
+      operator: "Opérateur",
       status: "Statut",
       available: "Disponible",
       unknown: "Inconnu",
-      faqTitle: "Charge VE en Belgique â€” FAQ",
+      faqTitle: "Charge VE en Belgique — FAQ",
       faq: [
-        { q: "Combien de bornes de recharge publiques y a-t-il en Belgique ?", a: "La Belgique compte plus de 30 000 points de charge publics en 2026, avec la plus haute densitÃ© en Flandre. Le rÃ©seau s'Ã©tend rapidement avec des objectifs UE pour des bornes tous les 60km sur les grandes routes." },
-        { q: "Quel rÃ©seau est le moins cher pour charger un VE en Belgique ?", a: "Les tarifs varient selon le rÃ©seau et l'heure. Allego, Eneco E-Mobility et Bolt Charge sont parmi les grands opÃ©rateurs. Mais le chargement le moins cher reste toujours Ã  domicile avec un contrat dynamique." },
+        { q: "Combien de bornes de recharge publiques y a-t-il en Belgique ?", a: "La Belgique compte plus de 30 000 points de charge publics en 2026, avec la plus haute densité en Flandre. Le réseau s'étend rapidement avec des objectifs UE pour des bornes tous les 60km sur les grandes routes." },
+        { q: "Quel réseau est le moins cher pour charger un VE en Belgique ?", a: "Les tarifs varient selon le réseau et l'heure. Allego, Eneco E-Mobility et Bolt Charge sont parmi les grands opérateurs. Mais le chargement le moins cher reste toujours à domicile avec un contrat dynamique." },
         { q: "Ai-je besoin d'une carte RFID ou d'une app pour charger en Belgique ?", a: "La plupart des bornes belges acceptent les cartes RFID (Charge Card, Plugsurfing, ENGIE Card) et les apps. Beaucoup de nouvelles bornes acceptent aussi le paiement sans contact par carte bancaire." },
-        { q: "Quels types de connecteurs sont utilisÃ©s en Belgique ?", a: "Le Type 2 (Mennekes) est le connecteur AC standard en Belgique. Pour la recharge rapide DC, le CCS domine. Le CHAdeMO est disponible mais en voie d'abandon. Les Superchargeurs Tesla utilisent le CCS dans les nouvelles installations." },
+        { q: "Quels types de connecteurs sont utilisés en Belgique ?", a: "Le Type 2 (Mennekes) est le connecteur AC standard en Belgique. Pour la recharge rapide DC, le CCS domine. Le CHAdeMO est disponible mais en voie d'abandon. Les Superchargeurs Tesla utilisent le CCS dans les nouvelles installations." },
       ],
-      cta: "Comparer les plans Ã©lectricitÃ© pour conducteurs VE â†’",
+      cta: "Comparer les plans électricité pour conducteurs VE →",
       ctaSub: "Trouvez le fournisseur le moins cher pour votre usage de recharge",
     },
   };
   const T = CONTENT[lang] || CONTENT.en;
 
-  // Declare all state + refs FIRST â€” before any useEffect that references them
+  // Declare all state + refs FIRST — before any useEffect that references them
   // (avoids TDZ when esbuild renames const declarations in production bundle)
   const mapRef    = useRef(null);
   const leafletRef = useRef(null);
@@ -176,12 +176,12 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
   const [copied,    setCopied]    = useState(false);
 
   useEffect(() => {
-    document.title = "EV Charging Stations Belgium â€” All Public Chargers Map | SmartPrice.be";
+    document.title = "EV Charging Stations Belgium — All Public Chargers Map | SmartPrice.be";
     const desc = document.querySelector("meta[name='description']");
     if (desc) desc.setAttribute("content", "Map of all public EV charging stations in Belgium with live EPEX electricity prices. Find the nearest fast charger and the cheapest time to charge.");
-    const canonical = document.getElementById('canonical-tag');
+    const canonical = document.querySelector("link[rel='canonical']");
     if (canonical) canonical.setAttribute("href", "https://smartprice.be/ev-charging-stations-belgium");
-    return () => { document.title = "SmartPrice.be â€” Belgium Real-Time Electricity & Gas Prices"; };
+    return () => { document.title = "SmartPrice.be — Belgium Real-Time Electricity & Gas Prices"; };
   }, []);
 
   // Inject Leaflet CSS fix for map container
@@ -261,7 +261,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
       const L = window.L;
       const map = L.map(mapRef.current, { center: [50.85, 4.35], zoom: 8, zoomControl: true });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: 'Â© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+        attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
         maxZoom: 18,
       }).addTo(map);
       leafletRef.current = map;
@@ -282,7 +282,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
         setStations(list);
         setFiltered(list);
         if (!data.success && list.length === 0) {
-          setError("Station data temporarily unavailable â€” try again later");
+          setError("Station data temporarily unavailable — try again later");
         }
       })
       .catch(e => {
@@ -359,14 +359,14 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
       {/* Nav */}
       <nav style={{ borderBottom: `1px solid ${C.border}`, padding: "14px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(6,11,20,0.95)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 100 }}>
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.text }}>
-          <span style={{ fontSize: 20 }}>ðŸ‡§ðŸ‡ª</span>
+          <span style={{ fontSize: 20 }}>🇧🇪</span>
           <span style={{ fontSize: 16, fontWeight: 900, letterSpacing: "-0.5px" }}>SmartPrice</span>
-          <span style={{ fontSize: 9, color: C.teal, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>â— LIVE</span>
+          <span style={{ fontSize: 9, color: C.teal, background: "rgba(13,148,136,0.1)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>● LIVE</span>
         </a>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <a href="/ev-charging-belgium" onClick={(e) => { e.preventDefault(); window.location.href = "/ev-charging-belgium"; }} style={{ fontSize: 12, color: C.muted, textDecoration: "none", padding: "6px 12px", display: "inline-block", cursor: "pointer" }}>â° Best times</a>
+          <a href="/ev-charging-belgium" onClick={(e) => { e.preventDefault(); window.location.href = "/ev-charging-belgium"; }} style={{ fontSize: 12, color: C.muted, textDecoration: "none", padding: "6px 12px", display: "inline-block", cursor: "pointer" }}>⏰ Best times</a>
           <LangSwitcher />
-          <a href="/" onClick={e => { e.preventDefault(); onGetStarted && onGetStarted(); }} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, color: "#fff", textDecoration: "none" }}>Dashboard â†’</a>
+          <a href="/" onClick={e => { e.preventDefault(); onGetStarted && onGetStarted(); }} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, color: "#fff", textDecoration: "none" }}>Dashboard →</a>
         </div>
       </nav>
 
@@ -375,7 +375,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
         {/* Hero */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.2)", borderRadius: 30, padding: "5px 14px", fontSize: 12, color: C.green, fontWeight: 700, marginBottom: 14 }}>
-            ðŸ—ºï¸ {filtered.length > 0 ? `${filtered.length} ${T.stationsFound}` : T.loadingStations}
+            🗺️ {filtered.length > 0 ? `${filtered.length} ${T.stationsFound}` : T.loadingStations}
           </div>
           <h1 style={{ fontSize: "clamp(24px,4vw,44px)", fontWeight: 900, letterSpacing: "-1.5px", margin: "0 0 10px", lineHeight: 1.1 }}>
             <span style={{ background: `linear-gradient(135deg,#fff 30%,${C.green})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
@@ -392,7 +392,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           <div style={{ background: `linear-gradient(135deg,${col}14,${col}05)`, border: `1px solid ${col}40`, borderRadius: 16, padding: "16px 20px", minWidth: 180 }}>
             <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6, fontWeight: 700 }}>{T.currentPrice}</div>
             <div style={{ fontSize: 32, fontWeight: 900, fontFamily: "monospace", color: col, lineHeight: 1 }}>
-              {mwh != null ? `â‚¬${mwh.toFixed(0)}` : "â€”"}
+              {mwh != null ? `€${mwh.toFixed(0)}` : "—"}
             </div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>/MWh</div>
             <div style={{ fontSize: 12, color: col, marginTop: 8, fontWeight: 600 }}>{getPriceAdvice(mwh, lang)}</div>
@@ -408,12 +408,12 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 background: nearMe ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.03)",
                 color: nearMe ? C.blue : C.muted, transition: "all 0.15s",
               }}>
-                {locating ? "ðŸ“ Locatingâ€¦" : nearMe ? "ðŸ“ Near me âœ“" : "ðŸ“ Near me"}
+                {locating ? "📍 Locating…" : nearMe ? "📍 Near me ✓" : "📍 Near me"}
               </button>
               {[
-                { key: "fast",  label: T.filterFast,  icon: "âš¡" },
-                { key: "type2", label: T.filterType2,  icon: "ðŸ”Œ" },
-                { key: "ccs",   label: T.filterCCS,    icon: "ðŸ”‹" },
+                { key: "fast",  label: T.filterFast,  icon: "⚡" },
+                { key: "type2", label: T.filterType2,  icon: "🔌" },
+                { key: "ccs",   label: T.filterCCS,    icon: "🔋" },
               ].map(f => (
                 <button key={f.key} onClick={() => toggleFilter(f.key)} style={{
                   padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer",
@@ -441,11 +441,11 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 16, padding: "18px 22px", marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: C.green }}>
-                ðŸ”‹ {lang === "nl" ? "Goedkoopste laadmomenten vandaag" : lang === "fr" ? "Meilleures heures de recharge aujourd'hui" : "Best hours to charge today"}
+                🔋 {lang === "nl" ? "Goedkoopste laadmomenten vandaag" : lang === "fr" ? "Meilleures heures de recharge aujourd'hui" : "Best hours to charge today"}
               </div>
               <a href="/ev-charging-belgium" onClick={e => { e.preventDefault(); window.location.href = "/ev-charging-belgium"; }}
                 style={{ fontSize: 12, color: C.teal, textDecoration: "none", fontWeight: 600 }}>
-                {lang === "nl" ? "Volledig overzicht â†’" : lang === "fr" ? "Voir tout â†’" : "Full planner â†’"}
+                {lang === "nl" ? "Volledig overzicht →" : lang === "fr" ? "Voir tout →" : "Full planner →"}
               </a>
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -461,12 +461,12 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                   <div key={i} style={{ flex: "1 1 100px", background: i === 0 ? `${hCol}12` : "rgba(255,255,255,0.03)", border: `1px solid ${i === 0 ? hCol + "40" : C.border}`, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
                     <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{label}</div>
                     <div style={{ fontSize: 22, fontWeight: 900, fontFamily: "monospace", color: hCol }}>
-                      {h.hour != null ? `${String(h.hour).padStart(2,"0")}:00` : "â€”"}
+                      {h.hour != null ? `${String(h.hour).padStart(2,"0")}:00` : "—"}
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: hCol, marginTop: 2 }}>
-                      â‚¬{hMwh != null ? hMwh.toFixed(0) : "â€”"}<span style={{ fontSize: 10, fontWeight: 400, color: C.muted }}>/MWh</span>
+                      €{hMwh != null ? hMwh.toFixed(0) : "—"}<span style={{ fontSize: 10, fontWeight: 400, color: C.muted }}>/MWh</span>
                     </div>
-                    {hMwh != null && <div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>~â‚¬{((hMwh/1000)*30*1.21).toFixed(2)}/30kWh</div>}
+                    {hMwh != null && <div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>~€{((hMwh/1000)*30*1.21).toFixed(2)}/30kWh</div>}
                   </div>
                 );
               })}
@@ -474,10 +474,10 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
               <div style={{ flex: "1 1 120px", background: "rgba(13,148,136,0.07)", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 12, padding: "12px 14px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 8, cursor: "pointer" }}
                 onClick={() => window.location.href = "/?register=1"}>
                 <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, textAlign: "center" }}>
-                  ðŸ”” {lang === "nl" ? "Krijg een melding als de prijs daalt" : lang === "fr" ? "Alerte quand le prix baisse" : "Get alerted when price drops"}
+                  🔔 {lang === "nl" ? "Krijg een melding als de prijs daalt" : lang === "fr" ? "Alerte quand le prix baisse" : "Get alerted when price drops"}
                 </div>
                 <div style={{ fontSize: 11, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, color: "#fff", padding: "5px 12px", borderRadius: 20, fontWeight: 700 }}>
-                  {lang === "nl" ? "Gratis aanmelden â†’" : lang === "fr" ? "S'inscrire â†’" : "Sign up free â†’"}
+                  {lang === "nl" ? "Gratis aanmelden →" : lang === "fr" ? "S'inscrire →" : "Sign up free →"}
                 </div>
               </div>
             </div>
@@ -490,7 +490,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           {/* Map */}
           <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 20, overflow: "hidden", position: "relative" }}>
             <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700 }}>ðŸ—ºï¸ {T.mapTitle}</div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>🗺️ {T.mapTitle}</div>
               <div style={{ fontSize: 12, color: C.muted }}>{T.mapDesc}</div>
             </div>
             {!mapReady && (
@@ -511,11 +511,11 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 <div style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.3, flex: 1, paddingRight: 8 }}>
                   {selected.AddressInfo?.Title || "Charging Station"}
                 </div>
-                <button onClick={() => setSelected(null)} style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`, borderRadius: 8, padding: "4px 10px", color: C.muted, cursor: "pointer", fontSize: 13, flexShrink: 0 }}>âœ•</button>
+                <button onClick={() => setSelected(null)} style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`, borderRadius: 8, padding: "4px 10px", color: C.muted, cursor: "pointer", fontSize: 13, flexShrink: 0 }}>✕</button>
               </div>
 
               <div style={{ fontSize: 12, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
-                ðŸ“ {selected.AddressInfo?.AddressLine1 && `${selected.AddressInfo.AddressLine1}, `}
+                📍 {selected.AddressInfo?.AddressLine1 && `${selected.AddressInfo.AddressLine1}, `}
                 {selected.AddressInfo?.Town && `${selected.AddressInfo.Town}, `}
                 {selected.AddressInfo?.Postcode}
               </div>
@@ -524,9 +524,9 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
               <div style={{ background: `${col}10`, border: `1px solid ${col}30`, borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <div>
-                    <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>âš¡ CURRENT EPEX PRICE</div>
+                    <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>⚡ CURRENT EPEX PRICE</div>
                     <div style={{ fontSize: 24, fontWeight: 900, fontFamily: "monospace", color: col }}>
-                      â‚¬{mwh != null ? mwh.toFixed(1) : "â€”"}
+                      €{mwh != null ? mwh.toFixed(1) : "—"}
                     </div>
                     <div style={{ fontSize: 10, color: C.muted }}>/MWh</div>
                   </div>
@@ -534,7 +534,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>30 kWh CHARGE COSTS</div>
                       <div style={{ fontSize: 24, fontWeight: 900, fontFamily: "monospace", color: col }}>
-                        â‚¬{costNow}
+                        €{costNow}
                       </div>
                       <div style={{ fontSize: 10, color: C.muted }}>incl. VAT</div>
                     </div>
@@ -543,13 +543,13 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 <div style={{ fontSize: 12, color: col, fontWeight: 700 }}>{getPriceAdvice(mwh, lang)}</div>
                 {chargeTime && maxPower > 0 && (
                   <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
-                    â± ~{chargeTime < 60 ? `${chargeTime} min` : `${(chargeTime/60).toFixed(1)}h`} at {maxPower}kW
+                    ⏱ ~{chargeTime < 60 ? `${chargeTime} min` : `${(chargeTime/60).toFixed(1)}h`} at {maxPower}kW
                   </div>
                 )}
                 {cheapHours.length > 0 && cheapHours[0].hour != null && (
                   <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(0,200,150,0.07)", borderRadius: 8, fontSize: 11, color: C.green, fontWeight: 600 }}>
-                    ðŸ’¡ {lang === "nl" ? `Goedkoopste thuislaadtijd vandaag: ${String(cheapHours[0].hour).padStart(2,"0")}:00 (â‚¬${cheapHours[0].price_eur_mwh?.toFixed(0) ?? cheapHours[0].price?.toFixed(0)}/MWh)` : lang === "fr" ? `Meilleure heure de recharge: ${String(cheapHours[0].hour).padStart(2,"0")}:00` : `Cheapest home charging today: ${String(cheapHours[0].hour).padStart(2,"0")}:00 (â‚¬${cheapHours[0].price_eur_mwh?.toFixed(0) ?? cheapHours[0].price?.toFixed(0)}/MWh)`}
-                    {" "}<a href="/ev-charging-belgium" onClick={e => { e.preventDefault(); window.location.href = "/ev-charging-belgium"; }} style={{ color: C.teal, textDecoration: "none" }}>Full planner â†’</a>
+                    💡 {lang === "nl" ? `Goedkoopste thuislaadtijd vandaag: ${String(cheapHours[0].hour).padStart(2,"0")}:00 (€${cheapHours[0].price_eur_mwh?.toFixed(0) ?? cheapHours[0].price?.toFixed(0)}/MWh)` : lang === "fr" ? `Meilleure heure de recharge: ${String(cheapHours[0].hour).padStart(2,"0")}:00` : `Cheapest home charging today: ${String(cheapHours[0].hour).padStart(2,"0")}:00 (€${cheapHours[0].price_eur_mwh?.toFixed(0) ?? cheapHours[0].price?.toFixed(0)}/MWh)`}
+                    {" "}<a href="/ev-charging-belgium" onClick={e => { e.preventDefault(); window.location.href = "/ev-charging-belgium"; }} style={{ color: C.teal, textDecoration: "none" }}>Full planner →</a>
                   </div>
                 )}
               </div>
@@ -577,7 +577,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                             <div style={{ fontSize: 12, fontWeight: 600 }}>
                               {CONNECTOR_TYPES[conn.ConnectionTypeID] || `Type ${conn.ConnectionTypeID}`}
                             </div>
-                            {conn.Quantity > 1 && <div style={{ fontSize: 10, color: C.muted }}>Ã—{conn.Quantity}</div>}
+                            {conn.Quantity > 1 && <div style={{ fontSize: 10, color: C.muted }}>×{conn.Quantity}</div>}
                           </div>
                           <div style={{ textAlign: "right" }}>
                             {power && (
@@ -585,7 +585,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                                 {power} kW
                               </div>
                             )}
-                            {connCost && <div style={{ fontSize: 10, color: C.muted }}>~â‚¬{connCost}/30kWh</div>}
+                            {connCost && <div style={{ fontSize: 10, color: C.muted }}>~€{connCost}/30kWh</div>}
                           </div>
                         </div>
                       );
@@ -599,31 +599,31 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 <a href={`https://www.google.com/maps/dir/?api=1&destination=${selected.AddressInfo?.Latitude},${selected.AddressInfo?.Longitude}`}
                   target="_blank" rel="noopener noreferrer"
                   style={{ flex: 1, display: "block", textAlign: "center", padding: "10px 0", borderRadius: 10, background: "rgba(13,148,136,0.15)", border: "1px solid rgba(13,148,136,0.3)", color: C.teal, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
-                  ðŸ—ºï¸ Directions
+                  🗺️ Directions
                 </a>
                 <div data-share-panel style={{ position: "relative" }}>
                   <button
                     onClick={() => setShareOpen(o => !o)}
                     style={{ padding: "10px 14px", borderRadius: 10, background: shareOpen ? "rgba(59,130,246,0.22)" : "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)", color: C.blue, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
-                    ðŸ“¤ Share price
+                    📤 Share price
                   </button>
 
                   {shareOpen && (() => {
                     const name  = selected.AddressInfo?.Title || "EV station";
                     const addr  = [selected.AddressInfo?.AddressLine1, selected.AddressInfo?.Town].filter(Boolean).join(", ");
-                    const price = mwh != null ? `â‚¬${mwh.toFixed(1)}/MWh` : "";
-                    const cost  = costNow ? ` Â· 30kWh ~â‚¬${costNow}` : "";
-                    const shareText = `âš¡ ${name}${addr ? ` â€” ${addr}` : ""}\nCurrent EPEX price: ${price}${cost}\nðŸ”— smartprice.be/ev-charging-stations-belgium`;
+                    const price = mwh != null ? `€${mwh.toFixed(1)}/MWh` : "";
+                    const cost  = costNow ? ` · 30kWh ~€${costNow}` : "";
+                    const shareText = `⚡ ${name}${addr ? ` — ${addr}` : ""}\nCurrent EPEX price: ${price}${cost}\n🔗 smartprice.be/ev-charging-stations-belgium`;
                     const encodedText = encodeURIComponent(shareText);
                     const pageUrl = encodeURIComponent("https://smartprice.be/ev-charging-stations-belgium");
 
                     const channels = [
                       {
-                        label: "WhatsApp", icon: "ðŸ’¬", color: "#25D366", bg: "rgba(37,211,102,0.1)",
+                        label: "WhatsApp", icon: "💬", color: "#25D366", bg: "rgba(37,211,102,0.1)",
                         href: `https://wa.me/?text=${encodedText}`,
                       },
                       {
-                        label: "X / Twitter", icon: "ð•", color: "#fff", bg: "rgba(255,255,255,0.08)",
+                        label: "X / Twitter", icon: "𝕏", color: "#fff", bg: "rgba(255,255,255,0.08)",
                         href: `https://twitter.com/intent/tweet?text=${encodedText}`,
                       },
                       {
@@ -631,7 +631,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                         href: `https://www.facebook.com/sharer/sharer.php?u=${pageUrl}&quote=${encodedText}`,
                       },
                       {
-                        label: "Email", icon: "âœ‰", color: "#94A3B8", bg: "rgba(148,163,184,0.1)",
+                        label: "Email", icon: "✉", color: "#94A3B8", bg: "rgba(148,163,184,0.1)",
                         href: `mailto:?subject=${encodeURIComponent(`EV charging price at ${name}`)}&body=${encodedText}`,
                       },
                     ];
@@ -657,7 +657,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                             });
                           }}
                           style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, background: copied ? "rgba(0,200,150,0.1)" : "rgba(255,255,255,0.04)", border: "none", width: "100%", cursor: "pointer", marginTop: 2 }}>
-                          <span style={{ width: 26, height: 26, borderRadius: 7, background: "rgba(0,200,150,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#00C896", flexShrink: 0 }}>{copied ? "âœ“" : "ðŸ”—"}</span>
+                          <span style={{ width: 26, height: 26, borderRadius: 7, background: "rgba(0,200,150,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#00C896", flexShrink: 0 }}>{copied ? "✓" : "🔗"}</span>
                           <span style={{ fontSize: 13, fontWeight: 600, color: copied ? "#00C896" : "#C4D4E0" }}>{copied ? (TD.copied || "Copied!") : (TD.copyLink || "Copy link")}</span>
                         </button>
                       </div>
@@ -677,7 +677,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
             <div style={{ fontSize: 12, color: C.muted }}>{T.ctaSub}</div>
           </div>
           <button onClick={() => nav("/calculator/electricity?ev=1")} style={{ padding: "12px 24px", borderRadius: 30, fontSize: 14, fontWeight: 800, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, border: "none", color: "#fff", cursor: "pointer", whiteSpace: "nowrap" }}>
-            {T.cta.split("â†’")[0]}â†’
+            {T.cta.split("→")[0]}→
           </button>
         </div>
 
@@ -702,8 +702,8 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
 
         <div style={{ textAlign: "center", fontSize: 11, color: C.muted, paddingTop: 24, borderTop: `1px solid ${C.border}` }}>
           Station data: <a href="https://openchargemap.org" target="_blank" rel="noopener noreferrer" style={{ color: C.teal }}>Open Charge Map</a> (CC BY-SA 3.0)
-          {" Â· "}Price data: Energy-Charts.info Â· Elia Open Data (CC BY 4.0)
-          {" Â· "}<a href="/" style={{ color: C.teal }}>SmartPrice.be</a>
+          {" · "}Price data: Energy-Charts.info · Elia Open Data (CC BY 4.0)
+          {" · "}<a href="/" style={{ color: C.teal }}>SmartPrice.be</a>
         </div>
       </div>
     </div>
