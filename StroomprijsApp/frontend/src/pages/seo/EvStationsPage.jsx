@@ -174,6 +174,8 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
   const [locating,  setLocating]  = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied,    setCopied]    = useState(false);
+  const [alertEmail,  setAlertEmail]  = useState("");
+  const [alertState,  setAlertState]  = useState("idle"); // idle | loading | done | error
 
   useEffect(() => {
     document.title = "EV Charging Stations Belgium — All Public Chargers Map | SmartPrice.be";
@@ -481,6 +483,48 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Email capture — get alerted when prices drop */}
+        {alertState !== "done" && (
+          <div style={{ background: "rgba(0,200,150,0.07)", border: "1px solid rgba(0,200,150,0.25)", borderRadius: 16, padding: "16px 22px", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: C.green, marginBottom: 2 }}>
+                  🔔 {lang === "nl" ? "Ontvang een melding als de prijs daalt" : lang === "fr" ? "Soyez alerté quand le prix baisse" : "Get alerted when electricity prices drop"}
+                </div>
+                <div style={{ fontSize: 11, color: C.muted }}>
+                  {lang === "nl" ? "Gratis · Geen wachtwoord nodig" : lang === "fr" ? "Gratuit · Sans mot de passe" : "Free · No password needed"}
+                </div>
+              </div>
+              <form onSubmit={async e => {
+                e.preventDefault();
+                if (!alertEmail || alertState === "loading") return;
+                setAlertState("loading");
+                try {
+                  const r = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: alertEmail, source: "ev-stations" }) });
+                  setAlertState(r.ok ? "done" : "error");
+                } catch { setAlertState("error"); }
+              }} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <input
+                  type="email" required
+                  value={alertEmail}
+                  onChange={e => setAlertEmail(e.target.value)}
+                  placeholder={lang === "nl" ? "uw@email.be" : lang === "fr" ? "votre@email.be" : "your@email.be"}
+                  style={{ padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(0,200,150,0.35)", background: "rgba(0,0,0,0.3)", color: "#E2E8F0", fontSize: 13, outline: "none", minWidth: 180 }}
+                />
+                <button type="submit" disabled={alertState === "loading"} style={{ padding: "9px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, border: "none", color: "#fff", cursor: "pointer", whiteSpace: "nowrap" }}>
+                  {alertState === "loading" ? "…" : lang === "nl" ? "Aanmelden →" : lang === "fr" ? "M'inscrire →" : "Notify me →"}
+                </button>
+              </form>
+              {alertState === "error" && <div style={{ fontSize: 11, color: "#EF4444" }}>Something went wrong — try again</div>}
+            </div>
+          </div>
+        )}
+        {alertState === "done" && (
+          <div style={{ background: "rgba(0,200,150,0.1)", border: "1px solid rgba(0,200,150,0.3)", borderRadius: 16, padding: "14px 22px", marginBottom: 16, fontSize: 13, color: C.green, fontWeight: 700 }}>
+            ✅ {lang === "nl" ? "Ingeschreven! U ontvangt een melding wanneer de prijs daalt." : lang === "fr" ? "Inscrit ! Vous serez alerté quand le prix baisse." : "You're in! We'll alert you when prices drop."}
           </div>
         )}
 
