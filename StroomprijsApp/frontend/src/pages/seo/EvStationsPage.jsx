@@ -484,6 +484,21 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
           </div>
         )}
 
+        {/* Supplier CTA — above the map so users see it before scrolling */}
+        <div style={{ background: "linear-gradient(135deg,rgba(13,148,136,0.1),rgba(26,86,164,0.08))", border: "1px solid rgba(13,148,136,0.25)", borderRadius: 16, padding: "16px 22px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#E2E8F0", marginBottom: 3 }}>
+              {lang === "nl" ? "💡 Op welk tarief laadt u thuis?" : lang === "fr" ? "💡 Quel est votre tarif à la maison ?" : "💡 What tariff are you charging at home?"}
+            </div>
+            <div style={{ fontSize: 12, color: C.muted }}>
+              {lang === "nl" ? "Vergelijk alle Belgische leveranciers en vind het goedkoopste plan voor EV-rijders" : lang === "fr" ? "Comparez tous les fournisseurs belges et trouvez le plan le moins cher pour les conducteurs VE" : "Compare all Belgian suppliers and find the cheapest plan for EV drivers"}
+            </div>
+          </div>
+          <button onClick={() => window.location.href = "/calculator/electricity?ev=1"} style={{ padding: "10px 22px", borderRadius: 30, fontSize: 13, fontWeight: 800, background: `linear-gradient(135deg,${C.teal},#1A56A4)`, border: "none", color: "#fff", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+            {lang === "nl" ? "Vergelijk plannen →" : lang === "fr" ? "Comparer les plans →" : "Compare plans →"}
+          </button>
+        </div>
+
         {/* Map + sidebar */}
         <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 340px" : "1fr", gap: 16, marginBottom: 24 }}>
 
