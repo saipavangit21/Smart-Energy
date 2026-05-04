@@ -358,8 +358,19 @@ async function sendAdminNewUserNotification(name, email, totalUsers) {
 module.exports.sendAdminNewUserNotification = sendAdminNewUserNotification;
 
 // ── Weekly digest email to all users ──────────────────────────
-async function sendWeeklyDigest(pool) {
+let _lastDigestDate = null; // in-memory guard — prevents duplicate sends on same day
+
+async function sendWeeklyDigest(pool, force = false) {
   if (!RESEND_API_KEY) return;
+
+  // Prevent sending more than once per calendar day (Brussels timezone)
+  const todayBrussels = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date());
+  if (!force && _lastDigestDate === todayBrussels) {
+    console.log(`[weekly-digest] Already sent today (${todayBrussels}) — skipping. Use force=true to override.`);
+    return;
+  }
+  _lastDigestDate = todayBrussels;
+
   try {
     // Get all users with email addresses
     const { rows: users } = await pool.query(
