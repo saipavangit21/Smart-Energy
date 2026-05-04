@@ -8,6 +8,7 @@ const express   = require("express");
 const axios     = require("axios");
 const jwt       = require("jsonwebtoken");
 const userStore = require("../db");
+const { sendWelcomeEmail, sendAdminNewUserNotification } = require("../email-alerts");
 const router    = express.Router();
 
 const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID;
@@ -56,6 +57,7 @@ router.get("/callback", async (req, res) => {
     console.log("[Google OAuth] User:", email);
 
     let user = await userStore.findByEmail(email);
+    const isNewUser = !user;
     if (user) {
       if (!user.providers?.google) {
         await userStore.update(user.id, { providers: { ...(user.providers || {}), google: true, googleId } });
@@ -63,6 +65,14 @@ router.get("/callback", async (req, res) => {
       }
     } else {
       user = await userStore.createOAuth({ email, name, provider: "google", googleId });
+    }
+
+    // Send welcome email + admin notification for new Google OAuth users
+    if (isNewUser && email) {
+      sendWelcomeEmail(email, name).catch(() => {});
+      userStore.count().then(total => {
+        sendAdminNewUserNotification(name, email, total).catch(() => {});
+      }).catch(() => {});
     }
 
     const tokens = generateTokens(user.id);

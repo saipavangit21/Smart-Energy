@@ -229,7 +229,7 @@ async function sendWelcomeEmail(email, name) {
   if (!RESEND_API_KEY || !email) return;
   try {
     await axios.post("https://api.resend.com/emails", {
-      from: "SmartPrice.be <hello@smartprice.be>",
+      from: "SmartPrice.be <info@smartprice.be>",
       to: email,
       subject: "🎉 Welcome to SmartPrice.be!",
       html: `
