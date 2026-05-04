@@ -476,14 +476,15 @@ app.post("/api/admin/send-template", async (req, res) => {
   }
 });
 
-// Manual trigger: POST /api/admin/send-weekly-digest { secret }
+// Manual trigger: POST /api/admin/send-weekly-digest { secret, force? }
+// Add "force": true to bypass the once-per-day guard
 app.post("/api/admin/send-weekly-digest", async (req, res) => {
-  const { secret } = req.body || {};
+  const { secret, force = false } = req.body || {};
   if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }
-  res.json({ success: true, message: "Weekly digest sending in background…" });
-  sendWeeklyDigest(pool).catch(e => console.error("[weekly-digest] Manual trigger error:", e.message));
+  res.json({ success: true, message: force ? "Weekly digest sending (forced)…" : "Weekly digest sending in background… (blocked if already sent today)" });
+  sendWeeklyDigest(pool, force).catch(e => console.error("[weekly-digest] Manual trigger error:", e.message));
 });
 
 app.listen(PORT,()=>{
