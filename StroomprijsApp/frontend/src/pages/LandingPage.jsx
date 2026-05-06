@@ -77,6 +77,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const [fluviusEmail,  setFluviusEmail]  = useState("");
   const [fluviusState,  setFluviusState]  = useState("idle");
   const [fetchedAt,     setFetchedAt]     = useState(null);
+  const [siteStats,     setSiteStats]     = useState(null);
   const [gasCurrent,    setGasCurrent]    = useState(null);
   const planRef = useRef(null);
 
@@ -94,6 +95,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
     fetch("/api/gas/current")
       .then(r => r.json())
       .then(d => { if (d.success && d.ttf) setGasCurrent({ price: d.ttf.price, ttf_cEkWh: d.ttf_cEkWh }); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/stats")
+      .then(r => r.json())
+      .then(d => { if (d.success) setSiteStats(d); })
       .catch(() => {});
   }, []);
 
@@ -328,6 +336,24 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               <span>⚡</span><span>Live Belgian electricity prices — updated every 15 min</span>
             </div>
           </div>
+
+          {/* Social proof counter */}
+          {siteStats && (siteStats.ev_views_today > 10 || siteStats.registered_users > 10) && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 16, flexWrap: "wrap" }}>
+              {siteStats.ev_views_today > 10 && (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#00C896", boxShadow: "0 0 6px #00C896", display: "inline-block" }} />
+                  <span><strong style={{ color: "#E2E8F0" }}>{siteStats.ev_views_today.toLocaleString()}</strong> people checked EV prices today</span>
+                </div>
+              )}
+              {siteStats.registered_users > 10 && (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", boxShadow: "0 0 6px #3B82F6", display: "inline-block" }} />
+                  <span><strong style={{ color: "#E2E8F0" }}>{siteStats.registered_users}</strong> users tracking Belgian energy</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Headline */}
           <h1 style={{ fontSize: "clamp(32px,6vw,62px)", fontWeight: 900, letterSpacing: "-2.5px", lineHeight: 1.05, margin: "0 0 8px", textAlign: "center" }}>
