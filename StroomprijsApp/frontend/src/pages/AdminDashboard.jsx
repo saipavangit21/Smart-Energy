@@ -345,6 +345,44 @@ export default function AdminDashboard() {
               }
             </div>
 
+            {/* Daily sessions chart — EV vs Page views */}
+            {(analytics?.daily_breakdown || []).length > 0 && (() => {
+              // Build per-day totals for ev_page_view and page_view
+              const days = {};
+              (analytics.daily_breakdown || []).forEach(row => {
+                const d = row.day?.substring(0, 10);
+                if (!d) return;
+                if (!days[d]) days[d] = { day: d, ev: 0, page: 0, seo: 0 };
+                if (row.event === "ev_page_view")  days[d].ev   += Number(row.count);
+                if (row.event === "page_view")      days[d].page += Number(row.count);
+                if (row.event === "seo_page_view")  days[d].seo  += Number(row.count);
+              });
+              const sorted = Object.values(days).sort((a, b) => a.day.localeCompare(b.day)).slice(-14);
+              const maxVal = Math.max(...sorted.map(d => Math.max(d.ev, d.page)), 1);
+              return (
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 24px", marginBottom: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Daily Sessions — Last 14 days</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 16, display: "flex", gap: 16 }}>
+                    <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#00C896", marginRight: 5 }} />EV page views</span>
+                    <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "#3B82F6", marginRight: 5 }} />Dashboard views</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 120, overflowX: "auto" }}>
+                    {sorted.map(d => (
+                      <div key={d.day} style={{ flex: "1 0 28px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 28 }}>
+                        <div style={{ width: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", height: 90, gap: 2 }}>
+                          <div title={`EV: ${d.ev}`} style={{ width: "100%", height: `${Math.round((d.ev / maxVal) * 90)}px`, background: "#00C896", borderRadius: "3px 3px 0 0", minHeight: d.ev > 0 ? 2 : 0 }} />
+                          <div title={`Page: ${d.page}`} style={{ width: "100%", height: `${Math.round((d.page / maxVal) * 90)}px`, background: "#3B82F6", borderRadius: "3px 3px 0 0", minHeight: d.page > 0 ? 2 : 0 }} />
+                        </div>
+                        <div style={{ fontSize: 9, color: C.muted, textAlign: "center", lineHeight: 1.2 }}>
+                          {d.day.substring(5).replace("-", "/")}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Calculator funnel */}
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 24px" }}>
               <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Calculator Funnel</div>

@@ -476,6 +476,26 @@ app.post("/api/admin/send-template", async (req, res) => {
   }
 });
 
+// Public stats for landing page social proof (no auth needed)
+app.get("/api/stats", async (req, res) => {
+  try {
+    const today = new Date();
+    const tzDate = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Brussels" }).format(today);
+    const [users, evToday] = await Promise.all([
+      pool.query("SELECT COUNT(*) AS total FROM users"),
+      pool.query(`SELECT COUNT(*) AS count FROM analytics_events WHERE event = 'ev_page_view' AND created_at::date = $1`, [tzDate]),
+    ]);
+    res.set("Cache-Control", "public, max-age=300");
+    res.json({
+      success: true,
+      registered_users: parseInt(users.rows[0].total),
+      ev_views_today: parseInt(evToday.rows[0].count),
+    });
+  } catch (e) {
+    res.json({ success: false, registered_users: 60, ev_views_today: 120 });
+  }
+});
+
 // Manual trigger: POST /api/admin/send-weekly-digest { secret, force? }
 // Add "force": true to bypass the once-per-day guard
 app.post("/api/admin/send-weekly-digest", async (req, res) => {
