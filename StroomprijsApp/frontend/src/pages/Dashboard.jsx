@@ -314,7 +314,40 @@ function SharePanel({ currentPrice, userName, onClose, copied, onCopy, refCopied
   );
 }
 
-function EvTab({ mwh, cheapest, prices, isMobile, stats, user }) {
+const EV_CARS = [
+  { id: "ioniq5",      name: "Hyundai Ioniq 5",         battery: 77.4, maxKw: 220 },
+  { id: "ioniq6",      name: "Hyundai Ioniq 6",         battery: 77.4, maxKw: 233 },
+  { id: "ev6",         name: "Kia EV6",                 battery: 77.4, maxKw: 233 },
+  { id: "ev9",         name: "Kia EV9",                 battery: 99.8, maxKw: 233 },
+  { id: "id4",         name: "Volkswagen ID.4",         battery: 77,   maxKw: 135 },
+  { id: "id3",         name: "Volkswagen ID.3",         battery: 58,   maxKw: 120 },
+  { id: "id7",         name: "Volkswagen ID.7",         battery: 86,   maxKw: 200 },
+  { id: "polestar2",   name: "Polestar 2",              battery: 78,   maxKw: 205 },
+  { id: "model3",      name: "Tesla Model 3",           battery: 75,   maxKw: 250 },
+  { id: "modely",      name: "Tesla Model Y",           battery: 75,   maxKw: 250 },
+  { id: "modelx",      name: "Tesla Model X",           battery: 100,  maxKw: 250 },
+  { id: "models",      name: "Tesla Model S",           battery: 100,  maxKw: 250 },
+  { id: "bmwi4",       name: "BMW i4",                  battery: 83.9, maxKw: 205 },
+  { id: "bmwix3",      name: "BMW iX3",                 battery: 74,   maxKw: 150 },
+  { id: "bmwix",       name: "BMW iX",                  battery: 111,  maxKw: 200 },
+  { id: "meceqa",      name: "Mercedes EQA",            battery: 66.5, maxKw: 100 },
+  { id: "meceqb",      name: "Mercedes EQB",            battery: 66.5, maxKw: 100 },
+  { id: "meceqs",      name: "Mercedes EQS",            battery: 107.8,maxKw: 200 },
+  { id: "renaultzoe",  name: "Renault Zoé",             battery: 52,   maxKw: 46  },
+  { id: "megane",      name: "Renault Mégane E-Tech",   battery: 60,   maxKw: 130 },
+  { id: "audi_q4",     name: "Audi Q4 e-tron",          battery: 77,   maxKw: 135 },
+  { id: "audi_etron",  name: "Audi e-tron GT",          battery: 93.4, maxKw: 270 },
+  { id: "volvoex40",   name: "Volvo EX40",              battery: 79,   maxKw: 150 },
+  { id: "volvoex30",   name: "Volvo EX30",              battery: 69,   maxKw: 153 },
+  { id: "skoda",       name: "Škoda Enyaq",             battery: 77,   maxKw: 135 },
+  { id: "cupra",       name: "CUPRA Born",              battery: 58,   maxKw: 120 },
+  { id: "mini",        name: "Mini Cooper SE",          battery: 54.2, maxKw: 95  },
+  { id: "opelamp",     name: "Opel Astra/Ampera-e",     battery: 50,   maxKw: 100 },
+  { id: "peugeote208", name: "Peugeot e-208",           battery: 51,   maxKw: 100 },
+  { id: "other",       name: "Other EV (50 kWh)",       battery: 50,   maxKw: 50  },
+];
+
+function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences }) {
   const C = { bg: "#060B14", card: "rgba(255,255,255,0.03)", card2: "#0A1220", border: "rgba(255,255,255,0.08)", green: "#00C896", teal: "#0D9488", blue: "#3B82F6", red: "#EF4444", muted: "#64748B", soft: "#94A3B8" };
   const getPriceColor = (v) => { if (v == null) return C.muted; if (v < 0) return "#00E5FF"; if (v < 50) return "#00C896"; if (v < 90) return "#84CC16"; if (v < 130) return "#F59E0B"; if (v < 160) return "#F97316"; return "#EF4444"; };
   const col = getPriceColor(mwh);
@@ -351,15 +384,30 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user }) {
       .then(() => setTesla({ success: true, connected: false }));
   };
 
-  const chargeKwh = 50; // typical EV 50 kWh session
-  const costNow = mwh != null ? ((mwh / 1000) * chargeKwh * 1.21).toFixed(2) : null;
+  // EV profile — saved car + battery %
+  const [evCarId,    setEvCarId]    = useState(user?.preferences?.ev_car    || "");
+  const [evBattPct,  setEvBattPct]  = useState(user?.preferences?.ev_batt   ?? 30);
+  const selectedCar = EV_CARS.find(c => c.id === evCarId) || null;
 
-  // If Tesla connected, use actual battery level for personalised cost
+  const saveEvProfile = async (carId, battPct) => {
+    try { await updatePreferences({ ev_car: carId, ev_batt: battPct }); } catch {}
+  };
+
+  // Use Tesla data if connected, otherwise use EV profile, otherwise generic 50kWh
   const batteryLevel = tesla?.vehicle?.battery_level;
   const chargeLimit  = tesla?.vehicle?.charge_limit_soc ?? 80;
-  const kwhNeeded    = batteryLevel != null ? ((chargeLimit - batteryLevel) / 100 * 75) : chargeKwh;
-  const personalCostNow     = mwh != null ? ((mwh / 1000) * kwhNeeded * 1.21).toFixed(2) : null;
-  const personalCostCheapest = cheapest[0]?.price_eur_mwh != null ? ((cheapest[0].price_eur_mwh / 1000) * kwhNeeded * 1.21).toFixed(2) : null;
+  const carBattery   = selectedCar?.battery ?? 50;
+
+  const kwhNeeded = batteryLevel != null
+    ? ((chargeLimit - batteryLevel) / 100 * 75)           // Tesla: real data
+    : selectedCar
+    ? ((80 - evBattPct) / 100 * carBattery)               // EV profile: selected car
+    : 50;                                                   // fallback
+
+  const chargeKwh = kwhNeeded > 0 ? kwhNeeded : 50;
+  const costNow = mwh != null ? ((mwh / 1000) * chargeKwh * 1.21).toFixed(2) : null;
+  const personalCostNow     = costNow;
+  const personalCostCheapest = cheapest[0]?.price_eur_mwh != null ? ((cheapest[0].price_eur_mwh / 1000) * chargeKwh * 1.21).toFixed(2) : null;
 
   const todayWindows = cheapest.filter(h => h.day === "today" || h.day == null).slice(0, 8);
   const tomorrowWindows = cheapest.filter(h => h.day === "tomorrow").slice(0, 5);
@@ -386,7 +434,9 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user }) {
           <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: col }}>
             {costNow ? `€${costNow}` : "—"}
           </div>
-          <div style={{ fontSize: 11, color: C.muted }}>incl. 21% VAT</div>
+          <div style={{ fontSize: 11, color: C.muted }}>
+            {tesla?.vehicle ? `${tesla.vehicle.battery_level}%→${chargeLimit}% · ${tesla.vehicle.name}` : selectedCar ? `${evBattPct}%→80% · ${selectedCar.name.split(" ").slice(0,2).join(" ")}` : "incl. 21% VAT"}
+          </div>
         </div>
         <div style={{ background: "rgba(0,200,150,0.06)", border: "1px solid rgba(0,200,150,0.2)", borderRadius: 16, padding: "16px 18px" }}>
           <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6, fontWeight: 700 }}>💡 Best window</div>
@@ -405,6 +455,41 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user }) {
           <div style={{ fontSize: 11, color: C.muted }}>per 50kWh charge</div>
         </div>
       </div>
+
+      {/* EV Profile card — for non-Tesla users */}
+      {user && !user.isGuest && !tesla?.vehicle && (
+        <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 18, padding: "18px 22px", marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.soft, marginBottom: 12 }}>🚗 Your EV — personalise charging costs</div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div style={{ flex: "1 1 200px" }}>
+              <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>Select your car</div>
+              <select
+                value={evCarId}
+                onChange={e => { setEvCarId(e.target.value); saveEvProfile(e.target.value, evBattPct); }}
+                style={{ width: "100%", padding: "9px 12px", borderRadius: 10, border: `1px solid ${C.border}`, background: "#0A1220", color: "#E2E8F0", fontSize: 13, outline: "none", cursor: "pointer" }}>
+                <option value="">— Select car model —</option>
+                {EV_CARS.map(c => <option key={c.id} value={c.id}>{c.name} · {c.battery}kWh</option>)}
+              </select>
+            </div>
+            <div style={{ flex: "0 0 160px" }}>
+              <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>Current battery: <strong style={{ color: C.green }}>{evBattPct}%</strong></div>
+              <input type="range" min={5} max={95} step={5} value={evBattPct}
+                onChange={e => { const v = parseInt(e.target.value); setEvBattPct(v); saveEvProfile(evCarId, v); }}
+                style={{ width: "100%", accentColor: C.green, cursor: "pointer" }} />
+            </div>
+            {selectedCar && (
+              <div style={{ fontSize: 12, color: C.green, fontWeight: 700, padding: "8px 14px", background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.25)", borderRadius: 10 }}>
+                ~{chargeKwh.toFixed(0)}kWh to 80%
+              </div>
+            )}
+          </div>
+          {!evCarId && (
+            <div style={{ marginTop: 10, fontSize: 11, color: C.muted }}>
+              Select your car to see personalised charging costs. No car? Costs are estimated for a 50kWh session.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tesla connection card */}
       {user && !user.isGuest && (
@@ -938,7 +1023,7 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
 
         {/* ── EV dashboard ── */}
         {energyType === "ev" && (
-          <EvTab mwh={mwh} cheapest={cheapest} prices={prices} isMobile={isMobile} stats={stats} user={user} />
+          <EvTab mwh={mwh} cheapest={cheapest} prices={prices} isMobile={isMobile} stats={stats} user={user} updatePreferences={updatePreferences} />
         )}
 
         {/* ── Gas dashboard ── */}
