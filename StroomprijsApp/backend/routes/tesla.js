@@ -207,7 +207,7 @@ router.post("/register-partner", async (req, res) => {
 
     // Step 2: Register domain with Tesla Fleet API
     const regRes = await axios.post(`${TESLA_API}/partner_accounts`, {
-      domain: "smartprice.be",
+      domain: "www.smartprice.be",
     }, {
       headers: {
         Authorization: `Bearer ${partnerToken}`,
