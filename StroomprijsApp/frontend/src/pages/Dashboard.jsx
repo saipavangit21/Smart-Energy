@@ -500,10 +500,19 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: C.green, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>🚗 {tesla.vehicle.name} · Connected</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.green, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+                    🚗 {tesla.vehicle.name} · Connected
+                    {tesla.vehicle.state === "asleep" && <span style={{ marginLeft: 8, color: "#F59E0B", fontWeight: 600 }}>· 😴 Asleep</span>}
+                  </div>
+                  {tesla.vehicle.battery_level == null && (
+                    <div style={{ fontSize: 12, color: "#F59E0B", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "8px 14px", marginBottom: 10 }}>
+                      😴 Your Tesla is asleep — battery data unavailable. Open the Tesla app or start driving to wake it, then click Refresh.
+                      <button onClick={fetchTesla} style={{ marginLeft: 10, fontSize: 11, padding: "3px 10px", borderRadius: 10, border: "1px solid rgba(245,158,11,0.4)", background: "transparent", color: "#F59E0B", cursor: "pointer" }}>↻ Refresh</button>
+                    </div>
+                  )}
                   <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                     <div>
-                      <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: C.green }}>{tesla.vehicle.battery_level ?? "—"}%</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "monospace", color: tesla.vehicle.battery_level != null ? C.green : C.muted }}>{tesla.vehicle.battery_level ?? "—"}%</div>
                       <div style={{ fontSize: 11, color: C.muted }}>Battery · {tesla.vehicle.battery_range_km ? `~${tesla.vehicle.battery_range_km}km` : ""}</div>
                     </div>
                     <div>
@@ -518,7 +527,10 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
                     )}
                   </div>
                 </div>
-                <button onClick={disconnectTesla} style={{ fontSize: 11, color: C.muted, background: "transparent", border: `1px solid ${C.border}`, padding: "5px 12px", borderRadius: 20, cursor: "pointer" }}>Disconnect</button>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={fetchTesla} style={{ fontSize: 11, color: C.teal, background: "transparent", border: `1px solid rgba(13,148,136,0.3)`, padding: "5px 12px", borderRadius: 20, cursor: "pointer" }}>↻ Refresh</button>
+                  <button onClick={disconnectTesla} style={{ fontSize: 11, color: C.muted, background: "transparent", border: `1px solid ${C.border}`, padding: "5px 12px", borderRadius: 20, cursor: "pointer" }}>Disconnect</button>
+                </div>
               </div>
               {personalCostNow && personalCostCheapest && cheapest[0]?.hour != null && (
                 <div style={{ marginTop: 14, padding: "12px 16px", background: "rgba(0,200,150,0.06)", border: "1px solid rgba(0,200,150,0.2)", borderRadius: 12 }}>
