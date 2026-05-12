@@ -171,4 +171,46 @@ router.delete("/disconnect", requireAuth, async (req, res) => {
   res.json({ success: true });
 });
 
+// POST /api/tesla/register-partner — one-time Tesla Fleet API partner registration
+// Must be called once after hosting the public key at /.well-known/appspecific/com.tesla.3p.public-key.pem
+router.post("/register-partner", async (req, res) => {
+  const { secret } = req.body || {};
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    return res.status(500).json({ success: false, error: "TESLA_CLIENT_ID or TESLA_CLIENT_SECRET not set" });
+  }
+  try {
+    // Step 1: Get partner token using client_credentials
+    const tokenRes = await axios.post(`${TESLA_AUTH}/token`, new URLSearchParams({
+      grant_type:    "client_credentials",
+      client_id:     CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      scope:         "openid vehicle_device_data",
+      audience:      "https://fleet-api.prd.eu.vn.cloud.tesla.com",
+    }), { headers: { "Content-Type": "application/x-www-form-urlencoded" } });
+
+    const partnerToken = tokenRes.data.access_token;
+    console.log("[Tesla] Partner token obtained");
+
+    // Step 2: Register domain with Tesla Fleet API
+    const regRes = await axios.post(`${TESLA_API}/partner_accounts`, {
+      domain: "smartprice.be",
+    }, {
+      headers: {
+        Authorization: `Bearer ${partnerToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("[Tesla] Partner registration response:", regRes.data);
+    res.json({ success: true, response: regRes.data });
+  } catch (err) {
+    const detail = err.response?.data || err.message;
+    console.error("[Tesla] Partner registration failed:", detail);
+    res.status(500).json({ success: false, error: detail });
+  }
+});
+
 module.exports = router;
