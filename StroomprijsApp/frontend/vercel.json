@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/api/:path*",  "destination": "https://smart-energy-production-aef3.up.railway.app/api/:path*" },
     { "source": "/auth/:path*", "destination": "https://smart-energy-production-aef3.up.railway.app/auth/:path*" },
+    { "source": "/.well-known/appspecific/com.tesla.3p.public-key.pem", "destination": "https://smart-energy-production-aef3.up.railway.app/api/tesla/public-key.pem" },
     { "source": "/(.*)",        "destination": "/index.html" }
   ]
 }
