@@ -12,11 +12,22 @@ const { requireAuth } = require("../middleware/auth");
 
 const CLIENT_ID     = process.env.TESLA_CLIENT_ID;
 const CLIENT_SECRET = process.env.TESLA_CLIENT_SECRET;
+const TESLA_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmJDw7tu9pVOXChKlcQDXEQckelP3
+otQ+fZFoPQs3/rRjTfJFKy4Xn6B+QsDiohCfEjptWSbhzwFbQ6EhB2nsVg==
+-----END PUBLIC KEY-----`;
 const FRONTEND_URL  = process.env.FRONTEND_URL || "https://smartprice.be";
 // Vercel proxies /auth/* → Railway, so Tesla must redirect to smartprice.be/auth/tesla/callback
 const REDIRECT_URI  = `${FRONTEND_URL}/auth/tesla/callback`;
 const TESLA_AUTH    = "https://auth.tesla.com/oauth2/v3";
 const TESLA_API     = "https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1";
+
+// Serve Tesla public key — Tesla fetches this to verify domain ownership
+router.get("/public-key.pem", (req, res) => {
+  res.set("Content-Type", "application/x-pem-file");
+  res.set("Cache-Control", "public, max-age=86400");
+  res.send(TESLA_PUBLIC_KEY);
+});
 
 // Step 1 — redirect user to Tesla consent page
 // GET /auth/tesla?userId=<jwt_user_id>  (pass userId in state so callback knows who to save tokens for)
