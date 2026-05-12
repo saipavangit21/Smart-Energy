@@ -109,7 +109,7 @@ const userStore = {
   // ── Update preferences ───────────────────────────────────────
   async updatePreferences(id, prefs) {
     const { rows } = await pool.query(
-      `UPDATE users SET preferences = preferences || $1::jsonb WHERE id = $2 RETURNING *`,
+      `UPDATE users SET preferences = COALESCE(preferences, '{}') || $1::jsonb WHERE id = $2 RETURNING *`,
       [JSON.stringify(prefs), id]
     );
     return rows[0] || null;
