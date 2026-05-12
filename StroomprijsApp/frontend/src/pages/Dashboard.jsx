@@ -545,6 +545,16 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
                 </div>
               )}
             </div>
+          ) : tesla?.connected ? (
+            // Connected but no vehicle data returned
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.green, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>🚗 Tesla Connected</div>
+              <div style={{ fontSize: 12, color: "#F59E0B", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 8 }}>
+                {tesla?.error || "No vehicle data returned. Your Tesla may be asleep or there may be an API issue."}
+                <button onClick={fetchTesla} style={{ marginLeft: 10, fontSize: 11, padding: "3px 10px", borderRadius: 8, border: "1px solid rgba(245,158,11,0.4)", background: "transparent", color: "#F59E0B", cursor: "pointer" }}>↻ Try again</button>
+              </div>
+              <button onClick={disconnectTesla} style={{ fontSize: 11, color: C.muted, background: "transparent", border: `1px solid ${C.border}`, padding: "5px 12px", borderRadius: 20, cursor: "pointer" }}>Disconnect & reconnect</button>
+            </div>
           ) : (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
               <div>
