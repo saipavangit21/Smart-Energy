@@ -488,6 +488,23 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
               Select your car to see personalised charging costs. No car? Costs are estimated for a 50kWh session.
             </div>
           )}
+          {/* Personalised cost summary for non-Tesla EV */}
+          {selectedCar && personalCostNow && personalCostCheapest && cheapest[0]?.hour != null && (
+            <div style={{ marginTop: 14, padding: "12px 16px", background: "rgba(0,200,150,0.06)", border: "1px solid rgba(0,200,150,0.2)", borderRadius: 12 }}>
+              <div style={{ fontSize: 13, color: "#E2E8F0", lineHeight: 1.7, marginBottom: 8 }}>
+                Charging <strong style={{ color: C.green }}>{selectedCar.name}</strong> from <strong style={{ color: C.green }}>{evBattPct}% → 80%</strong> (~{chargeKwh.toFixed(0)}kWh)
+              </div>
+              <div style={{ fontSize: 13, display: "flex", gap: 20, flexWrap: "wrap" }}>
+                <span>Now: <strong style={{ color: col }}>€{personalCostNow}</strong></span>
+                <span>At {String(cheapest[0].hour).padStart(2,"0")}:00: <strong style={{ color: C.green }}>€{personalCostCheapest}</strong></span>
+                {parseFloat(personalCostNow) > parseFloat(personalCostCheapest) && (
+                  <span style={{ color: "#10B981", fontWeight: 700 }}>
+                    Save €{(parseFloat(personalCostNow) - parseFloat(personalCostCheapest)).toFixed(2)} by waiting
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
