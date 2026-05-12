@@ -155,8 +155,9 @@ router.get("/vehicle", requireAuth, async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("[Tesla] Vehicle fetch failed:", err.response?.data || err.message);
-    res.json({ success: false, connected: true, error: "Could not fetch vehicle data" });
+    const detail = err.response?.data?.error || err.response?.data?.message || err.message;
+    console.error("[Tesla] Vehicle fetch failed:", detail);
+    res.json({ success: false, connected: true, error: `Tesla API error: ${detail}` });
   }
 });
 
