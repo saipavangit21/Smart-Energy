@@ -134,7 +134,7 @@ router.get("/vehicle", requireAuth, async (req, res) => {
     });
 
     const vehicles = vehiclesRes.data?.response || [];
-    if (vehicles.length === 0) return res.json({ success: true, connected: true, vehicles: [] });
+    if (vehicles.length === 0) return res.json({ success: true, connected: true, vehicles: [], error: "No Tesla vehicle found on this account." });
 
     // Get charge state for the first vehicle
     const vehicle = vehicles[0];
