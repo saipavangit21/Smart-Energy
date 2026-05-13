@@ -236,6 +236,7 @@ module.exports = function attachAnalytics(app, pool) {
           CASE WHEN providers->>'google' = 'true' THEN true ELSE false END AS google,
           CASE WHEN password_hash IS NOT NULL      THEN true ELSE false END AS email_auth,
           CASE WHEN preferences->>'tesla_access_token' IS NOT NULL THEN true ELSE false END AS tesla_connected,
+          preferences->>'referral_source' AS referral_source,
           created_at
         FROM users
         ORDER BY created_at DESC
