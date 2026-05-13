@@ -437,7 +437,8 @@ export default function AdminDashboard() {
                     <span>
                       {u.google    && <span style={{ fontSize: 11, background: "rgba(26,86,164,0.3)", color: "#7EB3FF", borderRadius: 6, padding: "2px 7px", marginRight: 3 }}>G</span>}
                       {u.email_auth && <span style={{ fontSize: 11, background: "rgba(13,148,136,0.3)", color: C.teal,   borderRadius: 6, padding: "2px 7px", marginRight: 3 }}>✉</span>}
-                      {u.tesla_connected && <span style={{ fontSize: 11, background: "rgba(0,229,255,0.15)", color: "#00E5FF", borderRadius: 6, padding: "2px 7px" }}>🚗 Tesla</span>}
+                      {u.tesla_connected && <span style={{ fontSize: 11, background: "rgba(0,229,255,0.15)", color: "#00E5FF", borderRadius: 6, padding: "2px 7px", marginRight: 3 }}>🚗 Tesla</span>}
+                      {u.referral_source && <span style={{ fontSize: 11, background: "rgba(245,158,11,0.12)", color: "#F59E0B", borderRadius: 6, padding: "2px 7px" }}>via {u.referral_source}</span>}
                     </span>
 
                     {/* Joined */}

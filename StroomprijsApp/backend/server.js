@@ -496,6 +496,24 @@ app.get("/api/stats", async (req, res) => {
   }
 });
 
+// GET /api/referral-source?source=facebook&email=... — tracks how users found SmartPrice
+app.get("/api/referral-source", async (req, res) => {
+  const { source, email } = req.query;
+  if (source) {
+    console.log(`[referral] source=${source} email=${email || "unknown"}`);
+    try {
+      if (email) {
+        await pool.query(
+          `UPDATE users SET preferences = COALESCE(preferences, '{}') || $1::jsonb WHERE email = $2`,
+          [JSON.stringify({ referral_source: source }), email.toLowerCase().trim()]
+        );
+      }
+    } catch (e) { /* non-critical */ }
+  }
+  // Redirect to dashboard so clicking the link logs them in
+  res.redirect("https://smartprice.be/?ref_tracked=1");
+});
+
 // Manual trigger: POST /api/admin/send-weekly-digest { secret, force? }
 // Add "force": true to bypass the once-per-day guard
 app.post("/api/admin/send-weekly-digest", async (req, res) => {

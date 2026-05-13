@@ -299,6 +299,22 @@ async function sendWelcomeEmail(email, name) {
               </div>
             </div>
 
+            <!-- How did you find us -->
+            <div style="background:#0D1626;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px 20px;margin-bottom:24px;">
+              <div style="color:#94A3B8;font-size:13px;font-weight:700;margin-bottom:12px;">🙋 Quick question — how did you find SmartPrice?</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                ${[
+                  { label: "Facebook group", source: "facebook" },
+                  { label: "Google search", source: "google" },
+                  { label: "Friend / word of mouth", source: "friend" },
+                  { label: "Home Assistant community", source: "homeassistant" },
+                  { label: "LinkedIn", source: "linkedin" },
+                  { label: "Tesla group", source: "tesla_group" },
+                  { label: "Other", source: "other" },
+                ].map(s => `<a href="https://smartprice.be/api/referral-source?source=${s.source}&email=${encodeURIComponent(email)}" style="display:inline-block;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#94A3B8;text-decoration:none;">${s.label}</a>`).join("")}
+              </div>
+            </div>
+
             <!-- Footer -->
             <div style="text-align:center;color:#334155;font-size:12px;line-height:1.8;">
               <div>SmartPrice.be · Belgium's real-time energy price tracker</div>
@@ -306,7 +322,7 @@ async function sendWelcomeEmail(email, name) {
               <div style="margin-top:8px;">
                 <a href="https://smartprice.be/privacy" style="color:#475569;text-decoration:none;">Privacy Policy</a>
                 &nbsp;·&nbsp;
-                <a href="mailto:hello@smartprice.be" style="color:#475569;text-decoration:none;">hello@smartprice.be</a>
+                <a href="mailto:info@smartprice.be" style="color:#475569;text-decoration:none;">info@smartprice.be</a>
               </div>
             </div>
 
