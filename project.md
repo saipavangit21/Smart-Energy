@@ -1,26 +1,39 @@
 # SmartPrice.be — Full Project Explainer
 ## For technical and non-technical audiences
+**Last updated: May 2026**
 
 ---
 
 ## PART 1: WHAT IS IT? (For anyone)
 
-SmartPrice.be is a free Belgian website (and mobile app) that shows electricity prices in real-time, hour by hour.
+SmartPrice.be is a free Belgian energy intelligence platform showing electricity prices in real-time, helping households and EV drivers make smarter energy decisions.
 
 **The problem it solves:**
-If you have a "dynamic" electricity contract in Belgium (like Bolt, Engie Spot, or TotalEnergies Flex), your electricity price changes every single hour based on the wholesale market. Most people have no idea when it's cheap or expensive — they just use electricity whenever they want and get a big bill at the end of the month.
+If you have a "dynamic" electricity contract in Belgium (like Bolt, Engie Spot, or TotalEnergies Flex), your electricity price changes every hour based on the wholesale market. Most people have no idea when it's cheap or expensive — they just use electricity whenever they want and get a big bill at the end of the month.
 
 **What SmartPrice does:**
-- Shows you the price for every hour of today and tomorrow
-- Tells you the cheapest 3–5 hours (best time for washing machine, EV charging, dishwasher)
-- Plans your EV charging with a live hour-by-hour charge planner on the landing page
-- Sends you an email alert when prices drop below a level you choose
-- Compares all Belgian electricity and gas suppliers with your actual usage
-- Answers energy questions via a built-in AI assistant
-- Works like a native app on your phone — no app store needed
+- Shows the price for every hour of today and tomorrow (EPEX Spot Belgium)
+- Tells you the cheapest upcoming hours (best time for EV charging, washing machine, dishwasher)
+- **EV tab** — dedicated dashboard for EV drivers with cheapest charge windows ranked
+- **Tesla integration** — connects via official Tesla Fleet API to show your actual battery level and exact charging cost ("charge now for €3.95 or wait until 14:00 for €2.21")
+- **EV profile** — select your car model (30 cars: Ioniq 5, ID.4, BMW i4, Polestar 2, etc.) + set battery % for personalised cost estimates without Tesla API
+- Sends email alert when prices drop below your chosen threshold
+- Compares all Belgian electricity and gas suppliers with personalised annual costs
+- Shows live TTF gas prices and compact tile on landing page
+- AI assistant (Claude) answers energy questions
+- Map of all public EV charging stations in Belgium
+- Negative price alert banner on landing page when EPEX < €0/MWh
+- Weekly Monday email digest with last week's price stats + Tesla feature highlight + share buttons
 
 **Who it's for:**
-Anyone in Belgium on a dynamic electricity contract. This is increasingly common as energy suppliers push "spot price" contracts.
+Belgian households, EV drivers, smart home users (Home Assistant), and dynamic electricity contract holders.
+
+**Current metrics (May 2026):**
+- 70+ registered users (growing ~2/day)
+- 300+ daily EV page views
+- 50+ email subscribers (weekly digest)
+- Tesla Fleet API registered and active
+- 6 leads captured via email capture strip
 
 ---
 
@@ -37,13 +50,15 @@ Your Browser / Phone
         ↓  shows you the chart + alerts
 ```
 
-1. **The data comes from EPEX Spot** — the European Power Exchange where electricity is traded wholesale. Belgian prices are published the day before (day-ahead market).
+1. **The data comes from EPEX Spot** — the European Power Exchange where electricity is traded wholesale. Belgian prices are published the day before (day-ahead market). Prices can range from −€479/MWh to +€400/MWh on the same day.
 
-2. **Our server fetches this data** from two free public sources (Elia Open Data and Energy-Charts by Fraunhofer Institute in Germany). It checks for updates every 15 minutes.
+2. **Our server fetches this data** from Energy-Charts.info (Fraunhofer ISE) with ENTSO-E as fallback. It checks for updates every 15 minutes.
 
 3. **Your browser shows it** as a colour-coded chart — green = cheap, red = expensive.
 
 4. **Alerts work like this:** Every hour, the server checks if the current price is below your chosen threshold. If yes, it sends you an email automatically.
+
+5. **Tesla integration:** User connects their Tesla via OAuth → SmartPrice reads battery level and charging state → shows personalised cost calculation in real time.
 
 ---
 
@@ -54,197 +69,147 @@ Your Browser / Phone
 ```
 ┌─────────────────────────────────────────────────────┐
 │  FRONTEND (what you see)                            │
-│  React + Vite · Hosted on Vercel                    │
+│  React + Vite · Hosted on Vercel (CDN)              │
 │  smartprice.be → Vercel servers (global CDN)        │
 └─────────────────┬───────────────────────────────────┘
-                  │ HTTPS API calls
+                  │ HTTPS API calls (proxied)
 ┌─────────────────▼───────────────────────────────────┐
 │  BACKEND (the engine)                               │
 │  Node.js + Express · Hosted on Railway (EU West)    │
-│  Handles: auth, prices, alerts, user preferences    │
+│  Handles: auth, prices, alerts, Tesla OAuth         │
 └──────┬──────────────────────────┬───────────────────┘
        │                          │
 ┌──────▼──────┐          ┌────────▼────────┐
 │  DATABASE   │          │  EMAIL SERVICE  │
 │  PostgreSQL │          │  Resend         │
-│  Supabase   │          │  alerts@        │
-│  (EU region)│          │  smartprice.be  │
+│  Supabase   │          │  info@          │
+│  (Ireland)  │          │  smartprice.be  │
 └─────────────┘          └─────────────────┘
 ```
 
-### Frontend — React
-React is a JavaScript library for building user interfaces. Think of it like LEGO — you build small reusable pieces (components) that snap together. Each tab on the dashboard (Today, Alerts, History, etc.) is a separate component. When data changes, React automatically updates only the parts of the page that need updating — no full page reload.
-
-**Vite** is the build tool — it compiles and bundles all the code for production.
-
-**Recharts** draws the price graphs — it takes raw numbers and turns them into the colourful bar charts.
-
-**PWA (Progressive Web App)** — a set of browser standards that let a website behave like a native app. When you visit smartprice.be on Android and tap "Add to Home Screen", it installs like a real app — offline capable, full screen, no browser bar.
-
-### Backend — Node.js + Express
-Node.js is JavaScript running on a server (not in a browser). Express is a lightweight framework that makes it easy to define API routes — rules like "when someone calls /api/prices/today, do this".
-
-The backend does four main jobs:
-1. **Fetch prices** from external APIs (Elia, Energy-Charts) and cache them for 15 minutes
-2. **Handle authentication** — check who you are, issue tokens, manage sessions
-3. **Store and retrieve user preferences** — your chosen supplier, alert threshold, email
-4. **Send alert emails** — runs every hour, checks all users with alerts enabled
-
-### Database — PostgreSQL on Supabase
-PostgreSQL is a relational database — like a very powerful, structured spreadsheet. We use it to store:
-- User accounts (name, hashed password, preferences)
-- Refresh tokens (for keeping you logged in safely)
-
-Supabase is a hosted PostgreSQL service — they manage the server, backups, and scaling. We're on their EU region so data stays in Europe.
-
-### Hosting
-- **Vercel** hosts the frontend. Every time code is pushed to GitHub, Vercel automatically rebuilds and deploys in ~30 seconds.
-- **Railway** hosts the backend. Same auto-deploy on push. EU West region for data sovereignty.
+### Key Backend Routes
+- `GET /api/current` — current EPEX price
+- `GET /api/prices/today` — enriched 24h prices (hour, day, is_current, is_negative)
+- `GET /api/cheapest?hours=N` — N cheapest upcoming hours (enriched)
+- `GET /api/gas/current` — TTF gas price
+- `GET /api/tesla/vehicle` — Tesla battery + charging state (JWT required)
+- `GET /auth/tesla` — Tesla OAuth start
+- `GET /auth/tesla/callback` — Tesla OAuth callback
+- `GET /api/stats` — public stats for social proof counter
+- `GET /api/referral-source` — tracks how users found SmartPrice (from welcome email)
+- `POST /api/admin/send-weekly-digest` — manual digest trigger
 
 ---
 
-## PART 4: AUTHENTICATION — HOW LOGIN WORKS
+## PART 4: AUTHENTICATION
 
-### The Problem with Passwords
-We never store your actual password. Instead, we run it through a one-way function called **bcrypt** (a hashing algorithm). The result looks like `$2b$12$eW5e...` — completely unreadable. When you log in, we hash what you typed and compare the two hashes. If they match, you're in.
+### Email + Password
+Registration requires email + password. Email is mandatory (login + price alerts). bcrypt cost 12. JWT access token (15min) + refresh token (7d) in httpOnly cookies.
 
-Even if a hacker stole our database, they'd only get a list of unreadable hashes — not your password.
+### Google OAuth
+Standard OAuth 2.0 flow via Google. On first sign-in, welcome email + admin notification are sent automatically.
 
-### Tokens — How We Know It's You
-After you log in, the server creates two short-lived **JWT tokens** (JSON Web Tokens):
-
-- **Access token** — like a 15-minute visitor pass. Attached automatically to every request.
-- **Refresh token** — like a 7-day "renew your pass" ticket. Used only to get a new access token when the old one expires.
-
-These tokens are stored in **httpOnly cookies** — a special type of browser storage that JavaScript cannot read. This protects against XSS attacks (where malicious code injected into a page tries to steal your credentials).
-
-### Google OAuth — "Continue with Google"
-OAuth is a standard protocol for "login with another service". Here's what happens:
-
-```
-1. You click "Continue with Google"
-2. You're sent to Google's servers (accounts.google.com)
-3. You approve on Google's page
-4. Google sends a one-time code back to OUR server
-5. Our server exchanges that code for your Google profile (name, email)
-6. We create/find your account, generate our own JWT tokens
-7. You're logged in — we never see your Google password
-```
-
-### Email Required
-Registration requires an email address and password. Email is used for login and for optional price alert notifications. It is never shared or used for marketing.
+### Tesla Fleet API OAuth
+1. User clicks "Connect your Tesla" on EV tab
+2. Redirected to Tesla consent page (`auth.tesla.com/oauth2/v3/authorize`)
+3. Tesla redirects to `https://smartprice.be/auth/tesla/callback`
+4. Backend exchanges code for tokens, saves to user preferences (`COALESCE` fix for NULL preferences)
+5. Vehicle data fetched from `fleet-api.prd.eu.vn.cloud.tesla.com`
+6. Partner registration completed for `www.smartprice.be` (required by Tesla Fleet API)
+7. Public key hosted at `/.well-known/appspecific/com.tesla.3p.public-key.pem` via Railway
 
 ---
 
-## PART 5: SECURITY IN PLAIN ENGLISH
+## PART 5: EMAIL SYSTEM
 
-### For a non-technical person:
-Think of security like a house:
-- **bcrypt passwords** = we don't keep a copy of your key, just a photo of the lock pattern that only matches your key
-- **httpOnly cookies** = your visitor badge is in a sealed envelope — you can show it at doors but can't read what's inside
-- **HTTPS** = all conversations between your browser and our server are encrypted — like talking in a soundproof booth
-- **EU hosting** = your data never leaves Europe
+All emails sent via Resend from `info@smartprice.be`.
 
-### For a technical person:
+| Email | Trigger | Recipients |
+|-------|---------|------------|
+| Welcome | New registration (email or Google OAuth) | New user |
+| Admin notification | New registration | info@smartprice.be |
+| Price alert | Hourly check, price < threshold | Alert subscribers |
+| Weekly digest | Every Monday 08:00 Brussels | All email users |
+| Uptime alert | Site down/recovery | ALERT_ADMIN_EMAIL |
 
-| Threat | Mitigation |
-|---|---|
-| Password database breach | bcrypt cost 12 — each crack attempt takes ~250ms |
-| XSS token theft | httpOnly cookies — inaccessible to JavaScript |
-| CSRF attacks | sameSite cookie policy + CORS credentials whitelist |
-| Token replay attacks | Refresh token rotation — old tokens invalidated on use |
-| Brute force login | express-rate-limit: 20 attempts per 15 min per IP |
-| Privilege escalation | requireAuth middleware on every protected route |
-| Cross-origin cookie theft | sameSite: none + secure: true in production only |
-| SQL injection | Parameterised queries via pg library — no string interpolation |
+**Weekly digest includes:**
+- Last 7 days EPEX stats (avg, min, max, negative hours)
+- Contextual EV charging advice
+- Tesla Connect feature highlight
+- "How did you find SmartPrice?" referral source tracking buttons
+- Share on WhatsApp / forward by email buttons
 
 ---
 
-## PART 6: GDPR EXPLAINED
+## PART 6: SEO
 
-### What is GDPR?
-GDPR (General Data Protection Regulation) is EU law that gives people control over their personal data. It applies to any service that handles data of EU residents — regardless of where the company is based.
+- `robots.txt` → points to sitemap
+- `sitemap.xml` → all 10 routes
+- Each page sets unique `document.title` + `meta[description]` + canonical via `getElementById('canonical-tag')`
+- Google Search Console verified and sitemap submitted
+- Canonical fix: `index.html` has empty `href=""` canonical; each page sets its own via JS
+- Googlebot crawling confirmed (5,000–8,000 SEO page views/day during indexing phase)
 
-### Key principles and how SmartPrice complies:
+---
 
-**1. Data Minimisation — only collect what you need**
+## PART 7: SOCIAL & COMMUNITY
+
+- **Facebook group:** facebook.com/groups/819979377511277
+- **LinkedIn page:** linkedin.com/company/smartprice-be
+- **Reddit:** r/SmartPriceBE (created, low karma phase)
+- Footer links to Facebook + LinkedIn on landing page
+- Referral source tracked in welcome email (7 options: Facebook, Google, friend, HA, LinkedIn, Tesla group, Other)
+
+---
+
+## PART 8: OUTREACH STATUS (May 2026)
+
+### Supplier affiliate outreach
+| Supplier | Status |
+|---------|--------|
+| Bolt Energy | Sent — awaiting reply |
+| Eneco | Sent — awaiting reply |
+| Mega | Sent — redirected to partnerships dept |
+| Engie | Replied — "too small now, follow up later" — contact: Erik.voet@engie.com |
+| Luminus | Form submitted |
+| TotalEnergies | Replied — requested detailed proposal (sent) |
+| Octa+ | Sent — EV/fuel card angle |
+
+### B2B fleet / widget outreach
+| Company | Status |
+|---------|--------|
+| Tesla Belgium | Email sent — Developer Portal Active, partner registered |
+| Polestar Belgium | Draft ready |
+| Blink/Bluecorner | Draft ready |
+| Renault/Mobilize | Draft ready |
+| BMW Financial Services | Replied — decision at Munich HQ |
+| Lizy BV | Declined — existing solution |
+| RENTA federation | Replied — provided 60-member list |
+
+---
+
+## PART 9: GDPR
+
 SmartPrice collects:
-- Email (to identify you and for login)
-- Password hash (to authenticate you)
-- Email lead (optional, collected on landing page before sign-up — stored separately)
-- Your alert preferences (threshold, chosen supplier)
+- Email + password hash (registration)
+- User preferences (supplier, alert threshold, EV car, Tesla tokens)
+- Referral source (from welcome email click)
+- Lead email (optional landing page capture)
+- Analytics events (page views, calculator starts — no PII)
 
-We do NOT collect: location, browsing behaviour, device fingerprints, advertising IDs.
-
-**2. Purpose Limitation — only use data for what you said**
-Your email is used for login and optionally to send price alerts. Lead emails (landing page capture) are used only to follow up on your interest in the product. No data is shared, sold, or used for third-party marketing.
-
-**3. Storage Limitation — don't keep data forever**
-Users can delete their account at any time. Deletion removes all data including refresh tokens.
-
-**4. Data stored in EU**
-Railway (EU West) + Supabase (EU region) — data never leaves the European Economic Area.
-
-**5. Right to be forgotten**
-`DELETE /auth/delete-account` — one call removes everything from the database permanently.
-
-**6. Transparency**
-Privacy policy is live at smartprice.be explaining exactly what is collected and why.
-
-### What GDPR does NOT require:
-- Cookie banner for functional cookies (login cookies are necessary for the service to function — no consent needed)
-- Registration with any authority for a small app handling non-sensitive data
-
-### What's still recommended:
-- Sign the Supabase Data Processing Agreement (DPA) at supabase.com/dpa — this formally documents the processor relationship
-- Document a data breach response plan (even a simple one)
+No location, browsing behaviour, device fingerprints, or advertising IDs collected.
+Users can delete their account at any time (`DELETE /auth/delete-account`).
+Data stored in EU (Railway Amsterdam + Supabase Ireland).
 
 ---
 
-## PART 7: ISO 27001 EXPLAINED
-
-### What is ISO 27001?
-ISO 27001 is an international standard for Information Security Management Systems (ISMS). It's a certification that proves an organisation has systematic processes for managing information security risks.
-
-### Does SmartPrice have it?
-No — and it doesn't need it at this stage.
-
-ISO 27001 certification:
-- Costs €15,000–50,000+ for audit and certification
-- Takes 6–12 months to implement
-- Requires a full documented ISMS (policies, procedures, risk registers)
-- Is designed for organisations handling sensitive data at scale (hospitals, banks, SaaS companies with enterprise customers)
-
-### When would SmartPrice need it?
-If we wanted to:
-- Sign enterprise B2B contracts (companies often require it from suppliers)
-- Handle sensitive personal data (medical, financial)
-- Sell to government or regulated industries
-
-### What SmartPrice DOES have (ISO 27001-aligned practices):
-Even without certification, many ISO 27001 controls are already implemented:
-- ✅ Access control (JWT + role-based routes)
-- ✅ Cryptography (bcrypt, HTTPS, JWT signing)
-- ✅ Secure development (parameterised queries, rate limiting)
-- ✅ Audit logging (Railway logs all requests)
-- ✅ Data backup (Supabase automated backups)
-- ✅ Incident response capability (Railway alerts on crashes)
-
----
-
-## PART 8: HOW TO EXPLAIN IT TO ANYONE
+## PART 10: HOW TO EXPLAIN IT TO ANYONE
 
 ### To a family member:
-"I built a free app that tells you when electricity is cheapest in Belgium. If you have one of those contracts where the price changes every hour, this app tells you the best time to run your washing machine or charge your car. It sends you an email when prices are really low."
-
-### To a non-technical colleague:
-"It's like a real-time dashboard for Belgian electricity spot prices. It fetches wholesale market data from public sources every 15 minutes, shows you a colour-coded hourly chart, and emails you when prices drop below your chosen threshold. No subscription, no ads, free to use."
+"I built a free app that tells you when electricity is cheapest in Belgium. If you have one of those contracts where the price changes every hour, this app tells you the best time to run your washing machine or charge your car — and if you have a Tesla, it connects directly to your car and shows you the exact cost."
 
 ### To a developer:
-"React + Vite frontend on Vercel, Node/Express backend on Railway EU, PostgreSQL on Supabase. Fetches EPEX Spot prices via Energy-Charts API with 15-min NodeCache. Cookie-based auth with httpOnly JWT, bcrypt passwords, refresh token rotation. PWA with service worker. Google OAuth with cross-origin token exchange. Email-required registration. Lead capture table, admin analytics + leads endpoints, Claude Haiku AI assistant endpoint, social sharing, referral links. ENTSO-E generation/flows, TTF gas via OilPriceAPI."
-
-### To a recruiter / hiring manager:
-"I built and deployed a full-stack production application from scratch — React frontend, Node.js REST API, PostgreSQL database, Google OAuth, email notifications via Resend, PWA, and HTTPS cookie-based authentication. It handles real users, real data, and is live at smartprice.be. The codebase covers auth security (httpOnly cookies, bcrypt, token rotation), CORS, rate limiting, GDPR compliance, i18n (EN/NL/FR), Claude AI integration, lead capture, referral system, and a public API used by Home Assistant users."
+"React + Vite frontend on Vercel, Node/Express backend on Railway EU, PostgreSQL on Supabase. EPEX Spot prices via Energy-Charts.info (15-min NodeCache), ENTSO-E fallback. Cookie-based auth with httpOnly JWT, bcrypt, refresh token rotation. Tesla Fleet API OAuth with partner registration (www.smartprice.be). Google OAuth. EV profile (30 cars) + Tesla live data. Weekly digest with referral tracking. Public REST API for Home Assistant. TTF gas via OilPriceAPI. Trilingual EN/NL/FR."
 
 ### To an investor:
-"SmartPrice.be is a free tool for Belgian dynamic electricity contract holders — a market that's growing as more suppliers push spot-price contracts. We have real-time EPEX Spot data, price alerts, a live EV charge planner, a full supplier plan calculator (electricity + gas), and a mobile-installable app. We capture email leads on the landing page and have a referral system in place. Phase 3 monetises via affiliate referrals (€30–80 per supplier switch). The main competitor, Mijnenergie.be (owned by DPG Media), doesn't cover dynamic contracts — that's our differentiation. We also expose a free public API used by Home Assistant users, extending our reach to the smart-home segment."
+"SmartPrice.be is a free energy intelligence tool for Belgian dynamic contract holders — a market growing as more suppliers push spot-price contracts. We have 70+ users in 3 months with zero marketing spend, a live Tesla Fleet API integration (first in Belgium), and active B2B conversations with TotalEnergies, Engie, Luminus, and fleet companies (RENTA member network). Revenue model: €20–50/activation affiliate commissions from energy suppliers + B2B API access fees for fleet/mobility companies. The main Belgian comparison sites (Mijnenergie.be) don't cover dynamic pricing — that's our differentiation. Timeline: 2-year build to sustainable revenue."
