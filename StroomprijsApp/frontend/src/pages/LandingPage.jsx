@@ -881,7 +881,15 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 <span style={{ fontWeight: 900, fontSize: 16, letterSpacing: "-0.5px" }}>SmartPrice.be</span>
               </div>
               <div style={{ fontSize: 12, color: "#334455", lineHeight: 2 }}>
-                <a href="mailto:hello@smartprice.be" style={{ color: "#0D9488", textDecoration: "none" }}>hello@smartprice.be</a>
+                <a href="mailto:info@smartprice.be" style={{ color: "#0D9488", textDecoration: "none" }}>info@smartprice.be</a>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <a href="https://www.facebook.com/groups/819979377511277" target="_blank" rel="noopener noreferrer"
+                  style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(24,119,242,0.1)", border: "1px solid rgba(24,119,242,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: "#1877F2", textDecoration: "none" }}
+                  title="Join our Facebook community">f</a>
+                <a href="https://www.linkedin.com/company/smartprice-be/" target="_blank" rel="noopener noreferrer"
+                  style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(10,102,194,0.1)", border: "1px solid rgba(10,102,194,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, color: "#0A66C2", textDecoration: "none" }}
+                  title="Follow on LinkedIn">in</a>
               </div>
             </div>
             <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
@@ -899,6 +907,21 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                     onMouseLeave={e => e.currentTarget.style.color = "#445566"}>
                     {l.label}
                   </div>
+                ))}
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: "#334455", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10, fontWeight: 700 }}>Community</div>
+                {[
+                  { label: "Facebook Group", href: "https://www.facebook.com/groups/819979377511277" },
+                  { label: "LinkedIn Page",  href: "https://www.linkedin.com/company/smartprice-be/" },
+                  { label: "API Docs",       href: "/api-docs" },
+                ].map(l => (
+                  <a key={l.label} href={l.href} target={l.href.startsWith("http") ? "_blank" : "_self"} rel="noopener noreferrer"
+                    style={{ display: "block", fontSize: 13, color: "#445566", marginBottom: 7, textDecoration: "none" }}
+                    onMouseEnter={e => e.currentTarget.style.color = "#0D9488"}
+                    onMouseLeave={e => e.currentTarget.style.color = "#445566"}>
+                    {l.label}
+                  </a>
                 ))}
               </div>
               <div>
