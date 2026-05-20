@@ -525,6 +525,35 @@ app.post("/api/admin/send-weekly-digest", async (req, res) => {
   sendWeeklyDigest(pool, force).catch(e => console.error("[weekly-digest] Manual trigger error:", e.message));
 });
 
+// POST /api/admin/broadcast { secret, subject, html } — send one-off email to ALL email users
+app.post("/api/admin/broadcast", async (req, res) => {
+  const { secret, subject, html } = req.body || {};
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  if (!process.env.RESEND_API_KEY) return res.status(500).json({ success: false, error: "RESEND_API_KEY not set" });
+  res.json({ success: true, message: "Broadcasting in background…" });
+  (async () => {
+    try {
+      const { rows: users } = await pool.query("SELECT name, email FROM users WHERE email IS NOT NULL AND email != '' ORDER BY created_at");
+      let sent = 0;
+      for (const u of users) {
+        try {
+          await axios.post("https://api.resend.com/emails", {
+            from: "SmartPrice.be <info@smartprice.be>",
+            to: u.email,
+            subject,
+            html: html.replace(/\{\{name\}\}/g, u.name || "there"),
+          }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } });
+          sent++;
+          await new Promise(r => setTimeout(r, 200));
+        } catch (e) { console.error(`[broadcast] Failed to ${u.email}:`, e.message); }
+      }
+      console.log(`[broadcast] Done — sent to ${sent}/${users.length}`);
+    } catch (e) { console.error("[broadcast] Fatal:", e.message); }
+  })();
+});
+
 app.listen(PORT,()=>{
   console.log(`\n⚡ SmartPrice v2 on port ${PORT}`);
   console.log(`   DB: ${process.env.DATABASE_URL?"✅ Supabase":"❌ No DATABASE_URL"}\n`);
