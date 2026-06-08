@@ -623,6 +623,18 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
         </div>
       </div>
 
+      {/* Calculator CTA — prominent funnel to plan comparison */}
+      <button
+        onClick={() => window.location.href = "/calculator/electricity?ev=1"}
+        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 22px", borderRadius: 16, cursor: "pointer", background: "linear-gradient(135deg, rgba(13,148,136,0.18), rgba(26,86,164,0.14))", border: "1px solid rgba(13,148,136,0.45)", marginBottom: 14 }}
+      >
+        <div style={{ textAlign: "left" }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: "#0D9488" }}>⚡ Find your cheapest EV electricity plan</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Compare all Belgian suppliers · takes 2 minutes</div>
+        </div>
+        <div style={{ fontSize: 20, color: "#0D9488", fontWeight: 900 }}>→</div>
+      </button>
+
       {/* Tomorrow preview */}
       {tomorrowWindows.length > 0 && (
         <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 18, padding: "18px 22px", marginBottom: 16 }}>

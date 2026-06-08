@@ -105,6 +105,7 @@ async function checkAndSendAlerts(pool) {
       FROM users
       WHERE (preferences->>'alertEnabled')::boolean = true
         AND (preferences->>'alertThreshold') IS NOT NULL
+        AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false
     `);
 
     console.log(`Found ${users.length} users with alerts enabled`);
@@ -193,6 +194,7 @@ async function checkAndSendGasAlerts(pool) {
       FROM users
       WHERE (preferences->>'gasAlertEnabled')::boolean = true
         AND (preferences->>'gasAlertThreshold') IS NOT NULL
+        AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false
     `);
 
     console.log(`Found ${users.length} users with gas alerts enabled`);
@@ -390,7 +392,7 @@ async function sendWeeklyDigest(pool, force = false) {
   try {
     // Get all users with email addresses
     const { rows: users } = await pool.query(
-      "SELECT id, name, email FROM users WHERE email IS NOT NULL AND email != '' ORDER BY created_at"
+      "SELECT id, name, email FROM users WHERE email IS NOT NULL AND email != '' AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false ORDER BY created_at"
     );
     if (users.length === 0) { console.log("[weekly-digest] No email users found"); return; }
 
@@ -458,7 +460,7 @@ async function sendWeeklyDigest(pool, force = false) {
         await axios.post("https://api.resend.com/emails", {
           from: "SmartPrice.be <info@smartprice.be>",
           to: user.email,
-          subject: `⚡ SmartPrice Weekly — Belgium electricity recap (${weekLabel})`,
+          subject: `⚡ SmartPrice Wekelijks — Belgische stroomprijzen (${weekLabel})`,
           html: `
             <!DOCTYPE html><html><head><meta charset="UTF-8"></head>
             <body style="margin:0;padding:0;background:#060B14;font-family:'Helvetica Neue',Arial,sans-serif;">
@@ -466,8 +468,9 @@ async function sendWeeklyDigest(pool, force = false) {
 
                 <div style="text-align:center;margin-bottom:28px;">
                   <div style="font-size:36px;margin-bottom:10px;">⚡🇧🇪</div>
-                  <h1 style="margin:0;font-size:22px;font-weight:900;color:#fff;">Belgium Electricity — Weekly Recap</h1>
-                  <p style="color:#64748B;font-size:13px;margin-top:6px;">${weekLabel}</p>
+                  <h1 style="margin:0;font-size:22px;font-weight:900;color:#fff;">Belgische Stroomprijzen — Wekelijks Overzicht</h1>
+                  <p style="color:#64748B;font-size:13px;margin-top:4px;">Belgium Electricity — Weekly Recap</p>
+                  <p style="color:#64748B;font-size:13px;margin-top:2px;">${weekLabel}</p>
                 </div>
 
                 <div style="background:#0A1220;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:24px;margin-bottom:20px;">
@@ -476,44 +479,46 @@ async function sendWeeklyDigest(pool, force = false) {
                 </div>
 
                 <div style="background:#0A1220;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:24px;margin-bottom:20px;">
-                  <div style="font-size:13px;font-weight:700;color:#94A3B8;margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;">💡 What this means for you</div>
+                  <div style="font-size:13px;font-weight:700;color:#94A3B8;margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;">💡 Wat betekent dit voor jou? / What this means for you</div>
                   <div style="color:#E2E8F0;font-size:14px;line-height:1.7;">
                     ${avgMwh != null && avgMwh < 80
-                      ? "Great week for EV charging and high-consumption appliances — prices were well below the €100/MWh average. If you have a dynamic contract, you saved significantly."
+                      ? "<strong style='color:#00C896'>🟢 Goede week voor EV opladen</strong> — Prijzen lagen ruim onder het gemiddelde van €100/MWh. Met een dynamisch contract heb je flink bespaard.<br><span style='color:#64748B;font-size:13px;'>Great week for EV charging — prices were well below the €100/MWh average. Dynamic contract holders saved significantly.</span>"
                       : avgMwh != null && avgMwh > 130
-                      ? "Expensive week — if you have a dynamic contract, try to shift heavy usage (EV, washing machine, dishwasher) to nights and weekends when prices typically drop."
-                      : "Typical week for Belgian electricity prices. Best savings come from charging EVs and running appliances during off-peak hours (typically 23:00–07:00)."}
+                      ? "<strong style='color:#EF4444'>🔴 Dure week</strong> — Verschuif zwaar verbruik (EV, wasmachine, vaatwasser) naar 's nachts en in het weekend wanneer prijzen typisch dalen.<br><span style='color:#64748B;font-size:13px;'>Expensive week — shift heavy usage to nights and weekends when prices typically drop.</span>"
+                      : "<strong style='color:#F59E0B'>🟡 Gemiddelde week</strong> — De beste besparingen komen van EV opladen en apparaten draaien tijdens daluren (typisch 23:00–07:00).<br><span style='color:#64748B;font-size:13px;'>Typical week. Best savings from off-peak hours (typically 23:00–07:00).</span>"}
                   </div>
                 </div>
 
                 <!-- Tesla feature highlight -->
                 <div style="background:rgba(0,200,150,0.07);border:1px solid rgba(0,200,150,0.25);border-radius:16px;padding:20px 24px;margin-bottom:20px;">
-                  <div style="font-size:13px;font-weight:800;color:#00C896;margin-bottom:8px;">🚗 New: Connect your Tesla to SmartPrice</div>
+                  <div style="font-size:13px;font-weight:800;color:#00C896;margin-bottom:8px;">🚗 Nieuw: Koppel je Tesla aan SmartPrice / Connect your Tesla</div>
                   <div style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:14px;">
-                    Open the <strong style="color:#E2E8F0;">EV tab</strong> on SmartPrice, click <strong style="color:#E2E8F0;">"Connect your Tesla"</strong> and instantly see:<br>
-                    <em style="color:#00C896;">"Your Model 3 is at 45% — charging to 80% now costs €8.20. Wait until 23:00 for €3.10. Save €5.10."</em>
+                    Open het <strong style="color:#E2E8F0;">EV-tabblad</strong> op SmartPrice en klik op <strong style="color:#E2E8F0;">"Koppel je Tesla"</strong> om meteen te zien:<br>
+                    <em style="color:#00C896;">"Je Model 3 staat op 45% — opladen tot 80% kost nu €8,20. Wacht tot 23:00 voor €3,10. Bespaar €5,10."</em><br>
+                    <span style="color:#556B82;font-size:12px;">Open the EV tab, click "Connect your Tesla" to see real-time cost for your car.</span>
                   </div>
                   <a href="${APP_URL}/?type=ev" style="display:inline-block;background:linear-gradient(135deg,#0D9488,#1A56A4);color:#fff;text-decoration:none;font-weight:700;font-size:13px;padding:10px 22px;border-radius:30px;">
-                    Connect my Tesla →
+                    Koppel mijn Tesla / Connect my Tesla →
                   </a>
                 </div>
 
                 <div style="text-align:center;margin-bottom:24px;">
                   <a href="${APP_URL}" style="display:inline-block;background:linear-gradient(135deg,#0D9488,#1A56A4);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 28px;border-radius:30px;">
-                    See live prices now →
+                    Bekijk live prijzen / See live prices →
                   </a>
                   &nbsp;
                   <a href="${APP_URL}/ev-charging-belgium" style="display:inline-block;background:rgba(255,255,255,0.06);color:#94A3B8;text-decoration:none;font-weight:600;font-size:14px;padding:12px 20px;border-radius:30px;border:1px solid rgba(255,255,255,0.1);">
-                    EV charging times
+                    EV oplaadtijden / Charging times
                   </a>
                 </div>
 
                 <!-- Share ask -->
                 <div style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.25);border-radius:16px;padding:20px 24px;margin-bottom:20px;text-align:center;">
-                  <div style="font-size:15px;font-weight:800;color:#F59E0B;margin-bottom:8px;">📢 Know someone who'd find this useful?</div>
+                  <div style="font-size:15px;font-weight:800;color:#F59E0B;margin-bottom:8px;">📢 Ken je iemand die dit nuttig zou vinden?</div>
                   <div style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:16px;">
-                    SmartPrice is free and built for Belgian households, EV drivers, and anyone on a dynamic electricity contract.<br>
-                    If this weekly recap is useful to you, forward it to a friend or share the link below.
+                    SmartPrice is gratis en gemaakt voor Belgische huishoudens, EV-rijders en iedereen met een dynamisch elektriciteitscontract.<br>
+                    Als dit wekelijks overzicht nuttig is, stuur het door naar een vriend of deel de link.<br>
+                    <span style="color:#556B82;font-size:12px;">If this weekly recap is useful, forward it to a friend or share the link.</span>
                   </div>
                   <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
                     <a href="https://wa.me/?text=${encodeURIComponent('⚡ SmartPrice.be — free live Belgian electricity prices, cheapest EV charging hours & Tesla integration. Check it out: https://smartprice.be')}"

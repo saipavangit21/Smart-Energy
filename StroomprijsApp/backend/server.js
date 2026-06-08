@@ -514,6 +514,25 @@ app.get("/api/referral-source", async (req, res) => {
   res.redirect("https://smartprice.be/?ref_tracked=1");
 });
 
+// POST /api/admin/unsubscribe-user { secret, email } — GDPR: opt a user out of all email communication
+app.post("/api/admin/unsubscribe-user", async (req, res) => {
+  const { secret, email } = req.body || {};
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  if (!email) return res.status(400).json({ success: false, error: "email required" });
+  try {
+    const { rows } = await pool.query(
+      `UPDATE users SET preferences = COALESCE(preferences, '{}') || $1::jsonb WHERE email = $2 RETURNING id, email`,
+      [JSON.stringify({ email_opt_out: true, alertEnabled: false, gasAlertEnabled: false }), email.toLowerCase().trim()]
+    );
+    if (rows.length === 0) return res.status(404).json({ success: false, error: "User not found" });
+    res.json({ success: true, message: `${rows[0].email} unsubscribed from all email communication` });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // Manual trigger: POST /api/admin/send-weekly-digest { secret, force? }
 // Add "force": true to bypass the once-per-day guard
 app.post("/api/admin/send-weekly-digest", async (req, res) => {
@@ -535,7 +554,7 @@ app.post("/api/admin/broadcast", async (req, res) => {
   res.json({ success: true, message: "Broadcasting in background…" });
   (async () => {
     try {
-      const { rows: users } = await pool.query("SELECT name, email FROM users WHERE email IS NOT NULL AND email != '' ORDER BY created_at");
+      const { rows: users } = await pool.query("SELECT name, email FROM users WHERE email IS NOT NULL AND email != '' AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false ORDER BY created_at");
       let sent = 0;
       for (const u of users) {
         try {
