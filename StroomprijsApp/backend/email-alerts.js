@@ -105,6 +105,7 @@ async function checkAndSendAlerts(pool) {
       FROM users
       WHERE (preferences->>'alertEnabled')::boolean = true
         AND (preferences->>'alertThreshold') IS NOT NULL
+        AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false
     `);
 
     console.log(`Found ${users.length} users with alerts enabled`);
@@ -193,6 +194,7 @@ async function checkAndSendGasAlerts(pool) {
       FROM users
       WHERE (preferences->>'gasAlertEnabled')::boolean = true
         AND (preferences->>'gasAlertThreshold') IS NOT NULL
+        AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false
     `);
 
     console.log(`Found ${users.length} users with gas alerts enabled`);
@@ -390,7 +392,7 @@ async function sendWeeklyDigest(pool, force = false) {
   try {
     // Get all users with email addresses
     const { rows: users } = await pool.query(
-      "SELECT id, name, email FROM users WHERE email IS NOT NULL AND email != '' ORDER BY created_at"
+      "SELECT id, name, email FROM users WHERE email IS NOT NULL AND email != '' AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false ORDER BY created_at"
     );
     if (users.length === 0) { console.log("[weekly-digest] No email users found"); return; }
 
