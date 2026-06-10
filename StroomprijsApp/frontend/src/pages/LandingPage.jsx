@@ -276,10 +276,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   return (
     <div style={{ minHeight: "100vh", background: "#060B14", color: "#E8EDF5", fontFamily: "'DM Sans', system-ui, sans-serif", overflowX: "hidden" }}>
 
-      {/* Ambient glow */}
-      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "-20%", left: "50%", transform: "translateX(-50%)", width: 900, height: 600, background: `radial-gradient(ellipse, ${currentCol}0A 0%, transparent 65%)`, transition: "background 3s ease" }} />
-      </div>
+      {/* Subtle top border accent */}
+      <div style={{ height: 3, background: "linear-gradient(90deg, #0D9488, #1E40AF, #7C3AED)", position: "fixed", top: 0, left: 0, right: 0, zIndex: 100 }} />
 
       {/* ── NAV ─────────────────────────────────────────────────────────── */}
       <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(6,11,20,0.94)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "11px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -299,106 +297,92 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         </div>
       </nav>
 
+      {/* ── PLATFORM NAV STRIP ── */}
+      <div style={{ background: "rgba(6,11,20,0.98)", borderBottom: "1px solid rgba(255,255,255,0.05)", position: "sticky", top: 63, zIndex: 40 }}>
+        <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", overflow: "auto" }}>
+          {[
+            { icon: "👤", label: "Households", accent: "#0D9488", href: null, active: true },
+            { icon: "🏢", label: "Business",   accent: "#60A5FA", href: "/business",   active: false },
+            { icon: "🚗", label: "Fleet Audit",accent: "#F59E0B", href: "/fleet-audit",active: false },
+            { icon: "🔌", label: "API & HA",   accent: "#A78BFA", href: "/api-docs",   active: false },
+          ].map(s => (
+            <a
+              key={s.label}
+              href={s.href || "#"}
+              onClick={s.href ? undefined : e => e.preventDefault()}
+              style={{ display: "flex", alignItems: "center", gap: 7, padding: "11px 22px", fontSize: 12, fontWeight: 700, color: s.active ? s.accent : "#475569", textDecoration: "none", borderBottom: `2px solid ${s.active ? s.accent : "transparent"}`, whiteSpace: "nowrap", transition: "all 0.15s" }}
+            >
+              <span style={{ fontSize: 14 }}>{s.icon}</span>{s.label}
+            </a>
+          ))}
+        </div>
+      </div>
+
       {/* ══════════════════════════════════════════════════════════════════
-          HERO — THE DECISION ENGINE
-          First thing visible = "Charge between 14:00–16:00"
+          HERO — price IS the product
       ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ maxWidth: 860, margin: "0 auto", padding: "48px 20px 0", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 860, margin: "0 auto", padding: "52px 20px 0", position: "relative", zIndex: 1 }}>
         <div style={{ opacity: heroIn ? 1 : 0, transform: heroIn ? "translateY(0)" : "translateY(16px)", transition: "all 0.6s ease" }}>
 
           {/* Negative price alert banner */}
           {currentMwh != null && currentMwh < 0 && (
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 10,
-                background: "linear-gradient(135deg,rgba(0,229,255,0.12),rgba(0,200,150,0.08))",
-                border: "1px solid rgba(0,229,255,0.45)",
-                borderRadius: 30, padding: "10px 22px",
-                fontSize: 14, fontWeight: 800, color: "#00E5FF",
-                boxShadow: "0 0 24px rgba(0,229,255,0.2)",
-                animation: "pulse-elec 2s infinite",
-                cursor: "pointer",
+                background: "rgba(0,229,255,0.07)", border: "1px solid rgba(0,229,255,0.35)",
+                borderRadius: 12, padding: "10px 22px",
+                fontSize: 14, fontWeight: 800, color: "#00E5FF", cursor: "pointer",
               }} onClick={onGetStarted}>
-                <span style={{ fontSize: 20 }}>⚡</span>
-                <span>
-                  Electricity is <strong>FREE</strong> right now — {currentMwh.toFixed(1)} €/MWh
-                  &nbsp;·&nbsp;
-                  <span style={{ textDecoration: "underline" }}>
-                    {lang === "nl" ? "Laad nu op →" : lang === "fr" ? "Rechargez maintenant →" : "Charge now →"}
-                  </span>
-                </span>
+                ⚡ Electricity is <strong>FREE</strong> right now — {currentMwh.toFixed(1)} €/MWh &nbsp;·&nbsp;
+                {lang === "nl" ? "Laad nu op →" : lang === "fr" ? "Rechargez maintenant →" : "Charge now →"}
               </div>
             </div>
           )}
 
-          {/* Context label */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 20, padding: "5px 14px", fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>
-              <span>⚡</span><span>Live Belgian electricity prices — updated every 15 min</span>
+          {/* Big headline + price number — THE hero */}
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: "2.5px", marginBottom: 20 }}>
+              Belgium · EPEX Spot · Live
             </div>
-          </div>
+            <h1 style={{ fontSize: "clamp(28px,5vw,48px)", fontWeight: 900, letterSpacing: "-1.5px", lineHeight: 1.1, margin: "0 0 24px", color: "#F1F5F9" }}>
+              {L.headline || "Stop paying peak price"}
+            </h1>
 
-          {/* Social proof counter */}
-          {siteStats && (siteStats.ev_views_today > 10 || siteStats.registered_users > 10) && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 16, flexWrap: "wrap" }}>
-              {siteStats.ev_views_today > 10 && (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#00C896", boxShadow: "0 0 6px #00C896", display: "inline-block" }} />
-                  <span><strong style={{ color: "#E2E8F0" }}>{siteStats.ev_views_today.toLocaleString()}</strong> people checked EV prices today</span>
-                </div>
-              )}
-              {siteStats.registered_users > 10 && (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", boxShadow: "0 0 6px #3B82F6", display: "inline-block" }} />
-                  <span><strong style={{ color: "#E2E8F0" }}>{siteStats.registered_users}</strong> users tracking Belgian energy</span>
-                </div>
-              )}
+            {/* Giant current price */}
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 12, marginBottom: 8 }}>
+              <span style={{ fontSize: "clamp(64px,12vw,96px)", fontWeight: 900, fontFamily: "monospace", color: currentCol, letterSpacing: "-4px", lineHeight: 1 }}>
+                {currentMwh != null ? `${currentMwh < 0 ? "" : ""}${Math.round(currentMwh)}` : "—"}
+              </span>
+              <span style={{ fontSize: 22, fontWeight: 700, color: "#475569", marginBottom: 8 }}>€/MWh</span>
             </div>
-          )}
+            <div style={{ fontSize: 14, color: "#334155", marginBottom: 20 }}>
+              = <strong style={{ color: currentCol }}>€{currentMwh != null ? retailFmt(currentMwh) : "—"}/kWh</strong> at your meter
+              {updatedStr && <span style={{ marginLeft: 12, color: "#1E293B", fontSize: 12 }}>· updated {updatedStr}</span>}
+            </div>
 
-          {/* Headline */}
-          <h1 style={{ fontSize: "clamp(32px,6vw,62px)", fontWeight: 900, letterSpacing: "-2.5px", lineHeight: 1.05, margin: "0 0 8px", textAlign: "center" }}>
-            <span style={{ background: "linear-gradient(135deg,#fff 20%,#10B981 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{L.headline || "Stop paying peak price"}</span>
-          </h1>
-          <p style={{ fontSize: "clamp(14px,2vw,18px)", color: "#556B82", textAlign: "center", margin: "0 0 20px", fontWeight: 500 }}>
-            {L.tagline || "We tell you exactly when to charge — and how much you save."}
-          </p>
-
-          {/* Product scope row */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginBottom: 28 }}>
-            {[
-              { icon: "⚡", label: L.pillElec || "Electricity prices", color: "#F59E0B", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)" },
-              { icon: "🔥", label: L.pillGas  || "Gas prices",         color: "#F97316", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.25)" },
-              { icon: "🚗", label: L.pillEv   || "EV charging",        color: "#10B981", bg: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.25)" },
-            ].map(p => (
-              <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 6, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 20, padding: "6px 14px", fontSize: 12, fontWeight: 700, color: p.color }}>
-                <span>{p.icon}</span><span>{p.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Urgency pill */}
-          {urgencyText && (
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                background: cheapNow ? "rgba(16,185,129,0.13)" : cheapSoon ? "rgba(249,115,22,0.12)" : "rgba(13,148,136,0.08)",
-                border: `1px solid ${cheapNow ? "rgba(16,185,129,0.45)" : cheapSoon ? "rgba(249,115,22,0.4)" : "rgba(13,148,136,0.22)"}`,
-                borderRadius: 30, padding: "8px 20px", fontSize: 13, fontWeight: 800, color: urgencyColor,
-                boxShadow: cheapNow ? "0 0 20px rgba(16,185,129,0.2)" : cheapSoon ? "0 0 16px rgba(249,115,22,0.15)" : "none",
-              }}>
+            {/* Urgency line — clean, single line */}
+            {urgencyText && (
+              <div style={{ display: "inline-block", padding: "8px 22px", borderRadius: 8, background: cheapNow ? "rgba(16,185,129,0.1)" : "rgba(13,148,136,0.06)", border: `1px solid ${cheapNow ? "rgba(16,185,129,0.3)" : "rgba(13,148,136,0.18)"}`, fontSize: 13, fontWeight: 700, color: urgencyColor, marginBottom: 28 }}>
                 {urgencyText}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* ── MAIN CARD (zinc style) ── */}
+            {/* Social proof — compact */}
+            {siteStats && (
+              <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", marginBottom: 28 }}>
+                {siteStats.ev_views_today > 10 && <span style={{ fontSize: 12, color: "#334155" }}><strong style={{ color: "#94A3B8" }}>{siteStats.ev_views_today.toLocaleString()}</strong> EV checks today</span>}
+                {siteStats.registered_users > 10 && <span style={{ fontSize: 12, color: "#334155" }}><strong style={{ color: "#94A3B8" }}>{siteStats.registered_users}</strong> users tracking</span>}
+              </div>
+            )}
+          </div>
+
+
+          {/* ── MAIN CARD ── */}
           <div style={{
-            background: "rgba(24,24,27,0.85)",
-            backdropFilter: "blur(24px)",
-            border: "1px solid rgba(63,63,70,0.8)",
+            background: "#0D1626",
+            border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 20,
-            boxShadow: "0 24px 48px rgba(0,0,0,0.6)",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
             overflow: "hidden",
             marginBottom: 14,
           }}>
@@ -416,7 +400,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 {/* Price grid */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                   {/* Cheapest */}
-                  <div style={{ background: "rgba(39,39,42,0.9)", border: "1px solid rgba(63,63,70,0.6)", borderRadius: 14, padding: "16px 18px" }}>
+                  <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "16px 18px" }}>
                     <div style={{ fontSize: 11, color: "#71717a", marginBottom: 6, fontWeight: 600 }}>
                       {cheapIsNow ? "⚡ Cheapest — plug in now" : (cheapEntry?.day === "tomorrow" ? "Best window (tomorrow)" : "Best window today")}
                     </div>
@@ -427,7 +411,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                   </div>
 
                   {/* Most expensive */}
-                  <div style={{ background: "rgba(39,39,42,0.9)", border: "1px solid rgba(63,63,70,0.6)", borderRadius: 14, padding: "16px 18px" }}>
+                  <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "16px 18px" }}>
                     <div style={{ fontSize: 11, color: "#71717a", marginBottom: 6, fontWeight: 600 }}>{L.mostExpensiveLabel || "Most expensive"}</div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: "#f4f4f5", marginBottom: 4, fontFamily: "monospace", letterSpacing: "-0.5px" }}>
                       {peakH != null ? `${fmtHour(peakH)} – ${fmtHour(peakH + 2)}` : "—"}
@@ -437,7 +421,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 </div>
 
                 {/* Cost comparison block */}
-                <div style={{ background: "rgba(39,39,42,0.9)", border: "1px solid rgba(63,63,70,0.6)", borderRadius: 14, padding: "16px 18px", marginBottom: 14 }}>
+                <div style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "16px 18px", marginBottom: 14 }}>
                   <div style={{ fontSize: 11, color: "#71717a", marginBottom: 10, fontWeight: 600 }}>{L.fullChargeLabel || "Full charge cost (40 kWh)"}</div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <span style={{ fontSize: 14, color: "#a1a1aa" }}>{cheapIsNow ? "Now (cheapest)" : `Best window (${fmtHour(cheapHour)})`}</span>
@@ -519,83 +503,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             </div>
           )}
 
-          {/* Trust */}
-          <div style={{ display: "flex", gap: 18, justifyContent: "center", flexWrap: "wrap", marginBottom: 8 }}>
-            {["🇧🇪 Belgian data", "🆓 Free forever", "⚡ Every 15 min", "🔒 GDPR"].map(b => (
-              <span key={b} style={{ fontSize: 11, color: "#3f3f46" }}>{b}</span>
+          {/* Trust bar */}
+          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", marginTop: 20, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            {["🇧🇪 Belgian EPEX data", "🆓 Free forever", "⚡ Every 15 min", "🔒 GDPR compliant"].map(b => (
+              <span key={b} style={{ fontSize: 12, color: "#334155", fontWeight: 500 }}>{b}</span>
             ))}
           </div>
 
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          PLATFORM HUB — 4 audience cards
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ maxWidth: 860, margin: "28px auto 0", padding: "0 20px", position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: 16 }}>
-          <span style={{ fontSize: 10, fontWeight: 800, color: "#556B82", textTransform: "uppercase", letterSpacing: "2px" }}>SmartPrice is built for</span>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-          {[
-            {
-              icon: "👤",
-              label: "Households",
-              accent: "#0D9488",
-              desc: "Live prices · EV charging · Price alerts · Supplier compare",
-              cta: "You're here ↓",
-              href: null,
-              active: true,
-            },
-            {
-              icon: "🏢",
-              label: "Business",
-              accent: "#1E40AF",
-              desc: "Fleet EV cost management · Reimbursement tracking · HR reports",
-              cta: "Explore Business →",
-              href: "/business",
-              active: false,
-            },
-            {
-              icon: "🚗",
-              label: "Fleet Audit",
-              accent: "#F59E0B",
-              desc: "Free audit · See exactly how much your company overpays on EV reimbursements",
-              cta: "Free audit →",
-              href: "/fleet-audit",
-              active: false,
-            },
-            {
-              icon: "🔌",
-              label: "API & HA",
-              accent: "#7C3AED",
-              desc: "Home Assistant HACS · REST API · Public endpoints for developers",
-              cta: "View docs →",
-              href: "/api-docs",
-              active: false,
-            },
-          ].map(card => (
-            <div
-              key={card.label}
-              onClick={() => card.href && (window.location.href = card.href)}
-              style={{
-                background: card.active ? `rgba(13,148,136,0.07)` : "rgba(255,255,255,0.025)",
-                border: `1px solid ${card.active ? card.accent + "44" : "rgba(255,255,255,0.07)"}`,
-                borderTop: `3px solid ${card.accent}`,
-                borderRadius: 16,
-                padding: "18px 16px",
-                cursor: card.href ? "pointer" : "default",
-                transition: "all 0.2s",
-              }}
-              onMouseEnter={e => { if (card.href) { e.currentTarget.style.background = `rgba(255,255,255,0.045)`; e.currentTarget.style.transform = "translateY(-2px)"; } }}
-              onMouseLeave={e => { e.currentTarget.style.background = card.active ? `rgba(13,148,136,0.07)` : "rgba(255,255,255,0.025)"; e.currentTarget.style.transform = "translateY(0)"; }}
-            >
-              <div style={{ fontSize: 22, marginBottom: 8 }}>{card.icon}</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: card.accent, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 6 }}>{card.label}</div>
-              <div style={{ fontSize: 12, color: "#556B82", lineHeight: 1.6, marginBottom: 12, minHeight: 52 }}>{card.desc}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: card.active ? card.accent : "#64748B" }}>{card.cta}</div>
-            </div>
-          ))}
         </div>
       </section>
 
