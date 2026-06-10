@@ -28,6 +28,7 @@ import CheapestHoursPage from "./pages/seo/CheapestHoursPage";
 import EvChargingPage    from "./pages/seo/EvChargingPage";
 import EvStationsPage   from "./pages/seo/EvStationsPage";
 import ApiPage           from "./pages/ApiPage";
+import FleetAuditPage    from "./pages/FleetAuditPage";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
 function getFullPath() { return window.location.pathname + window.location.search; }
@@ -115,6 +116,8 @@ export default function App() {
     return <EvStationsPage onGetStarted={() => { setShowAuth(true); navigate("/"); }} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} onNavigate={navigate} />;
   if (path === "/ev-charging-belgium")
     return <EvChargingPage onGetStarted={() => navigate("/")} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
+  if (path === "/fleet-audit")
+    return <FleetAuditPage onNavigate={navigate} />;
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   // ── Loading spinner ──────────────────────────────────────────

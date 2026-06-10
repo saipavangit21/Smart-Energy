@@ -573,6 +573,56 @@ app.post("/api/admin/broadcast", async (req, res) => {
   })();
 });
 
+// POST /api/fleet-audit-lead — saves B2B fleet audit lead with full audit data
+app.post("/api/fleet-audit-lead", async (req, res) => {
+  const { email, company, audit } = req.body || {};
+  if (!email || !email.includes("@")) return res.status(400).json({ success: false, error: "Valid email required" });
+  try {
+    await pool.query(
+      `INSERT INTO b2b_leads (email, company, audit_data, source, created_at)
+       VALUES ($1, $2, $3::jsonb, 'fleet-audit', NOW())
+       ON CONFLICT (email) DO UPDATE SET audit_data = $3::jsonb, company = COALESCE($2, b2b_leads.company), updated_at = NOW()`,
+      [email.toLowerCase().trim(), company || null, JSON.stringify(audit || {})]
+    );
+    console.log(`[fleet-audit] New B2B lead: ${email} — fleet ${audit?.fleetSize} cars, overpayment €${audit?.overpayment?.toFixed(0)}`);
+
+    // Notify admin
+    if (process.env.RESEND_API_KEY) {
+      axios.post("https://api.resend.com/emails", {
+        from: "SmartPrice.be <info@smartprice.be>",
+        to: "info@smartprice.be",
+        subject: `🚗 New B2B fleet audit lead — ${company || email}`,
+        html: `<p><strong>Email:</strong> ${email}</p><p><strong>Company:</strong> ${company || "—"}</p><p><strong>Fleet size:</strong> ${audit?.fleetSize} EVs</p><p><strong>Est. overpayment:</strong> €${audit?.overpayment?.toFixed(0)}/year</p>`,
+      }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } }).catch(() => {});
+    }
+    res.json({ success: true });
+  } catch (e) {
+    // If table doesn't exist yet, create it and retry
+    if (e.code === "42P01") {
+      try {
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS b2b_leads (
+            id SERIAL PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            company TEXT,
+            audit_data JSONB,
+            source TEXT DEFAULT 'fleet-audit',
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await pool.query(
+          `INSERT INTO b2b_leads (email, company, audit_data, source) VALUES ($1, $2, $3::jsonb, 'fleet-audit')`,
+          [email.toLowerCase().trim(), company || null, JSON.stringify(audit || {})]
+        );
+        res.json({ success: true });
+      } catch (e2) { res.status(500).json({ success: false, error: e2.message }); }
+    } else {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  }
+});
+
 app.listen(PORT,()=>{
   console.log(`\n⚡ SmartPrice v2 on port ${PORT}`);
   console.log(`   DB: ${process.env.DATABASE_URL?"✅ Supabase":"❌ No DATABASE_URL"}\n`);
