@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SmartPrice België",
+        "description": "Live EPEX Spot elektriciteitsprijzen voor België. Geen API-sleutel nodig — SmartPrice is gratis.\n\nDocs: [smartprice.be/api-docs]({docs_url})",
+        "data": {
+          "scan_interval": "Updateinterval (minuten)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Slechts één SmartPrice-integratie is toegestaan."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SmartPrice opties",
+        "data": {
+          "scan_interval": "Updateinterval (minuten)"
+        }
+      }
+    }
+  }
+}
