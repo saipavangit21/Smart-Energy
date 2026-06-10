@@ -292,6 +292,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           <ThemeSwitcher />
           <LangSwitcher style={{ marginRight: 4 }} />
           <a href="/ev-charging-belgium" style={{ padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.22)", color: "#00C896", textDecoration: "none" }}>🚗 EV</a>
+          <a href="/business" style={{ padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(30,64,175,0.1)", border: "1px solid rgba(30,64,175,0.3)", color: "#60A5FA", textDecoration: "none" }}>🏢 Business</a>
           <button onClick={onGetStarted} style={{ padding: "9px 22px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg,#10B981,#0D9488)", border: "none", color: "#fff", cursor: "pointer" }}>
             Dashboard →
           </button>
@@ -525,6 +526,76 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             ))}
           </div>
 
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          PLATFORM HUB — 4 audience cards
+      ══════════════════════════════════════════════════════════════════ */}
+      <section style={{ maxWidth: 860, margin: "28px auto 0", padding: "0 20px", position: "relative", zIndex: 1 }}>
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: "#556B82", textTransform: "uppercase", letterSpacing: "2px" }}>SmartPrice is built for</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+          {[
+            {
+              icon: "👤",
+              label: "Households",
+              accent: "#0D9488",
+              desc: "Live prices · EV charging · Price alerts · Supplier compare",
+              cta: "You're here ↓",
+              href: null,
+              active: true,
+            },
+            {
+              icon: "🏢",
+              label: "Business",
+              accent: "#1E40AF",
+              desc: "Fleet EV cost management · Reimbursement tracking · HR reports",
+              cta: "Explore Business →",
+              href: "/business",
+              active: false,
+            },
+            {
+              icon: "🚗",
+              label: "Fleet Audit",
+              accent: "#F59E0B",
+              desc: "Free audit · See exactly how much your company overpays on EV reimbursements",
+              cta: "Free audit →",
+              href: "/fleet-audit",
+              active: false,
+            },
+            {
+              icon: "🔌",
+              label: "API & HA",
+              accent: "#7C3AED",
+              desc: "Home Assistant HACS · REST API · Public endpoints for developers",
+              cta: "View docs →",
+              href: "/api-docs",
+              active: false,
+            },
+          ].map(card => (
+            <div
+              key={card.label}
+              onClick={() => card.href && (window.location.href = card.href)}
+              style={{
+                background: card.active ? `rgba(13,148,136,0.07)` : "rgba(255,255,255,0.025)",
+                border: `1px solid ${card.active ? card.accent + "44" : "rgba(255,255,255,0.07)"}`,
+                borderTop: `3px solid ${card.accent}`,
+                borderRadius: 16,
+                padding: "18px 16px",
+                cursor: card.href ? "pointer" : "default",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={e => { if (card.href) { e.currentTarget.style.background = `rgba(255,255,255,0.045)`; e.currentTarget.style.transform = "translateY(-2px)"; } }}
+              onMouseLeave={e => { e.currentTarget.style.background = card.active ? `rgba(13,148,136,0.07)` : "rgba(255,255,255,0.025)"; e.currentTarget.style.transform = "translateY(0)"; }}
+            >
+              <div style={{ fontSize: 22, marginBottom: 8 }}>{card.icon}</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: card.accent, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 6 }}>{card.label}</div>
+              <div style={{ fontSize: 12, color: "#556B82", lineHeight: 1.6, marginBottom: 12, minHeight: 52 }}>{card.desc}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: card.active ? card.accent : "#64748B" }}>{card.cta}</div>
+            </div>
+          ))}
         </div>
       </section>
 
