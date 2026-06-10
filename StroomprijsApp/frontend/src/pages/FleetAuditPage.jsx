@@ -4,11 +4,11 @@
  * Lead gen: fleet managers enter fleet size + current reimbursement →
  * see overpayment vs CREG flat rate → download PDF → email gate (B2B lead).
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // CREG official Belgian electricity reference rate (updated quarterly)
 const CREG_RATE_KWH      = 0.2833; // €/kWh — CREG Q2 2026 reference tariff
-const DYNAMIC_RATE_KWH   = 0.1920; // €/kWh — SmartPrice EPEX avg (12-month rolling, all-in)
+const DYNAMIC_RATE_FALLBACK = 0.1920; // €/kWh fallback if API unavailable
 const AVG_KWH_PER_CAR    = 280;    // kWh/month average Belgian company EV home charging
 
 const C = {
@@ -31,7 +31,7 @@ function fmt(n) { return n.toLocaleString("nl-BE", { minimumFractionDigits: 0, m
 function fmtE(n) { return `€${n.toLocaleString("nl-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
 
 export default function FleetAuditPage({ onNavigate }) {
-  const [step, setStep]           = useState("form"); // form | results | downloading | done
+  const [step, setStep]           = useState("form"); // form | results | done
   const [fleetSize, setFleetSize] = useState("");
   const [currentMethod, setCurrentMethod] = useState("creg");
   const [monthlyPerCar, setMonthlyPerCar] = useState("");
@@ -39,17 +39,35 @@ export default function FleetAuditPage({ onNavigate }) {
   const [email, setEmail]         = useState("");
   const [company, setCompany]     = useState("");
   const [emailError, setEmailError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [liveRate, setLiveRate]   = useState(DYNAMIC_RATE_FALLBACK);
+
+  // Fetch live EPEX average from SmartPrice API
+  useEffect(() => {
+    fetch("/api/prices/history?days=30")
+      .then(r => r.json())
+      .then(d => {
+        const days = d?.days || [];
+        const all = days.flatMap(day => (day.prices || day.hourly || []).map(h => h.price_eur_mwh)).filter(p => p != null && p > 0);
+        if (all.length > 0) {
+          const avgMwh = all.reduce((a, b) => a + b, 0) / all.length;
+          // Convert MWh to kWh and add Belgian grid + taxes (~€0.13/kWh)
+          const allinKwh = (avgMwh / 1000) * 1.21 + 0.13;
+          setLiveRate(Math.max(0.12, Math.min(0.28, allinKwh)));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   function calculate() {
     const n = parseInt(fleetSize);
     if (!n || n < 1) return;
 
+    const DYNAMIC_RATE_KWH = liveRate;
     const cregAnnual    = CREG_RATE_KWH   * AVG_KWH_PER_CAR * 12 * n;
     const dynamicAnnual = DYNAMIC_RATE_KWH * AVG_KWH_PER_CAR * 12 * n;
     const overpayment   = cregAnnual - dynamicAnnual;
-    const perCarMonth   = (CREG_RATE_KWH - DYNAMIC_RATE_KWH) * AVG_KWH_PER_CAR;
+    const perCarMonth   = (CREG_RATE_KWH - liveRate) * AVG_KWH_PER_CAR;
     const savingsPct    = Math.round((overpayment / cregAnnual) * 100);
 
     // If user entered their own monthly cost, use that as current
@@ -67,7 +85,7 @@ export default function FleetAuditPage({ onNavigate }) {
       userAnnual,
       userOverpay,
       cregRateKwh: CREG_RATE_KWH,
-      dynamicRateKwh: DYNAMIC_RATE_KWH,
+      dynamicRateKwh: liveRate,
       avgKwhPerCar: AVG_KWH_PER_CAR,
     });
     setStep("results");
@@ -90,9 +108,57 @@ export default function FleetAuditPage({ onNavigate }) {
       });
     } catch (_) {}
     setSubmitting(false);
-    setSubmitted(true);
     setStep("done");
-    window.print();
+    // Open print-friendly report in new tab
+    openPrintReport();
+  }
+
+  function openPrintReport() {
+    if (!audit) return;
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SmartPrice Fleet Audit — ${company || email}</title>
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; color: #1E293B; }
+      h1 { font-size: 24px; color: #1E40AF; } h2 { font-size: 16px; color: #64748B; font-weight: 500; margin-top: 0; }
+      .hero { background: #1E40AF; color: #fff; padding: 28px 32px; border-radius: 12px; margin: 24px 0; text-align: center; }
+      .hero .amount { font-size: 52px; font-weight: 900; color: #FCD34D; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
+      .card { border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; text-align: center; }
+      .card .val { font-size: 24px; font-weight: 900; } .card .lbl { font-size: 12px; color: #64748B; margin-top: 4px; }
+      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+      td, th { padding: 10px 14px; border-bottom: 1px solid #E2E8F0; font-size: 13px; text-align: left; }
+      th { background: #F8FAFC; font-weight: 700; color: #64748B; }
+      .footer { margin-top: 40px; font-size: 11px; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 16px; }
+      @media print { body { margin: 20px; } }
+    </style></head><body>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:22px;">⚡</span><strong style="font-size:18px;color:#1E40AF;">SmartPrice Business</strong><span style="font-size:12px;color:#64748B;margin-left:8px;">Fleet EV Charging Cost Audit</span></div>
+    <h1>Fleet Charging Cost Audit Report</h1>
+    <h2>${company ? `${company} · ` : ""}Generated ${new Date().toLocaleDateString("nl-BE")} · Fleet of ${audit.fleetSize} EVs</h2>
+    <div class="hero">
+      <div style="font-size:13px;opacity:0.75;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Estimated Annual Overpayment</div>
+      <div class="amount">${fmtE(audit.overpayment)}</div>
+      <div style="opacity:0.8;margin-top:6px;">${audit.savingsPct}% of current reimbursement spend</div>
+    </div>
+    <div class="grid">
+      <div class="card"><div class="val" style="color:#DC2626;">${fmtE(audit.cregAnnual)}</div><div class="lbl">Annual cost at CREG rate (${fmtE(audit.cregRateKwh)}/kWh)</div></div>
+      <div class="card"><div class="val" style="color:#059669;">${fmtE(audit.dynamicAnnual)}</div><div class="lbl">Annual cost with dynamic EPEX tracking (${fmtE(audit.dynamicRateKwh)}/kWh)</div></div>
+      <div class="card"><div class="val" style="color:#0D9488;">${fmtE(audit.perCarMonth)}</div><div class="lbl">Saving per car per month</div></div>
+    </div>
+    <table><tr><th>Metric</th><th>Value</th><th>Basis</th></tr>
+      <tr><td>Fleet size</td><td>${audit.fleetSize} EVs</td><td>As entered</td></tr>
+      <tr><td>Avg. home charging</td><td>${fmt(audit.avgKwhPerCar)} kWh/month/car</td><td>Belgian average (VDAB / Febiac data)</td></tr>
+      <tr><td>CREG reference tariff</td><td>${fmtE(audit.cregRateKwh)}/kWh</td><td>CREG Q2 2026 official rate</td></tr>
+      <tr><td>EPEX dynamic rate (30-day avg)</td><td>${fmtE(audit.dynamicRateKwh)}/kWh</td><td>SmartPrice live EPEX Spot Belgium + grid costs</td></tr>
+      <tr><td>Annual CREG spend</td><td><strong>${fmtE(audit.cregAnnual)}</strong></td><td></td></tr>
+      <tr><td>Annual dynamic cost</td><td><strong style="color:#059669;">${fmtE(audit.dynamicAnnual)}</strong></td><td></td></tr>
+      <tr><td><strong>Annual overpayment</strong></td><td><strong style="color:#DC2626;">${fmtE(audit.overpayment)}</strong></td><td>${audit.savingsPct}% reduction possible</td></tr>
+    </table>
+    <p style="font-size:13px;color:#475569;line-height:1.7;"><strong>Legal basis:</strong> Belgian tax law (CIR 92, art. 31) allows reimbursement at actual cost with proper documentation. SmartPrice's hourly EPEX-based calculation provides an auditable, fiscally compliant record accepted by social secretariats (SD Worx, Securex, Partena).</p>
+    <p style="font-size:13px;color:#475569;line-height:1.7;"><strong>Next step:</strong> Contact SmartPrice Business at <strong>info@smartprice.be</strong> to set up automated monthly reimbursement reports for your fleet.</p>
+    <div class="footer">SmartPrice.be Business · info@smartprice.be · smartprice.be/fleet-audit · GDPR compliant · Data stored in EU · Generated ${new Date().toISOString().split("T")[0]}</div>
+    <script>window.onload = function() { window.print(); }</script>
+    </body></html>`;
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); }
   }
 
   return (
@@ -346,10 +412,10 @@ export default function FleetAuditPage({ onNavigate }) {
         {step === "done" && (
           <div style={{ textAlign: "center", padding: "60px 20px" }}>
             <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
-            <h2 style={{ fontSize: 26, fontWeight: 900, color: C.text, marginBottom: 10 }}>Your audit report is ready</h2>
-            <p style={{ fontSize: 15, color: C.muted, marginBottom: 8 }}>A copy has been sent to <strong>{email}</strong>.</p>
+            <h2 style={{ fontSize: 26, fontWeight: 900, color: C.text, marginBottom: 10 }}>Your audit report opened for printing</h2>
+            <p style={{ fontSize: 15, color: C.muted, marginBottom: 8 }}>The PDF report opened in a new tab — save or print it from there.</p>
             <p style={{ fontSize: 14, color: C.muted, marginBottom: 32, lineHeight: 1.7, maxWidth: 480, margin: "0 auto 32px" }}>
-              We'll be in touch to show how SmartPrice Business can automate accurate monthly reimbursement reports for your entire fleet — saving your HR team hours every month.
+              We'll follow up at <strong>{email}</strong> to show how SmartPrice Business can automate accurate monthly reimbursement reports for your entire fleet — saving your HR team hours every month.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <button
