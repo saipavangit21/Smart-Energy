@@ -1,34 +1,31 @@
 /**
  * LandingPage.jsx — SmartPrice.be
- * v5: Frank Energie–style. Hero → product → how it works → features → stats → tools → CTA
+ * v6: Grid53/Frank Energie style.
+ * Dark navy hero (split layout) → white alternating feature sections → stats → tools → CTA
  */
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher  from "../components/LangSwitcher";
 import ThemeSwitcher from "../components/ThemeSwitcher";
 
-const C = {
-  bg:     "#F0F4F8",
-  white:  "#FFFFFF",
-  text:   "#0F172A",
-  body:   "#1E293B",
-  muted:  "#64748B",
-  light:  "#94A3B8",
-  border: "#E2E8F0",
-  teal:   "#0D9488",
-  blue:   "#1E40AF",
-  navy:   "#1E3A8A",
-  shadow: "0 2px 16px rgba(0,0,0,0.07)",
-  shadowM:"0 8px 40px rgba(0,0,0,0.1)",
-};
+const NAVY  = "#0B1628";
+const NAVY2 = "#112240";
+const WHITE = "#FFFFFF";
+const GREY  = "#F5F7FA";
+const TEAL  = "#0D9488";
+const BLUE  = "#1E40AF";
+const TEXT  = "#0F172A";
+const MUTED = "#64748B";
+const LIGHT = "#94A3B8";
+const BORD  = "#E2E8F0";
 
 function retailKwh(mwh) { return (mwh / 1000) + 0.173; }
 function retailFmt(mwh) { return retailKwh(mwh).toFixed(3); }
 function priceColor(mwh) {
-  if (mwh == null) return C.light;
+  if (mwh == null) return LIGHT;
   if (mwh < 0)   return "#10B981";
   if (mwh < 60)  return "#10B981";
-  if (mwh < 110) return "#84CC16";
+  if (mwh < 110) return "#4ADE80";
   if (mwh < 160) return "#F59E0B";
   if (mwh < 220) return "#F97316";
   return "#EF4444";
@@ -43,21 +40,6 @@ function priceLabel(mwh) {
   return "VERY HIGH";
 }
 function fmtHour(h) { return `${String(h).padStart(2,"0")}:00`; }
-
-// Shared section header component
-function SectionHeader({ badge, title, sub, light = false }) {
-  return (
-    <div style={{ textAlign: "center", marginBottom: 52 }}>
-      {badge && (
-        <div style={{ display: "inline-block", fontSize: 11, fontWeight: 800, color: C.teal, background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 20, padding: "4px 14px", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14 }}>
-          {badge}
-        </div>
-      )}
-      <h2 style={{ fontSize: "clamp(26px,4vw,38px)", fontWeight: 900, color: light ? "#fff" : C.text, letterSpacing: "-1px", lineHeight: 1.15, margin: "0 0 14px" }}>{title}</h2>
-      {sub && <p style={{ fontSize: 16, color: light ? "rgba(255,255,255,0.7)" : C.muted, maxWidth: 500, margin: "0 auto", lineHeight: 1.65 }}>{sub}</p>}
-    </div>
-  );
-}
 
 export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const { tSection, lang } = useLanguage();
@@ -78,7 +60,6 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const [needByHour,   setNeedByHour]   = useState(7);
   const [chargerKw,    setChargerKw]    = useState(7.4);
   const [planResult,   setPlanResult]   = useState(null);
-  const [tick,         setTick]         = useState(0);
   const [hasSolar,     setHasSolar]     = useState(false);
   const [leadEmail,    setLeadEmail]    = useState("");
   const [leadState,    setLeadState]    = useState("idle");
@@ -87,34 +68,20 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const [fetchedAt,    setFetchedAt]    = useState(null);
   const [siteStats,    setSiteStats]    = useState(null);
   const [gasCurrent,   setGasCurrent]   = useState(null);
-  const priceRef = useRef(null);
+  const toolsRef = useRef(null);
 
   useEffect(() => { setTimeout(() => setHeroIn(true), 40); }, []);
-
   useEffect(() => {
-    fetch("/api/prices/today")
-      .then(r => r.json())
-      .then(d => { if (d.data?.length) { setPrices(d.data); setFetchedAt(d.fetched_at || new Date().toISOString()); } })
-      .catch(() => {});
+    fetch("/api/prices/today").then(r => r.json())
+      .then(d => { if (d.data?.length) { setPrices(d.data); setFetchedAt(d.fetched_at || new Date().toISOString()); } }).catch(() => {});
   }, []);
-
   useEffect(() => {
-    fetch("/api/gas/current")
-      .then(r => r.json())
-      .then(d => { if (d.success && d.ttf) setGasCurrent({ price: d.ttf.price, ttf_cEkWh: d.ttf_cEkWh }); })
-      .catch(() => {});
+    fetch("/api/gas/current").then(r => r.json())
+      .then(d => { if (d.success && d.ttf) setGasCurrent({ price: d.ttf.price, ttf_cEkWh: d.ttf_cEkWh }); }).catch(() => {});
   }, []);
-
   useEffect(() => {
-    fetch("/api/stats")
-      .then(r => r.json())
-      .then(d => { if (d.success) setSiteStats(d); })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const id = setInterval(() => setTick(t => t + 1), 60000);
-    return () => clearInterval(id);
+    fetch("/api/stats").then(r => r.json())
+      .then(d => { if (d.success) setSiteStats(d); }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -124,121 +91,74 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
     const nowH = new Date().getHours();
     const upcoming = prices.filter(p => {
       const h = new Date(p.timestamp_utc || p.timestamp).getHours();
-      if (needByHour > nowH) return h >= nowH && h < needByHour;
-      return h >= nowH || h < needByHour;
-    }).sort((a, b) => new Date(a.timestamp_utc || a.timestamp) - new Date(b.timestamp_utc || b.timestamp));
+      return needByHour > nowH ? (h >= nowH && h < needByHour) : (h >= nowH || h < needByHour);
+    }).sort((a,b) => new Date(a.timestamp_utc||a.timestamp) - new Date(b.timestamp_utc||b.timestamp));
     if (upcoming.length < hoursNeeded) { setPlanResult(null); return; }
     let best = null;
     for (let i = 0; i <= upcoming.length - hoursNeeded; i++) {
       const win = upcoming.slice(i, i + hoursNeeded);
-      const avg = win.reduce((s, p) => s + p.price_eur_mwh, 0) / hoursNeeded;
-      if (!best || avg < best.avg) {
-        best = {
-          avg, hours: hoursNeeded, needed,
-          start: new Date(win[0].timestamp_utc || win[0].timestamp).getHours(),
-          end:   new Date(win[hoursNeeded-1].timestamp_utc || win[hoursNeeded-1].timestamp).getHours() + 1,
-          cost:  (avg / 1000 + 0.173) * needed,
-        };
-      }
+      const avg = win.reduce((s,p) => s + p.price_eur_mwh, 0) / hoursNeeded;
+      if (!best || avg < best.avg) best = {
+        avg, hours: hoursNeeded, needed,
+        start: new Date(win[0].timestamp_utc||win[0].timestamp).getHours(),
+        end:   new Date(win[hoursNeeded-1].timestamp_utc||win[hoursNeeded-1].timestamp).getHours() + 1,
+        cost:  (avg/1000 + 0.173) * needed,
+      };
     }
-    const nowSlice = prices.filter(p => {
-      const h = new Date(p.timestamp_utc || p.timestamp).getHours();
-      return h >= nowH && h < nowH + hoursNeeded;
-    });
-    const nowAvg = nowSlice.length
-      ? nowSlice.reduce((s, p) => s + p.price_eur_mwh, 0) / nowSlice.length
-      : (prices.find(p => p.is_current)?.price_eur_mwh ?? 120);
-    if (best) best.saving = Math.max(0, (nowAvg / 1000 + 0.173) * needed - best.cost);
+    const nowSlice = prices.filter(p => { const h = new Date(p.timestamp_utc||p.timestamp).getHours(); return h >= nowH && h < nowH + hoursNeeded; });
+    const nowAvg = nowSlice.length ? nowSlice.reduce((s,p) => s + p.price_eur_mwh,0)/nowSlice.length : (prices.find(p=>p.is_current)?.price_eur_mwh ?? 120);
+    if (best) best.saving = Math.max(0, (nowAvg/1000+0.173)*needed - best.cost);
     setPlanResult(best);
   }, [prices, battPct, needByHour, chargerKw]);
 
-  // ── Derived ───────────────────────────────────────────────────────────
-  const nowDate = new Date();
-  const nowH    = nowDate.getHours();
-  const nowM    = nowDate.getMinutes();
-
-  const current    = prices.find(p => p.is_current) || prices[prices.length - 1];
+  const nowH = new Date().getHours();
+  const nowM = new Date().getMinutes();
+  const current    = prices.find(p => p.is_current) || prices[prices.length-1];
   const currentMwh = current?.price_eur_mwh ?? null;
   const currentCol = priceColor(currentMwh);
   const currentLbl = priceLabel(currentMwh);
-
-  const currentHour = current?.hour ?? nowH;
-  const upcoming2   = prices.filter(p => p.hour != null ? (p.hour >= currentHour && p.day === "today") || p.day === "tomorrow" : false);
-  const sorted      = [...upcoming2].sort((a, b) => a.price_eur_mwh - b.price_eur_mwh);
-  const futureOnly  = sorted.filter(p => !p.is_current);
-  const cheapEntry  = futureOnly[0] || sorted[0];
-  const cheapHour   = cheapEntry?.hour ?? null;
-  const cheapMwh    = cheapEntry?.price_eur_mwh ?? null;
-  const cheapIsNow  = cheapEntry?.is_current ?? false;
-
+  const upcoming2  = prices.filter(p => p.hour != null ? (p.hour >= (current?.hour ?? nowH) && p.day==="today") || p.day==="tomorrow" : false);
+  const sorted     = [...upcoming2].sort((a,b) => a.price_eur_mwh - b.price_eur_mwh);
+  const futureOnly = sorted.filter(p => !p.is_current);
+  const cheapEntry = futureOnly[0] || sorted[0];
+  const cheapHour  = cheapEntry?.hour ?? null;
+  const cheapMwh   = cheapEntry?.price_eur_mwh ?? null;
+  const cheapIsNow = cheapEntry?.is_current ?? false;
   let cheapWindowEnd = cheapHour != null ? cheapHour + 1 : null;
   if (cheapHour != null && futureOnly[1] && Math.abs(futureOnly[1].hour - cheapHour) <= 1)
     cheapWindowEnd = Math.max(cheapHour, futureOnly[1].hour) + 1;
-
-  const peakEntry = [...upcoming2].sort((a, b) => b.price_eur_mwh - a.price_eur_mwh)[0];
-  const peakH     = peakEntry?.hour ?? null;
-  const peakMwh   = peakEntry?.price_eur_mwh ?? null;
-
-  const FILL_KWH   = 40;
-  const savingToday = (currentMwh != null && cheapMwh != null)
-    ? Math.max(0, (retailKwh(currentMwh) - retailKwh(cheapMwh)) * FILL_KWH) : null;
-
-  const minsUntilCheap = cheapHour != null ? (cheapHour - nowH) * 60 - nowM : null;
-  const cheapNow  = minsUntilCheap != null && minsUntilCheap <= 0;
-  const cheapSoon = minsUntilCheap != null && minsUntilCheap > 0 && minsUntilCheap <= 90;
-  const countdownStr = minsUntilCheap < 60 ? `${minsUntilCheap} min` : `${Math.floor(minsUntilCheap/60)}h ${minsUntilCheap%60}m`;
-
-  const updatedMinsAgo = fetchedAt ? Math.max(0, Math.floor((Date.now() - new Date(fetchedAt).getTime()) / 60000)) : null;
-  const updatedStr = updatedMinsAgo === null ? null : updatedMinsAgo === 0 ? "just now" : `${updatedMinsAgo} min ago`;
-  const tomorrowPublishHour = 14;
-  const showTomorrowTeaser  = prices.length > 0 && nowH < tomorrowPublishHour;
+  const peakEntry  = [...upcoming2].sort((a,b) => b.price_eur_mwh - a.price_eur_mwh)[0];
+  const peakH      = peakEntry?.hour ?? null;
+  const peakMwh    = peakEntry?.price_eur_mwh ?? null;
+  const savingToday = (currentMwh!=null && cheapMwh!=null) ? Math.max(0,(retailKwh(currentMwh)-retailKwh(cheapMwh))*40) : null;
+  const minsUntilCheap = cheapHour!=null ? (cheapHour-nowH)*60-nowM : null;
+  const cheapNow   = minsUntilCheap!=null && minsUntilCheap<=0;
+  const cheapSoon  = minsUntilCheap!=null && minsUntilCheap>0 && minsUntilCheap<=90;
+  const updatedMinsAgo = fetchedAt ? Math.max(0, Math.floor((Date.now()-new Date(fetchedAt).getTime())/60000)) : null;
+  const updatedStr = updatedMinsAgo===null ? null : updatedMinsAgo===0 ? "just now" : `${updatedMinsAgo} min ago`;
 
   async function submitLead(e) {
     e.preventDefault();
     if (!leadEmail || leadState !== "idle") return;
     setLeadState("loading");
-    try {
-      const r = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: leadEmail, source: "landing" }) });
-      setLeadState(r.ok ? "done" : "error");
-    } catch { setLeadState("error"); }
+    try { const r = await fetch("/api/leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:leadEmail,source:"landing"})}); setLeadState(r.ok?"done":"error"); } catch { setLeadState("error"); }
   }
-
   async function submitFluvius(e) {
     e.preventDefault();
     if (!fluviusEmail || fluviusState !== "idle") return;
     setFluviusState("loading");
-    try {
-      const r = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: fluviusEmail, source: "fluvius_waitlist" }) });
-      setFluviusState(r.ok ? "done" : "error");
-    } catch { setFluviusState("error"); }
+    try { const r = await fetch("/api/leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:fluviusEmail,source:"fluvius_waitlist"})}); setFluviusState(r.ok?"done":"error"); } catch { setFluviusState("error"); }
   }
 
-  const CTABtn = ({ label, onClick, outline = false, style = {} }) => (
-    <button onClick={onClick || onGetStarted} style={{
-      padding: "14px 30px", borderRadius: 50, fontSize: 15, fontWeight: 800,
-      background: outline ? "transparent" : "linear-gradient(135deg,#10B981,#0D9488)",
-      border: outline ? `2px solid ${C.teal}` : "none",
-      color: outline ? C.teal : "#fff",
-      cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s",
-      boxShadow: outline ? "none" : "0 6px 24px rgba(13,148,136,0.3)",
-      ...style,
-    }}
-      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; if (!outline) e.currentTarget.style.boxShadow = "0 10px 32px rgba(13,148,136,0.4)"; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; if (!outline) e.currentTarget.style.boxShadow = "0 6px 24px rgba(13,148,136,0.3)"; }}>
-      {label}
-    </button>
-  );
-
   const SUPPLIERS = [
-    { name: "Engie",         abbr: "EN", color: "#fff", bg: "#0066A1" },
-    { name: "Luminus",       abbr: "LU", color: "#1a1a1a", bg: "#FFB800" },
-    { name: "Bolt",          abbr: "⚡", color: "#fff", bg: "#1A1A2E" },
-    { name: "TotalEnergies", abbr: "TE", color: "#fff", bg: "#EF3340" },
-    { name: "Eneco",         abbr: "EC", color: "#fff", bg: "#00A651" },
-    { name: "Mega",          abbr: "MG", color: "#fff", bg: "#7C3AED" },
-    { name: "Octa+",         abbr: "O+", color: "#fff", bg: "#F97316" },
+    { name:"Engie",         abbr:"EN", color:"#fff",    bg:"#0066A1" },
+    { name:"Luminus",       abbr:"LU", color:"#1a1a1a", bg:"#FFB800" },
+    { name:"Bolt",          abbr:"⚡", color:"#fff",    bg:"#1A1A2E" },
+    { name:"TotalEnergies", abbr:"TE", color:"#fff",    bg:"#EF3340" },
+    { name:"Eneco",         abbr:"EC", color:"#fff",    bg:"#00A651" },
+    { name:"Mega",          abbr:"MG", color:"#fff",    bg:"#7C3AED" },
+    { name:"Octa+",         abbr:"O+", color:"#fff",    bg:"#F97316" },
   ];
-
   const faqs = [
     { q: L.faq1Q, a: L.faq1A },
     { q: L.faq2Q, a: L.faq2A },
@@ -246,557 +166,532 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
     { q: L.faq4Q, a: L.faq4A },
   ];
 
+  /* ── Mini bar chart used inside hero card ── */
+  const MiniChart = () => {
+    if (!prices.length) return <div style={{height:48,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"rgba(255,255,255,0.3)"}}>Loading…</div>;
+    const slice = prices.slice(0,24);
+    const maxP  = Math.max(...slice.map(x => Math.max(x.price_eur_mwh,0)));
+    return (
+      <div style={{display:"flex",gap:2,alignItems:"flex-end",height:48}}>
+        {slice.map((p,i) => {
+          const barH = maxP>0 ? Math.max((p.price_eur_mwh/maxP)*100,4) : 4;
+          const col  = priceColor(p.price_eur_mwh);
+          const pHour = new Date(p.timestamp_utc||p.timestamp).getHours();
+          const hi = p.is_current || pHour===cheapHour;
+          return <div key={i} style={{flex:1,height:`${barH}%`,borderRadius:"2px 2px 0 0",background:hi?col:`${col}44`}} title={`${String(pHour).padStart(2,"0")}:00`}/>;
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div style={{ minHeight: "100vh", background: C.white, color: C.body, fontFamily: "'DM Sans', system-ui, sans-serif", overflowX: "hidden" }}>
+    <div style={{ minHeight:"100vh", background:WHITE, color:TEXT, fontFamily:"'DM Sans',system-ui,sans-serif", overflowX:"hidden" }}>
 
-      {/* Thin 3-colour accent bar */}
-      <div style={{ height: 3, background: "linear-gradient(90deg,#0D9488,#1E40AF,#7C3AED)", position: "fixed", top: 0, left: 0, right: 0, zIndex: 100 }} />
+      {/* Top accent line */}
+      <div style={{ height:3, background:"linear-gradient(90deg,#0D9488,#1E40AF,#7C3AED)", position:"fixed", top:0, left:0, right:0, zIndex:100 }} />
 
-      {/* ── NAV ─────────────────────────────────────────────────────────── */}
-      <nav style={{ position: "sticky", top: 0, zIndex: 50, background: C.white, borderBottom: `1px solid ${C.border}`, padding: "12px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 20 }}>🇧🇪</span>
-          <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.5px", color: C.text }}>SmartPrice</span>
-          <span style={{ fontSize: 9, color: "#10B981", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>● LIVE</span>
+      {/* ══ NAV ════════════════════════════════════════════════════════ */}
+      <nav style={{ background:WHITE, borderBottom:`1px solid ${BORD}`, padding:"0 32px", height:64, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:50, boxShadow:"0 1px 12px rgba(0,0,0,0.06)" }}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:22}}>🇧🇪</span>
+          <span style={{fontSize:19,fontWeight:900,letterSpacing:"-0.8px",color:TEXT}}>SmartPrice</span>
+          <span style={{fontSize:9,color:"#10B981",background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.25)",borderRadius:20,padding:"2px 8px",fontWeight:700}}>● LIVE</span>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <ThemeSwitcher />
-          <LangSwitcher style={{ marginRight: 4 }} />
-          <a href="/ev-charging-belgium" style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(13,148,136,0.07)", border: "1px solid rgba(13,148,136,0.2)", color: C.teal, textDecoration: "none" }}>🚗 EV</a>
-          <a href="/business" style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "rgba(30,64,175,0.07)", border: "1px solid rgba(30,64,175,0.2)", color: C.blue, textDecoration: "none" }}>🏢 Business</a>
-          <CTABtn label="Dashboard →" style={{ padding: "9px 22px", borderRadius: 20, fontSize: 13 }} />
+          <LangSwitcher style={{marginRight:4}} />
+          <a href="/ev-charging-belgium" style={{padding:"7px 14px",borderRadius:20,fontSize:12,fontWeight:700,background:"rgba(13,148,136,0.07)",border:"1px solid rgba(13,148,136,0.2)",color:TEAL,textDecoration:"none"}}>🚗 EV</a>
+          <a href="/business"            style={{padding:"7px 14px",borderRadius:20,fontSize:12,fontWeight:700,background:"rgba(30,64,175,0.07)",border:"1px solid rgba(30,64,175,0.2)",color:BLUE,textDecoration:"none"}}>🏢 Business</a>
+          <button onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:20,fontSize:13,fontWeight:800,background:"linear-gradient(135deg,#10B981,#0D9488)",border:"none",color:"#fff",cursor:"pointer",boxShadow:"0 4px 14px rgba(13,148,136,0.3)"}}>
+            Dashboard →
+          </button>
         </div>
       </nav>
 
-      {/* ── PLATFORM STRIP ── */}
-      <div style={{ background: C.white, borderBottom: `1px solid ${C.border}`, position: "sticky", top: 63, zIndex: 40 }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", display: "flex", overflow: "auto" }}>
+      {/* ══ PLATFORM STRIP ═════════════════════════════════════════════ */}
+      <div style={{background:WHITE,borderBottom:`1px solid ${BORD}`,position:"sticky",top:64,zIndex:40}}>
+        <div style={{maxWidth:960,margin:"0 auto",display:"flex",overflow:"auto"}}>
           {[
-            { icon: "👤", label: "Households", accent: C.teal,    href: null,          active: true  },
-            { icon: "🏢", label: "Business",   accent: C.blue,    href: "/business",   active: false },
-            { icon: "🚗", label: "Fleet Audit",accent: "#F59E0B", href: "/fleet-audit",active: false },
-            { icon: "🔌", label: "API & HA",   accent: "#7C3AED", href: "/api-docs",   active: false },
-          ].map(s => (
-            <a key={s.label} href={s.href || "#"} onClick={s.href ? undefined : e => e.preventDefault()}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "11px 22px", fontSize: 12, fontWeight: 700, color: s.active ? s.accent : C.muted, textDecoration: "none", borderBottom: `2px solid ${s.active ? s.accent : "transparent"}`, whiteSpace: "nowrap" }}>
-              <span>{s.icon}</span>{s.label}
+            {icon:"👤",label:"Households",accent:TEAL, href:null,         active:true},
+            {icon:"🏢",label:"Business",  accent:BLUE, href:"/business",  active:false},
+            {icon:"🚗",label:"Fleet Audit",accent:"#F59E0B",href:"/fleet-audit",active:false},
+            {icon:"🔌",label:"API & HA",  accent:"#7C3AED",href:"/api-docs",  active:false},
+          ].map(s=>(
+            <a key={s.label} href={s.href||"#"} onClick={s.href?undefined:e=>e.preventDefault()}
+              style={{display:"flex",alignItems:"center",gap:6,padding:"11px 22px",fontSize:12,fontWeight:700,color:s.active?s.accent:MUTED,textDecoration:"none",borderBottom:`2px solid ${s.active?s.accent:"transparent"}`,whiteSpace:"nowrap"}}>
+              {s.icon} {s.label}
             </a>
           ))}
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          § 1  HERO
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: C.white, padding: "88px 24px 72px", textAlign: "center" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", opacity: heroIn ? 1 : 0, transform: heroIn ? "translateY(0)" : "translateY(20px)", transition: "all 0.6s ease" }}>
+      {/* ══ § 1  HERO — dark navy, split layout ═════════════════════════
+           Left: headline + CTA + social proof
+           Right: live price product card (coded visual)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section style={{background:`linear-gradient(160deg,${NAVY} 0%,${NAVY2} 100%)`,padding:"80px 32px 88px"}}>
+        <div style={{maxWidth:960,margin:"0 auto",display:"flex",gap:56,alignItems:"center",flexWrap:"wrap",
+          opacity:heroIn?1:0,transform:heroIn?"translateY(0)":"translateY(20px)",transition:"all 0.65s ease"}}>
 
-          {/* Badge */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(13,148,136,0.07)", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 20, padding: "5px 16px", fontSize: 12, fontWeight: 700, color: C.teal, marginBottom: 24 }}>
-            🇧🇪 Belgium · EPEX Spot · Updated every 15 min
+          {/* ── Left col ── */}
+          <div style={{flex:"1 1 380px",minWidth:300}}>
+            {/* Tag */}
+            <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(13,148,136,0.15)",border:"1px solid rgba(13,148,136,0.35)",borderRadius:20,padding:"5px 14px",fontSize:11,fontWeight:700,color:"#4DD9C0",marginBottom:24,textTransform:"uppercase",letterSpacing:"1.5px"}}>
+              🇧🇪 Belgium · EPEX Spot · Live now
+            </div>
+
+            {/* H1 */}
+            <h1 style={{fontSize:"clamp(34px,5vw,56px)",fontWeight:900,color:WHITE,letterSpacing:"-2px",lineHeight:1.1,margin:"0 0 18px"}}>
+              Stop overpaying<br/>for every EV charge
+            </h1>
+
+            {/* Sub */}
+            <p style={{fontSize:17,color:"rgba(255,255,255,0.6)",lineHeight:1.75,margin:"0 0 32px",maxWidth:440}}>
+              Live EPEX electricity prices for Belgium, updated every 15 minutes.
+              We find your cheapest charging window — completely free.
+            </p>
+
+            {/* Social proof stars */}
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:32}}>
+              <div style={{display:"flex",gap:2}}>
+                {"★★★★★".split("").map((s,i)=><span key={i} style={{fontSize:16,color:"#F59E0B"}}>{s}</span>)}
+              </div>
+              <span style={{fontSize:13,color:"rgba(255,255,255,0.5)",fontWeight:500}}>
+                {siteStats?.registered_users ?? "100"}+ Belgian users · Free forever
+              </span>
+            </div>
+
+            {/* CTAs */}
+            <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:28}}>
+              <button onClick={onGetStarted} style={{padding:"14px 32px",borderRadius:50,fontSize:15,fontWeight:800,background:"linear-gradient(135deg,#10B981,#0D9488)",border:"none",color:"#fff",cursor:"pointer",boxShadow:"0 6px 24px rgba(13,148,136,0.45)",transition:"all 0.2s"}}
+                onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 10px 32px rgba(13,148,136,0.55)"}}
+                onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 6px 24px rgba(13,148,136,0.45)"}}>
+                Get started free →
+              </button>
+              <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} style={{padding:"14px 28px",borderRadius:50,fontSize:14,fontWeight:700,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",color:"rgba(255,255,255,0.85)",cursor:"pointer",transition:"all 0.2s"}}
+                onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.14)"}
+                onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.08)"}>
+                See live prices ↓
+              </button>
+            </div>
+
+            {/* Trust row */}
+            <div style={{display:"flex",gap:18,flexWrap:"wrap"}}>
+              {["🆓 Free forever","⚡ 15 min updates","🔒 GDPR compliant","🇧🇪 Belgian data"].map(t=>(
+                <span key={t} style={{fontSize:12,color:"rgba(255,255,255,0.4)",fontWeight:500}}>{t}</span>
+              ))}
+            </div>
           </div>
 
-          {/* H1 */}
-          <h1 style={{ fontSize: "clamp(36px,7vw,64px)", fontWeight: 900, color: C.text, letterSpacing: "-2px", lineHeight: 1.1, margin: "0 0 20px" }}>
-            {L.headline || "Stop overpaying for every EV charge"}
-          </h1>
+          {/* ── Right col: product card ── */}
+          <div style={{flex:"1 1 320px",minWidth:280}}>
+            <div style={{background:WHITE,borderRadius:24,boxShadow:"0 32px 80px rgba(0,0,0,0.5)",overflow:"hidden"}}>
 
-          {/* Subtitle */}
-          <p style={{ fontSize: 18, color: C.muted, maxWidth: 520, margin: "0 auto 32px", lineHeight: 1.7 }}>
-            Live EPEX electricity prices for Belgium — we find the cheapest hours, compare 7 suppliers, and alert you. Free, always.
-          </p>
-
-          {/* Live price inline */}
-          {currentMwh != null && (
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 16, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 20, padding: "16px 28px", marginBottom: 32, boxShadow: C.shadow }}>
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 11, color: C.light, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 2 }}>Live now</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                  <span style={{ fontSize: 44, fontWeight: 900, fontFamily: "monospace", color: currentCol, letterSpacing: "-2px", lineHeight: 1 }}>{Math.round(currentMwh)}</span>
-                  <span style={{ fontSize: 16, color: C.muted, fontWeight: 600 }}>€/MWh</span>
+              {/* Card header */}
+              <div style={{background:"linear-gradient(135deg,#0B1628,#112240)",padding:"20px 22px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",fontWeight:700,textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:4}}>Belgium · EPEX Spot</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>Updated {updatedStr ?? "…"}</div>
                 </div>
-                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>= €{retailFmt(currentMwh)}/kWh at your meter</div>
+                <div style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontWeight:700,color:"#10B981",background:"rgba(16,185,129,0.12)",border:"1px solid rgba(16,185,129,0.3)",borderRadius:20,padding:"4px 10px"}}>
+                  <span style={{width:6,height:6,borderRadius:"50%",background:"#10B981",display:"inline-block"}}/>LIVE
+                </div>
               </div>
-              <div style={{ width: 1, height: 48, background: C.border }} />
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: currentCol, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>{currentLbl}</div>
-                {cheapHour != null && (
-                  <>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Best window: {fmtHour(cheapHour)}–{fmtHour(cheapWindowEnd ?? cheapHour + 1)}</div>
-                    <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>€{retailFmt(cheapMwh)}/kWh</div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
 
-          {/* CTAs */}
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", marginBottom: 32 }}>
-            <CTABtn label="Get started free →" style={{ fontSize: 16, padding: "15px 36px" }} />
-            <CTABtn label="See live prices ↓" outline onClick={() => priceRef.current?.scrollIntoView({ behavior: "smooth" })} style={{ fontSize: 15, padding: "13px 28px" }} />
-          </div>
-
-          {/* Trust strip */}
-          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
-            {[
-              `🇧🇪 ${siteStats?.registered_users ?? "100+"} Belgian users`,
-              "🆓 Free forever",
-              "⚡ Every 15 min",
-              "🔒 GDPR compliant",
-            ].map(t => <span key={t} style={{ fontSize: 13, color: C.muted, fontWeight: 500 }}>{t}</span>)}
-          </div>
-
-          {/* Urgency chip */}
-          {prices.length > 0 && (cheapNow || cheapSoon) && (
-            <div style={{ display: "inline-block", marginTop: 20, padding: "8px 20px", borderRadius: 8, background: cheapNow ? "rgba(16,185,129,0.08)" : "rgba(249,115,22,0.07)", border: `1px solid ${cheapNow ? "rgba(16,185,129,0.3)" : "rgba(249,115,22,0.25)"}`, fontSize: 13, fontWeight: 700, color: cheapNow ? "#10B981" : "#F97316" }}>
-              {cheapNow ? "⚡ Cheapest window is RIGHT NOW — plug in now" : `⚡ Cheapest window in ${countdownStr} — get ready`}
-            </div>
-          )}
-
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          § 2  LIVE PRICE CARD
-      ══════════════════════════════════════════════════════════════════ */}
-      <section ref={priceRef} style={{ background: C.bg, padding: "72px 24px" }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <SectionHeader badge="Live pricing" title="Today's electricity prices" sub="Real-time EPEX Spot Belgium data — see when it's cheap and when to avoid charging." />
-
-          {/* Negative price banner */}
-          {currentMwh != null && currentMwh < 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.35)", borderRadius: 14, padding: "14px 22px", marginBottom: 20, cursor: "pointer" }} onClick={onGetStarted}>
-              <span style={{ fontSize: 22 }}>⚡</span>
-              <div>
-                <div style={{ fontWeight: 800, color: "#0891B2" }}>Electricity is FREE right now — {currentMwh.toFixed(1)} €/MWh</div>
-                <div style={{ fontSize: 13, color: C.muted }}>Negative prices mean you're paid to consume. Charge everything now.</div>
-              </div>
-            </div>
-          )}
-
-          {/* Price card */}
-          <div style={{ background: C.white, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: C.shadowM, overflow: "hidden" }}>
-            {prices.length > 0 && cheapHour != null ? (
-              <>
-                {/* Card top bar */}
-                <div style={{ background: "linear-gradient(135deg,#1E3A8A,#1E40AF)", padding: "20px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-                  <div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: 700, marginBottom: 4 }}>⚡ Electricity · EPEX Spot Belgium</div>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 42, fontWeight: 900, fontFamily: "monospace", color: currentCol, letterSpacing: "-2px" }}>{Math.round(currentMwh ?? 0)}</span>
-                      <span style={{ fontSize: 18, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>€/MWh</span>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: currentCol, background: `${currentCol}22`, border: `1px solid ${currentCol}55`, borderRadius: 20, padding: "3px 10px", marginLeft: 4 }}>{currentLbl}</span>
-                    </div>
-                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 4 }}>
-                      = €{currentMwh != null ? retailFmt(currentMwh) : "—"}/kWh at your meter
-                      {updatedStr && <span style={{ marginLeft: 10 }}>· updated {updatedStr}</span>}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>Best window today</div>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", fontFamily: "monospace" }}>
-                      {cheapIsNow ? "Right now!" : `${fmtHour(cheapHour)}–${fmtHour(cheapWindowEnd ?? cheapHour + 1)}`}
-                    </div>
-                    <div style={{ fontSize: 14, color: "#4ADE80", fontWeight: 700 }}>€{retailFmt(cheapMwh)}/kWh</div>
+              {/* Big price */}
+              <div style={{padding:"24px 22px 16px",borderBottom:`1px solid ${BORD}`}}>
+                <div style={{fontSize:11,color:MUTED,fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",marginBottom:8}}>Current electricity price</div>
+                <div style={{display:"flex",alignItems:"flex-end",gap:10,marginBottom:6}}>
+                  <span style={{fontSize:54,fontWeight:900,fontFamily:"monospace",color:currentMwh!=null?currentCol:LIGHT,letterSpacing:"-3px",lineHeight:1}}>
+                    {currentMwh!=null ? Math.round(currentMwh) : "—"}
+                  </span>
+                  <div style={{paddingBottom:6}}>
+                    <div style={{fontSize:15,fontWeight:600,color:MUTED}}>€/MWh</div>
+                    <div style={{fontSize:10,fontWeight:800,color:currentCol,textTransform:"uppercase",letterSpacing:"1px"}}>{currentLbl}</div>
                   </div>
                 </div>
+                <div style={{fontSize:12,color:MUTED}}>= <strong style={{color:currentCol}}>€{currentMwh!=null?retailFmt(currentMwh):"—"}/kWh</strong> at your meter</div>
+              </div>
 
-                {/* Card body */}
-                <div style={{ padding: "24px 28px" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 20 }}>
-                    {/* Cheapest */}
-                    <div style={{ background: "rgba(22,163,74,0.05)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: 14, padding: "16px 20px" }}>
-                      <div style={{ fontSize: 11, color: "#16A34A", fontWeight: 700, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                        {cheapIsNow ? "⚡ Cheapest — plug in now" : "Best window today"}
+              {/* Cheapest window */}
+              {cheapHour!=null && (
+                <div style={{padding:"16px 22px",borderBottom:`1px solid ${BORD}`,background:"rgba(22,163,74,0.03)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div>
+                      <div style={{fontSize:10,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:"1px",marginBottom:4}}>
+                        {cheapIsNow ? "⚡ Cheapest now" : "Best window today"}
                       </div>
-                      <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 4 }}>
-                        {cheapIsNow ? "Right now!" : `${fmtHour(cheapHour)} – ${fmtHour(cheapWindowEnd ?? cheapHour + 2)}`}
-                      </div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: "#16A34A" }}>€{retailFmt(cheapMwh)}/kWh</div>
-                    </div>
-                    {/* Most expensive */}
-                    <div style={{ background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.15)", borderRadius: 14, padding: "16px 20px" }}>
-                      <div style={{ fontSize: 11, color: "#DC2626", fontWeight: 700, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                        Most expensive
-                      </div>
-                      <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 4 }}>
-                        {peakH != null ? `${fmtHour(peakH)} – ${fmtHour(peakH + 2)}` : "—"}
-                      </div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: "#DC2626" }}>€{peakMwh != null ? retailFmt(peakMwh) : "—"}/kWh</div>
-                    </div>
-                    {/* Saving */}
-                    {savingToday != null && savingToday > 0.3 && (
-                      <div style={{ background: "rgba(13,148,136,0.05)", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 14, padding: "16px 20px" }}>
-                        <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Full charge (40 kWh)</div>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 4 }}>€{(retailKwh(cheapMwh) * 40).toFixed(2)}</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: C.teal }}>Save €{savingToday.toFixed(2)} vs now</div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 24h bar chart */}
-                  <div style={{ marginBottom: 20 }}>
-                    <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>24-hour price schedule</div>
-                    <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 60 }}>
-                      {prices.slice(0, 24).map((p, i) => {
-                        const maxP = Math.max(...prices.slice(0,24).map(x => Math.max(x.price_eur_mwh, 0)));
-                        const barH = maxP > 0 ? Math.max((p.price_eur_mwh / maxP) * 100, 4) : 4;
-                        const col  = priceColor(p.price_eur_mwh);
-                        const pHour = new Date(p.timestamp_utc || p.timestamp).getHours();
-                        const highlight = p.is_current || pHour === cheapHour;
-                        return <div key={i} style={{ flex: 1, height: `${barH}%`, borderRadius: "3px 3px 0 0", background: highlight ? col : `${col}55`, border: highlight ? `1px solid ${col}` : "none" }} title={`${String(pHour).padStart(2,"0")}:00 — €${p.price_eur_mwh?.toFixed(0)}/MWh`} />;
-                      })}
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: C.light, marginTop: 4 }}>
-                      {["00:00","06:00","12:00","18:00","23:00"].map(h => <span key={h}>{h}</span>)}
-                    </div>
-                  </div>
-
-                  {/* Solar toggle */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: hasSolar ? "rgba(251,191,36,0.06)" : C.bg, border: `1px solid ${hasSolar ? "rgba(251,191,36,0.3)" : C.border}`, borderRadius: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 20 }}
-                    onClick={() => setHasSolar(s => !s)}>
-                    <div style={{ width: 36, height: 20, borderRadius: 10, background: hasSolar ? "#f59e0b" : "#CBD5E1", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
-                      <div style={{ position: "absolute", top: 2, left: hasSolar ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: hasSolar ? "#92400E" : C.muted }}>
-                      ☀️ {L.hasSolarLabel || "I have solar panels — show capacity tariff impact"}
-                    </span>
-                  </div>
-
-                  {hasSolar && cheapMwh != null && (
-                    <div style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: 12, padding: "14px 18px", marginBottom: 20 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E", marginBottom: 6 }}>☀️ Capacity tariff (Fluvius) impact</div>
-                      <div style={{ fontSize: 13, color: "#78350F", lineHeight: 1.7 }}>
-                        Charging at peak ({fmtHour(peakH ?? 19)}) raises your monthly Fluvius bill by ~€20–30. Charging at {fmtHour(cheapHour)} avoids this. <strong>Real saving: €{((savingToday ?? 0) + 22).toFixed(0)}/month.</strong>
+                      <div style={{fontSize:20,fontWeight:800,color:TEXT,fontFamily:"monospace",letterSpacing:"-0.5px"}}>
+                        {cheapIsNow ? "Right now!" : `${fmtHour(cheapHour)} – ${fmtHour(cheapWindowEnd??cheapHour+1)}`}
                       </div>
                     </div>
-                  )}
-
-                  {/* CTA */}
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: C.blue, marginBottom: 16 }}>
-                      👉 {(L.chargeBeforeCta || "Charge before {x} to save money").replace("{x}", fmtHour(cheapWindowEnd ?? cheapHour + 2))}
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:18,fontWeight:800,color:"#16A34A"}}>€{retailFmt(cheapMwh)}/kWh</div>
+                      {savingToday!=null && savingToday>0.3 && (
+                        <div style={{fontSize:12,color:TEAL,fontWeight:600}}>Save €{savingToday.toFixed(2)} per charge</div>
+                      )}
                     </div>
-                    <CTABtn label={L.mainCta || "Start saving on every charge →"} style={{ width: "100%", maxWidth: 400, padding: "15px 0", borderRadius: 14, fontSize: 15 }} />
-                    <div style={{ fontSize: 12, color: C.light, marginTop: 10 }}>Free · No account needed · 30 sec to set alerts</div>
                   </div>
                 </div>
-              </>
-            ) : (
-              <div style={{ padding: "60px", textAlign: "center", color: C.light }}>Loading live prices…</div>
-            )}
-          </div>
+              )}
 
-          {showTomorrowTeaser && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.18)", borderRadius: 12, marginTop: 14, fontSize: 13, color: C.blue, fontWeight: 600 }}>
-              📅 Tomorrow's cheapest hours publish at {String(tomorrowPublishHour).padStart(2,"0")}:00 — check back then
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          § 3  HOW IT WORKS
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: C.white, padding: "88px 24px" }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <SectionHeader badge="How it works" title="Three steps to cheaper energy" sub="SmartPrice does the work. You just plug in at the right time." />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 28 }}>
-            {[
-              { n: "1", icon: "📡", title: "We monitor 24/7", desc: "EPEX Spot Belgium prices updated every 15 minutes. Gas TTF prices tracked in parallel." },
-              { n: "2", icon: "🎯", title: "We find your window", desc: "Our algorithm calculates the cheapest hours for your EV based on your battery, charger power, and deadline." },
-              { n: "3", icon: "💶", title: "You charge smarter", desc: "Plug in at the optimal time. The average Belgian EV driver saves €200+ per year." },
-            ].map(s => (
-              <div key={s.n} style={{ background: C.bg, borderRadius: 20, padding: "32px 28px", position: "relative", overflow: "hidden" }}>
-                <div style={{ fontSize: 56, fontWeight: 900, color: C.border, position: "absolute", top: 12, right: 20, lineHeight: 1, fontFamily: "monospace", userSelect: "none" }}>{s.n}</div>
-                <div style={{ fontSize: 32, marginBottom: 16 }}>{s.icon}</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 8 }}>{s.title}</div>
-                <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{s.desc}</div>
+              {/* Mini bar chart */}
+              <div style={{padding:"14px 22px"}}>
+                <div style={{fontSize:9,fontWeight:700,color:LIGHT,textTransform:"uppercase",letterSpacing:"1px",marginBottom:8}}>Today's 24-hour schedule</div>
+                <MiniChart />
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:8,color:LIGHT,marginTop:4}}>
+                  <span>00:00</span><span>12:00</span><span>23:00</span>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          § 4  FEATURES
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: C.bg, padding: "88px 24px" }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <SectionHeader badge="Features" title="Everything you need to optimise your energy" />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
-            {[
-              { icon: "🔋", accent: "#00C896", title: "EV Charge Planner", desc: "Set your battery %, charger speed, and deadline. We calculate the cheapest window and total cost.", cta: "Try the planner", onClick: () => priceRef.current?.scrollIntoView({ behavior: "smooth" }) },
-              { icon: "🔔", accent: "#1E40AF", title: "Daily Price Alerts", desc: "Get an email every day at 13:00 when tomorrow's cheapest window is confirmed.", cta: "Set up alerts", onClick: onGetStarted },
-              { icon: "🔌", accent: "#0D9488", title: "Plan Calculator", desc: "Compare all 7 Belgian suppliers side by side. See your real annual electricity cost in 30 seconds.", cta: "Compare suppliers", onClick: () => onOpenCalculator?.("electricity") },
-              { icon: "🏠", accent: "#7C3AED", title: "Home Assistant", desc: "Official HACS integration. Automate your EV charger and appliances based on live EPEX prices.", cta: "View HACS docs", onClick: () => window.location.href = "/api-docs" },
-            ].map(f => (
-              <div key={f.title} style={{ background: C.white, borderRadius: 20, border: `1px solid ${C.border}`, padding: "28px 24px", boxShadow: C.shadow, display: "flex", flexDirection: "column" }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, background: `${f.accent}12`, border: `1px solid ${f.accent}25`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, marginBottom: 16 }}>{f.icon}</div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 8 }}>{f.title}</div>
-                <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, flex: 1, marginBottom: 16 }}>{f.desc}</div>
-                <button onClick={f.onClick} style={{ fontSize: 13, fontWeight: 700, color: f.accent, background: `${f.accent}0D`, border: `1px solid ${f.accent}25`, borderRadius: 10, padding: "8px 16px", cursor: "pointer", textAlign: "left" }}>
-                  {f.cta} →
+              {/* Card CTA */}
+              <div style={{padding:"0 22px 20px"}}>
+                <button onClick={onGetStarted} style={{width:"100%",padding:"12px",borderRadius:12,fontSize:14,fontWeight:800,background:"linear-gradient(135deg,#10B981,#0D9488)",border:"none",color:"#fff",cursor:"pointer"}}>
+                  Get full access — free →
                 </button>
               </div>
+            </div>
+
+            {/* Urgency chip under card */}
+            {(cheapNow||cheapSoon) && (
+              <div style={{marginTop:12,padding:"9px 16px",borderRadius:10,background:"rgba(16,185,129,0.12)",border:"1px solid rgba(16,185,129,0.3)",fontSize:12,fontWeight:700,color:"#4DD9C0",textAlign:"center"}}>
+                {cheapNow ? "⚡ Cheapest window RIGHT NOW — plug in now" : `⚡ Cheapest window in ${(minsUntilCheap<60?`${minsUntilCheap} min`:`${Math.floor(minsUntilCheap/60)}h ${minsUntilCheap%60}m`)} — get ready`}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ § 2  SOCIAL PROOF STRIP ═════════════════════════════════════ */}
+      <div style={{background:GREY,borderTop:`1px solid ${BORD}`,borderBottom:`1px solid ${BORD}`,padding:"20px 32px"}}>
+        <div style={{maxWidth:960,margin:"0 auto",display:"flex",gap:0,justifyContent:"center",flexWrap:"wrap"}}>
+          {[
+            {n: siteStats?.registered_users ?? "100+", label:"Belgian users tracking"},
+            {n:"7",    label:"Suppliers compared"},
+            {n:"15 min",label:"Price refresh interval"},
+            {n:"€200+", label:"Average annual saving"},
+          ].map((s,i,arr)=>(
+            <div key={s.label} style={{textAlign:"center",padding:"8px 36px",borderRight:i<arr.length-1?`1px solid ${BORD}`:"none"}}>
+              <div style={{fontSize:24,fontWeight:900,color:TEXT,fontFamily:"monospace",letterSpacing:"-0.5px"}}>{s.n}</div>
+              <div style={{fontSize:11,color:MUTED,fontWeight:500,marginTop:2}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ══ § 3  HOW IT WORKS ══════════════════════════════════════════ */}
+      <section style={{background:WHITE,padding:"88px 32px"}}>
+        <div style={{maxWidth:960,margin:"0 auto"}}>
+          <div style={{textAlign:"center",marginBottom:56}}>
+            <div style={{display:"inline-block",fontSize:11,fontWeight:800,color:TEAL,background:"rgba(13,148,136,0.07)",border:`1px solid rgba(13,148,136,0.2)`,borderRadius:20,padding:"4px 14px",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:14}}>
+              How it works
+            </div>
+            <h2 style={{fontSize:"clamp(26px,4vw,38px)",fontWeight:900,color:TEXT,letterSpacing:"-1px",margin:"0 0 12px"}}>Three steps to cheaper energy</h2>
+            <p style={{fontSize:16,color:MUTED,maxWidth:480,margin:"0 auto",lineHeight:1.65}}>SmartPrice does the work. You just plug in at the right time.</p>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:2}}>
+            {[
+              {n:"01",icon:"📡",color:TEAL,  title:"We monitor 24/7",    desc:"EPEX Spot Belgium prices fetched and processed every 15 minutes — day and night, including weekends."},
+              {n:"02",icon:"🎯",color:BLUE,  title:"We find your window",desc:"Our algorithm calculates the cheapest consecutive hours for your battery level, charger power, and deadline."},
+              {n:"03",icon:"💶",color:"#7C3AED",title:"You save money",  desc:"Plug in at the optimal time. Belgian EV drivers save an average of €200+ per year by charging smarter."},
+            ].map((s,i)=>(
+              <div key={s.n} style={{background:i%2===1?GREY:WHITE,border:`1px solid ${BORD}`,borderRadius:0,padding:"40px 36px",position:"relative",overflow:"hidden"}}>
+                <div style={{fontSize:72,fontWeight:900,color:BORD,position:"absolute",top:16,right:20,lineHeight:1,fontFamily:"monospace",userSelect:"none",pointerEvents:"none"}}>{s.n}</div>
+                <div style={{width:52,height:52,borderRadius:14,background:`${s.color}12`,border:`1px solid ${s.color}25`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,marginBottom:20}}>{s.icon}</div>
+                <div style={{fontSize:19,fontWeight:800,color:TEXT,marginBottom:10}}>{s.title}</div>
+                <div style={{fontSize:14,color:MUTED,lineHeight:1.75}}>{s.desc}</div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          § 5  EV CHARGE PLANNER (interactive)
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: C.white, padding: "88px 24px" }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <SectionHeader badge="EV Charge Planner" title="Find your cheapest charging window" sub="Tell us your battery level and deadline — we'll do the maths." />
-          <div style={{ background: C.bg, borderRadius: 24, border: `1px solid ${C.border}`, padding: "36px", boxShadow: C.shadow }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 20, marginBottom: 28 }}>
-              {/* Battery */}
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 700, display: "block", marginBottom: 8 }}>
-                  Battery now: <span style={{ color: "#00C896" }}>{battPct}%</span>
-                </label>
-                <input type="range" min={5} max={90} step={5} value={battPct} onChange={e => setBattPct(+e.target.value)}
-                  style={{ width: "100%", accentColor: "#00C896", cursor: "pointer" }} />
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: C.light, marginTop: 3 }}>
-                  <span>5%</span><span>50%</span><span>90%</span>
+      {/* ══ § 4  FEATURE: EV PLANNER (text left, widget right) ═════════ */}
+      <section ref={toolsRef} style={{background:GREY,padding:"88px 32px"}}>
+        <div style={{maxWidth:960,margin:"0 auto",display:"flex",gap:56,alignItems:"center",flexWrap:"wrap"}}>
+          {/* Left */}
+          <div style={{flex:"1 1 300px",minWidth:260}}>
+            <div style={{display:"inline-block",fontSize:11,fontWeight:800,color:"#00C896",background:"rgba(0,200,150,0.08)",border:"1px solid rgba(0,200,150,0.2)",borderRadius:20,padding:"4px 14px",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:16}}>
+              🔋 EV Charge Planner
+            </div>
+            <h2 style={{fontSize:"clamp(24px,3.5vw,34px)",fontWeight:900,color:TEXT,letterSpacing:"-1px",marginBottom:14,lineHeight:1.15}}>
+              Find your cheapest charging window
+            </h2>
+            <p style={{fontSize:15,color:MUTED,lineHeight:1.75,marginBottom:24}}>
+              Tell us your battery level, charger speed, and when you need the car ready. We calculate the cheapest window and exact cost — in real time.
+            </p>
+            {planResult && (
+              <div style={{display:"flex",gap:20,flexWrap:"wrap",marginBottom:24}}>
+                <div>
+                  <div style={{fontSize:10,color:MUTED,textTransform:"uppercase",letterSpacing:"1px",marginBottom:4}}>Optimal window</div>
+                  <div style={{fontSize:28,fontWeight:900,color:"#10B981",fontFamily:"monospace",letterSpacing:"-1px"}}>{fmtHour(planResult.start)} – {fmtHour(planResult.end)}</div>
+                </div>
+                {planResult.saving>0.1 && (
+                  <div>
+                    <div style={{fontSize:10,color:MUTED,textTransform:"uppercase",letterSpacing:"1px",marginBottom:4}}>vs charging now</div>
+                    <div style={{fontSize:28,fontWeight:900,color:"#F97316",fontFamily:"monospace",letterSpacing:"-1px"}}>-€{planResult.saving.toFixed(2)}</div>
+                  </div>
+                )}
+              </div>
+            )}
+            <button onClick={onGetStarted} style={{padding:"13px 28px",borderRadius:50,fontSize:14,fontWeight:800,background:"linear-gradient(135deg,#10B981,#0D9488)",border:"none",color:"#fff",cursor:"pointer",boxShadow:"0 4px 16px rgba(13,148,136,0.3)"}}>
+              Get alerts for my window →
+            </button>
+          </div>
+          {/* Right: interactive planner */}
+          <div style={{flex:"1 1 340px",minWidth:300}}>
+            <div style={{background:WHITE,borderRadius:20,border:`1px solid ${BORD}`,padding:"28px",boxShadow:"0 8px 32px rgba(0,0,0,0.08)"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+                <div>
+                  <label style={{fontSize:10,color:MUTED,textTransform:"uppercase",letterSpacing:"1px",fontWeight:700,display:"block",marginBottom:8}}>
+                    Battery now: <span style={{color:"#00C896"}}>{battPct}%</span>
+                  </label>
+                  <input type="range" min={5} max={90} step={5} value={battPct} onChange={e=>setBattPct(+e.target.value)}
+                    style={{width:"100%",accentColor:"#00C896",cursor:"pointer"}} />
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:LIGHT,marginTop:3}}>
+                    <span>5%</span><span>90%</span>
+                  </div>
+                </div>
+                <div>
+                  <label style={{fontSize:10,color:MUTED,textTransform:"uppercase",letterSpacing:"1px",fontWeight:700,display:"block",marginBottom:8}}>Full by:</label>
+                  <select value={needByHour} onChange={e=>setNeedByHour(+e.target.value)}
+                    style={{width:"100%",background:WHITE,border:`1px solid ${BORD}`,borderRadius:10,padding:"9px 10px",color:TEXT,fontSize:13,fontWeight:700,cursor:"pointer",outline:"none"}}>
+                    {Array.from({length:23},(_,i)=>(new Date().getHours()+1+i)%24).map(h=>(
+                      <option key={h} value={h}>{String(h).padStart(2,"0")}:00{h>=5&&h<=9?" (morning)":h>=17&&h<=20?" (evening)":""}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-              {/* Full by */}
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 700, display: "block", marginBottom: 8 }}>Full by:</label>
-                <select value={needByHour} onChange={e => setNeedByHour(+e.target.value)}
-                  style={{ width: "100%", background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 12px", color: C.text, fontSize: 14, fontWeight: 700, cursor: "pointer", outline: "none" }}>
-                  {Array.from({ length: 23 }, (_, i) => (new Date().getHours() + 1 + i) % 24).map(h => (
-                    <option key={h} value={h}>{String(h).padStart(2,"0")}:00{h >= 5 && h <= 9 ? " (morning)" : h >= 17 && h <= 20 ? " (evening)" : ""}</option>
-                  ))}
-                </select>
-              </div>
-              {/* Charger */}
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 700, display: "block", marginBottom: 8 }}>Charger speed:</label>
-                <div style={{ display: "flex", gap: 5 }}>
-                  {[3.7, 7.4, 11, 22].map(kw => (
-                    <button key={kw} onClick={() => setChargerKw(kw)} style={{ flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 11, fontWeight: 700, border: `1px solid ${chargerKw === kw ? "rgba(0,200,150,0.5)" : C.border}`, background: chargerKw === kw ? "rgba(0,200,150,0.1)" : C.white, color: chargerKw === kw ? "#00C896" : C.muted, cursor: "pointer" }}>
+              <div style={{marginBottom:20}}>
+                <label style={{fontSize:10,color:MUTED,textTransform:"uppercase",letterSpacing:"1px",fontWeight:700,display:"block",marginBottom:8}}>Charger speed:</label>
+                <div style={{display:"flex",gap:6}}>
+                  {[3.7,7.4,11,22].map(kw=>(
+                    <button key={kw} onClick={()=>setChargerKw(kw)} style={{flex:1,padding:"10px 4px",borderRadius:10,fontSize:12,fontWeight:700,border:`1px solid ${chargerKw===kw?"rgba(0,200,150,0.5)":BORD}`,background:chargerKw===kw?"rgba(0,200,150,0.1)":GREY,color:chargerKw===kw?"#00C896":MUTED,cursor:"pointer"}}>
                       {kw}kW
                     </button>
                   ))}
                 </div>
               </div>
-            </div>
-
-            {planResult ? (
-              <div style={{ background: C.white, border: "1px solid rgba(16,185,129,0.25)", borderRadius: 18, padding: "24px 28px" }}>
-                <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: "#10B981", textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: 700, marginBottom: 6 }}>⚡ Optimal window</div>
-                    <div style={{ fontSize: "clamp(28px,5vw,44px)", fontWeight: 900, color: "#10B981", fontFamily: "monospace", letterSpacing: "-1.5px", lineHeight: 1, marginBottom: 4 }}>
-                      {fmtHour(planResult.start)} – {fmtHour(planResult.end)}
+              {planResult ? (
+                <div style={{background:"rgba(16,185,129,0.06)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:14,padding:"16px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+                    <div>
+                      <div style={{fontSize:10,color:"#10B981",fontWeight:700,textTransform:"uppercase",marginBottom:4}}>⚡ Charge between</div>
+                      <div style={{fontSize:22,fontWeight:900,color:"#10B981",fontFamily:"monospace"}}>{fmtHour(planResult.start)} – {fmtHour(planResult.end)}</div>
+                      <div style={{fontSize:11,color:MUTED,marginTop:2}}>{planResult.hours}h · {planResult.needed.toFixed(0)} kWh needed</div>
                     </div>
-                    <div style={{ fontSize: 12, color: C.muted }}>{planResult.hours}h · {planResult.needed.toFixed(0)} kWh needed</div>
-                  </div>
-                  <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>Cost</div>
-                      <div style={{ fontSize: 32, fontWeight: 900, color: "#10B981", fontFamily: "monospace" }}>€{planResult.cost.toFixed(2)}</div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:22,fontWeight:900,color:"#10B981",fontFamily:"monospace"}}>€{planResult.cost.toFixed(2)}</div>
+                      {planResult.saving>0.1 && <div style={{fontSize:12,color:"#F97316",fontWeight:700}}>save €{planResult.saving.toFixed(2)}</div>}
                     </div>
-                    {planResult.saving > 0.1 && (
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>vs now</div>
-                        <div style={{ fontSize: 32, fontWeight: 900, color: "#F97316", fontFamily: "monospace" }}>-€{planResult.saving.toFixed(2)}</div>
-                      </div>
-                    )}
-                    {planResult.saving > 0.1 && (
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>Per year ×250</div>
-                        <div style={{ fontSize: 32, fontWeight: 900, color: "#F97316", fontFamily: "monospace" }}>-€{(planResult.saving * 250).toFixed(0)}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <CTABtn label="Get alerts for this window →" />
-                <div style={{ fontSize: 11, color: C.light, marginTop: 8 }}>Free · No credit card</div>
-              </div>
-            ) : (
-              <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px", textAlign: "center" }}>
-                <span style={{ fontSize: 13, color: C.muted }}>{prices.length ? "Adjust the inputs above to calculate your window" : "Loading prices…"}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          § 6  STATS BAR
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: "linear-gradient(135deg,#1E3A8A,#1E40AF)", padding: "60px 24px" }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 0 }}>
-            {[
-              { n: siteStats?.registered_users ?? "100+", label: "Belgian users tracking" },
-              { n: "7",    label: "Suppliers compared" },
-              { n: "15 min", label: "Price update interval" },
-              { n: "€200+", label: "Average annual saving" },
-            ].map((s, i, arr) => (
-              <div key={s.label} style={{ textAlign: "center", padding: "12px 8px", borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.12)" : "none" }}>
-                <div style={{ fontSize: "clamp(28px,4vw,44px)", fontWeight: 900, color: "#fff", fontFamily: "monospace", letterSpacing: "-1px", marginBottom: 6 }}>{s.n}</div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          § 7  SUPPLIERS + PLAN CALCULATOR
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: C.bg, padding: "88px 24px" }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <SectionHeader badge="7 suppliers" title="Compare every Belgian electricity supplier" sub="We track Engie, Luminus, Bolt, TotalEnergies, Eneco, Mega, and Octa+ — updated in real time." />
-
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginBottom: 36 }}>
-            {SUPPLIERS.map(s => (
-              <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 10, background: C.white, border: `1px solid ${C.border}`, borderRadius: 14, padding: "10px 18px", boxShadow: C.shadow }}>
-                <div style={{ width: 32, height: 32, borderRadius: 9, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, color: s.color, flexShrink: 0 }}>{s.abbr}</div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: C.body }}>{s.name}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Plan calculator CTA card */}
-          <div onClick={() => onOpenCalculator?.("electricity")} style={{ background: C.white, borderRadius: 20, border: `1px solid ${C.border}`, padding: "28px 32px", boxShadow: C.shadowM, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20, cursor: "pointer" }}
-            onMouseEnter={e => e.currentTarget.style.border = `1px solid ${C.teal}55`}
-            onMouseLeave={e => e.currentTarget.style.border = `1px solid ${C.border}`}>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 900, color: C.text, marginBottom: 6 }}>Is your current supplier the cheapest?</div>
-              <div style={{ fontSize: 14, color: C.muted }}>Compare all 7 Belgian suppliers · real annual cost · takes 30 seconds</div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 26, fontWeight: 900, color: "#10B981", fontFamily: "monospace" }}>€987 <span style={{ fontSize: 13, color: C.muted, fontFamily: "inherit", fontWeight: 400 }}>vs €1,204</span></div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.teal, marginTop: 4 }}>Calculate my plan →</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          § 8  GAS + EMAIL CAPTURE
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: C.white, padding: "88px 24px" }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
-
-            {/* Gas price card */}
-            <div style={{ background: C.bg, border: "1px solid rgba(249,115,22,0.2)", borderRadius: 20, padding: "28px", boxShadow: C.shadow }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <span style={{ fontSize: 28 }}>🔥</span>
-                <div>
-                  <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>TTF Natural Gas · Today</div>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: "#F97316", fontFamily: "monospace", letterSpacing: "-1px" }}>
-                    {gasCurrent ? `€${gasCurrent.price?.toFixed(1)}/MWh` : "—"}
-                  </div>
-                  {gasCurrent?.ttf_cEkWh != null && <div style={{ fontSize: 12, color: C.muted }}>= {gasCurrent.ttf_cEkWh.toFixed(3)} c€/kWh</div>}
-                </div>
-              </div>
-              <div style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}><strong style={{ color: "#F97316" }}>~40%</strong> of your gas bill directly tracks this market price.</div>
-              <a href="/calculator/gas" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.25)", borderRadius: 12, padding: "9px 18px", fontSize: 13, fontWeight: 700, color: "#F97316", textDecoration: "none" }}>
-                Compare gas plans →
-              </a>
-            </div>
-
-            {/* Email alert capture */}
-            <div style={{ background: leadState === "done" ? "rgba(16,185,129,0.06)" : "linear-gradient(135deg,rgba(13,148,136,0.07),rgba(26,86,164,0.04))", border: `1px solid ${leadState === "done" ? "rgba(16,185,129,0.3)" : "rgba(13,148,136,0.2)"}`, borderRadius: 20, padding: "28px", boxShadow: C.shadow }}>
-              {leadState === "done" ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <span style={{ fontSize: 32 }}>✅</span>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: "#10B981" }}>You're on the list</div>
-                    <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>We'll alert you every day at 13:00 when the cheapest window is confirmed.</div>
                   </div>
                 </div>
               ) : (
-                <>
-                  <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>Daily alerts</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 6 }}>🔔 Alert me when the cheapest window opens</div>
-                  <div style={{ fontSize: 13, color: C.muted, marginBottom: 18 }}>Daily at 13:00 · No spam · Unsubscribe anytime</div>
-                  <form onSubmit={submitLead} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <input type="email" required placeholder="your@email.com" value={leadEmail} onChange={e => setLeadEmail(e.target.value)}
-                      style={{ flex: 1, minWidth: 180, padding: "11px 14px", borderRadius: 12, fontSize: 14, background: C.white, border: `1px solid ${C.border}`, color: C.text, outline: "none", fontFamily: "inherit" }}
-                      onFocus={e => e.target.style.border = "1px solid rgba(13,148,136,0.5)"}
-                      onBlur={e => e.target.style.border = `1px solid ${C.border}`} />
-                    <button type="submit" disabled={leadState === "loading"} style={{ padding: "11px 22px", borderRadius: 12, fontSize: 13, fontWeight: 800, background: "linear-gradient(135deg,#10B981,#0D9488)", border: "none", color: "#fff", cursor: "pointer", opacity: leadState === "loading" ? 0.7 : 1 }}>
-                      {leadState === "loading" ? "…" : "Notify me →"}
-                    </button>
-                  </form>
-                  {leadState === "error" && <div style={{ fontSize: 12, color: "#EF4444", marginTop: 8 }}>Something went wrong — try again</div>}
-                </>
+                <div style={{background:GREY,borderRadius:12,padding:"14px",textAlign:"center",fontSize:13,color:MUTED}}>
+                  {prices.length ? "Adjust inputs above to calculate" : "Loading prices…"}
+                </div>
               )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          § 9  FLUVIUS TEASER
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: C.bg, padding: "88px 24px" }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <div style={{ background: C.white, border: "1px solid rgba(251,191,36,0.25)", borderRadius: 24, padding: "40px", boxShadow: C.shadow }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 32, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 260 }}>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", borderRadius: 20, padding: "4px 14px", fontSize: 11, fontWeight: 800, color: "#92400E", marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px" }}>
-                  ⚡ Coming soon
-                </div>
-                <h3 style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 10, letterSpacing: "-0.5px" }}>Fluvius capacity tariff integration</h3>
-                <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.75, marginBottom: 20 }}>
-                  Since 2023, Belgian households with a smart meter pay a capacity tariff — your monthly grid bill is based on your highest 15-min peak. Charging your EV at the wrong hour raises your entire Fluvius bill by €20–30. We're building full integration to show you the real cost.
-                </p>
-                <form onSubmit={submitFluvius} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {fluviusState === "done" ? (
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#92400E" }}>✅ You're on the Fluvius waitlist</div>
-                  ) : (
-                    <>
-                      <input type="email" required placeholder="your@email.com" value={fluviusEmail} onChange={e => setFluviusEmail(e.target.value)}
-                        style={{ flex: 1, minWidth: 180, padding: "10px 14px", borderRadius: 10, fontSize: 13, background: C.bg, border: "1px solid rgba(251,191,36,0.3)", color: C.text, outline: "none", fontFamily: "inherit" }}
-                        onFocus={e => e.target.style.border = "1px solid rgba(251,191,36,0.6)"}
-                        onBlur={e => e.target.style.border = "1px solid rgba(251,191,36,0.3)"} />
-                      <button type="submit" disabled={fluviusState === "loading"} style={{ padding: "10px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", color: "#1c1917", cursor: "pointer", opacity: fluviusState === "loading" ? 0.7 : 1 }}>
-                        {fluviusState === "loading" ? "…" : "Notify me →"}
-                      </button>
-                    </>
-                  )}
-                </form>
-              </div>
-              <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px 22px", minWidth: 180 }}>
-                <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12 }}>What we'll show</div>
-                {["Real cost incl. capacity tariff", "Best charge time for solar owners", "Monthly peak demand tracker", "Fluvius bill simulator"].map(f => (
-                  <div key={f} style={{ display: "flex", gap: 8, fontSize: 13, color: C.muted, marginBottom: 8 }}>
-                    <span style={{ color: "#f59e0b", flexShrink: 0 }}>→</span> {f}
+      {/* ══ § 5  FEATURE: PLAN CALCULATOR (widget left, text right) ════ */}
+      <section style={{background:WHITE,padding:"88px 32px"}}>
+        <div style={{maxWidth:960,margin:"0 auto",display:"flex",gap:56,alignItems:"center",flexWrap:"wrap"}}>
+          {/* Left: calculator card */}
+          <div style={{flex:"1 1 340px",minWidth:300,order:0}}>
+            <div style={{background:GREY,borderRadius:20,border:`1px solid ${BORD}`,padding:"28px",boxShadow:"0 8px 32px rgba(0,0,0,0.06)"}}>
+              <div style={{fontSize:12,color:MUTED,fontWeight:700,marginBottom:16}}>7 Belgian suppliers · real annual cost</div>
+              <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:20}}>
+                {SUPPLIERS.map(s=>(
+                  <div key={s.name} style={{display:"flex",alignItems:"center",gap:8,background:WHITE,border:`1px solid ${BORD}`,borderRadius:12,padding:"8px 14px",boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
+                    <div style={{width:28,height:28,borderRadius:8,background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:s.color,flexShrink:0}}>{s.abbr}</div>
+                    <span style={{fontSize:12,fontWeight:700,color:TEXT}}>{s.name}</span>
                   </div>
                 ))}
               </div>
+              <div style={{background:WHITE,border:"1px solid rgba(16,185,129,0.25)",borderRadius:14,padding:"16px 18px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Cheapest plan</div>
+                  <div style={{fontSize:24,fontWeight:900,color:"#10B981",fontFamily:"monospace"}}>€987<span style={{fontSize:12,color:MUTED,fontFamily:"inherit",fontWeight:400}}>/yr</span></div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:11,color:MUTED,marginBottom:4}}>Your current plan</div>
+                  <div style={{fontSize:20,fontWeight:700,color:"#F97316",fontFamily:"monospace",textDecoration:"line-through",opacity:0.7}}>€1,204</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Right: text */}
+          <div style={{flex:"1 1 300px",minWidth:260}}>
+            <div style={{display:"inline-block",fontSize:11,fontWeight:800,color:TEAL,background:"rgba(13,148,136,0.07)",border:`1px solid rgba(13,148,136,0.2)`,borderRadius:20,padding:"4px 14px",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:16}}>
+              🔌 Plan Calculator
+            </div>
+            <h2 style={{fontSize:"clamp(24px,3.5vw,34px)",fontWeight:900,color:TEXT,letterSpacing:"-1px",marginBottom:14,lineHeight:1.15}}>
+              Is your supplier the cheapest?
+            </h2>
+            <p style={{fontSize:15,color:MUTED,lineHeight:1.75,marginBottom:24}}>
+              We compare all 7 Belgian electricity suppliers side by side — Engie, Luminus, Bolt, TotalEnergies, Eneco, Mega, and Octa+. See your real annual cost in 30 seconds.
+            </p>
+            <button onClick={()=>onOpenCalculator?.("electricity")} style={{padding:"13px 28px",borderRadius:50,fontSize:14,fontWeight:800,background:"linear-gradient(135deg,#1E40AF,#1E3A8A)",border:"none",color:"#fff",cursor:"pointer",boxShadow:"0 4px 16px rgba(30,64,175,0.3)"}}>
+              Compare my plan →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ § 6  FEATURE: ALERTS + HA (text left, cards right) ═════════ */}
+      <section style={{background:GREY,padding:"88px 32px"}}>
+        <div style={{maxWidth:960,margin:"0 auto",display:"flex",gap:56,alignItems:"center",flexWrap:"wrap"}}>
+          {/* Left */}
+          <div style={{flex:"1 1 300px",minWidth:260}}>
+            <div style={{display:"inline-block",fontSize:11,fontWeight:800,color:BLUE,background:"rgba(30,64,175,0.07)",border:`1px solid rgba(30,64,175,0.2)`,borderRadius:20,padding:"4px 14px",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:16}}>
+              🔔 Price Alerts + 🏠 Home Assistant
+            </div>
+            <h2 style={{fontSize:"clamp(24px,3.5vw,34px)",fontWeight:900,color:TEXT,letterSpacing:"-1px",marginBottom:14,lineHeight:1.15}}>
+              Automate your energy. Never miss a cheap window.
+            </h2>
+            <p style={{fontSize:15,color:MUTED,lineHeight:1.75,marginBottom:24}}>
+              Daily email alerts at 13:00 when tomorrow's cheapest window is confirmed. Or connect directly to Home Assistant via our official HACS integration and automate your EV charger.
+            </p>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              <button onClick={onGetStarted} style={{padding:"13px 24px",borderRadius:50,fontSize:14,fontWeight:800,background:"linear-gradient(135deg,#1E40AF,#1E3A8A)",border:"none",color:"#fff",cursor:"pointer"}}>
+                Set up email alerts →
+              </button>
+              <a href="/api-docs" style={{padding:"13px 24px",borderRadius:50,fontSize:14,fontWeight:700,background:WHITE,border:`1px solid ${BORD}`,color:TEXT,textDecoration:"none",display:"inline-block"}}>
+                HA integration →
+              </a>
+            </div>
+          </div>
+          {/* Right: two feature cards */}
+          <div style={{flex:"1 1 320px",minWidth:280,display:"flex",flexDirection:"column",gap:14}}>
+            <div style={{background:WHITE,borderRadius:18,border:`1px solid ${BORD}`,padding:"22px 24px",boxShadow:"0 4px 16px rgba(0,0,0,0.05)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+                <div style={{width:40,height:40,borderRadius:12,background:"rgba(30,64,175,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🔔</div>
+                <div style={{fontSize:16,fontWeight:800,color:TEXT}}>Daily Price Alerts</div>
+              </div>
+              <div style={{fontSize:13,color:MUTED,lineHeight:1.7}}>Every day at 13:00 CET we send tomorrow's cheapest window to your inbox. No spam. Unsubscribe anytime.</div>
+            </div>
+            <div style={{background:WHITE,borderRadius:18,border:`1px solid ${BORD}`,padding:"22px 24px",boxShadow:"0 4px 16px rgba(0,0,0,0.05)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+                <div style={{width:40,height:40,borderRadius:12,background:"rgba(124,58,237,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🏠</div>
+                <div style={{fontSize:16,fontWeight:800,color:TEXT}}>Home Assistant</div>
+              </div>
+              <div style={{fontSize:13,color:MUTED,lineHeight:1.7}}>Official HACS custom integration. 6 sensors including price level, cheapest hour, and gas TTF. Automate anything.</div>
+              <div style={{display:"inline-block",marginTop:10,fontSize:11,fontWeight:700,color:"#7C3AED",background:"rgba(124,58,237,0.08)",border:"1px solid rgba(124,58,237,0.2)",borderRadius:10,padding:"3px 10px"}}>Available on HACS</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          § 10  FAQ
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: C.white, padding: "88px 24px" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <SectionHeader badge="FAQ" title="Frequently asked questions" />
-          {faqs.filter(f => f.q).map((f, i) => (
-            <div key={i} onClick={() => setOpenFaq(openFaq === i ? null : i)}
-              style={{ background: openFaq === i ? "rgba(13,148,136,0.04)" : C.white, border: `1px solid ${openFaq === i ? "rgba(13,148,136,0.28)" : C.border}`, borderRadius: 16, overflow: "hidden", cursor: "pointer", marginBottom: 10, transition: "all 0.2s", boxShadow: C.shadow }}>
-              <div style={{ padding: "18px 22px", fontSize: 15, fontWeight: 700, display: "flex", justifyContent: "space-between", alignItems: "center", color: openFaq === i ? C.teal : C.text }}>
-                {f.q}
-                <span style={{ color: C.teal, fontSize: 22, fontWeight: 300, flexShrink: 0, marginLeft: 16, transform: openFaq === i ? "rotate(45deg)" : "none", transition: "transform 0.2s", display: "inline-block" }}>+</span>
+      {/* ══ § 7  GAS + EMAIL CAPTURE ════════════════════════════════════ */}
+      <section style={{background:WHITE,padding:"88px 32px"}}>
+        <div style={{maxWidth:960,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:24}}>
+          {/* Gas */}
+          <div style={{background:GREY,border:"1px solid rgba(249,115,22,0.2)",borderRadius:20,padding:"32px",boxShadow:"0 4px 16px rgba(0,0,0,0.04)"}}>
+            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:16}}>
+              <span style={{fontSize:32}}>🔥</span>
+              <div>
+                <div style={{fontSize:11,color:MUTED,fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",marginBottom:4}}>TTF Natural Gas · Today</div>
+                <div style={{fontSize:32,fontWeight:900,color:"#F97316",fontFamily:"monospace",letterSpacing:"-1px"}}>{gasCurrent?`€${gasCurrent.price?.toFixed(1)}/MWh`:"—"}</div>
+                {gasCurrent?.ttf_cEkWh!=null&&<div style={{fontSize:12,color:MUTED}}>= {gasCurrent.ttf_cEkWh.toFixed(3)} c€/kWh</div>}
               </div>
-              {openFaq === i && (
-                <div style={{ padding: "0 22px 18px", fontSize: 14, color: C.muted, lineHeight: 1.8, borderTop: `1px solid ${C.border}` }}>
-                  <div style={{ paddingTop: 14 }}>{f.a}</div>
+            </div>
+            <p style={{fontSize:13,color:MUTED,lineHeight:1.7,marginBottom:18}}><strong style={{color:"#F97316"}}>~40%</strong> of your gas bill directly tracks this market price. Switch when it's low.</p>
+            <a href="/calculator/gas" style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.25)",borderRadius:50,padding:"10px 20px",fontSize:13,fontWeight:700,color:"#F97316",textDecoration:"none"}}>
+              Compare gas plans →
+            </a>
+          </div>
+
+          {/* Email */}
+          <div style={{background:leadState==="done"?"rgba(16,185,129,0.05)":"linear-gradient(135deg,rgba(13,148,136,0.06),rgba(30,64,175,0.03))",border:`1px solid ${leadState==="done"?"rgba(16,185,129,0.3)":"rgba(13,148,136,0.18)"}`,borderRadius:20,padding:"32px",boxShadow:"0 4px 16px rgba(0,0,0,0.04)"}}>
+            {leadState==="done" ? (
+              <div style={{display:"flex",gap:14,alignItems:"center"}}>
+                <span style={{fontSize:36}}>✅</span>
+                <div>
+                  <div style={{fontSize:17,fontWeight:800,color:"#10B981",marginBottom:6}}>You're on the list</div>
+                  <div style={{fontSize:13,color:MUTED,lineHeight:1.65}}>We'll alert you every day at 13:00 when the cheapest window is confirmed.</div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{fontSize:11,color:TEAL,fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>Daily alerts</div>
+                <div style={{fontSize:20,fontWeight:800,color:TEXT,marginBottom:8}}>🔔 Alert me when the cheapest window opens</div>
+                <div style={{fontSize:13,color:MUTED,marginBottom:20}}>Every day at 13:00 CET · No spam · Unsubscribe anytime</div>
+                <form onSubmit={submitLead} style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  <input type="email" required placeholder="your@email.com" value={leadEmail} onChange={e=>setLeadEmail(e.target.value)}
+                    style={{flex:1,minWidth:160,padding:"12px 14px",borderRadius:50,fontSize:14,background:WHITE,border:`1px solid ${BORD}`,color:TEXT,outline:"none",fontFamily:"inherit"}}
+                    onFocus={e=>e.target.style.border="1px solid rgba(13,148,136,0.5)"}
+                    onBlur={e=>e.target.style.border=`1px solid ${BORD}`}/>
+                  <button type="submit" disabled={leadState==="loading"} style={{padding:"12px 22px",borderRadius:50,fontSize:13,fontWeight:800,background:"linear-gradient(135deg,#10B981,#0D9488)",border:"none",color:"#fff",cursor:"pointer",opacity:leadState==="loading"?0.7:1,whiteSpace:"nowrap"}}>
+                    {leadState==="loading"?"…":"Notify me →"}
+                  </button>
+                </form>
+                {leadState==="error"&&<div style={{fontSize:12,color:"#EF4444",marginTop:8}}>Something went wrong — try again</div>}
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ § 8  FLUVIUS TEASER ════════════════════════════════════════ */}
+      <section style={{background:GREY,padding:"72px 32px"}}>
+        <div style={{maxWidth:960,margin:"0 auto"}}>
+          <div style={{background:WHITE,border:"1px solid rgba(251,191,36,0.25)",borderRadius:24,padding:"40px 44px",display:"flex",gap:44,flexWrap:"wrap",alignItems:"flex-start",boxShadow:"0 4px 20px rgba(0,0,0,0.05)"}}>
+            <div style={{flex:"1 1 280px",minWidth:240}}>
+              <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.3)",borderRadius:20,padding:"4px 14px",fontSize:11,fontWeight:800,color:"#92400E",marginBottom:16,textTransform:"uppercase",letterSpacing:"1px"}}>
+                ⚡ Coming soon
+              </div>
+              <h3 style={{fontSize:22,fontWeight:900,color:TEXT,marginBottom:10,letterSpacing:"-0.5px"}}>Fluvius capacity tariff integration</h3>
+              <p style={{fontSize:14,color:MUTED,lineHeight:1.75,marginBottom:20}}>
+                Since 2023, Belgian households with a smart meter pay a capacity tariff. Charging at the wrong hour can add €20–30 to your monthly grid bill. We're building full integration to show the real cost of every decision.
+              </p>
+              <form onSubmit={submitFluvius} style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {fluviusState==="done" ? (
+                  <div style={{fontSize:14,fontWeight:700,color:"#92400E"}}>✅ You're on the Fluvius waitlist</div>
+                ) : (
+                  <>
+                    <input type="email" required placeholder="your@email.com" value={fluviusEmail} onChange={e=>setFluviusEmail(e.target.value)}
+                      style={{flex:1,minWidth:160,padding:"10px 14px",borderRadius:50,fontSize:13,background:GREY,border:"1px solid rgba(251,191,36,0.3)",color:TEXT,outline:"none",fontFamily:"inherit"}}
+                      onFocus={e=>e.target.style.border="1px solid rgba(251,191,36,0.6)"}
+                      onBlur={e=>e.target.style.border="1px solid rgba(251,191,36,0.3)"}/>
+                    <button type="submit" disabled={fluviusState==="loading"} style={{padding:"10px 20px",borderRadius:50,fontSize:13,fontWeight:700,background:"linear-gradient(135deg,#f59e0b,#d97706)",border:"none",color:"#1c1917",cursor:"pointer",opacity:fluviusState==="loading"?0.7:1}}>
+                      {fluviusState==="loading"?"…":"Notify me →"}
+                    </button>
+                  </>
+                )}
+              </form>
+            </div>
+            <div style={{flex:"0 0 auto",minWidth:180,background:GREY,borderRadius:16,padding:"20px 24px",border:`1px solid ${BORD}`}}>
+              <div style={{fontSize:11,color:MUTED,fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",marginBottom:14}}>What we'll show</div>
+              {["Real cost incl. capacity tariff","Best charge time for solar owners","Monthly peak demand tracker","Fluvius bill simulator"].map(f=>(
+                <div key={f} style={{display:"flex",gap:8,fontSize:13,color:MUTED,marginBottom:9}}>
+                  <span style={{color:"#f59e0b",flexShrink:0}}>→</span>{f}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ § 9  FAQ ════════════════════════════════════════════════════ */}
+      <section style={{background:WHITE,padding:"88px 32px"}}>
+        <div style={{maxWidth:680,margin:"0 auto"}}>
+          <div style={{textAlign:"center",marginBottom:48}}>
+            <div style={{display:"inline-block",fontSize:11,fontWeight:800,color:TEAL,background:"rgba(13,148,136,0.07)",border:`1px solid rgba(13,148,136,0.2)`,borderRadius:20,padding:"4px 14px",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:14}}>FAQ</div>
+            <h2 style={{fontSize:"clamp(24px,4vw,36px)",fontWeight:900,color:TEXT,letterSpacing:"-1px",margin:0}}>Frequently asked questions</h2>
+          </div>
+          {faqs.filter(f=>f.q).map((f,i)=>(
+            <div key={i} onClick={()=>setOpenFaq(openFaq===i?null:i)}
+              style={{background:openFaq===i?"rgba(13,148,136,0.03)":WHITE,border:`1px solid ${openFaq===i?"rgba(13,148,136,0.25)":BORD}`,borderRadius:14,overflow:"hidden",cursor:"pointer",marginBottom:8,transition:"all 0.2s",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+              <div style={{padding:"18px 22px",fontSize:15,fontWeight:700,display:"flex",justifyContent:"space-between",alignItems:"center",color:openFaq===i?TEAL:TEXT}}>
+                {f.q}
+                <span style={{color:TEAL,fontSize:22,fontWeight:300,flexShrink:0,marginLeft:16,transform:openFaq===i?"rotate(45deg)":"none",transition:"transform 0.2s",display:"inline-block"}}>+</span>
+              </div>
+              {openFaq===i&&(
+                <div style={{padding:"0 22px 18px",fontSize:14,color:MUTED,lineHeight:1.8,borderTop:`1px solid ${BORD}`}}>
+                  <div style={{paddingTop:14}}>{f.a}</div>
                 </div>
               )}
             </div>
@@ -804,119 +699,106 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          § 11  FINAL CTA
-      ══════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: "linear-gradient(135deg,#0D9488,#0F766E)", padding: "88px 24px", textAlign: "center" }}>
-        <div style={{ maxWidth: 560, margin: "0 auto" }}>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", marginBottom: 16 }}>Ready to start saving?</div>
-          <h2 style={{ fontSize: "clamp(28px,5vw,44px)", fontWeight: 900, color: "#fff", letterSpacing: "-1px", marginBottom: 14, lineHeight: 1.15 }}>
-            Join 100+ Belgians who charge smarter
+      {/* ══ § 10  FINAL CTA ═════════════════════════════════════════════ */}
+      <section style={{background:`linear-gradient(160deg,${NAVY} 0%,${NAVY2} 100%)`,padding:"88px 32px",textAlign:"center"}}>
+        <div style={{maxWidth:560,margin:"0 auto"}}>
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",fontWeight:700,textTransform:"uppercase",letterSpacing:"2px",marginBottom:16}}>Ready to start saving?</div>
+          <h2 style={{fontSize:"clamp(28px,5vw,46px)",fontWeight:900,color:WHITE,letterSpacing:"-1.5px",marginBottom:14,lineHeight:1.1}}>
+            Join {siteStats?.registered_users ?? "100"}+ Belgians<br/>who charge smarter
           </h2>
-          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.7)", marginBottom: 32, lineHeight: 1.65 }}>
-            Free forever. No credit card. Set up in 30 seconds.
-          </p>
-          <button onClick={onGetStarted} style={{ padding: "16px 44px", borderRadius: 50, fontSize: 16, fontWeight: 800, background: "#fff", border: "none", color: C.teal, cursor: "pointer", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", transition: "all 0.2s" }}
-            onMouseEnter={e => e.currentTarget.style.transform = "translateY(-3px)"}
-            onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+          <p style={{fontSize:16,color:"rgba(255,255,255,0.55)",marginBottom:36,lineHeight:1.65}}>Free forever. No credit card. Set up in 30 seconds.</p>
+          <button onClick={onGetStarted} style={{padding:"16px 48px",borderRadius:50,fontSize:17,fontWeight:900,background:"linear-gradient(135deg,#10B981,#0D9488)",border:"none",color:"#fff",cursor:"pointer",boxShadow:"0 8px 32px rgba(13,148,136,0.5)",transition:"all 0.2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 14px 40px rgba(13,148,136,0.6)"}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 8px 32px rgba(13,148,136,0.5)"}}>
             Get started free →
           </button>
-          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
-            {["🇧🇪 Belgian EPEX data", "🆓 Free forever", "🔒 GDPR compliant"].map(t => (
-              <span key={t} style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>{t}</span>
+          <div style={{display:"flex",gap:20,justifyContent:"center",flexWrap:"wrap",marginTop:24}}>
+            {["🇧🇪 Belgian EPEX data","🆓 Free forever","🔒 GDPR compliant"].map(t=>(
+              <span key={t} style={{fontSize:13,color:"rgba(255,255,255,0.35)",fontWeight:500}}>{t}</span>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ─────────────────────────────────────────────────────── */}
-      <footer style={{ background: C.white, borderTop: `1px solid ${C.border}`, padding: "52px 32px 32px" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 32, marginBottom: 40 }}>
-            {/* Brand */}
-            <div style={{ minWidth: 180 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{ fontSize: 18 }}>🇧🇪</span>
-                <span style={{ fontWeight: 900, fontSize: 17, color: C.text }}>SmartPrice.be</span>
+      {/* ══ FOOTER ══════════════════════════════════════════════════════ */}
+      <footer style={{background:WHITE,borderTop:`1px solid ${BORD}`,padding:"56px 32px 32px"}}>
+        <div style={{maxWidth:960,margin:"0 auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:36,marginBottom:44}}>
+            <div style={{minWidth:180}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <span style={{fontSize:18}}>🇧🇪</span>
+                <span style={{fontWeight:900,fontSize:17,color:TEXT}}>SmartPrice.be</span>
               </div>
-              <div style={{ fontSize: 13, color: C.muted, marginBottom: 16, lineHeight: 1.7 }}>
-                Live EPEX electricity prices<br />for Belgium. Free, always.
-              </div>
-              <a href="mailto:info@smartprice.be" style={{ fontSize: 13, color: C.teal, textDecoration: "none" }}>info@smartprice.be</a>
-              <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-                <a href="https://www.facebook.com/groups/819979377511277" target="_blank" rel="noopener noreferrer" style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(24,119,242,0.08)", border: "1px solid rgba(24,119,242,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: "#1877F2", textDecoration: "none" }}>f</a>
-                <a href="https://www.linkedin.com/company/smartprice-be/" target="_blank" rel="noopener noreferrer" style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(10,102,194,0.08)", border: "1px solid rgba(10,102,194,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, color: "#0A66C2", textDecoration: "none" }}>in</a>
+              <p style={{fontSize:13,color:MUTED,lineHeight:1.75,marginBottom:16,maxWidth:200}}>Live EPEX electricity prices for Belgium. Free, always.</p>
+              <a href="mailto:info@smartprice.be" style={{fontSize:13,color:TEAL,textDecoration:"none"}}>info@smartprice.be</a>
+              <div style={{display:"flex",gap:8,marginTop:14}}>
+                <a href="https://www.facebook.com/groups/819979377511277" target="_blank" rel="noopener noreferrer" style={{width:34,height:34,borderRadius:9,background:"rgba(24,119,242,0.08)",border:"1px solid rgba(24,119,242,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:"#1877F2",textDecoration:"none"}}>f</a>
+                <a href="https://www.linkedin.com/company/smartprice-be/" target="_blank" rel="noopener noreferrer" style={{width:34,height:34,borderRadius:9,background:"rgba(10,102,194,0.08)",border:"1px solid rgba(10,102,194,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#0A66C2",textDecoration:"none"}}>in</a>
               </div>
             </div>
-            {/* Links */}
-            <div style={{ display: "flex", gap: 48, flexWrap: "wrap" }}>
+            <div style={{display:"flex",gap:48,flexWrap:"wrap"}}>
               {[
-                { heading: "Product", links: [
-                  { label: "⚡ Electricity Prices", action: onGetStarted },
-                  { label: "🔥 Gas Prices", action: onGetStarted },
-                  { label: "🔌 Plan Calculator", action: () => onOpenCalculator?.("electricity") },
-                  { label: "🚗 EV Charging", action: () => window.location.href = "/ev-charging-belgium" },
-                  { label: "🗺️ Charging Stations", action: () => window.location.href = "/ev-charging-stations-belgium" },
+                {heading:"Product",links:[
+                  {label:"⚡ Electricity Prices",action:onGetStarted},
+                  {label:"🔥 Gas Prices",action:onGetStarted},
+                  {label:"🔌 Plan Calculator",action:()=>onOpenCalculator?.("electricity")},
+                  {label:"🚗 EV Charging",action:()=>window.location.href="/ev-charging-belgium"},
+                  {label:"🗺️ Charging Stations",action:()=>window.location.href="/ev-charging-stations-belgium"},
                 ]},
-                { heading: "Platform", links: [
-                  { label: "🏢 Business", action: () => window.location.href = "/business" },
-                  { label: "🚗 Fleet Audit", action: () => window.location.href = "/fleet-audit" },
-                  { label: "🔌 API & HA", action: () => window.location.href = "/api-docs" },
+                {heading:"Platform",links:[
+                  {label:"🏢 Business",href:"/business"},
+                  {label:"🚗 Fleet Audit",href:"/fleet-audit"},
+                  {label:"🔌 API & HA",href:"/api-docs"},
                 ]},
-                { heading: "Community", links: [
-                  { label: "Facebook Group", href: "https://www.facebook.com/groups/819979377511277" },
-                  { label: "LinkedIn Page",  href: "https://www.linkedin.com/company/smartprice-be/" },
-                  { label: "Privacy Policy", action: () => window.dispatchEvent(new CustomEvent("showPrivacy")) },
+                {heading:"Company",links:[
+                  {label:"Facebook Group",href:"https://www.facebook.com/groups/819979377511277"},
+                  {label:"LinkedIn Page",href:"https://www.linkedin.com/company/smartprice-be/"},
+                  {label:"Privacy Policy",action:()=>window.dispatchEvent(new CustomEvent("showPrivacy"))},
+                  {label:"GDPR Compliant",action:()=>{}},
                 ]},
-              ].map(col => (
+              ].map(col=>(
                 <div key={col.heading}>
-                  <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: "1.2px", fontWeight: 700, marginBottom: 14 }}>{col.heading}</div>
-                  {col.links.map(l => l.href ? (
-                    <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 13, color: C.muted, marginBottom: 8, textDecoration: "none" }}
-                      onMouseEnter={e => e.currentTarget.style.color = C.teal}
-                      onMouseLeave={e => e.currentTarget.style.color = C.muted}>{l.label}</a>
-                  ) : (
-                    <div key={l.label} onClick={l.action} style={{ fontSize: 13, color: C.muted, marginBottom: 8, cursor: "pointer" }}
-                      onMouseEnter={e => e.currentTarget.style.color = C.teal}
-                      onMouseLeave={e => e.currentTarget.style.color = C.muted}>{l.label}</div>
+                  <div style={{fontSize:10,color:MUTED,textTransform:"uppercase",letterSpacing:"1.2px",fontWeight:700,marginBottom:14}}>{col.heading}</div>
+                  {col.links.map(l=>l.href?(
+                    <a key={l.label} href={l.href} target={l.href.startsWith("http")?"_blank":"_self"} rel="noopener noreferrer"
+                      style={{display:"block",fontSize:13,color:MUTED,marginBottom:8,textDecoration:"none"}}
+                      onMouseEnter={e=>e.currentTarget.style.color=TEAL}
+                      onMouseLeave={e=>e.currentTarget.style.color=MUTED}>{l.label}</a>
+                  ):(
+                    <div key={l.label} onClick={l.action} style={{fontSize:13,color:MUTED,marginBottom:8,cursor:"pointer"}}
+                      onMouseEnter={e=>e.currentTarget.style.color=TEAL}
+                      onMouseLeave={e=>e.currentTarget.style.color=MUTED}>{l.label}</div>
                   ))}
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Share */}
-          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 20, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>Share SmartPrice:</span>
+          <div style={{borderTop:`1px solid ${BORD}`,paddingTop:20,display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:20}}>
+            <span style={{fontSize:12,color:MUTED}}>Share SmartPrice:</span>
             {[
-              { label: "WhatsApp", icon: "💬", color: "#25D366", href: `https://wa.me/?text=${encodeURIComponent("⚡ SmartPrice.be — tells you exactly when to charge your EV to save money. Live EPEX prices, free. https://smartprice.be")}` },
-              { label: "X",        icon: "𝕏",  color: "#1E293B", href: `https://twitter.com/intent/tweet?text=${encodeURIComponent("⚡ SmartPrice.be — live electricity prices for Belgium + EV charge planner. Free. https://smartprice.be")}` },
-              { label: "Facebook", icon: "f",  color: "#1877F2", href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://smartprice.be")}` },
-              { label: "LinkedIn", icon: "in", color: "#0A66C2", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://smartprice.be")}` },
-            ].map(s => (
+              {label:"WhatsApp",icon:"💬",color:"#25D366",href:`https://wa.me/?text=${encodeURIComponent("⚡ SmartPrice.be — tells you exactly when to charge your EV to save money. Live EPEX prices, free. https://smartprice.be")}`},
+              {label:"Facebook",icon:"f",color:"#1877F2",href:`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://smartprice.be")}`},
+              {label:"LinkedIn",icon:"in",color:"#0A66C2",href:`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://smartprice.be")}`},
+              {label:"X",icon:"𝕏",color:"#1E293B",href:`https://twitter.com/intent/tweet?text=${encodeURIComponent("⚡ SmartPrice.be — live electricity prices for Belgium + EV charge planner. Free. https://smartprice.be")}`},
+            ].map(s=>(
               <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
-                style={{ width: 32, height: 32, borderRadius: 8, background: `${s.color}10`, border: `1px solid ${s.color}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: s.color, textDecoration: "none", transition: "all 0.15s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = `${s.color}20`; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = `${s.color}10`; e.currentTarget.style.transform = "translateY(0)"; }}>
+                style={{width:32,height:32,borderRadius:8,background:`${s.color}10`,border:`1px solid ${s.color}28`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:s.color,textDecoration:"none",transition:"all 0.15s"}}
+                onMouseEnter={e=>{e.currentTarget.style.background=`${s.color}20`;e.currentTarget.style.transform="translateY(-2px)"}}
+                onMouseLeave={e=>{e.currentTarget.style.background=`${s.color}10`;e.currentTarget.style.transform="translateY(0)"}}>
                 {s.icon}
               </a>
             ))}
           </div>
-
-          <div style={{ fontSize: 12, color: C.light, lineHeight: 1.9 }}>
-            Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E · Prices refresh every 15 min<br />
+          <div style={{fontSize:12,color:LIGHT,lineHeight:1.9}}>
+            Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · ENTSO-E · Prices refresh every 15 min<br/>
             Not financial advice. Always verify tariffs on supplier websites before switching.
           </div>
         </div>
       </footer>
 
       <style>{`
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         input[type=range] { height: 4px; }
-        @keyframes dot-pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(0.7); }
-        }
       `}</style>
     </div>
   );
