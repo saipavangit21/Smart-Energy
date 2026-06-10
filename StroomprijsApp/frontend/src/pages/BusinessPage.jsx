@@ -191,13 +191,26 @@ export default function BusinessPage({ onNavigate }) {
 
         {/* Social secretariaten */}
         <div style={{ background: C.card, borderRadius: 20, border: `1px solid ${C.border}`, boxShadow: C.shadow, padding: "28px 32px", marginBottom: 40, textAlign: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Works with your existing systems</div>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            {["SD Worx", "Securex", "Partena", "Group S", "Acerta"].map(s => (
-              <div key={s} style={{ padding: "8px 20px", borderRadius: 10, background: C.bg, border: `1px solid ${C.border}`, fontSize: 13, fontWeight: 700, color: C.muted }}>{s}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 20 }}>Works with your existing systems</div>
+          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", alignItems: "center", marginBottom: 16 }}>
+            {[
+              { name: "SD Worx",  initials: "SD", color: "#E30613", bg: "#FEF2F2" },
+              { name: "Securex",  initials: "SX", color: "#003DA5", bg: "#EFF6FF" },
+              { name: "Partena",  initials: "PA", color: "#00A550", bg: "#F0FDF4" },
+              { name: "Group S",  initials: "GS", color: "#6D28D9", bg: "#F5F3FF" },
+              { name: "Acerta",   initials: "AC", color: "#0369A1", bg: "#F0F9FF" },
+            ].map(s => (
+              <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: s.bg, border: `1.5px solid ${s.color}22`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: s.color, flexShrink: 0 }}>
+                  {s.initials}
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{s.name}</span>
+              </div>
             ))}
           </div>
-          <div style={{ fontSize: 12, color: C.light, marginTop: 14 }}>SmartPrice reimbursement calculations are CIR 92 compliant and accepted by all Belgian social secretariaten</div>
+          <div style={{ fontSize: 12, color: C.light, borderTop: `1px solid ${C.border}`, paddingTop: 14, marginTop: 4 }}>
+            ✅ SmartPrice reimbursement calculations are <strong style={{ color: C.text }}>CIR 92 compliant</strong> and accepted by all Belgian social secretariaten
+          </div>
         </div>
 
         {/* Contact / waitlist */}
