@@ -197,6 +197,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const minsUntilCheap = cheapHour!=null?(cheapHour-nowH)*60-nowM:null;
   const cheapNow   = minsUntilCheap!=null&&minsUntilCheap<=0;
   const cheapSoon  = minsUntilCheap!=null&&minsUntilCheap>0&&minsUntilCheap<=90;
+
+  /* night window — cheapest hour between 22:00 and 06:00 */
+  const nightPrices = prices.filter(p => p.hour!=null && (p.hour>=22||p.hour<6));
+  const nightCheap  = [...nightPrices].sort((a,b)=>a.price_eur_mwh-b.price_eur_mwh)[0];
+  const nightH      = nightCheap?.hour??null;
+  const nightMwh    = nightCheap?.price_eur_mwh??null;
+
   const updatedMinsAgo = fetchedAt?Math.max(0,Math.floor((Date.now()-new Date(fetchedAt).getTime())/60000)):null;
   const updatedStr = updatedMinsAgo===null?null:updatedMinsAgo===0?"just now":`${updatedMinsAgo} min ago`;
 
@@ -284,14 +291,14 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         </div>
 
         {/* Headline */}
-        <h1 className="sp-animate sp-delay-1" style={{fontSize:"clamp(42px,7vw,88px)",fontWeight:900,lineHeight:1.05,margin:"0 auto 24px",maxWidth:860,letterSpacing:"-3px",color:"#fff",textShadow:"0 2px 40px rgba(0,0,0,0.15)"}}>
-          Smart energy.<br/>
-          <span style={{color:"#FCD34D"}}>Live prices.</span>
+        <h1 className="sp-animate sp-delay-1" style={{fontSize:"clamp(38px,6.5vw,84px)",fontWeight:900,lineHeight:1.05,margin:"0 auto 24px",maxWidth:860,letterSpacing:"-3px",color:"#fff",textShadow:"0 2px 40px rgba(0,0,0,0.15)"}}>
+          Is now a good time<br/>
+          <span style={{color:"#FCD34D"}}>to charge your EV?</span>
         </h1>
 
         {/* Subtitle */}
-        <p className="sp-animate sp-delay-2" style={{fontSize:"clamp(16px,2vw,20px)",color:"rgba(255,255,255,0.85)",maxWidth:520,margin:"0 auto 40px",lineHeight:1.7,fontWeight:400}}>
-          Real-time EPEX Spot Belgium — we find the cheapest window to charge, compare 7 suppliers, and alert you. Always free.
+        <p className="sp-animate sp-delay-2" style={{fontSize:"clamp(16px,2vw,20px)",color:"rgba(255,255,255,0.85)",maxWidth:540,margin:"0 auto 40px",lineHeight:1.7,fontWeight:400}}>
+          Live EPEX Spot Belgium — see today's cheapest charging window, compare 7 suppliers, and get daily alerts. Free forever.
         </p>
 
         {/* Live price display */}
@@ -328,13 +335,18 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           </div>
         )}
 
-        {/* CTAs */}
-        <div className="sp-animate sp-delay-4" style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",marginBottom:64}}>
+        {/* Dual-entry portal — B2C + B2B */}
+        <div className="sp-animate sp-delay-4" style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",marginBottom:16}}>
           <button onClick={onGetStarted} className="sp-cta-primary">
-            Get started free →
+            👉 Track My Consumption (Free)
           </button>
-          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} className="sp-cta-ghost">
-            See live prices ↓
+          <a href="/business" className="sp-cta-ghost" style={{textDecoration:"none",display:"inline-flex",alignItems:"center",gap:8}}>
+            💼 Corporate EV Fleets →
+          </a>
+        </div>
+        <div className="sp-animate sp-delay-4" style={{marginBottom:52}}>
+          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:13,cursor:"pointer",fontWeight:600,letterSpacing:"0.3px"}}>
+            ↓ See live prices
           </button>
         </div>
 
@@ -403,6 +415,48 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             <h2 style={{fontSize:"clamp(28px,4vw,46px)",fontWeight:900,color:C.text,marginBottom:12,letterSpacing:"-1px"}}>Today's electricity prices</h2>
             <p style={{fontSize:16,color:C.muted,maxWidth:520,margin:"0 auto",lineHeight:1.8}}>Real-time EPEX Spot Belgium. Cheapest window, peak hours, and your exact cost per charge.</p>
           </div>
+
+          {/* ── AT A GLANCE — quick-read summary ──────────────────── */}
+          {prices.length>0&&(cheapHour!=null||peakH!=null) && (
+            <div className="sp-animate" style={{background:"#fff",border:`1.5px solid ${C.border2}`,borderRadius:20,padding:"22px 28px",marginBottom:32,boxShadow:"0 4px 20px rgba(22,163,74,0.07)"}}>
+              <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:"2px",marginBottom:14}}>Today at a glance</div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {cheapHour!=null && (
+                  <div style={{display:"flex",alignItems:"flex-start",gap:10,fontSize:14,color:C.text,fontWeight:600,lineHeight:1.5}}>
+                    <span style={{flexShrink:0}}>☀️</span>
+                    <span>
+                      <strong>Cheapest window:</strong>{" "}
+                      <span style={{color:C.primary}}>{fmtHour(cheapHour)}–{fmtHour(cheapWindowEnd??cheapHour+1)}</span>
+                      {cheapMwh!=null && <span style={{color:C.muted}}> (€{retailFmt(cheapMwh)}/kWh)</span>}
+                      {" "}— Best for laundry &amp; EV charging
+                    </span>
+                  </div>
+                )}
+                {nightH!=null && (
+                  <div style={{display:"flex",alignItems:"flex-start",gap:10,fontSize:14,color:C.text,fontWeight:600,lineHeight:1.5}}>
+                    <span style={{flexShrink:0}}>🌙</span>
+                    <span>
+                      <strong>Night window:</strong>{" "}
+                      <span style={{color:"#6366F1"}}>{fmtHour(nightH)}–{fmtHour((nightH+2)%24)}</span>
+                      {nightMwh!=null && <span style={{color:C.muted}}> (€{retailFmt(nightMwh)}/kWh)</span>}
+                      {" "}— Overnight charging
+                    </span>
+                  </div>
+                )}
+                {peakH!=null && (
+                  <div style={{display:"flex",alignItems:"flex-start",gap:10,fontSize:14,color:C.text,fontWeight:600,lineHeight:1.5}}>
+                    <span style={{flexShrink:0}}>🚨</span>
+                    <span>
+                      <strong>Peak warning:</strong>{" "}
+                      <span style={{color:C.red}}>{fmtHour(peakH)}–{fmtHour(peakH+2)}</span>
+                      {peakMwh!=null && <span style={{color:C.muted}}> (€{retailFmt(peakMwh)}/kWh)</span>}
+                      {" "}— Minimize usage
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {prices.length>0&&cheapHour!=null ? (
             <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,overflow:"hidden",marginBottom:72}}>
@@ -708,6 +762,59 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── DEVELOPER / HOME ASSISTANT ──────────────────────────── */}
+        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 32px 80px"}}>
+          <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,overflow:"hidden"}}>
+            {/* Dark code panel */}
+            <div style={{background:"linear-gradient(135deg,#0F172A,#1E293B)",padding:"40px",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:40,alignItems:"center"}}>
+              <div>
+                <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(124,58,237,0.18)",border:"1px solid rgba(124,58,237,0.4)",borderRadius:20,padding:"4px 14px",fontSize:11,fontWeight:800,color:"#A78BFA",marginBottom:18,textTransform:"uppercase",letterSpacing:"1px"}}>🔌 Free Public API</div>
+                <h3 style={{fontSize:"clamp(20px,3vw,32px)",fontWeight:900,color:"#fff",marginBottom:10,letterSpacing:"-0.5px",lineHeight:1.2}}>Built for developers &amp; Home Assistant</h3>
+                <p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.8,marginBottom:24}}>Zero authentication. Just hit the endpoint. Get live EPEX Spot prices, gas TTF, and hourly schedules as clean JSON — perfect for dashboards, automations, and HACS.</p>
+                <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+                  <a href="/api-docs" style={{display:"inline-block",padding:"10px 22px",borderRadius:24,fontSize:13,fontWeight:700,background:"rgba(124,58,237,0.15)",border:"1px solid rgba(124,58,237,0.35)",color:"#A78BFA",textDecoration:"none",transition:"background 0.2s"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,0.28)"}
+                    onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,0.15)"}>
+                    View HA integration →
+                  </a>
+                  <a href="/api-docs" style={{display:"inline-block",padding:"10px 22px",borderRadius:24,fontSize:13,fontWeight:700,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.7)",textDecoration:"none",transition:"background 0.2s"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.12)"}
+                    onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.06)"}>
+                    API docs →
+                  </a>
+                </div>
+              </div>
+              {/* Code block */}
+              <div style={{background:"rgba(0,0,0,0.35)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"22px 24px",fontFamily:"'Fira Code','Cascadia Code',monospace",fontSize:12}}>
+                <div style={{display:"flex",gap:6,marginBottom:14}}>
+                  {["#EF4444","#F59E0B","#22C55E"].map(c=><div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}}/>)}
+                </div>
+                <div style={{color:"rgba(255,255,255,0.35)",marginBottom:6,fontSize:11}}>$ curl request</div>
+                <div style={{color:"#4ADE80",marginBottom:16,wordBreak:"break-all",lineHeight:1.7}}>
+                  curl https://smartprice.be/api/prices/today
+                </div>
+                <div style={{color:"rgba(255,255,255,0.25)",marginBottom:6,fontSize:11}}>// response</div>
+                <pre style={{color:"rgba(255,255,255,0.65)",margin:0,lineHeight:1.8,fontSize:11,whiteSpace:"pre"}}>{`{
+  "data": [
+    { "hour": 14,
+      "price_eur_mwh": 42.3,
+      "is_current": true },
+    ...
+  ]
+}`}</pre>
+              </div>
+            </div>
+            {/* Feature strip */}
+            <div style={{background:"rgba(15,23,42,0.96)",borderTop:"1px solid rgba(255,255,255,0.06)",padding:"16px 40px",display:"flex",gap:28,flexWrap:"wrap"}}>
+              {["No API key","EPEX Spot Belgium","Gas TTF","15-min updates","HACS integration","Open source"].map(f=>(
+                <div key={f} style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"rgba(255,255,255,0.4)",fontWeight:600}}>
+                  <span style={{color:"#4ADE80",fontWeight:800}}>✓</span>{f}
+                </div>
+              ))}
             </div>
           </div>
         </div>
