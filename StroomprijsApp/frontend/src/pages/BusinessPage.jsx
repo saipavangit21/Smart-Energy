@@ -131,22 +131,22 @@ export default function BusinessPage({ onNavigate }) {
         </div>
 
         {/* Products */}
-        <div style={{ fontSize: 11, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: 2, marginBottom: 20, textAlign: "center" }}>What SmartPrice Business offers</div>
+        <div style={{ fontSize: 11, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: 2, marginBottom: 20, textAlign: "center" }}>Smart tools · Smart services</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 52 }}>
           {[
             {
               icon: "🚗",
-              title: "Free Fleet Cost Audit",
+              title: "Smart Audit",
               badge: "Live now",
               badgeColor: C.green,
               desc: "Enter your fleet size. Instantly see your annual overpayment vs. the CREG rate — with a downloadable PDF ready to share with your CFO or HR director.",
-              cta: "Start free audit →",
+              cta: "Start Smart Audit →",
               href: "/fleet-audit",
               accent: C.amber,
             },
             {
               icon: "📊",
-              title: "Fleet Reimbursement Dashboard",
+              title: "Smart Reimburse",
               badge: "Coming Q3 2026",
               badgeColor: C.muted,
               desc: "Each employee logs a charge session (time + kWh). SmartPrice looks up the EPEX price at that exact hour and calculates the exact reimbursement. Monthly reports exported directly to your payroll system.",
@@ -156,21 +156,21 @@ export default function BusinessPage({ onNavigate }) {
             },
             {
               icon: "🔌",
-              title: "Home Assistant for Office Buildings",
+              title: "Smart Connect",
               badge: "Beta",
               badgeColor: C.purple,
               desc: "Install our HACS integration to automate office EV charging — automatically shift to cheapest EPEX windows, monitor fleet consumption in real time, export to your energy management system.",
-              cta: "View HACS integration →",
+              cta: "Explore Smart Connect →",
               href: "https://github.com/saipavangit21/smartprice-ha",
               accent: C.purple,
             },
             {
               icon: "📡",
-              title: "REST API Access",
+              title: "Smart API",
               badge: "Free",
               badgeColor: C.teal,
               desc: "Live EPEX Spot Belgium prices via public REST API. No API key needed. Integrate into your own fleet management platform, ERP, or mobility application.",
-              cta: "View API docs →",
+              cta: "View Smart API docs →",
               href: "/api-docs",
               accent: C.teal,
             },
