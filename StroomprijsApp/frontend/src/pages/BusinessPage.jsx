@@ -30,6 +30,23 @@ const EPEX_SMART  = 0.1920;
 const SAVING_KWH  = +(CREG_RATE - EPEX_SMART).toFixed(4); // 0.0913
 const KWH_PER_KM  = 0.20;  // 5 km/kWh average EV
 
+/* ── CREG tooltip ────────────────────────────────────────────── */
+function CregTooltip() {
+  const [show, setShow] = useState(false);
+  return (
+    <span style={{ position: "relative", display: "inline-block", marginLeft: 5, verticalAlign: "middle", cursor: "help" }}
+      onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)} onFocus={() => setShow(true)} onBlur={() => setShow(false)}>
+      <span style={{ fontSize: 12, color: C.primary, fontWeight: 700 }}>ℹ️</span>
+      {show && (
+        <div style={{ position: "absolute", bottom: "calc(100% + 8px)", left: "50%", transform: "translateX(-50%)", background: "#1E293B", color: "#fff", fontSize: 12, fontWeight: 500, lineHeight: 1.65, padding: "10px 14px", borderRadius: 10, width: 280, zIndex: 50, boxShadow: "0 8px 24px rgba(0,0,0,0.25)", pointerEvents: "none" }}>
+          <strong>CREG</strong> — Commissie voor de Regulering van de Elektriciteit en het Gas. Belgium's federal energy regulator. Publishes a standard quarterly reference tariff used by most HR departments to calculate home-charging reimbursements.
+          <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", border: "6px solid transparent", borderTopColor: "#1E293B" }} />
+        </div>
+      )}
+    </span>
+  );
+}
+
 /* ── Section divider ─────────────────────────────────────────── */
 function SectionDivider({ label }) {
   return (
@@ -159,7 +176,7 @@ export default function BusinessPage({ onNavigate }) {
                         onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
                         onBlur={e => e.target.style.border = `1.5px solid ${C.border}`}>
                         <option value="" disabled>Select range…</option>
-                        {["1–5 EVs","6–15 EVs","16–30 EVs","31–50 EVs","51–100 EVs","100+ EVs"].map(o => <option key={o} value={o}>{o}</option>)}
+                        {["1–9 cars","10–49 cars","50+ cars"].map(o => <option key={o} value={o}>{o}</option>)}
                       </select>
                     </div>
                     <div>
@@ -181,9 +198,10 @@ export default function BusinessPage({ onNavigate }) {
                       onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
                       onBlur={e => e.target.style.border = `1.5px solid ${C.border}`}>
                       <option value="" disabled>How do you reimburse now?</option>
-                      <option value="creg-flat">CREG quarterly flat rate</option>
-                      <option value="company-fixed">Fixed company rate (e.g. €0.25/kWh)</option>
-                      <option value="dynamic">Dynamic tariff — already tracking EPEX</option>
+                      <option value="creg-flat">Fixed CREG Allowances</option>
+                      <option value="fuel-card">Flat Fuel / Charge Cards</option>
+                      <option value="excel">Manual Excel Tracking</option>
+                      <option value="dynamic">Dynamic EPEX Tariff (already tracking)</option>
                       <option value="not-yet">Not reimbursing yet</option>
                       <option value="other">Other / not sure</option>
                     </select>
@@ -266,9 +284,9 @@ export default function BusinessPage({ onNavigate }) {
         {/* ── PROBLEM ───────────────────────────────────────────────── */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>The problem</div>
-          <h2 style={{ fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 900, color: C.text, marginBottom: 14, letterSpacing: "-0.8px" }}>Why CREG-based reimbursements fail the legal audit</h2>
+          <h2 style={{ fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 900, color: C.text, marginBottom: 14, letterSpacing: "-0.8px" }}>Why CREG<CregTooltip />-based reimbursements fail the legal audit</h2>
           <p style={{ fontSize: 15, color: C.muted, maxWidth: 580, margin: "0 auto", lineHeight: 1.85 }}>
-            Every quarter the CREG publishes a reference electricity tariff. HR departments multiply this by estimated kWh and reimburse employees. It sounds fair — but under CIR 92, the reimbursement must reflect the <em>actual cost at the moment of charging</em>. Fixed quarterly averages don't satisfy that requirement.
+            Every quarter the CREG<CregTooltip /> publishes a reference electricity tariff. HR departments multiply this by estimated kWh and reimburse employees. It sounds fair — but under CIR 92, the reimbursement must reflect the <em>actual cost at the moment of charging</em>. Fixed quarterly averages don't satisfy that requirement.
           </p>
         </div>
 
@@ -303,7 +321,7 @@ export default function BusinessPage({ onNavigate }) {
           <div style={{ background: "linear-gradient(135deg,#15803D,#16A34A)", padding: "28px 36px" }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>Smart Audit · ROI Calculator</div>
             <h3 style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, color: "#fff", marginBottom: 6, letterSpacing: "-0.5px" }}>How much is your fleet overpaying — and is your audit trail CIR 92-ready?</h3>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.65 }}>Based on CREG Q2 2026 (€{CREG_RATE}/kWh) vs. actual EPEX smart-charging average (€{EPEX_SMART}/kWh) · All figures exportable as a tax-authority audit report</p>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.65 }}>Based on CREG<CregTooltip /> Q2 2026 (€{CREG_RATE}/kWh) vs. actual EPEX smart-charging average (€{EPEX_SMART}/kWh) · All figures exportable as a tax-authority audit report</p>
           </div>
 
           <div style={{ padding: "36px" }}>
@@ -333,7 +351,14 @@ export default function BusinessPage({ onNavigate }) {
                 <div style={{ fontSize: "clamp(40px,6vw,64px)", fontWeight: 900, color: C.primary, fontFamily: "monospace", letterSpacing: "-3px", lineHeight: 1 }}>
                   €{annualSaving.toLocaleString()}
                 </div>
-                <div style={{ fontSize: 14, color: C.muted, marginTop: 6 }}>= €{perCarSaving.toLocaleString()} per car per year · {fleetSize} cars</div>
+                {/* Per-vehicle callout — makes small fleets feel the ROI too */}
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, background: C.highlight, border: `1px solid ${C.border2}`, borderRadius: 20, padding: "6px 14px" }}>
+                  <span style={{ fontSize: 14 }}>⚡</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>
+                    That's <strong>€{perCarSaving.toLocaleString()}+ per vehicle</strong> every year
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: C.light, marginTop: 8 }}>{fleetSize} vehicles · software pays for itself instantly</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -450,20 +475,22 @@ export default function BusinessPage({ onNavigate }) {
         </div>
 
         <SectionDivider label="Security & compliance" />
-        {/* ── GDPR & ENTERPRISE SECURITY ────────────────────────────── */}
-        <div style={{ marginBottom: 52 }}>
-          <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>Enterprise security & privacy</div>
-            <h2 style={{ fontSize: "clamp(22px,3vw,34px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", marginBottom: 10 }}>Your employees' data stays private</h2>
-            <p style={{ fontSize: 15, color: C.muted, maxWidth: 520, margin: "0 auto", lineHeight: 1.85 }}>Belgian companies need confidence that connecting employee home charging data is safe. Here is exactly how we protect it.</p>
+        {/* ── GDPR & ENTERPRISE SECURITY — isolated trust box ──────── */}
+        <div style={{ background: "rgba(22,163,74,0.035)", border: "1.5px solid rgba(22,163,74,0.18)", borderRadius: 24, padding: "36px 32px", marginBottom: 52 }}>
+          {/* Header row with lock icon */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(22,163,74,0.12)", border: "1px solid rgba(22,163,74,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🔒</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2 }}>Enterprise security & privacy</div>
           </div>
+          <h2 style={{ fontSize: "clamp(20px,3vw,32px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", marginBottom: 10 }}>Your employees' data stays private</h2>
+          <p style={{ fontSize: 15, color: C.muted, maxWidth: 560, lineHeight: 1.85, marginBottom: 28 }}>Belgian companies hesitate to connect employee home-charging data. Here is exactly how we isolate and protect every record — by design, not as an afterthought.</p>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14 }}>
             {[
               {
                 icon: "🛡️", accent: C.primary,
                 title: "GDPR Compliant by Design",
-                desc: "Employee home location, private energy contract details, and personal charging schedules are fully isolated per employer account and are never stored in raw form or shared with third parties.",
+                desc: "Employee home location, private energy contracts, and personal charging schedules are fully isolated per employer account and are never stored in raw form or shared with third parties.",
               },
               {
                 icon: "🇪🇺", accent: "#0EA5E9",
@@ -471,9 +498,9 @@ export default function BusinessPage({ onNavigate }) {
                 desc: "All cloud processing, database storage, and data-in-transit takes place exclusively on European nodes (Vercel EU West — Frankfurt, Ireland). No data ever leaves the EU.",
               },
               {
-                icon: "🔒", accent: C.amber,
+                icon: "🔑", accent: C.amber,
                 title: "Secure OAuth 2.0 Authentication",
-                desc: "Direct secure token authentication with all connected APIs — no raw passwords are ever stored or transmitted. Tokens are scoped, short-lived, and revokable at any time.",
+                desc: "Direct secure token auth with all connected APIs — no raw passwords are ever stored or transmitted. Tokens are scoped, short-lived, and revokable at any time by the employer.",
               },
               {
                 icon: "📋", accent: C.purple,
@@ -481,11 +508,18 @@ export default function BusinessPage({ onNavigate }) {
                 desc: "Every reimbursement calculation is logged with a timestamp, EPEX price source, kWh amount, and employee ID. Full exportable audit trail for tax authorities and social secretariaten.",
               },
             ].map(t => (
-              <div key={t.title} style={{ background: C.card, borderRadius: 18, border: `1.5px solid ${t.accent}18`, boxShadow: C.shadow, padding: "24px 26px" }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${t.accent}12`, border: `1px solid ${t.accent}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 16 }}>{t.icon}</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 8 }}>{t.title}</div>
+              <div key={t.title} style={{ background: C.card, borderRadius: 16, border: `1px solid ${t.accent}20`, padding: "20px 22px" }}>
+                <div style={{ width: 40, height: 40, borderRadius: 11, background: `${t.accent}10`, border: `1px solid ${t.accent}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, marginBottom: 14 }}>{t.icon}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 6 }}>{t.title}</div>
                 <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.8 }}>{t.desc}</div>
               </div>
+            ))}
+          </div>
+
+          {/* Footer trust strip */}
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(22,163,74,0.15)", display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center" }}>
+            {["🛡️ GDPR Article 25 — Privacy by Design", "🇪🇺 EU GDPR & NIS2 Compliant", "🔒 OAuth 2.0 / OpenID Connect", "📋 CIR 92 Audit Ready"].map(b => (
+              <span key={b} style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>{b}</span>
             ))}
           </div>
         </div>
