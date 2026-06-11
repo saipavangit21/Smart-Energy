@@ -30,14 +30,27 @@ const EPEX_SMART  = 0.1920;
 const SAVING_KWH  = +(CREG_RATE - EPEX_SMART).toFixed(4); // 0.0913
 const KWH_PER_KM  = 0.20;  // 5 km/kWh average EV
 
+/* ── Section divider ─────────────────────────────────────────── */
+function SectionDivider({ label }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "56px 0 48px" }}>
+      <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(22,163,74,0.2))" }} />
+      <span style={{ fontSize: 10, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: "2.5px", whiteSpace: "nowrap", background: C.highlight, border: `1px solid ${C.border2}`, borderRadius: 20, padding: "4px 14px" }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(22,163,74,0.2), transparent)" }} />
+    </div>
+  );
+}
+
 export default function BusinessPage({ onNavigate }) {
   /* Lead / contact form */
-  const [leadEmail,    setLeadEmail]    = useState("");
-  const [leadCompany,  setLeadCompany]  = useState("");
-  const [leadName,     setLeadName]     = useState("");
-  const [leadPhone,    setLeadPhone]    = useState("");
-  const [leadFleet,    setLeadFleet]    = useState("");
-  const [leadState,    setLeadState]    = useState("idle");
+  const [leadEmail,       setLeadEmail]       = useState("");
+  const [leadCompany,     setLeadCompany]     = useState("");
+  const [leadName,        setLeadName]        = useState("");
+  const [leadPhone,       setLeadPhone]       = useState("");
+  const [leadFleetRange,  setLeadFleetRange]  = useState("");
+  const [leadPayroll,     setLeadPayroll]     = useState("");
+  const [leadReimbMethod, setLeadReimbMethod] = useState("");
+  const [leadState,       setLeadState]       = useState("idle");
 
   /* ROI Calculator */
   const [fleetSize,    setFleetSize]    = useState(20);
@@ -79,12 +92,14 @@ export default function BusinessPage({ onNavigate }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email:    leadEmail,
-          source:   "business-audit-form",
-          company:  leadCompany,
-          name:     leadName,
-          phone:    leadPhone,
-          fleet_size: leadFleet || String(fleetSize),
+          email:           leadEmail,
+          source:          "business-audit-form",
+          company:         leadCompany,
+          name:            leadName,
+          phone:           leadPhone,
+          fleet_size:      leadFleetRange || String(fleetSize),
+          payroll_provider:leadPayroll,
+          reimb_method:    leadReimbMethod,
           metadata: { annual_saving_estimate: annualSaving, monthly_km: monthlyKm },
         }),
       });
@@ -119,22 +134,60 @@ export default function BusinessPage({ onNavigate }) {
                   📊 Based on your inputs: {fleetSize} EVs · {monthlyKm.toLocaleString()} km/month — estimated saving <strong>€{annualSaving.toLocaleString()}/year</strong>
                 </div>
                 <form onSubmit={submitLead} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {/* Text inputs */}
                   {[
-                    { label: "Company name *", val: leadCompany,  set: setLeadCompany,  ph: "Acme NV",                    type: "text",  req: true  },
-                    { label: "Your name *",    val: leadName,     set: setLeadName,     ph: "Jan Janssen",                type: "text",  req: true  },
-                    { label: "Corporate email *", val: leadEmail, set: setLeadEmail,    ph: "jan@acme.be",                type: "email", req: true  },
-                    { label: "Fleet size",     val: leadFleet,    set: setLeadFleet,    ph: `${fleetSize} (from calculator)`, type: "number", req: false },
-                    { label: "Phone (optional)", val: leadPhone,  set: setLeadPhone,    ph: "+32 …",                      type: "tel",   req: false },
+                    { label: "Company name *",    val: leadCompany, set: setLeadCompany, ph: "Acme NV",       type: "text",  req: true  },
+                    { label: "Your name *",        val: leadName,    set: setLeadName,    ph: "Jan Janssen",   type: "text",  req: true  },
+                    { label: "Corporate email *",  val: leadEmail,   set: setLeadEmail,   ph: "jan@acme.be",   type: "email", req: true  },
+                    { label: "Phone (optional)",   val: leadPhone,   set: setLeadPhone,   ph: "+32 …",         type: "tel",   req: false },
                   ].map(f => (
                     <div key={f.label}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>{f.label}</label>
                       <input type={f.type} required={f.req} placeholder={f.ph} value={f.val} onChange={e => f.set(e.target.value)}
                         style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none", fontFamily: "inherit", transition: "border 0.2s" }}
                         onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
-                        onBlur={e => e.target.style.border = `1.5px solid ${C.border}`}
-                      />
+                        onBlur={e => e.target.style.border = `1.5px solid ${C.border}`} />
                     </div>
                   ))}
+
+                  {/* Segmented dropdowns */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>Fleet size *</label>
+                      <select required value={leadFleetRange} onChange={e => setLeadFleetRange(e.target.value)}
+                        style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, color: leadFleetRange ? C.text : C.light, background: C.bg, outline: "none", fontFamily: "inherit", cursor: "pointer" }}
+                        onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
+                        onBlur={e => e.target.style.border = `1.5px solid ${C.border}`}>
+                        <option value="" disabled>Select range…</option>
+                        {["1–5 EVs","6–15 EVs","16–30 EVs","31–50 EVs","51–100 EVs","100+ EVs"].map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>Payroll provider</label>
+                      <select value={leadPayroll} onChange={e => setLeadPayroll(e.target.value)}
+                        style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, color: leadPayroll ? C.text : C.light, background: C.bg, outline: "none", fontFamily: "inherit", cursor: "pointer" }}
+                        onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
+                        onBlur={e => e.target.style.border = `1.5px solid ${C.border}`}>
+                        <option value="">Select…</option>
+                        {["SD Worx","Securex","Partena","Group S","Acerta","Liantis","Other"].map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>Current reimbursement method *</label>
+                    <select required value={leadReimbMethod} onChange={e => setLeadReimbMethod(e.target.value)}
+                      style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, color: leadReimbMethod ? C.text : C.light, background: C.bg, outline: "none", fontFamily: "inherit", cursor: "pointer" }}
+                      onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
+                      onBlur={e => e.target.style.border = `1.5px solid ${C.border}`}>
+                      <option value="" disabled>How do you reimburse now?</option>
+                      <option value="creg-flat">CREG quarterly flat rate</option>
+                      <option value="company-fixed">Fixed company rate (e.g. €0.25/kWh)</option>
+                      <option value="dynamic">Dynamic tariff — already tracking EPEX</option>
+                      <option value="not-yet">Not reimbursing yet</option>
+                      <option value="other">Other / not sure</option>
+                    </select>
+                  </div>
                   <button type="submit" disabled={leadState === "loading"} style={{ marginTop: 8, padding: "14px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg, ${C.primary}, ${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: `0 6px 24px rgba(22,163,74,0.3)`, opacity: leadState === "loading" ? 0.7 : 1 }}>
                     {leadState === "loading" ? "Sending…" : leadState === "error" ? "Error — try again" : "Send my Cost Audit request →"}
                   </button>
@@ -213,9 +266,9 @@ export default function BusinessPage({ onNavigate }) {
         {/* ── PROBLEM ───────────────────────────────────────────────── */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>The problem</div>
-          <h2 style={{ fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 900, color: C.text, marginBottom: 14, letterSpacing: "-0.8px" }}>How Belgian companies get the maths wrong</h2>
+          <h2 style={{ fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 900, color: C.text, marginBottom: 14, letterSpacing: "-0.8px" }}>Why CREG-based reimbursements fail the legal audit</h2>
           <p style={{ fontSize: 15, color: C.muted, maxWidth: 580, margin: "0 auto", lineHeight: 1.85 }}>
-            Every quarter the CREG publishes a reference electricity tariff. HR departments multiply this by estimated kWh and reimburse employees. It sounds fair — but it is not legally accurate.
+            Every quarter the CREG publishes a reference electricity tariff. HR departments multiply this by estimated kWh and reimburse employees. It sounds fair — but under CIR 92, the reimbursement must reflect the <em>actual cost at the moment of charging</em>. Fixed quarterly averages don't satisfy that requirement.
           </p>
         </div>
 
@@ -244,12 +297,13 @@ export default function BusinessPage({ onNavigate }) {
           </div>
         </div>
 
+        <SectionDivider label="ROI Calculator" />
         {/* ── ROI CALCULATOR ────────────────────────────────────────── */}
         <div style={{ background: C.card, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: C.shadow, overflow: "hidden", marginBottom: 64 }}>
           <div style={{ background: "linear-gradient(135deg,#15803D,#16A34A)", padding: "28px 36px" }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>Smart Audit · ROI Calculator</div>
-            <h3 style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, color: "#fff", marginBottom: 6, letterSpacing: "-0.5px" }}>How much is your fleet overpaying right now?</h3>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.65 }}>Based on CREG Q2 2026 (€{CREG_RATE}/kWh) vs. average smart-charging EPEX rate (€{EPEX_SMART}/kWh)</p>
+            <h3 style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, color: "#fff", marginBottom: 6, letterSpacing: "-0.5px" }}>How much is your fleet overpaying — and is your audit trail CIR 92-ready?</h3>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.65 }}>Based on CREG Q2 2026 (€{CREG_RATE}/kWh) vs. actual EPEX smart-charging average (€{EPEX_SMART}/kWh) · All figures exportable as a tax-authority audit report</p>
           </div>
 
           <div style={{ padding: "36px" }}>
@@ -304,6 +358,7 @@ export default function BusinessPage({ onNavigate }) {
           </div>
         </div>
 
+        <SectionDivider label="Smart tools · Smart services" />
         {/* ── 3-COLUMN FEATURE GRID (Belgian context) ───────────────── */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>Smart tools · Smart services</div>
@@ -370,6 +425,7 @@ export default function BusinessPage({ onNavigate }) {
           ))}
         </div>
 
+        <SectionDivider label="Payroll integrations" />
         {/* ── SOCIAL SECRETARIATEN ──────────────────────────────────── */}
         <div style={{ background: C.card, borderRadius: 22, border: `1px solid ${C.border}`, boxShadow: C.shadow, padding: "30px 36px", marginBottom: 40, textAlign: "center" }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 22 }}>Works with your existing payroll systems</div>
@@ -393,6 +449,7 @@ export default function BusinessPage({ onNavigate }) {
           </div>
         </div>
 
+        <SectionDivider label="Security & compliance" />
         {/* ── GDPR & ENTERPRISE SECURITY ────────────────────────────── */}
         <div style={{ marginBottom: 52 }}>
           <div style={{ textAlign: "center", marginBottom: 36 }}>
@@ -437,12 +494,12 @@ export default function BusinessPage({ onNavigate }) {
         <div id="contact" style={{ background: "linear-gradient(135deg, #15803D, #16A34A)", borderRadius: 24, padding: "44px 40px", color: "#fff", textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 14 }}>📩</div>
           <h3 style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, marginBottom: 10, letterSpacing: "-0.5px" }}>Ready to stop overpaying?</h3>
-          <p style={{ fontSize: 15, opacity: 0.82, marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.75 }}>
-            We'll prepare your personalised fleet cost report and reach out within 1 business day. No commitment required.
+          <p style={{ fontSize: 15, opacity: 0.82, marginBottom: 32, maxWidth: 480, margin: "0 auto 32px", lineHeight: 1.75 }}>
+            We'll generate your CIR 92-ready fleet cost report — exact EPEX vs CREG delta, per employee, exportable to your payroll provider — and reach out within 1 business day.
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={() => setShowModal(true)} style={{ padding: "14px 36px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FCD34D", color: "#15803D", border: "none", cursor: "pointer", boxShadow: "0 6px 24px rgba(0,0,0,0.2)" }}>
-              Get a Detailed Cost Audit →
+              Generate my CIR 92 Audit Report →
             </button>
             <a href="/fleet-audit" style={{ padding: "14px 24px", borderRadius: 30, fontSize: 14, fontWeight: 700, background: "rgba(255,255,255,0.12)", color: "#fff", textDecoration: "none", border: "1px solid rgba(255,255,255,0.25)" }}>
               Free instant audit first
