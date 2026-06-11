@@ -313,7 +313,7 @@ app.post("/api/leads", async (req, res) => {
             <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#10B981">You're in.</h1>
             <p style="color:#6B8099;font-size:15px;line-height:1.7;margin:0 0 20px">
               Every day at <strong style="color:#E8EDF5">13:00 CET</strong> we publish tomorrow's prices.<br>
-              We'll alert you when the <strong style="color:#10B981">cheapest charging window</strong> opens for Belgium.
+              We'll alert you when the <strong style="color:#10B981">cheapest energy window</strong> opens for Belgium — EV charging, heat pumps &amp; appliances.
             </p>
             <a href="https://smartprice.be" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#10B981,#0D9488);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
               View live prices →

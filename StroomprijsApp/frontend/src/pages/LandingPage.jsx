@@ -102,7 +102,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   useEffect(() => {
     document.title = "SmartPrice.be — Live Belgian Electricity & Gas Prices | Free";
     const desc = document.querySelector("meta[name='description']");
-    if (desc) desc.setAttribute("content", "Track live EPEX Spot electricity prices in Belgium, compare all suppliers, find the cheapest hours to charge your EV, and set price alerts. 100% free.");
+    if (desc) desc.setAttribute("content", "Track live EPEX Spot electricity prices in Belgium, compare all suppliers, find the cheapest hours for EV charging, heat pumps & household appliances, and set price alerts. 100% free.");
   }, []);
 
   /* state */
@@ -636,7 +636,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           <div style={{background:C.card,borderRadius:28,border:`1px solid ${C.border}`,boxShadow:"0 8px 48px rgba(0,0,0,0.06)",overflow:"hidden"}}>
             <div style={{background:"linear-gradient(135deg,#15803D,#16A34A,#22C55E)",padding:"36px 40px"}}>
               <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",letterSpacing:3,marginBottom:10}}>Smart Planner</div>
-              <h2 style={{fontSize:"clamp(24px,3vw,38px)",fontWeight:900,color:"#fff",marginBottom:8,letterSpacing:"-0.5px"}}>Find your cheapest charging window</h2>
+              <h2 style={{fontSize:"clamp(24px,3vw,38px)",fontWeight:900,color:"#fff",marginBottom:8,letterSpacing:"-0.5px"}}>Find your cheapest energy window</h2>
               <p style={{fontSize:15,color:"rgba(255,255,255,0.75)",lineHeight:1.7}}>Set your battery and deadline — optimal window calculated in real time.</p>
             </div>
 
