@@ -75,8 +75,9 @@ export default function BusinessPage({ onNavigate }) {
   const [leadState,       setLeadState]       = useState("idle");
 
   /* ROI Calculator */
-  const [fleetSize,    setFleetSize]    = useState(20);
-  const [monthlyKm,    setMonthlyKm]    = useState(1500);
+  const [fleetSize,       setFleetSize]       = useState(20);
+  const [monthlyKm,       setMonthlyKm]       = useState(1500);
+  const [calculatorUsed,  setCalculatorUsed]  = useState(false);
 
   /* Modal */
   const [showModal,    setShowModal]    = useState(false);
@@ -110,7 +111,7 @@ export default function BusinessPage({ onNavigate }) {
     if (!leadEmail || leadState !== "idle") return;
     setLeadState("loading");
     try {
-      const r = await fetch("/api/business-leads", {
+      const r = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -151,10 +152,12 @@ export default function BusinessPage({ onNavigate }) {
                 <p style={{ fontSize: 13, color: C.muted, marginBottom: 28, lineHeight: 1.7 }}>
                   We'll calculate your fleet's exact CREG overpayment and send a PDF ready to share with your CFO or HR director.
                 </p>
-                {/* Pre-filled from ROI calculator */}
-                <div style={{ background: C.highlight, border: `1px solid ${C.border2}`, borderRadius: 12, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: C.primary, fontWeight: 700 }}>
-                  📊 Based on your inputs: {fleetSize} EVs · {monthlyKm.toLocaleString()} km/month — estimated saving <strong>€{annualSaving.toLocaleString()}/year</strong>
-                </div>
+                {/* Pre-filled from ROI calculator — only shown if user interacted with sliders */}
+                {calculatorUsed && (
+                  <div style={{ background: C.highlight, border: `1px solid ${C.border2}`, borderRadius: 12, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: C.primary, fontWeight: 700 }}>
+                    📊 Based on your inputs: {fleetSize} EVs · {monthlyKm.toLocaleString()} km/month — estimated saving <strong>€{annualSaving.toLocaleString()}/year</strong>
+                  </div>
+                )}
                 <form onSubmit={submitLead} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {/* Text inputs */}
                   {[
@@ -335,7 +338,7 @@ export default function BusinessPage({ onNavigate }) {
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 10 }}>
                   EVs in your fleet: <strong style={{ color: C.primary }}>{fleetSize}</strong>
                 </label>
-                <input type="range" min={2} max={150} step={1} value={fleetSize} onChange={e => setFleetSize(+e.target.value)}
+                <input type="range" min={2} max={150} step={1} value={fleetSize} onChange={e => { setFleetSize(+e.target.value); setCalculatorUsed(true); }}
                   style={{ width: "100%", accentColor: C.primary, cursor: "pointer" }} />
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.light, marginTop: 4 }}><span>2</span><span>150</span></div>
               </div>
@@ -343,7 +346,7 @@ export default function BusinessPage({ onNavigate }) {
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 10 }}>
                   Avg. monthly km per car: <strong style={{ color: C.primary }}>{monthlyKm.toLocaleString()} km</strong>
                 </label>
-                <input type="range" min={300} max={4000} step={100} value={monthlyKm} onChange={e => setMonthlyKm(+e.target.value)}
+                <input type="range" min={300} max={4000} step={100} value={monthlyKm} onChange={e => { setMonthlyKm(+e.target.value); setCalculatorUsed(true); }}
                   style={{ width: "100%", accentColor: C.primary, cursor: "pointer" }} />
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.light, marginTop: 4 }}><span>300 km</span><span>4,000 km</span></div>
               </div>

@@ -281,10 +281,11 @@ app.get("/api/status-banner", (req, res) => res.json({ active: false }));
 
 // ── Email lead capture ────────────────────────────────────────
 app.post("/api/leads", async (req, res) => {
-  const { email, source = "landing" } = req.body;
+  const { email, source = "landing", company, name, phone, fleet_size, payroll_provider, reimb_method, metadata } = req.body;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ success: false, error: "Invalid email" });
   }
+  const isB2B = source === "business-audit-form";
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS leads (
@@ -301,32 +302,85 @@ app.post("/api/leads", async (req, res) => {
       [email.toLowerCase().trim(), source]
     );
     const isNew = rows[0].is_new;
-    // Send welcome email via Resend if API key present and it's a new lead
-    if (isNew && process.env.RESEND_API_KEY) {
-      await axios.post("https://api.resend.com/emails", {
-        from: process.env.FROM_EMAIL || "alerts@smartprice.be",
-        to: email,
-        subject: "⚡ SmartPrice — you're on the list",
-        html: `
-          <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#060B14;color:#E8EDF5;border-radius:16px">
-            <div style="font-size:28px;margin-bottom:8px">⚡</div>
-            <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#10B981">You're in.</h1>
-            <p style="color:#6B8099;font-size:15px;line-height:1.7;margin:0 0 20px">
-              Every day at <strong style="color:#E8EDF5">13:00 CET</strong> we publish tomorrow's prices.<br>
-              We'll alert you when the <strong style="color:#10B981">cheapest energy window</strong> opens for Belgium — EV charging, heat pumps &amp; appliances.
-            </p>
-            <a href="https://smartprice.be" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#10B981,#0D9488);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
-              View live prices →
-            </a>
-            <p style="margin-top:28px;font-size:11px;color:#334455">
-              SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#334455">Privacy</a> · You can unsubscribe anytime by replying "unsubscribe"
-            </p>
-          </div>
-        `,
-      }, {
-        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-        timeout: 8000,
-      }).catch(e => console.warn("[leads] Resend failed:", e.message));
+
+    // Also persist full B2B data in b2b_leads when submitted from business page
+    if (isB2B) {
+      const auditData = { name, phone, fleet_size, payroll_provider, reimb_method, ...metadata };
+      pool.query(`
+        CREATE TABLE IF NOT EXISTS b2b_leads (
+          id SERIAL PRIMARY KEY, email TEXT UNIQUE NOT NULL, company TEXT,
+          audit_data JSONB, source TEXT DEFAULT 'business-page',
+          created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `).then(() => pool.query(
+        `INSERT INTO b2b_leads (email, company, audit_data, source, created_at)
+         VALUES ($1, $2, $3::jsonb, 'business-page', NOW())
+         ON CONFLICT (email) DO UPDATE
+           SET company = COALESCE($2, b2b_leads.company),
+               audit_data = b2b_leads.audit_data || $3::jsonb, updated_at = NOW()`,
+        [email.toLowerCase().trim(), company || null, JSON.stringify(auditData)]
+      )).catch(e => console.warn("[leads] b2b upsert failed:", e.message));
+    }
+
+    if (process.env.RESEND_API_KEY) {
+      const firstName = name ? name.split(" ")[0] : null;
+      if (isB2B) {
+        // B2B audit confirmation email
+        axios.post("https://api.resend.com/emails", {
+          from: "SmartPrice.be <info@smartprice.be>",
+          to: email,
+          subject: "⚡ SmartPrice — Audit request received",
+          html: `
+            <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F7FEF9;color:#0F1A0F;border-radius:16px;border:1px solid #DCFCE7">
+              <div style="font-size:28px;margin-bottom:8px">✅</div>
+              <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#16A34A">Audit request received${firstName ? `, ${firstName}` : ""}.</h1>
+              <p style="color:#52635A;font-size:15px;line-height:1.7;margin:0 0 20px">
+                We're preparing your personalised fleet cost report for <strong>${company || "your company"}</strong>.<br>
+                We'll be in touch within <strong>one business day</strong> with a PDF ready to share with your CFO or HR team.
+              </p>
+              <a href="https://smartprice.be/business" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
+                View SmartPrice for Business →
+              </a>
+              <p style="margin-top:28px;font-size:11px;color:#9DB3A3">
+                SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#9DB3A3">Privacy</a> · GDPR compliant · EU hosted
+              </p>
+            </div>
+          `,
+        }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" }, timeout: 8000 })
+        .catch(e => console.warn("[leads] B2B Resend failed:", e.message));
+        // Admin notification
+        axios.post("https://api.resend.com/emails", {
+          from: "SmartPrice.be <info@smartprice.be>",
+          to: "info@smartprice.be",
+          subject: `🏢 New business audit request — ${company || email}`,
+          html: `<p><b>Email:</b> ${email}</p><p><b>Company:</b> ${company||"—"}</p><p><b>Name:</b> ${name||"—"}</p><p><b>Phone:</b> ${phone||"—"}</p><p><b>Fleet size:</b> ${fleet_size||"—"}</p><p><b>Payroll:</b> ${payroll_provider||"—"}</p><p><b>Reimbursement:</b> ${reimb_method||"—"}</p>${metadata?.annual_saving_estimate?`<p><b>Est. saving:</b> €${Number(metadata.annual_saving_estimate).toLocaleString()}/yr</p>`:""}`,
+        }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } })
+        .catch(() => {});
+      } else if (isNew) {
+        // Consumer welcome email
+        axios.post("https://api.resend.com/emails", {
+          from: process.env.FROM_EMAIL || "alerts@smartprice.be",
+          to: email,
+          subject: "⚡ SmartPrice — you're on the list",
+          html: `
+            <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#060B14;color:#E8EDF5;border-radius:16px">
+              <div style="font-size:28px;margin-bottom:8px">⚡</div>
+              <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#10B981">You're in.</h1>
+              <p style="color:#6B8099;font-size:15px;line-height:1.7;margin:0 0 20px">
+                Every day at <strong style="color:#E8EDF5">13:00 CET</strong> we publish tomorrow's prices.<br>
+                We'll alert you when the <strong style="color:#10B981">cheapest energy window</strong> opens for Belgium — EV charging, heat pumps &amp; appliances.
+              </p>
+              <a href="https://smartprice.be" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#10B981,#0D9488);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
+                View live prices →
+              </a>
+              <p style="margin-top:28px;font-size:11px;color:#334455">
+                SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#334455">Privacy</a> · You can unsubscribe anytime by replying "unsubscribe"
+              </p>
+            </div>
+          `,
+        }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" }, timeout: 8000 })
+        .catch(e => console.warn("[leads] Resend failed:", e.message));
+      }
     }
     res.json({ success: true, is_new: isNew });
   } catch (e) {
