@@ -5,6 +5,8 @@
  * see overpayment vs CREG flat rate → download PDF → email gate (B2B lead).
  */
 import { useState, useEffect } from "react";
+import { useLanguage } from "../context/LanguageContext";
+import LangSwitcher  from "../components/LangSwitcher";
 
 // CREG official Belgian electricity reference rate (updated quarterly)
 const CREG_RATE_KWH      = 0.2833; // €/kWh — CREG Q2 2026 reference tariff
@@ -31,6 +33,9 @@ function fmt(n) { return n.toLocaleString("nl-BE", { minimumFractionDigits: 0, m
 function fmtE(n) { return `€${n.toLocaleString("nl-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
 
 export default function FleetAuditPage({ onNavigate }) {
+  const { tSection } = useLanguage();
+  const L = tSection("fleet");
+
   const [step, setStep]           = useState("form"); // form | results | done
   const [fleetSize, setFleetSize] = useState("");
   const [currentMethod, setCurrentMethod] = useState("creg");
@@ -172,7 +177,8 @@ export default function FleetAuditPage({ onNavigate }) {
           <span style={{ fontSize: 12, color: C.muted, fontWeight: 600, background: C.highlight, padding: "2px 8px", borderRadius: 20, border: `1px solid ${C.blueBorder}` }}>Business</span>
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <span style={{ fontSize: 13, color: C.muted }}>Questions? <a href="mailto:info@smartprice.be" style={{ color: C.blue, fontWeight: 600 }}>info@smartprice.be</a></span>
+          <LangSwitcher />
+          <span style={{ fontSize: 13, color: C.muted }}>{L.navContact||"Questions?"} <a href="mailto:info@smartprice.be" style={{ color: C.blue, fontWeight: 600 }}>info@smartprice.be</a></span>
         </div>
       </nav>
 
@@ -184,10 +190,10 @@ export default function FleetAuditPage({ onNavigate }) {
             {/* Hero */}
             <div style={{ textAlign: "center", marginBottom: 48 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.highlight, border: `1px solid ${C.blueBorder}`, borderRadius: 30, padding: "6px 16px", marginBottom: 20, fontSize: 13, color: C.blue, fontWeight: 700 }}>
-                🚗 Free Fleet Cost Audit Tool
+                🚗 {L.heroTitle||"Free Fleet Cost Audit Tool"}
               </div>
               <h1 style={{ fontSize: 36, fontWeight: 900, lineHeight: 1.15, color: C.text, marginBottom: 16 }}>
-                Is your company overpaying for<br />employee EV reimbursements?
+                {L.heroSub||"Is your company overpaying for employee EV reimbursements?"}
               </h1>
               <p style={{ fontSize: 17, color: C.muted, maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
                 Most Belgian companies use the fixed CREG reference tariff to reimburse employees for home charging. Enter your fleet size and we'll show exactly how much you're overpaying versus real EPEX Spot rates.
@@ -210,7 +216,7 @@ export default function FleetAuditPage({ onNavigate }) {
                 {/* Fleet size */}
                 <div>
                   <label style={{ display: "block", fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 8 }}>
-                    Number of company EVs / employees with EV
+                    {L.fleetSizeLabel||"Number of company EVs / employees with EV"}
                   </label>
                   <input
                     type="number"
@@ -278,7 +284,7 @@ export default function FleetAuditPage({ onNavigate }) {
                 disabled={!fleetSize || parseInt(fleetSize) < 1}
                 style={{ width: "100%", marginTop: 32, padding: "16px", borderRadius: 12, fontSize: 16, fontWeight: 800, background: !fleetSize ? C.border : `linear-gradient(135deg, ${C.blue}, #3B82F6)`, color: !fleetSize ? C.muted : "#fff", border: "none", cursor: !fleetSize ? "not-allowed" : "pointer", boxShadow: !fleetSize ? "none" : "0 4px 20px rgba(30,64,175,0.3)", transition: "all 0.2s" }}
               >
-                Generate my free audit →
+                {L.heroCta||"Generate my free audit →"}
               </button>
             </div>
 
@@ -311,13 +317,13 @@ export default function FleetAuditPage({ onNavigate }) {
             {/* Header */}
             <div style={{ textAlign: "center", marginBottom: 32 }}>
               <div style={{ fontSize: 48, marginBottom: 8 }}>📊</div>
-              <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, marginBottom: 8 }}>Your Fleet Charging Audit</h1>
+              <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, marginBottom: 8 }}>{L.resultTitle||"Your Fleet Charging Audit"}</h1>
               <p style={{ fontSize: 14, color: C.muted }}>Fleet size: <strong>{audit.fleetSize} EVs</strong> · Based on CREG Q2 2026 reference tariff vs. real EPEX Spot Belgium (12-month avg)</p>
             </div>
 
             {/* Headline overpayment */}
             <div style={{ background: "linear-gradient(135deg, #15803D, #16A34A)", borderRadius: 20, padding: "32px 36px", marginBottom: 20, color: "#fff", textAlign: "center" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.75, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Estimated annual overpayment</div>
+              <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.75, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{L.resultOverpay||"Estimated annual overpayment"}</div>
               <div style={{ fontSize: 56, fontWeight: 900, letterSpacing: -2, color: "#FCD34D" }}>{fmtE(audit.overpayment)}</div>
               <div style={{ fontSize: 15, opacity: 0.85, marginTop: 6 }}>per year for your fleet of {audit.fleetSize} vehicles</div>
               <div style={{ fontSize: 13, opacity: 0.65, marginTop: 4 }}>({audit.savingsPct}% of current reimbursement spend)</div>
@@ -367,7 +373,7 @@ export default function FleetAuditPage({ onNavigate }) {
             {/* Download CTA */}
             {step === "results" && (
               <div style={{ background: C.card, borderRadius: 20, border: `2px solid ${C.blue}`, boxShadow: "0 4px 24px rgba(30,64,175,0.12)", padding: "32px 36px" }}>
-                <div style={{ fontSize: 18, fontWeight: 900, color: C.text, marginBottom: 6 }}>📄 Download the full audit report</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: C.text, marginBottom: 6 }}>📄 {L.emailGate||"Download the full audit report"}</div>
                 <div style={{ fontSize: 14, color: C.muted, marginBottom: 24, lineHeight: 1.7 }}>
                   Get a printable PDF with your fleet's full cost breakdown, CREG vs. EPEX comparison, and a one-page summary ready to share with your CFO or HR director.
                 </div>
@@ -378,7 +384,7 @@ export default function FleetAuditPage({ onNavigate }) {
                       required
                       value={email}
                       onChange={e => setEmail(e.target.value)}
-                      placeholder="Corporate email address"
+                      placeholder={L.emailPlaceholder||"Corporate email address"}
                       style={{ flex: "1 1 220px", padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${emailError ? C.red : C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none" }}
                     />
                     <input
@@ -395,7 +401,7 @@ export default function FleetAuditPage({ onNavigate }) {
                     disabled={submitting}
                     style={{ padding: "14px 28px", borderRadius: 12, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg, ${C.blue}, #3B82F6)`, color: "#fff", border: "none", cursor: submitting ? "wait" : "pointer", boxShadow: "0 4px 20px rgba(30,64,175,0.3)" }}
                   >
-                    {submitting ? "Saving…" : "Download free PDF report →"}
+                    {submitting ? "Saving…" : (L.sendReport||"Download free PDF report →")}
                   </button>
                   <div style={{ fontSize: 11, color: C.light }}>No spam. We may follow up once to ask if you'd like a live demo.</div>
                 </form>

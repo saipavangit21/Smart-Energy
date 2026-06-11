@@ -5,6 +5,8 @@
  *     3-column Belgian feature grid, OG meta tags, audit form modal.
  */
 import { useState, useEffect } from "react";
+import { useLanguage } from "../context/LanguageContext";
+import LangSwitcher  from "../components/LangSwitcher";
 
 const C = {
   bg:        "#F7FEF9",
@@ -59,6 +61,9 @@ function SectionDivider({ label }) {
 }
 
 export default function BusinessPage({ onNavigate }) {
+  const { tSection } = useLanguage();
+  const L = tSection("business");
+
   /* Lead / contact form */
   const [leadEmail,       setLeadEmail]       = useState("");
   const [leadCompany,     setLeadCompany]     = useState("");
@@ -136,13 +141,13 @@ export default function BusinessPage({ onNavigate }) {
             {leadState === "done" ? (
               <div style={{ textAlign: "center", padding: "20px 0" }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-                <h3 style={{ fontSize: 22, fontWeight: 900, color: C.primary, marginBottom: 10 }}>Audit request received</h3>
-                <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7 }}>We'll prepare your personalised fleet cost report and reach out within 1 business day.</p>
+                <h3 style={{ fontSize: 22, fontWeight: 900, color: C.primary, marginBottom: 10 }}>{L.modalDone||"Audit request received!"}</h3>
+                <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{L.modalDoneSub||"We'll prepare your personalised fleet cost report and reach out within 1 business day."}</p>
               </div>
             ) : (
               <>
                 <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Smart Audit</div>
-                <h3 style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 6 }}>Get your Detailed Cost Audit</h3>
+                <h3 style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 6 }}>{L.modalTitle||"Get your Detailed Cost Audit"}</h3>
                 <p style={{ fontSize: 13, color: C.muted, marginBottom: 28, lineHeight: 1.7 }}>
                   We'll calculate your fleet's exact CREG overpayment and send a PDF ready to share with your CFO or HR director.
                 </p>
@@ -153,10 +158,10 @@ export default function BusinessPage({ onNavigate }) {
                 <form onSubmit={submitLead} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {/* Text inputs */}
                   {[
-                    { label: "Company name *",    val: leadCompany, set: setLeadCompany, ph: "Acme NV",       type: "text",  req: true  },
-                    { label: "Your name *",        val: leadName,    set: setLeadName,    ph: "Jan Janssen",   type: "text",  req: true  },
-                    { label: "Corporate email *",  val: leadEmail,   set: setLeadEmail,   ph: "jan@acme.be",   type: "email", req: true  },
-                    { label: "Phone (optional)",   val: leadPhone,   set: setLeadPhone,   ph: "+32 …",         type: "tel",   req: false },
+                    { label: (L.modalCompany||"Company name")+" *", val: leadCompany, set: setLeadCompany, ph: "Acme NV",     type: "text",  req: true  },
+                    { label: (L.modalName||"Your name")+" *",    val: leadName,    set: setLeadName,    ph: "Jan Janssen", type: "text",  req: true  },
+                    { label: (L.modalEmail||"Work email")+" *",  val: leadEmail,   set: setLeadEmail,   ph: "jan@acme.be", type: "email", req: true  },
+                    { label: L.modalPhone||"Phone (optional)",   val: leadPhone,   set: setLeadPhone,   ph: "+32 …",       type: "tel",   req: false },
                   ].map(f => (
                     <div key={f.label}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>{f.label}</label>
@@ -170,7 +175,7 @@ export default function BusinessPage({ onNavigate }) {
                   {/* Segmented dropdowns */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>Fleet size *</label>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>{L.modalFleet||"Fleet size"} *</label>
                       <select required value={leadFleetRange} onChange={e => setLeadFleetRange(e.target.value)}
                         style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, color: leadFleetRange ? C.text : C.light, background: C.bg, outline: "none", fontFamily: "inherit", cursor: "pointer" }}
                         onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
@@ -180,7 +185,7 @@ export default function BusinessPage({ onNavigate }) {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>Payroll provider</label>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>{L.modalPayroll||"Payroll provider"}</label>
                       <select value={leadPayroll} onChange={e => setLeadPayroll(e.target.value)}
                         style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, color: leadPayroll ? C.text : C.light, background: C.bg, outline: "none", fontFamily: "inherit", cursor: "pointer" }}
                         onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
@@ -207,7 +212,7 @@ export default function BusinessPage({ onNavigate }) {
                     </select>
                   </div>
                   <button type="submit" disabled={leadState === "loading"} style={{ marginTop: 8, padding: "14px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg, ${C.primary}, ${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: `0 6px 24px rgba(22,163,74,0.3)`, opacity: leadState === "loading" ? 0.7 : 1 }}>
-                    {leadState === "loading" ? "Sending…" : leadState === "error" ? "Error — try again" : "Send my Cost Audit request →"}
+                    {leadState === "loading" ? "…" : leadState === "error" ? "Error — try again" : (L.modalSubmit||"Send my Cost Audit request →")}
                   </button>
                   <div style={{ fontSize: 11, color: C.light, textAlign: "center" }}>🛡️ GDPR compliant · EU hosted · No spam</div>
                 </form>
@@ -225,9 +230,10 @@ export default function BusinessPage({ onNavigate }) {
           <span style={{ fontSize: 11, color: C.primary, fontWeight: 800, background: C.highlight, padding: "3px 12px", borderRadius: 20, border: `1px solid ${C.border2}` }}>Business</span>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <a href="/fleet-audit" style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: C.highlight, border: `1px solid ${C.border2}`, color: C.primary, textDecoration: "none" }}>Free Fleet Audit →</a>
+          <LangSwitcher />
+          <a href="/fleet-audit" style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: C.highlight, border: `1px solid ${C.border2}`, color: C.primary, textDecoration: "none" }}>{L.navFleetAudit||"Free Fleet Audit →"}</a>
           <button onClick={() => setShowModal(true)} style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(22,163,74,0.3)" }}>
-            Request audit
+            {L.navAudit||"Request audit"}
           </button>
         </div>
       </nav>

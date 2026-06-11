@@ -294,13 +294,12 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
 
         {/* Headline */}
         <h1 className="sp-animate sp-delay-1" style={{fontSize:"clamp(38px,6.5vw,84px)",fontWeight:900,lineHeight:1.05,margin:"0 auto 24px",maxWidth:860,letterSpacing:"-3px",color:"#fff",textShadow:"0 2px 40px rgba(0,0,0,0.15)"}}>
-          Is now a good time<br/>
-          <span style={{color:"#FCD34D"}}>to charge your EV?</span>
+          <span style={{color:"#FCD34D"}}>{L.heroNew||"Is now a good time to charge your EV?"}</span>
         </h1>
 
         {/* Subtitle */}
         <p className="sp-animate sp-delay-2" style={{fontSize:"clamp(16px,2vw,20px)",color:"rgba(255,255,255,0.85)",maxWidth:540,margin:"0 auto 40px",lineHeight:1.7,fontWeight:400}}>
-          Live EPEX Spot Belgium — see today's cheapest charging window, compare 7 suppliers, and get daily alerts. Free forever.
+          {L.heroSubNew||"Live EPEX Spot Belgium — see today's cheapest charging window, compare 7 suppliers, and get daily alerts. Free forever."}
         </p>
 
         {/* Live price display */}
@@ -340,15 +339,15 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         {/* Dual-entry portal — B2C + B2B */}
         <div className="sp-animate sp-delay-4" style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",marginBottom:16}}>
           <button onClick={onGetStarted} className="sp-cta-primary">
-            👉 Track My Consumption (Free)
+            {L.ctaPersonal||"👉 Track My Consumption (Free)"}
           </button>
           <a href="/business" className="sp-cta-ghost" style={{textDecoration:"none",display:"inline-flex",alignItems:"center",gap:8}}>
-            💼 Corporate EV Fleets →
+            {L.ctaCorporate||"💼 Corporate EV Fleets →"}
           </a>
         </div>
         <div className="sp-animate sp-delay-4" style={{marginBottom:52}}>
           <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:13,cursor:"pointer",fontWeight:600,letterSpacing:"0.3px"}}>
-            ↓ See live prices
+            {L.seePrices||"↓ See live prices"}
           </button>
         </div>
 
@@ -421,7 +420,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           {/* ── AT A GLANCE — structured window table ─────────────── */}
           {prices.length>0&&(cheapHour!=null||peakH!=null) && (
             <div className="sp-animate" style={{background:"#fff",border:`1.5px solid ${C.border2}`,borderRadius:20,padding:"24px 28px",marginBottom:32,boxShadow:"0 4px 20px rgba(22,163,74,0.07)",overflowX:"auto"}}>
-              <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:"2px",marginBottom:18}}>Best charging windows — today</div>
+              <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:"2px",marginBottom:18}}>{L.glanceTitle||"Best charging windows — today"}</div>
 
               {/* Column headers */}
               <div className="sp-glance-header">
@@ -435,10 +434,10 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 <div className="sp-glance-row" style={{borderTop:`1px solid ${C.border}`}}>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{width:9,height:9,borderRadius:"50%",background:"#22C55E",flexShrink:0,display:"inline-block"}}/>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>Best Solar Peak</span>
+                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>{L.glancePeak||"Best Solar Peak"}</span>
                   </div>
                   <div style={{fontSize:14,fontWeight:800,color:C.primary}}>{fmtHour(cheapHour)}–{fmtHour(cheapWindowEnd??cheapHour+1)}</div>
-                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>Run washing machine / heat pump</div>
+                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>{L.glanceAction1||"Run washing machine / heat pump"}</div>
                   <div style={{fontSize:13,fontWeight:700,color:C.primary}}>{cheapMwh!=null?`€${retailFmt(cheapMwh)}/kWh`:"low"}</div>
                 </div>
               )}
@@ -448,10 +447,10 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 <div className="sp-glance-row" style={{borderTop:`1px solid ${C.border}`}}>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{width:9,height:9,borderRadius:"50%",background:"#6366F1",flexShrink:0,display:"inline-block"}}/>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>Best Night Window</span>
+                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>{L.glanceNight||"Best Night Window"}</span>
                   </div>
                   <div style={{fontSize:14,fontWeight:800,color:"#6366F1"}}>{fmtHour(nightH)}–{fmtHour((nightH+3)%24)}</div>
-                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>Automated overnight EV charge</div>
+                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>{L.glanceAction2||"Automated overnight EV charge"}</div>
                   <div style={{fontSize:13,fontWeight:700,color:"#6366F1"}}>{nightMwh!=null?`€${retailFmt(nightMwh)}/kWh`:"off-peak"}</div>
                 </div>
               )}
@@ -461,10 +460,10 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 <div className="sp-glance-row" style={{borderTop:`1px solid ${C.border}`}}>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{width:9,height:9,borderRadius:"50%",background:C.red,flexShrink:0,display:"inline-block"}}/>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>Peak Price Freeze</span>
+                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>{L.glancePeakFreeze||"Peak Price Freeze"}</span>
                   </div>
                   <div style={{fontSize:14,fontWeight:800,color:C.red}}>{fmtHour(peakH)}–{fmtHour(peakH+2)}</div>
-                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>Pause heavy appliances &amp; charging</div>
+                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>{L.glanceAction3||"Pause heavy appliances & charging"}</div>
                   <div style={{fontSize:13,fontWeight:700,color:C.red}}>{peakMwh!=null?`€${retailFmt(peakMwh)}/kWh`:"avoid"}</div>
                 </div>
               )}
@@ -472,7 +471,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               {/* 13:00 release note */}
               <div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:6,fontSize:11,color:C.muted}}>
                 <span>ℹ️</span>
-                <span>Tomorrow's prices are published daily around <strong style={{color:C.primary}}>13:00 CET</strong> — check back then to plan next day's charging.</span>
+                <span>{L.glanceTomorrow||"Tomorrow's prices are published daily around 13:00 CET — check back then to plan next day's charging."}</span>
               </div>
             </div>
           )}
@@ -815,19 +814,19 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             <div style={{background:"linear-gradient(135deg,#0F172A,#1E293B)",padding:"40px",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:40,alignItems:"center"}}>
               <div>
                 <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(124,58,237,0.18)",border:"1px solid rgba(124,58,237,0.4)",borderRadius:20,padding:"4px 14px",fontSize:11,fontWeight:800,color:"#A78BFA",marginBottom:18,textTransform:"uppercase",letterSpacing:"1px"}}>🔌 Free Public API</div>
-                <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:8}}>Built for developers &amp; Home Assistant</div>
-                <h3 style={{fontSize:"clamp(20px,3vw,30px)",fontWeight:900,color:"#fff",marginBottom:10,letterSpacing:"-0.5px",lineHeight:1.2}}>🚀 Open Data for the<br/>Belgian Energy Community</h3>
-                <p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.8,marginBottom:24}}>Zero authentication. Just hit the endpoint. Get live EPEX Spot prices, gas TTF, and hourly schedules as clean JSON — perfect for dashboards, automations, and HACS.</p>
+                <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:8}}>{L.devSub||"Built for developers & Home Assistant"}</div>
+                <h3 style={{fontSize:"clamp(20px,3vw,30px)",fontWeight:900,color:"#fff",marginBottom:10,letterSpacing:"-0.5px",lineHeight:1.2}}>{L.devTitle||"🚀 Open Data for the Belgian Energy Community"}</h3>
+                <p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.8,marginBottom:24}}>{L.devDesc||"Zero authentication. Just hit the endpoint. Get live EPEX Spot prices, gas TTF, and hourly schedules as clean JSON — perfect for dashboards, automations, and HACS."}</p>
                 <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
                   <a href="/api-docs" style={{display:"inline-block",padding:"10px 22px",borderRadius:24,fontSize:13,fontWeight:700,background:"rgba(124,58,237,0.15)",border:"1px solid rgba(124,58,237,0.35)",color:"#A78BFA",textDecoration:"none",transition:"background 0.2s"}}
                     onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,0.28)"}
                     onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,0.15)"}>
-                    View HA integration →
+                    {L.devCtaHA||"View HA integration →"}
                   </a>
                   <a href="/api-docs" style={{display:"inline-block",padding:"10px 22px",borderRadius:24,fontSize:13,fontWeight:700,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.7)",textDecoration:"none",transition:"background 0.2s"}}
                     onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.12)"}
                     onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.06)"}>
-                    API docs →
+                    {L.devCtaApi||"API docs →"}
                   </a>
                 </div>
               </div>
