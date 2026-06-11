@@ -110,7 +110,7 @@ export default function BusinessPage({ onNavigate }) {
     if (!leadEmail || leadState !== "idle") return;
     setLeadState("loading");
     try {
-      const r = await fetch("/api/leads", {
+      const r = await fetch("/api/business-leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -158,12 +158,12 @@ export default function BusinessPage({ onNavigate }) {
                 <form onSubmit={submitLead} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {/* Text inputs */}
                   {[
-                    { label: (L.modalCompany||"Company name")+" *", val: leadCompany, set: setLeadCompany, ph: "Acme NV",     type: "text",  req: true  },
-                    { label: (L.modalName||"Your name")+" *",    val: leadName,    set: setLeadName,    ph: "Jan Janssen", type: "text",  req: true  },
-                    { label: (L.modalEmail||"Work email")+" *",  val: leadEmail,   set: setLeadEmail,   ph: "jan@acme.be", type: "email", req: true  },
-                    { label: L.modalPhone||"Phone (optional)",   val: leadPhone,   set: setLeadPhone,   ph: "+32 …",       type: "tel",   req: false },
+                    { id: "company", label: (L.modalCompany||"Company name")+" *", val: leadCompany, set: setLeadCompany, ph: "Acme NV",     type: "text",  req: true  },
+                    { id: "name",    label: (L.modalName||"Your name")+" *",    val: leadName,    set: setLeadName,    ph: "Jan Janssen", type: "text",  req: true  },
+                    { id: "email",   label: (L.modalEmail||"Work email")+" *",  val: leadEmail,   set: setLeadEmail,   ph: "jan@acme.be", type: "email", req: true  },
+                    { id: "phone",   label: L.modalPhone||"Phone (optional)",   val: leadPhone,   set: setLeadPhone,   ph: "+32 …",       type: "tel",   req: false },
                   ].map(f => (
-                    <div key={f.label}>
+                    <div key={f.id}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>{f.label}</label>
                       <input type={f.type} required={f.req} placeholder={f.ph} value={f.val} onChange={e => f.set(e.target.value)}
                         style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none", fontFamily: "inherit", transition: "border 0.2s" }}
@@ -251,18 +251,17 @@ export default function BusinessPage({ onNavigate }) {
 
           {/* Updated hero headline per review */}
           <h1 style={{ fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 900, lineHeight: 1.08, margin: "0 auto 24px", maxWidth: 760, letterSpacing: "-2px", textShadow: "0 2px 24px rgba(0,0,0,0.15)" }}>
-            Automate EV Fleet Reimbursements<br />
-            <span style={{ color: "#FCD34D" }}>on Dynamic Tariffs</span>
+            {L.heroTitle||"Automate EV Fleet Reimbursements"}
           </h1>
           <p style={{ fontSize: "clamp(15px,2vw,19px)", opacity: 0.88, maxWidth: 580, margin: "0 auto 40px", lineHeight: 1.75 }}>
-            Stop overpaying based on fixed CREG averages. SmartPrice tracks live EPEX data to calculate exact home-charging costs for your employees — saving up to <strong>40% on corporate energy bills</strong>.
+            {L.heroSub||"Stop overpaying based on fixed CREG averages. SmartPrice tracks live EPEX data to calculate exact home-charging costs for your employees."}
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={() => setShowModal(true)} style={{ padding: "15px 36px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FCD34D", color: "#15803D", border: "none", cursor: "pointer", boxShadow: "0 6px 28px rgba(0,0,0,0.2)" }}>
-              Get a Detailed Cost Audit →
+              {L.heroCta||"Get a Detailed Cost Audit →"}
             </button>
             <a href="/fleet-audit" style={{ padding: "15px 28px", borderRadius: 30, fontSize: 14, fontWeight: 700, background: "rgba(255,255,255,0.12)", color: "#fff", textDecoration: "none", border: "1px solid rgba(255,255,255,0.28)", backdropFilter: "blur(8px)" }}>
-              Free instant fleet audit
+              {L.navFleetAudit||"Free instant fleet audit"}
             </a>
           </div>
         </div>
@@ -321,7 +320,7 @@ export default function BusinessPage({ onNavigate }) {
           </div>
         </div>
 
-        <SectionDivider label="ROI Calculator" />
+        <SectionDivider label={L.sectionROI||"ROI Calculator"} />
         {/* ── ROI CALCULATOR ────────────────────────────────────────── */}
         <div style={{ background: C.card, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: C.shadow, overflow: "hidden", marginBottom: 64 }}>
           <div style={{ background: "linear-gradient(135deg,#15803D,#16A34A)", padding: "28px 36px" }}>
@@ -389,7 +388,7 @@ export default function BusinessPage({ onNavigate }) {
           </div>
         </div>
 
-        <SectionDivider label="Smart tools · Smart services" />
+        <SectionDivider label={L.sectionTools||"Smart tools · Smart services"} />
         {/* ── 3-COLUMN FEATURE GRID (Belgian context) ───────────────── */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>Smart tools · Smart services</div>
@@ -456,7 +455,7 @@ export default function BusinessPage({ onNavigate }) {
           ))}
         </div>
 
-        <SectionDivider label="Payroll integrations" />
+        <SectionDivider label={L.sectionPayroll||"Payroll integrations"} />
         {/* ── SOCIAL SECRETARIATEN ──────────────────────────────────── */}
         <div style={{ background: C.card, borderRadius: 22, border: `1px solid ${C.border}`, boxShadow: C.shadow, padding: "30px 36px", marginBottom: 40, textAlign: "center" }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 22 }}>Works with your existing payroll systems</div>
@@ -480,7 +479,7 @@ export default function BusinessPage({ onNavigate }) {
           </div>
         </div>
 
-        <SectionDivider label="Security & compliance" />
+        <SectionDivider label={L.sectionSecurity||"Security & compliance"} />
         {/* ── GDPR & ENTERPRISE SECURITY — isolated trust box ──────── */}
         <div style={{ background: "rgba(22,163,74,0.035)", border: "1.5px solid rgba(22,163,74,0.18)", borderRadius: 24, padding: "36px 32px", marginBottom: 52 }}>
           {/* Header row with lock icon */}

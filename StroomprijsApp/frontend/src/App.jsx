@@ -192,6 +192,7 @@ export default function App() {
       <LandingPage
         onGetStarted={() => setShowAuth(true)}
         onOpenCalculator={(type = "electricity") => navigate(`/calculator/${type}`)}
+        onNavigate={navigate}
       />
     );
   }

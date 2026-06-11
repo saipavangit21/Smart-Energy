@@ -623,6 +623,88 @@ app.post("/api/fleet-audit-lead", async (req, res) => {
   }
 });
 
+// POST /api/business-leads — saves B2B audit request with full contact + fleet details
+app.post("/api/business-leads", async (req, res) => {
+  const { email, company, name, phone, fleet_size, payroll_provider, reimb_method, metadata } = req.body || {};
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, error: "Valid email required" });
+  }
+  try {
+    // Ensure table exists with all business fields
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS b2b_leads (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        company TEXT,
+        audit_data JSONB,
+        source TEXT DEFAULT 'business-page',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    const auditData = { name, phone, fleet_size, payroll_provider, reimb_method, ...metadata };
+    await pool.query(
+      `INSERT INTO b2b_leads (email, company, audit_data, source, created_at)
+       VALUES ($1, $2, $3::jsonb, 'business-page', NOW())
+       ON CONFLICT (email) DO UPDATE
+         SET company    = COALESCE($2, b2b_leads.company),
+             audit_data = b2b_leads.audit_data || $3::jsonb,
+             updated_at = NOW()`,
+      [email.toLowerCase().trim(), company || null, JSON.stringify(auditData)]
+    );
+    console.log(`[business-leads] New B2B audit request: ${email} — ${company || "no company"}, fleet ${fleet_size}`);
+
+    if (process.env.RESEND_API_KEY) {
+      // Confirmation email to the prospect
+      axios.post("https://api.resend.com/emails", {
+        from: "SmartPrice.be <info@smartprice.be>",
+        to: email,
+        subject: "⚡ SmartPrice — Audit request received",
+        html: `
+          <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F7FEF9;color:#0F1A0F;border-radius:16px;border:1px solid #DCFCE7">
+            <div style="font-size:28px;margin-bottom:8px">✅</div>
+            <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#16A34A">Audit request received${name ? `, ${name.split(" ")[0]}` : ""}.</h1>
+            <p style="color:#52635A;font-size:15px;line-height:1.7;margin:0 0 20px">
+              We're preparing your personalised fleet cost report for <strong>${company || "your company"}</strong>.<br>
+              We'll be in touch within <strong>one business day</strong> with a PDF ready to share with your CFO or HR team.
+            </p>
+            <p style="color:#52635A;font-size:13px;line-height:1.7;margin:0 0 24px">
+              In the meantime, explore the live EPEX Spot data and fleet tools at SmartPrice.be.
+            </p>
+            <a href="https://smartprice.be/business" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
+              View SmartPrice for Business →
+            </a>
+            <p style="margin-top:28px;font-size:11px;color:#9DB3A3">
+              SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#9DB3A3">Privacy</a> · GDPR compliant · EU hosted
+            </p>
+          </div>
+        `,
+      }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } }).catch(e => console.warn("[business-leads] Resend prospect email failed:", e.message));
+
+      // Internal notification to SmartPrice team
+      axios.post("https://api.resend.com/emails", {
+        from: "SmartPrice.be <info@smartprice.be>",
+        to: "info@smartprice.be",
+        subject: `🏢 New business audit request — ${company || email}`,
+        html: `
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Company:</strong> ${company || "—"}</p>
+          <p><strong>Name:</strong> ${name || "—"}</p>
+          <p><strong>Phone:</strong> ${phone || "—"}</p>
+          <p><strong>Fleet size:</strong> ${fleet_size || "—"}</p>
+          <p><strong>Payroll provider:</strong> ${payroll_provider || "—"}</p>
+          <p><strong>Reimbursement method:</strong> ${reimb_method || "—"}</p>
+          ${metadata?.annual_saving_estimate ? `<p><strong>Est. annual saving:</strong> €${metadata.annual_saving_estimate.toLocaleString()}</p>` : ""}
+        `,
+      }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } }).catch(e => console.warn("[business-leads] Resend admin email failed:", e.message));
+    }
+    res.json({ success: true });
+  } catch (e) {
+    console.error("[business-leads]", e.message);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 app.listen(PORT,()=>{
   console.log(`\n⚡ SmartPrice v2 on port ${PORT}`);
   console.log(`   DB: ${process.env.DATABASE_URL?"✅ Supabase":"❌ No DATABASE_URL"}\n`);

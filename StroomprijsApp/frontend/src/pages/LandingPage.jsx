@@ -95,7 +95,7 @@ function useScrollReveal() {
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-export default function LandingPage({ onGetStarted, onOpenCalculator }) {
+export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate }) {
   const { tSection } = useLanguage();
   const L = tSection("landing");
 
@@ -338,12 +338,12 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
 
         {/* Dual-entry portal — B2C + B2B */}
         <div className="sp-animate sp-delay-4" style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",marginBottom:16}}>
-          <button onClick={onGetStarted} className="sp-cta-primary">
-            {L.ctaPersonal||"👉 Track My Consumption (Free)"}
+          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} className="sp-cta-primary">
+            {L.ctaPersonal||"👉 Track My Energy Use (Free)"}
           </button>
-          <a href="/business" className="sp-cta-ghost" style={{textDecoration:"none",display:"inline-flex",alignItems:"center",gap:8}}>
+          <button onClick={()=>onNavigate?.("/business")} className="sp-cta-ghost" style={{cursor:"pointer"}}>
             {L.ctaCorporate||"💼 Corporate EV Fleets →"}
-          </a>
+          </button>
         </div>
         <div className="sp-animate sp-delay-4" style={{marginBottom:52}}>
           <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:13,cursor:"pointer",fontWeight:600,letterSpacing:"0.3px"}}>
@@ -831,7 +831,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 </div>
               </div>
               {/* Code block */}
-              <div style={{background:"rgba(0,0,0,0.35)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"22px 24px",fontFamily:"'Fira Code','Cascadia Code',monospace",fontSize:12}}>
+              <div style={{background:"rgba(0,0,0,0.35)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"22px 24px",fontFamily:"'Fira Code','Cascadia Code','SFMono-Regular','Menlo','Courier New',monospace",fontSize:12,overflowX:"hidden"}}>
                 <div style={{display:"flex",gap:6,marginBottom:14}}>
                   {["#EF4444","#F59E0B","#22C55E"].map(c=><div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}}/>)}
                 </div>
