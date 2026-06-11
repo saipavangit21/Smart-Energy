@@ -118,6 +118,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const [leadState,    setLeadState]    = useState("idle");
   const [fluviusEmail, setFluviusEmail] = useState("");
   const [fluviusState, setFluviusState] = useState("idle");
+  const [copiedCmd,    setCopiedCmd]    = useState(false);
   const [fetchedAt,    setFetchedAt]    = useState(null);
   const [siteStats,    setSiteStats]    = useState(null);
   const [gasCurrent,   setGasCurrent]   = useState(null);
@@ -416,45 +417,56 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             <p style={{fontSize:16,color:C.muted,maxWidth:520,margin:"0 auto",lineHeight:1.8}}>Real-time EPEX Spot Belgium. Cheapest window, peak hours, and your exact cost per charge.</p>
           </div>
 
-          {/* ── AT A GLANCE — quick-read summary ──────────────────── */}
+          {/* ── AT A GLANCE — structured window table ─────────────── */}
           {prices.length>0&&(cheapHour!=null||peakH!=null) && (
-            <div className="sp-animate" style={{background:"#fff",border:`1.5px solid ${C.border2}`,borderRadius:20,padding:"22px 28px",marginBottom:32,boxShadow:"0 4px 20px rgba(22,163,74,0.07)"}}>
-              <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:"2px",marginBottom:14}}>Today at a glance</div>
-              <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {cheapHour!=null && (
-                  <div style={{display:"flex",alignItems:"flex-start",gap:10,fontSize:14,color:C.text,fontWeight:600,lineHeight:1.5}}>
-                    <span style={{flexShrink:0}}>☀️</span>
-                    <span>
-                      <strong>Cheapest window:</strong>{" "}
-                      <span style={{color:C.primary}}>{fmtHour(cheapHour)}–{fmtHour(cheapWindowEnd??cheapHour+1)}</span>
-                      {cheapMwh!=null && <span style={{color:C.muted}}> (€{retailFmt(cheapMwh)}/kWh)</span>}
-                      {" "}— Best for laundry &amp; EV charging
-                    </span>
-                  </div>
-                )}
-                {nightH!=null && (
-                  <div style={{display:"flex",alignItems:"flex-start",gap:10,fontSize:14,color:C.text,fontWeight:600,lineHeight:1.5}}>
-                    <span style={{flexShrink:0}}>🌙</span>
-                    <span>
-                      <strong>Night window:</strong>{" "}
-                      <span style={{color:"#6366F1"}}>{fmtHour(nightH)}–{fmtHour((nightH+2)%24)}</span>
-                      {nightMwh!=null && <span style={{color:C.muted}}> (€{retailFmt(nightMwh)}/kWh)</span>}
-                      {" "}— Overnight charging
-                    </span>
-                  </div>
-                )}
-                {peakH!=null && (
-                  <div style={{display:"flex",alignItems:"flex-start",gap:10,fontSize:14,color:C.text,fontWeight:600,lineHeight:1.5}}>
-                    <span style={{flexShrink:0}}>🚨</span>
-                    <span>
-                      <strong>Peak warning:</strong>{" "}
-                      <span style={{color:C.red}}>{fmtHour(peakH)}–{fmtHour(peakH+2)}</span>
-                      {peakMwh!=null && <span style={{color:C.muted}}> (€{retailFmt(peakMwh)}/kWh)</span>}
-                      {" "}— Minimize usage
-                    </span>
-                  </div>
-                )}
+            <div className="sp-animate" style={{background:"#fff",border:`1.5px solid ${C.border2}`,borderRadius:20,padding:"24px 28px",marginBottom:32,boxShadow:"0 4px 20px rgba(22,163,74,0.07)",overflowX:"auto"}}>
+              <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:"2px",marginBottom:18}}>Best charging windows — today</div>
+
+              {/* Column headers */}
+              <div className="sp-glance-header">
+                {["Window","Timing Today","Your Action","Rate"].map(h=>(
+                  <div key={h} style={{fontSize:9,fontWeight:800,color:C.light,textTransform:"uppercase",letterSpacing:"1.5px"}}>{h}</div>
+                ))}
               </div>
+
+              {/* Row 1 — daytime cheapest (solar peak) */}
+              {cheapHour!=null && (
+                <div className="sp-glance-row" style={{borderTop:`1px solid ${C.border}`}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{width:9,height:9,borderRadius:"50%",background:"#22C55E",flexShrink:0,display:"inline-block"}}/>
+                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>Best Solar Peak</span>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:800,color:C.primary}}>{fmtHour(cheapHour)}–{fmtHour(cheapWindowEnd??cheapHour+1)}</div>
+                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>Run washing machine / heat pump</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.primary}}>{cheapMwh!=null?`€${retailFmt(cheapMwh)}/kWh`:"low"}</div>
+                </div>
+              )}
+
+              {/* Row 2 — night window */}
+              {nightH!=null && (
+                <div className="sp-glance-row" style={{borderTop:`1px solid ${C.border}`}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{width:9,height:9,borderRadius:"50%",background:"#6366F1",flexShrink:0,display:"inline-block"}}/>
+                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>Best Night Window</span>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:800,color:"#6366F1"}}>{fmtHour(nightH)}–{fmtHour((nightH+3)%24)}</div>
+                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>Automated overnight EV charge</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#6366F1"}}>{nightMwh!=null?`€${retailFmt(nightMwh)}/kWh`:"off-peak"}</div>
+                </div>
+              )}
+
+              {/* Row 3 — peak freeze */}
+              {peakH!=null && (
+                <div className="sp-glance-row" style={{borderTop:`1px solid ${C.border}`}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{width:9,height:9,borderRadius:"50%",background:C.red,flexShrink:0,display:"inline-block"}}/>
+                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>Peak Price Freeze</span>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:800,color:C.red}}>{fmtHour(peakH)}–{fmtHour(peakH+2)}</div>
+                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>Pause heavy appliances &amp; charging</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.red}}>{peakMwh!=null?`€${retailFmt(peakMwh)}/kWh`:"avoid"}</div>
+                </div>
+              )}
             </div>
           )}
 
@@ -773,7 +785,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
             <div style={{background:"linear-gradient(135deg,#0F172A,#1E293B)",padding:"40px",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:40,alignItems:"center"}}>
               <div>
                 <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(124,58,237,0.18)",border:"1px solid rgba(124,58,237,0.4)",borderRadius:20,padding:"4px 14px",fontSize:11,fontWeight:800,color:"#A78BFA",marginBottom:18,textTransform:"uppercase",letterSpacing:"1px"}}>🔌 Free Public API</div>
-                <h3 style={{fontSize:"clamp(20px,3vw,32px)",fontWeight:900,color:"#fff",marginBottom:10,letterSpacing:"-0.5px",lineHeight:1.2}}>Built for developers &amp; Home Assistant</h3>
+                <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:8}}>Built for developers &amp; Home Assistant</div>
+                <h3 style={{fontSize:"clamp(20px,3vw,30px)",fontWeight:900,color:"#fff",marginBottom:10,letterSpacing:"-0.5px",lineHeight:1.2}}>🚀 Open Data for the<br/>Belgian Energy Community</h3>
                 <p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.8,marginBottom:24}}>Zero authentication. Just hit the endpoint. Get live EPEX Spot prices, gas TTF, and hourly schedules as clean JSON — perfect for dashboards, automations, and HACS.</p>
                 <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
                   <a href="/api-docs" style={{display:"inline-block",padding:"10px 22px",borderRadius:24,fontSize:13,fontWeight:700,background:"rgba(124,58,237,0.15)",border:"1px solid rgba(124,58,237,0.35)",color:"#A78BFA",textDecoration:"none",transition:"background 0.2s"}}
@@ -793,12 +806,18 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 <div style={{display:"flex",gap:6,marginBottom:14}}>
                   {["#EF4444","#F59E0B","#22C55E"].map(c=><div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}}/>)}
                 </div>
-                <div style={{color:"rgba(255,255,255,0.35)",marginBottom:6,fontSize:11}}>$ curl request</div>
+                <div style={{color:"rgba(255,255,255,0.35)",marginBottom:8,fontSize:11,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+                  <span>$ curl request</span>
+                  <button onClick={()=>{navigator.clipboard?.writeText("curl https://smartprice.be/api/prices/today");setCopiedCmd(true);setTimeout(()=>setCopiedCmd(false),2000);}}
+                    style={{background:copiedCmd?"rgba(74,222,128,0.15)":"rgba(255,255,255,0.08)",border:`1px solid ${copiedCmd?"rgba(74,222,128,0.4)":"rgba(255,255,255,0.15)"}`,borderRadius:8,padding:"3px 10px",color:copiedCmd?"#4ADE80":"rgba(255,255,255,0.45)",fontSize:10,fontWeight:700,cursor:"pointer",transition:"all 0.2s",fontFamily:"inherit",flexShrink:0}}>
+                    {copiedCmd?"✓ Copied":"Copy"}
+                  </button>
+                </div>
                 <div style={{color:"#4ADE80",marginBottom:16,wordBreak:"break-all",lineHeight:1.7}}>
                   curl https://smartprice.be/api/prices/today
                 </div>
                 <div style={{color:"rgba(255,255,255,0.25)",marginBottom:6,fontSize:11}}>// response</div>
-                <pre style={{color:"rgba(255,255,255,0.65)",margin:0,lineHeight:1.8,fontSize:11,whiteSpace:"pre"}}>{`{
+                <pre style={{color:"rgba(255,255,255,0.65)",margin:0,lineHeight:1.8,fontSize:11,whiteSpace:"pre-wrap",wordBreak:"break-word",overflowX:"auto"}}>{`{
   "data": [
     { "hour": 14,
       "price_eur_mwh": 42.3,
@@ -1109,6 +1128,38 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         .sp-cta-outline-amber:hover { background: rgba(249,115,22,0.14); }
 
         input[type=range] { height: 6px; border-radius: 3px; }
+
+        /* At-a-Glance table grid */
+        .sp-glance-header {
+          display: grid;
+          grid-template-columns: 168px 130px 1fr 118px;
+          gap: 12px;
+          padding: 0 0 10px;
+        }
+        .sp-glance-row {
+          display: grid;
+          grid-template-columns: 168px 130px 1fr 118px;
+          gap: 12px;
+          padding: 13px 0;
+          align-items: center;
+        }
+
+        /* Mobile — stack each row as a card */
+        @media (max-width: 640px) {
+          .sp-glance-header { display: none; }
+          .sp-glance-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 14px 0;
+          }
+          .sp-glance-row > div:first-child { margin-bottom: 2px; }
+        }
+
+        /* Prevent horizontal scroll from any fixed-width child */
+        @media (max-width: 768px) {
+          .sp-card-enterprise { overflow-x: hidden; }
+        }
       `}</style>
     </div>
   );
