@@ -933,9 +933,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       <style>{`
         * { box-sizing: border-box; }
 
-        /* Animated hero gradient */
+        /* Animated hero gradient — Belgian black/gold */
         .sp-hero {
-          background: linear-gradient(-45deg, #15803D, #16A34A, #22C55E, #166534, #4ADE80, #15803D);
+          background: linear-gradient(-45deg, #0A0700, #1C1200, #07090D, #241800, #0A0700, #1C1200);
           background-size: 400% 400%;
           animation: sp-gradient 12s ease infinite;
           position: relative;
@@ -951,7 +951,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         .sp-blob {
           position: absolute;
           border-radius: 50%;
-          background: rgba(255,255,255,0.06);
+          background: rgba(245,166,35,0.08);
           pointer-events: none;
         }
         .sp-blob-1 {
