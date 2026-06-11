@@ -119,6 +119,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
   const [fluviusEmail, setFluviusEmail] = useState("");
   const [fluviusState, setFluviusState] = useState("idle");
   const [copiedCmd,    setCopiedCmd]    = useState(false);
+  const [barTooltip,   setBarTooltip]   = useState(null);
   const [fetchedAt,    setFetchedAt]    = useState(null);
   const [siteStats,    setSiteStats]    = useState(null);
   const [gasCurrent,   setGasCurrent]   = useState(null);
@@ -467,6 +468,12 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                   <div style={{fontSize:13,fontWeight:700,color:C.red}}>{peakMwh!=null?`€${retailFmt(peakMwh)}/kWh`:"avoid"}</div>
                 </div>
               )}
+
+              {/* 13:00 release note */}
+              <div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:6,fontSize:11,color:C.muted}}>
+                <span>ℹ️</span>
+                <span>Tomorrow's prices are published daily around <strong style={{color:C.primary}}>13:00 CET</strong> — check back then to plan next day's charging.</span>
+              </div>
             </div>
           )}
 
@@ -516,16 +523,39 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 </div>
 
                 {/* 24h bar chart */}
-                <div style={{background:C.bg,borderRadius:16,padding:"20px 24px",marginBottom:24}}>
-                  <div style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:12}}>24-hour price schedule</div>
-                  <div style={{display:"flex",gap:2,alignItems:"flex-end",height:64}}>
+                <div style={{background:C.bg,borderRadius:16,padding:"20px 24px",marginBottom:24}} onClick={()=>setBarTooltip(null)}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <div style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"1.5px"}}>24-hour price schedule</div>
+                    <div style={{fontSize:9,color:C.light,fontWeight:600}}>tap bar for details</div>
+                  </div>
+
+                  {/* Touch tooltip chip — renders above bars when a bar is tapped */}
+                  {barTooltip && (
+                    <div style={{display:"inline-flex",alignItems:"center",gap:8,background:barTooltip.col,color:"#fff",borderRadius:20,padding:"5px 14px",fontSize:12,fontWeight:700,marginBottom:10,boxShadow:`0 4px 16px ${barTooltip.col}55`}}>
+                      <span>{String(barTooltip.hour).padStart(2,"0")}:00 – {String(barTooltip.hour+1).padStart(2,"0")}:00</span>
+                      <span style={{opacity:0.8}}>·</span>
+                      <span>€{retailFmt(barTooltip.mwh)}/kWh</span>
+                      <span style={{opacity:0.7,fontSize:10}}>({barTooltip.mwh?.toFixed(0)} €/MWh)</span>
+                    </div>
+                  )}
+
+                  {/* Bars — full-height columns for reliable touch targets */}
+                  <div style={{display:"flex",gap:2,height:64}}>
                     {prices.slice(0,24).map((p,i)=>{
                       const maxP = Math.max(...prices.slice(0,24).map(x=>Math.max(x.price_eur_mwh,0)));
                       const barH = maxP>0?Math.max((p.price_eur_mwh/maxP)*100,4):4;
                       const col  = priceColor(p.price_eur_mwh);
                       const pHour = new Date(p.timestamp_utc||p.timestamp).getHours();
-                      const hi = p.is_current||pHour===cheapHour;
-                      return <div key={i} title={`${String(pHour).padStart(2,"0")}:00 — €${p.price_eur_mwh?.toFixed(0)}/MWh`} style={{flex:1,height:`${barH}%`,borderRadius:"3px 3px 0 0",background:hi?col:`${col}55`,transition:"height 0.5s ease",transitionDelay:`${i*0.02}s`}}/>;
+                      const hi  = p.is_current||pHour===cheapHour;
+                      const sel = barTooltip?.hour===pHour;
+                      return (
+                        <div key={i}
+                          style={{flex:1,height:"100%",display:"flex",alignItems:"flex-end",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}
+                          onClick={e=>{e.stopPropagation();setBarTooltip(sel?null:{hour:pHour,mwh:p.price_eur_mwh,col});}}
+                        >
+                          <div style={{width:"100%",height:`${barH}%`,borderRadius:"3px 3px 0 0",background:sel?col:(hi?col:`${col}55`),outline:sel?`2px solid ${col}`:undefined,outlineOffset:1,transition:"height 0.5s ease,background 0.2s",transitionDelay:`${i*0.02}s`}}/>
+                        </div>
+                      );
                     })}
                   </div>
                   <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.light,marginTop:6}}>
