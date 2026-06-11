@@ -1,27 +1,26 @@
 /**
  * LandingPage.jsx — SmartPrice.be
- * v7: exact same visual language as BusinessPage.jsx
- * Blue gradient hero · white cards on #F0F4F8 · same C palette
+ * v8: green energy palette — forest green hero · emerald accents · white cards on #F0F7F2
  */
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher  from "../components/LangSwitcher";
 import ThemeSwitcher from "../components/ThemeSwitcher";
 
-// Identical to BusinessPage
+// Green energy palette
 const C = {
-  bg:        "#F0F4F8",
+  bg:        "#F0F7F2",
   card:      "#FFFFFF",
   border:    "rgba(0,0,0,0.08)",
   shadow:    "0 2px 16px rgba(0,0,0,0.07)",
-  blue:      "#1E40AF",
-  teal:      "#0D9488",
+  blue:      "#166534",   // forest green — replaces blue as primary brand colour
+  teal:      "#059669",   // emerald — replaces teal as secondary accent
   text:      "#1E293B",
   muted:     "#64748B",
   light:     "#94A3B8",
-  green:     "#059669",
-  highlight: "#EFF6FF",
-  blueBorder:"rgba(30,64,175,0.18)",
+  green:     "#16A34A",   // bright green for positive indicators
+  highlight: "#F0FDF4",   // very light green card background
+  blueBorder:"rgba(22,101,52,0.18)",
   amber:     "#D97706",
   purple:    "#7C3AED",
 };
@@ -185,7 +184,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <ThemeSwitcher />
           <LangSwitcher style={{marginRight:4}} />
-          <a href="/ev-charging-belgium" style={{padding:"7px 14px",borderRadius:20,fontSize:12,fontWeight:700,background:"rgba(13,148,136,0.07)",border:"1px solid rgba(13,148,136,0.2)",color:C.teal,textDecoration:"none"}}>🚗 EV</a>
+          <a href="/ev-charging-belgium" style={{padding:"7px 14px",borderRadius:20,fontSize:12,fontWeight:700,background:"rgba(5,150,105,0.07)",border:"1px solid rgba(5,150,105,0.2)",color:C.teal,textDecoration:"none"}}>🚗 EV</a>
           <a href="/business"            style={{padding:"7px 14px",borderRadius:20,fontSize:12,fontWeight:700,background:C.highlight,border:`1px solid ${C.blueBorder}`,color:C.blue,textDecoration:"none"}}>🏢 Business</a>
           <button onClick={onGetStarted} style={{padding:"8px 20px",borderRadius:20,fontSize:13,fontWeight:700,background:C.teal,color:"#fff",border:"none",cursor:"pointer"}}>
             Dashboard →
@@ -210,8 +209,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         </div>
       </div>
 
-      {/* ── HERO — same blue gradient as BusinessPage ──────────────────── */}
-      <div style={{ background:"linear-gradient(135deg, #1E3A8A 0%, #1E40AF 60%, #1D4ED8 100%)", color:"#fff", padding:"72px 24px 64px", textAlign:"center" }}>
+      {/* ── HERO — forest green gradient ───────────────────────────────── */}
+      <div style={{ background:"linear-gradient(135deg, #14532D 0%, #166534 60%, #15803D 100%)", color:"#fff", padding:"72px 24px 64px", textAlign:"center" }}>
         {/* Badge */}
         <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:30,padding:"6px 18px",marginBottom:24,fontSize:13,fontWeight:700}}>
           🇧🇪 Belgium · EPEX Spot · Live
@@ -258,7 +257,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
 
         {/* CTAs — same yellow primary as BusinessPage */}
         <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}>
-          <button onClick={onGetStarted} style={{display:"inline-block",padding:"14px 32px",borderRadius:30,fontSize:15,fontWeight:800,background:"#FCD34D",color:"#1E3A8A",border:"none",cursor:"pointer",boxShadow:"0 6px 24px rgba(0,0,0,0.2)"}}>
+          <button onClick={onGetStarted} style={{display:"inline-block",padding:"14px 32px",borderRadius:30,fontSize:15,fontWeight:800,background:"#FCD34D",color:"#14532D",border:"none",cursor:"pointer",boxShadow:"0 6px 24px rgba(0,0,0,0.2)"}}>
             Get started free →
           </button>
           <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} style={{display:"inline-block",padding:"14px 28px",borderRadius:30,fontSize:14,fontWeight:700,background:"rgba(255,255,255,0.12)",color:"#fff",border:"1px solid rgba(255,255,255,0.25)",cursor:"pointer"}}>
@@ -298,7 +297,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           {prices.length > 0 && cheapHour != null ? (
             <>
               {/* Card header bar */}
-              <div style={{background:"linear-gradient(135deg,#1E3A8A,#1E40AF)",padding:"18px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+              <div style={{background:"linear-gradient(135deg,#14532D,#166534)",padding:"18px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
                 <div>
                   <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",marginBottom:4}}>⚡ Electricity · EPEX Spot Belgium</div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
@@ -333,7 +332,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                     <div style={{fontSize:18,fontWeight:700,color:"#DC2626"}}>€{peakMwh!=null?retailFmt(peakMwh):"—"}/kWh</div>
                   </div>
                   {savingToday!=null && savingToday>0.3 && (
-                    <div style={{background:"rgba(13,148,136,0.04)",border:"1px solid rgba(13,148,136,0.18)",borderRadius:16,padding:"20px 22px"}}>
+                    <div style={{background:"rgba(5,150,105,0.04)",border:"1px solid rgba(5,150,105,0.18)",borderRadius:16,padding:"20px 22px"}}>
                       <div style={{fontSize:11,fontWeight:800,color:C.teal,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8}}>Full charge (40 kWh)</div>
                       <div style={{fontSize:22,fontWeight:800,color:C.text,marginBottom:6}}>€{(retailKwh(cheapMwh)*40).toFixed(2)}</div>
                       <div style={{fontSize:14,fontWeight:700,color:C.teal}}>Save €{savingToday.toFixed(2)} vs charging now</div>
@@ -381,7 +380,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                   <div style={{fontSize:15,fontWeight:700,color:C.blue,marginBottom:16}}>
                     👉 {(L.chargeBeforeCta||"Charge before {x} to save money").replace("{x}",fmtHour(cheapWindowEnd??cheapHour+2))}
                   </div>
-                  <button onClick={onGetStarted} style={{padding:"13px 36px",borderRadius:30,fontSize:15,fontWeight:800,background:"linear-gradient(135deg,#10B981,#0D9488)",border:"none",color:"#fff",cursor:"pointer",boxShadow:"0 4px 20px rgba(13,148,136,0.3)"}}>
+                  <button onClick={onGetStarted} style={{padding:"13px 36px",borderRadius:30,fontSize:15,fontWeight:800,background:"linear-gradient(135deg,#16A34A,#059669)",border:"none",color:"#fff",cursor:"pointer",boxShadow:"0 4px 20px rgba(5,150,105,0.3)"}}>
                     {L.mainCta||"Start saving on every charge →"}
                   </button>
                   <div style={{fontSize:12,color:C.light,marginTop:10}}>Free · No account needed · 30 sec to set alerts</div>
@@ -470,7 +469,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
               <label style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",fontWeight:700,display:"block",marginBottom:8}}>Charger speed:</label>
               <div style={{display:"flex",gap:6}}>
                 {[3.7,7.4,11,22].map(kw=>(
-                  <button key={kw} onClick={()=>setChargerKw(kw)} style={{flex:1,padding:"9px 4px",borderRadius:10,fontSize:11,fontWeight:700,border:`1px solid ${chargerKw===kw?"rgba(13,148,136,0.5)":C.border}`,background:chargerKw===kw?"rgba(13,148,136,0.1)":C.bg,color:chargerKw===kw?C.teal:C.muted,cursor:"pointer"}}>
+                  <button key={kw} onClick={()=>setChargerKw(kw)} style={{flex:1,padding:"9px 4px",borderRadius:10,fontSize:11,fontWeight:700,border:`1px solid ${chargerKw===kw?"rgba(5,150,105,0.5)":C.border}`,background:chargerKw===kw?"rgba(5,150,105,0.1)":C.bg,color:chargerKw===kw?C.teal:C.muted,cursor:"pointer"}}>
                     {kw}kW
                   </button>
                 ))}
@@ -505,7 +504,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                   </>}
                 </div>
               </div>
-              <button onClick={onGetStarted} style={{padding:"12px 28px",borderRadius:30,fontSize:14,fontWeight:800,background:"linear-gradient(135deg,#10B981,#0D9488)",border:"none",color:"#fff",cursor:"pointer"}}>
+              <button onClick={onGetStarted} style={{padding:"12px 28px",borderRadius:30,fontSize:14,fontWeight:800,background:"linear-gradient(135deg,#16A34A,#059669)",border:"none",color:"#fff",cursor:"pointer"}}>
                 Get alerts for this window →
               </button>
               <span style={{fontSize:11,color:C.light,marginLeft:12}}>Free · No credit card</span>
@@ -554,7 +553,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           </div>
 
           {/* Email alert */}
-          <div style={{background:leadState==="done"?"rgba(5,150,105,0.05)":"linear-gradient(135deg,rgba(13,148,136,0.06),rgba(30,64,175,0.03))",border:`1px solid ${leadState==="done"?"rgba(5,150,105,0.25)":"rgba(13,148,136,0.18)"}`,borderRadius:18,padding:"28px",boxShadow:C.shadow}}>
+          <div style={{background:leadState==="done"?"rgba(5,150,105,0.05)":"linear-gradient(135deg,rgba(5,150,105,0.06),rgba(22,101,52,0.03))",border:`1px solid ${leadState==="done"?"rgba(5,150,105,0.25)":"rgba(5,150,105,0.18)"}`,borderRadius:18,padding:"28px",boxShadow:C.shadow}}>
             {leadState==="done" ? (
               <div style={{display:"flex",gap:14,alignItems:"center"}}>
                 <span style={{fontSize:32}}>✅</span>
@@ -571,9 +570,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
                 <form onSubmit={submitLead} style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                   <input type="email" required placeholder="your@email.com" value={leadEmail} onChange={e=>setLeadEmail(e.target.value)}
                     style={{flex:1,minWidth:160,padding:"10px 14px",borderRadius:20,fontSize:14,background:C.card,border:`1px solid ${C.border}`,color:C.text,outline:"none",fontFamily:"inherit"}}
-                    onFocus={e=>e.target.style.border="1px solid rgba(13,148,136,0.5)"}
+                    onFocus={e=>e.target.style.border="1px solid rgba(5,150,105,0.5)"}
                     onBlur={e=>e.target.style.border=`1px solid ${C.border}`}/>
-                  <button type="submit" disabled={leadState==="loading"} style={{padding:"10px 20px",borderRadius:20,fontSize:13,fontWeight:800,background:"linear-gradient(135deg,#10B981,#0D9488)",border:"none",color:"#fff",cursor:"pointer",opacity:leadState==="loading"?0.7:1,whiteSpace:"nowrap"}}>
+                  <button type="submit" disabled={leadState==="loading"} style={{padding:"10px 20px",borderRadius:20,fontSize:13,fontWeight:800,background:"linear-gradient(135deg,#16A34A,#059669)",border:"none",color:"#fff",cursor:"pointer",opacity:leadState==="loading"?0.7:1,whiteSpace:"nowrap"}}>
                     {leadState==="loading"?"…":"Notify me →"}
                   </button>
                 </form>
@@ -623,7 +622,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
         <h2 style={{fontSize:26,fontWeight:900,color:C.text,marginBottom:28,textAlign:"center"}}>Frequently asked questions</h2>
         {faqs.filter(f=>f.q).map((f,i)=>(
           <div key={i} onClick={()=>setOpenFaq(openFaq===i?null:i)}
-            style={{background:openFaq===i?"rgba(13,148,136,0.03)":C.card,border:`1px solid ${openFaq===i?"rgba(13,148,136,0.25)":C.border}`,borderRadius:14,overflow:"hidden",cursor:"pointer",marginBottom:8,transition:"all 0.2s",boxShadow:C.shadow}}>
+            style={{background:openFaq===i?"rgba(5,150,105,0.03)":C.card,border:`1px solid ${openFaq===i?"rgba(5,150,105,0.25)":C.border}`,borderRadius:14,overflow:"hidden",cursor:"pointer",marginBottom:8,transition:"all 0.2s",boxShadow:C.shadow}}>
             <div style={{padding:"17px 22px",fontSize:15,fontWeight:700,display:"flex",justifyContent:"space-between",alignItems:"center",color:openFaq===i?C.teal:C.text}}>
               {f.q}
               <span style={{color:C.teal,fontSize:22,fontWeight:300,flexShrink:0,marginLeft:16,transform:openFaq===i?"rotate(45deg)":"none",transition:"transform 0.2s",display:"inline-block"}}>+</span>
@@ -639,7 +638,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       </div>
 
       {/* ── FINAL CTA — same blue gradient as BusinessPage contact ─────── */}
-      <div style={{background:"linear-gradient(135deg, #1E3A8A, #1E40AF)",padding:"52px 24px",textAlign:"center",color:"#fff"}}>
+      <div style={{background:"linear-gradient(135deg, #14532D, #166534)",padding:"52px 24px",textAlign:"center",color:"#fff"}}>
         <div style={{fontSize:24,marginBottom:12}}>⚡</div>
         <h3 style={{fontSize:26,fontWeight:900,marginBottom:8,letterSpacing:"-0.5px"}}>
           Join {siteStats?.registered_users ?? "100"}+ Belgians who charge smarter
@@ -648,7 +647,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           Free forever. No credit card. Set up in 30 seconds.
         </p>
         <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}>
-          <button onClick={onGetStarted} style={{padding:"13px 32px",borderRadius:30,fontSize:15,fontWeight:800,background:"#FCD34D",color:"#1E3A8A",border:"none",cursor:"pointer",boxShadow:"0 6px 24px rgba(0,0,0,0.2)"}}>
+          <button onClick={onGetStarted} style={{padding:"13px 32px",borderRadius:30,fontSize:15,fontWeight:800,background:"#FCD34D",color:"#14532D",border:"none",cursor:"pointer",boxShadow:"0 6px 24px rgba(0,0,0,0.2)"}}>
             Get started free →
           </button>
           <a href="/business" style={{padding:"13px 24px",borderRadius:30,fontSize:14,fontWeight:700,background:"rgba(255,255,255,0.12)",color:"#fff",textDecoration:"none",border:"1px solid rgba(255,255,255,0.25)"}}>
