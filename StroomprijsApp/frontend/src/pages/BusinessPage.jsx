@@ -6,18 +6,18 @@
 import { useState } from "react";
 
 const C = {
-  bg:        "#F0F7F2",
+  bg:        "#F7FEF9",
   card:      "#FFFFFF",
   border:    "rgba(0,0,0,0.08)",
   shadow:    "0 2px 16px rgba(0,0,0,0.07)",
-  blue:      "#166534",   // forest green as primary
-  teal:      "#059669",   // emerald as secondary
+  blue:      "#16A34A",   // primary: vivid eco-green
+  teal:      "#22C55E",   // secondary: bright eco-green
   text:      "#1E293B",
   muted:     "#64748B",
   light:     "#94A3B8",
-  green:     "#16A34A",
-  highlight: "#F0FDF4",
-  blueBorder:"rgba(22,101,52,0.18)",
+  green:     "#22C55E",
+  highlight: "#DCFCE7",
+  blueBorder:"rgba(22,163,74,0.2)",
   amber:     "#D97706",
   purple:    "#7C3AED",
 };
@@ -57,7 +57,7 @@ export default function BusinessPage({ onNavigate }) {
       </nav>
 
       {/* Hero */}
-      <div style={{ background: `linear-gradient(135deg, #14532D 0%, #166534 60%, #15803D 100%)`, color: "#fff", padding: "72px 24px 64px", textAlign: "center" }}>
+      <div style={{ background: `linear-gradient(135deg, #15803D 0%, #16A34A 55%, #22C55E 100%)`, color: "#fff", padding: "72px 24px 64px", textAlign: "center" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 30, padding: "6px 18px", marginBottom: 24, fontSize: 13, fontWeight: 700 }}>
           🏢 SmartPrice for Business — Beta
         </div>
@@ -68,7 +68,7 @@ export default function BusinessPage({ onNavigate }) {
           Belgian companies using the CREG flat rate overpay by <strong>€300–500 per car per year</strong>. SmartPrice Business tracks real EPEX prices so you reimburse exactly what employees actually pay.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/fleet-audit" style={{ display: "inline-block", padding: "14px 32px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FCD34D", color: "#14532D", textDecoration: "none", boxShadow: "0 6px 24px rgba(0,0,0,0.2)" }}>
+          <a href="/fleet-audit" style={{ display: "inline-block", padding: "14px 32px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FCD34D", color: "#15803D", textDecoration: "none", boxShadow: "0 6px 24px rgba(0,0,0,0.2)" }}>
             Free fleet audit — see your overpayment →
           </a>
           <a href="#contact" style={{ display: "inline-block", padding: "14px 28px", borderRadius: 30, fontSize: 14, fontWeight: 700, background: "rgba(255,255,255,0.12)", color: "#fff", textDecoration: "none", border: "1px solid rgba(255,255,255,0.25)" }}>
@@ -214,7 +214,7 @@ export default function BusinessPage({ onNavigate }) {
         </div>
 
         {/* Contact / waitlist */}
-        <div id="contact" style={{ background: `linear-gradient(135deg, #14532D, #166534)`, borderRadius: 24, padding: "40px 36px", color: "#fff", textAlign: "center" }}>
+        <div id="contact" style={{ background: `linear-gradient(135deg, #15803D, #16A34A)`, borderRadius: 24, padding: "40px 36px", color: "#fff", textAlign: "center" }}>
           <div style={{ fontSize: 24, marginBottom: 12 }}>📩</div>
           <h3 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8 }}>Get early access to the fleet dashboard</h3>
           <p style={{ fontSize: 14, opacity: 0.8, marginBottom: 28, maxWidth: 440, margin: "0 auto 28px", lineHeight: 1.7 }}>
@@ -235,7 +235,7 @@ export default function BusinessPage({ onNavigate }) {
               <button
                 type="submit"
                 disabled={leadState === "loading"}
-                style={{ padding: "12px 24px", borderRadius: 30, fontSize: 14, fontWeight: 800, background: "#FCD34D", color: "#14532D", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}
+                style={{ padding: "12px 24px", borderRadius: 30, fontSize: 14, fontWeight: 800, background: "#FCD34D", color: "#15803D", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}
               >
                 {leadState === "loading" ? "Saving…" : "Get early access →"}
               </button>

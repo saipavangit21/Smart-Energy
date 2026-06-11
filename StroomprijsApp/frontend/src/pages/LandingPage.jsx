@@ -7,20 +7,20 @@ import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher  from "../components/LangSwitcher";
 import ThemeSwitcher from "../components/ThemeSwitcher";
 
-// Green energy palette
+// Eco-green palette — vibrant #22C55E energy brand
 const C = {
-  bg:        "#F0F7F2",
+  bg:        "#F7FEF9",
   card:      "#FFFFFF",
   border:    "rgba(0,0,0,0.08)",
   shadow:    "0 2px 16px rgba(0,0,0,0.07)",
-  blue:      "#166534",   // forest green — replaces blue as primary brand colour
-  teal:      "#059669",   // emerald — replaces teal as secondary accent
+  blue:      "#16A34A",   // primary: vivid eco-green (section labels, badges)
+  teal:      "#22C55E",   // secondary: bright eco-green (CTAs, active states)
   text:      "#1E293B",
   muted:     "#64748B",
   light:     "#94A3B8",
-  green:     "#16A34A",   // bright green for positive indicators
-  highlight: "#F0FDF4",   // very light green card background
-  blueBorder:"rgba(22,101,52,0.18)",
+  green:     "#22C55E",   // positive indicators — same eco-green
+  highlight: "#DCFCE7",   // light green card highlight
+  blueBorder:"rgba(22,163,74,0.2)",
   amber:     "#D97706",
   purple:    "#7C3AED",
 };
@@ -210,7 +210,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       </div>
 
       {/* ── HERO — forest green gradient ───────────────────────────────── */}
-      <div style={{ background:"linear-gradient(135deg, #14532D 0%, #166534 60%, #15803D 100%)", color:"#fff", padding:"72px 24px 64px", textAlign:"center" }}>
+      <div style={{ background:"linear-gradient(135deg, #15803D 0%, #16A34A 55%, #22C55E 100%)", color:"#fff", padding:"72px 24px 64px", textAlign:"center" }}>
         {/* Badge */}
         <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:30,padding:"6px 18px",marginBottom:24,fontSize:13,fontWeight:700}}>
           🇧🇪 Belgium · EPEX Spot · Live
@@ -257,7 +257,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
 
         {/* CTAs — same yellow primary as BusinessPage */}
         <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}>
-          <button onClick={onGetStarted} style={{display:"inline-block",padding:"14px 32px",borderRadius:30,fontSize:15,fontWeight:800,background:"#FCD34D",color:"#14532D",border:"none",cursor:"pointer",boxShadow:"0 6px 24px rgba(0,0,0,0.2)"}}>
+          <button onClick={onGetStarted} style={{display:"inline-block",padding:"14px 32px",borderRadius:30,fontSize:15,fontWeight:800,background:"#FCD34D",color:"#15803D",border:"none",cursor:"pointer",boxShadow:"0 6px 24px rgba(0,0,0,0.2)"}}>
             Get started free →
           </button>
           <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} style={{display:"inline-block",padding:"14px 28px",borderRadius:30,fontSize:14,fontWeight:700,background:"rgba(255,255,255,0.12)",color:"#fff",border:"1px solid rgba(255,255,255,0.25)",cursor:"pointer"}}>
@@ -553,7 +553,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           </div>
 
           {/* Email alert */}
-          <div style={{background:leadState==="done"?"rgba(5,150,105,0.05)":"linear-gradient(135deg,rgba(5,150,105,0.06),rgba(22,101,52,0.03))",border:`1px solid ${leadState==="done"?"rgba(5,150,105,0.25)":"rgba(5,150,105,0.18)"}`,borderRadius:18,padding:"28px",boxShadow:C.shadow}}>
+          <div style={{background:leadState==="done"?"rgba(5,150,105,0.05)":"linear-gradient(135deg,rgba(5,150,105,0.06),rgba(22,163,74,0.03))",border:`1px solid ${leadState==="done"?"rgba(5,150,105,0.25)":"rgba(5,150,105,0.18)"}`,borderRadius:18,padding:"28px",boxShadow:C.shadow}}>
             {leadState==="done" ? (
               <div style={{display:"flex",gap:14,alignItems:"center"}}>
                 <span style={{fontSize:32}}>✅</span>
@@ -638,7 +638,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
       </div>
 
       {/* ── FINAL CTA — same blue gradient as BusinessPage contact ─────── */}
-      <div style={{background:"linear-gradient(135deg, #14532D, #166534)",padding:"52px 24px",textAlign:"center",color:"#fff"}}>
+      <div style={{background:"linear-gradient(135deg, #15803D, #16A34A)",padding:"52px 24px",textAlign:"center",color:"#fff"}}>
         <div style={{fontSize:24,marginBottom:12}}>⚡</div>
         <h3 style={{fontSize:26,fontWeight:900,marginBottom:8,letterSpacing:"-0.5px"}}>
           Join {siteStats?.registered_users ?? "100"}+ Belgians who charge smarter
@@ -647,7 +647,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator }) {
           Free forever. No credit card. Set up in 30 seconds.
         </p>
         <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}>
-          <button onClick={onGetStarted} style={{padding:"13px 32px",borderRadius:30,fontSize:15,fontWeight:800,background:"#FCD34D",color:"#14532D",border:"none",cursor:"pointer",boxShadow:"0 6px 24px rgba(0,0,0,0.2)"}}>
+          <button onClick={onGetStarted} style={{padding:"13px 32px",borderRadius:30,fontSize:15,fontWeight:800,background:"#FCD34D",color:"#15803D",border:"none",cursor:"pointer",boxShadow:"0 6px 24px rgba(0,0,0,0.2)"}}>
             Get started free →
           </button>
           <a href="/business" style={{padding:"13px 24px",borderRadius:30,fontSize:14,fontWeight:700,background:"rgba(255,255,255,0.12)",color:"#fff",textDecoration:"none",border:"1px solid rgba(255,255,255,0.25)"}}>

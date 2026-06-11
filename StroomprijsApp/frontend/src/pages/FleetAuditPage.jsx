@@ -12,19 +12,19 @@ const DYNAMIC_RATE_FALLBACK = 0.1920; // €/kWh fallback if API unavailable
 const AVG_KWH_PER_CAR    = 280;    // kWh/month average Belgian company EV home charging
 
 const C = {
-  bg:        "#F0F7F2",
+  bg:        "#F7FEF9",
   card:      "#FFFFFF",
   border:    "rgba(0,0,0,0.08)",
   shadow:    "0 2px 16px rgba(0,0,0,0.07)",
-  blue:      "#166534",
-  teal:      "#059669",
+  blue:      "#16A34A",
+  teal:      "#22C55E",
   text:      "#1E293B",
   muted:     "#64748B",
   light:     "#94A3B8",
-  green:     "#16A34A",
+  green:     "#22C55E",
   red:       "#DC2626",
-  highlight: "#F0FDF4",
-  blueBorder:"rgba(22,101,52,0.18)",
+  highlight: "#DCFCE7",
+  blueBorder:"rgba(22,163,74,0.2)",
 };
 
 function fmt(n) { return n.toLocaleString("nl-BE", { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
@@ -118,8 +118,8 @@ export default function FleetAuditPage({ onNavigate }) {
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SmartPrice Fleet Audit — ${company || email}</title>
     <style>
       body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; color: #1E293B; }
-      h1 { font-size: 24px; color: #166534; } h2 { font-size: 16px; color: #64748B; font-weight: 500; margin-top: 0; }
-      .hero { background: #166534; color: #fff; padding: 28px 32px; border-radius: 12px; margin: 24px 0; text-align: center; }
+      h1 { font-size: 24px; color: #16A34A; } h2 { font-size: 16px; color: #64748B; font-weight: 500; margin-top: 0; }
+      .hero { background: #16A34A; color: #fff; padding: 28px 32px; border-radius: 12px; margin: 24px 0; text-align: center; }
       .hero .amount { font-size: 52px; font-weight: 900; color: #FCD34D; }
       .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
       .card { border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; text-align: center; }
@@ -130,7 +130,7 @@ export default function FleetAuditPage({ onNavigate }) {
       .footer { margin-top: 40px; font-size: 11px; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 16px; }
       @media print { body { margin: 20px; } }
     </style></head><body>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:22px;">⚡</span><strong style="font-size:18px;color:#166534;">SmartPrice Business</strong><span style="font-size:12px;color:#64748B;margin-left:8px;">Fleet EV Charging Cost Audit</span></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:22px;">⚡</span><strong style="font-size:18px;color:#16A34A;">SmartPrice Business</strong><span style="font-size:12px;color:#64748B;margin-left:8px;">Fleet EV Charging Cost Audit</span></div>
     <h1>Fleet Charging Cost Audit Report</h1>
     <h2>${company ? `${company} · ` : ""}Generated ${new Date().toLocaleDateString("nl-BE")} · Fleet of ${audit.fleetSize} EVs</h2>
     <div class="hero">
@@ -316,7 +316,7 @@ export default function FleetAuditPage({ onNavigate }) {
             </div>
 
             {/* Headline overpayment */}
-            <div style={{ background: "linear-gradient(135deg, #14532D, #166534)", borderRadius: 20, padding: "32px 36px", marginBottom: 20, color: "#fff", textAlign: "center" }}>
+            <div style={{ background: "linear-gradient(135deg, #15803D, #16A34A)", borderRadius: 20, padding: "32px 36px", marginBottom: 20, color: "#fff", textAlign: "center" }}>
               <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.75, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Estimated annual overpayment</div>
               <div style={{ fontSize: 56, fontWeight: 900, letterSpacing: -2, color: "#FCD34D" }}>{fmtE(audit.overpayment)}</div>
               <div style={{ fontSize: 15, opacity: 0.85, marginTop: 6 }}>per year for your fleet of {audit.fleetSize} vehicles</div>
