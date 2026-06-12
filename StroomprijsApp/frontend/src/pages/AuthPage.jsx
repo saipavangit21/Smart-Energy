@@ -107,11 +107,19 @@ export default function AuthPage({ onBack, reason }) {
 
         {/* Back + lang row */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          {onBack ? (
-            <button onClick={onBack} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, fontWeight: 600, padding: 0, display: "flex", alignItems: "center", gap: 6 }}>
-              ← {A.backHome || "Back to home"}
-            </button>
-          ) : <div />}
+          <button
+            onClick={onBack || (() => window.location.href = "/")}
+            style={{
+              display: "flex", alignItems: "center", gap: 7,
+              background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+              border: `1px solid ${C.border}`,
+              borderRadius: 20, padding: "8px 16px",
+              color: C.text, cursor: "pointer",
+              fontSize: 13, fontWeight: 700,
+            }}
+          >
+            ← {A.backHome || "Back to home"}
+          </button>
           <LangSwitcher />
         </div>
 
