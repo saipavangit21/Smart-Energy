@@ -337,14 +337,17 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           </div>
         )}
 
-        {/* Dual-entry portal — B2C + B2B */}
+        {/* CTA buttons */}
         <div className="sp-animate sp-delay-4" style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",marginBottom:16}}>
-          <button onClick={onGetStarted} className="sp-cta-primary">
-            {L.ctaPersonal||"👉 Track My Energy Use (Free)"}
+          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} className="sp-cta-primary">
+            {L.ctaPersonal||"See Today's Cheapest Hours →"}
           </button>
           <button onClick={onGetStarted} className="sp-cta-ghost" style={{cursor:"pointer"}}>
             {L.ctaCorporate||"Start Free →"}
           </button>
+          <a href="/business" style={{padding:"14px 28px",borderRadius:30,fontSize:15,fontWeight:700,background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.85)",textDecoration:"none",border:"1px solid rgba(255,255,255,0.2)",backdropFilter:"blur(8px)",whiteSpace:"nowrap"}}>
+            {L.ctaCorporate2||"💼 Corporate EV Fleets →"}
+          </a>
         </div>
         <div className="sp-animate sp-delay-4" style={{marginBottom:52}}>
           <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:13,cursor:"pointer",fontWeight:600,letterSpacing:"0.3px"}}>
