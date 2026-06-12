@@ -342,8 +342,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           <button onClick={onGetStarted} className="sp-cta-primary">
             {L.ctaPersonal||"👉 Track My Energy Use (Free)"}
           </button>
-          <button onClick={()=>onNavigate?.("/business")} className="sp-cta-ghost" style={{cursor:"pointer"}}>
-            {L.ctaCorporate||"💼 Corporate EV Fleets →"}
+          <button onClick={onGetStarted} className="sp-cta-ghost" style={{cursor:"pointer"}}>
+            {L.ctaCorporate||"Start Free →"}
           </button>
         </div>
         <div className="sp-animate sp-delay-4" style={{marginBottom:52}}>
