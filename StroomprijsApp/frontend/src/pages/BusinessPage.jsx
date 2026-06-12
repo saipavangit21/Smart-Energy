@@ -61,8 +61,11 @@ function SectionDivider({ label }) {
 }
 
 export default function BusinessPage({ onNavigate }) {
-  const { tSection } = useLanguage();
+  const { tSection, lang } = useLanguage();
   const L = tSection("business");
+  const locale = lang === "fr" ? "fr-BE" : lang === "nl" ? "nl-BE" : "en-BE";
+  const fmtInt  = val => new Intl.NumberFormat(locale, {maximumFractionDigits:0}).format(val);
+  const fmtNum4 = val => new Intl.NumberFormat(locale, {minimumFractionDigits:4,maximumFractionDigits:4}).format(val);
 
   /* Lead / contact form */
   const [leadEmail,       setLeadEmail]       = useState("");
@@ -155,7 +158,7 @@ export default function BusinessPage({ onNavigate }) {
                 {/* Pre-filled from ROI calculator — only shown if user interacted with sliders */}
                 {calculatorUsed && (
                   <div style={{ background: C.highlight, border: `1px solid ${C.border2}`, borderRadius: 12, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: C.primary, fontWeight: 700 }}>
-                    📊 Based on your inputs: {fleetSize} EVs · {monthlyKm.toLocaleString()} km/month — estimated saving <strong>€{annualSaving.toLocaleString()}/year</strong>
+                    📊 Based on your inputs: {fleetSize} EVs · {fmtInt(monthlyKm)} km/month — estimated saving <strong>€{fmtInt(annualSaving)}/year</strong>
                   </div>
                 )}
                 <form onSubmit={submitLead} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -344,7 +347,7 @@ export default function BusinessPage({ onNavigate }) {
               </div>
               <div>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 10 }}>
-                  Avg. monthly km per car: <strong style={{ color: C.primary }}>{monthlyKm.toLocaleString()} km</strong>
+                  Avg. monthly km per car: <strong style={{ color: C.primary }}>{fmtInt(monthlyKm)} km</strong>
                 </label>
                 <input type="range" min={300} max={4000} step={100} value={monthlyKm} onChange={e => { setMonthlyKm(+e.target.value); setCalculatorUsed(true); }}
                   style={{ width: "100%", accentColor: C.primary, cursor: "pointer" }} />
@@ -357,21 +360,21 @@ export default function BusinessPage({ onNavigate }) {
               <div>
                 <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Estimated annual fleet savings with SmartPrice</div>
                 <div style={{ fontSize: "clamp(40px,6vw,64px)", fontWeight: 900, color: C.primary, fontFamily: "monospace", letterSpacing: "-3px", lineHeight: 1 }}>
-                  €{annualSaving.toLocaleString()}
+                  €{fmtInt(annualSaving)}
                 </div>
                 {/* Per-vehicle callout — makes small fleets feel the ROI too */}
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, background: C.highlight, border: `1px solid ${C.border2}`, borderRadius: 20, padding: "6px 14px" }}>
                   <span style={{ fontSize: 14 }}>⚡</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>
-                    That's <strong>€{perCarSaving.toLocaleString()}+ per vehicle</strong> every year
+                    That's <strong>€{fmtInt(perCarSaving)}+ per vehicle</strong> every year
                   </span>
                 </div>
                 <div style={{ fontSize: 12, color: C.light, marginTop: 8 }}>{fleetSize} vehicles · software pays for itself instantly</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { label: "Monthly kWh per car", val: `${Math.round(kwhPerCarPerMonth).toLocaleString()} kWh` },
-                  { label: "Saving per kWh",      val: `€${SAVING_KWH}/kWh` },
+                  { label: "Monthly kWh per car", val: `${fmtInt(Math.round(kwhPerCarPerMonth))} kWh` },
+                  { label: "Saving per kWh",      val: `€${fmtNum4(SAVING_KWH)}/kWh` },
                   { label: "Saving rate",          val: `~${Math.round((SAVING_KWH / CREG_RATE) * 100)}% of CREG rate` },
                 ].map(r => (
                   <div key={r.label} style={{ display: "flex", justifyContent: "space-between", gap: 24, fontSize: 13 }}>

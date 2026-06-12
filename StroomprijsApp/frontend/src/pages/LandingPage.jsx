@@ -29,7 +29,6 @@ const C = {
 
 /* ── helpers ─────────────────────────────────────────────────── */
 const retailKwh = mwh => (mwh / 1000) + 0.173;
-const retailFmt = mwh => retailKwh(mwh).toFixed(3);
 const fmtHour   = h   => `${String(h).padStart(2,"0")}:00`;
 
 function priceColor(mwh) {
@@ -96,8 +95,14 @@ function useScrollReveal() {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate }) {
-  const { tSection } = useLanguage();
+  const { tSection, lang } = useLanguage();
   const L = tSection("landing");
+  const locale = lang === "fr" ? "fr-BE" : lang === "nl" ? "nl-BE" : "en-BE";
+  const fmtKwh  = mwh => new Intl.NumberFormat(locale, {minimumFractionDigits:3,maximumFractionDigits:3}).format(retailKwh(mwh));
+  const fmtNum0 = val => new Intl.NumberFormat(locale, {minimumFractionDigits:0,maximumFractionDigits:0}).format(val);
+  const fmtNum1 = val => new Intl.NumberFormat(locale, {minimumFractionDigits:1,maximumFractionDigits:1}).format(val);
+  const fmtNum2 = val => new Intl.NumberFormat(locale, {minimumFractionDigits:2,maximumFractionDigits:2}).format(val);
+  const fmtNum3 = val => new Intl.NumberFormat(locale, {minimumFractionDigits:3,maximumFractionDigits:3}).format(val);
 
   useEffect(() => {
     document.title = "SmartPrice.be — Live Belgian Electricity & Gas Prices | Free";
@@ -240,9 +245,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
   /* ── TICKER DATA ────────────────────────────────────────────── */
   const tickerItems = [
     currentMwh!=null && `⚡ Live price: ${Math.round(currentMwh)} €/MWh`,
-    cheapHour!=null  && `🟢 Best window: ${fmtHour(cheapHour)}–${fmtHour(cheapWindowEnd??cheapHour+1)} · €${cheapMwh!=null?retailFmt(cheapMwh):"—"}/kWh`,
-    gasCurrent       && `🔥 Gas TTF: €${gasCurrent.price?.toFixed(1)}/MWh`,
-    savingToday!=null&&savingToday>0.5 && `💶 Save €${savingToday.toFixed(2)} per 40 kWh charge today`,
+    cheapHour!=null  && `🟢 Best window: ${fmtHour(cheapHour)}–${fmtHour(cheapWindowEnd??cheapHour+1)} · €${cheapMwh!=null?fmtKwh(cheapMwh):"—"}/kWh`,
+    gasCurrent       && `🔥 Gas TTF: €${gasCurrent.price!=null?fmtNum1(gasCurrent.price):"—"}/MWh`,
+    savingToday!=null&&savingToday>0.5 && `💶 Save €${fmtNum2(savingToday)} per 40 kWh charge today`,
     `🇧🇪 EPEX Spot Belgium · updated every 15 min`,
     siteStats?.registered_users && `👥 ${siteStats.registered_users}+ Belgian households tracking`,
   ].filter(Boolean);
@@ -321,7 +326,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                     {cheapIsNow?"Cheapest — now":"Best window"}
                   </div>
                   <div style={{fontSize:20,fontWeight:800,color:"#fff"}}>{cheapIsNow?"Right now!":` ${fmtHour(cheapHour)} – ${fmtHour(cheapWindowEnd??cheapHour+1)}`}</div>
-                  <div style={{fontSize:13,color:"#4ADE80",fontWeight:700}}>€{retailFmt(cheapMwh)}/kWh{savingToday!=null&&savingToday>0.3?` · save €${savingToday.toFixed(2)}`:""}</div>
+                  <div style={{fontSize:13,color:"#4ADE80",fontWeight:700}}>€{fmtKwh(cheapMwh)}/kWh{savingToday!=null&&savingToday>0.3?` · save €${fmtNum2(savingToday)}`:""}</div>
                 </div>
               </>
             )}
@@ -438,7 +443,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                   </div>
                   <div style={{fontSize:14,fontWeight:800,color:C.primary}}>{fmtHour(cheapHour)}–{fmtHour(cheapWindowEnd??cheapHour+1)}</div>
                   <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>{L.glanceAction1||"Run washing machine / heat pump"}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.primary}}>{cheapMwh!=null?`€${retailFmt(cheapMwh)}/kWh`:"low"}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.primary}}>{cheapMwh!=null?`€${fmtKwh(cheapMwh)}/kWh`:"low"}</div>
                 </div>
               )}
 
@@ -451,7 +456,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                   </div>
                   <div style={{fontSize:14,fontWeight:800,color:"#6366F1"}}>{fmtHour(nightH)}–{fmtHour((nightH+3)%24)}</div>
                   <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>{L.glanceAction2||"Automated overnight EV charge"}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:"#6366F1"}}>{nightMwh!=null?`€${retailFmt(nightMwh)}/kWh`:"off-peak"}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#6366F1"}}>{nightMwh!=null?`€${fmtKwh(nightMwh)}/kWh`:"off-peak"}</div>
                 </div>
               )}
 
@@ -464,7 +469,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                   </div>
                   <div style={{fontSize:14,fontWeight:800,color:C.red}}>{fmtHour(peakH)}–{fmtHour(peakH+2)}</div>
                   <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>{L.glanceAction3||"Pause heavy appliances & charging"}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.red}}>{peakMwh!=null?`€${retailFmt(peakMwh)}/kWh`:"avoid"}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.red}}>{peakMwh!=null?`€${fmtKwh(peakMwh)}/kWh`:"avoid"}</div>
                 </div>
               )}
 
@@ -472,6 +477,42 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
               <div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:6,fontSize:11,color:C.muted}}>
                 <span>ℹ️</span>
                 <span>{L.glanceTomorrow||"Tomorrow's prices are published daily around 13:00 CET — check back then to plan next day's charging."}</span>
+              </div>
+            </div>
+          )}
+
+          {prices.length===0 && (
+            <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,overflow:"hidden",marginBottom:72}}>
+              <div style={{background:"linear-gradient(135deg,#15803D,#16A34A,#22C55E)",padding:"28px 36px"}}>
+                <div className="sp-shimmer" style={{height:11,width:140,borderRadius:8,background:"rgba(255,255,255,0.18)",marginBottom:14}}/>
+                <div style={{display:"flex",alignItems:"baseline",gap:12}}>
+                  <div className="sp-shimmer" style={{height:56,width:120,borderRadius:8,background:"rgba(255,255,255,0.13)"}}/>
+                  <div className="sp-shimmer" style={{height:28,width:60,borderRadius:6,background:"rgba(255,255,255,0.10)"}}/>
+                </div>
+              </div>
+              <div style={{padding:"32px 36px",background:"#fff"}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:16,marginBottom:28}}>
+                  {[0,1,2].map(i=>(
+                    <div key={i} style={{borderRadius:18,padding:"22px 24px",background:"#F8FAFC",border:"1px solid #E2E8F0"}}>
+                      <div className="sp-shimmer" style={{height:10,width:96,borderRadius:6,background:"#E2E8F0",marginBottom:12}}/>
+                      <div className="sp-shimmer" style={{height:26,width:130,borderRadius:6,background:"#E2E8F0",marginBottom:8}}/>
+                      <div className="sp-shimmer" style={{height:18,width:80,borderRadius:6,background:"#E2E8F0"}}/>
+                    </div>
+                  ))}
+                </div>
+                <div style={{background:"#F8FAFC",borderRadius:16,padding:"20px 24px"}}>
+                  <div className="sp-shimmer" style={{height:10,width:150,borderRadius:6,background:"#E2E8F0",marginBottom:14}}/>
+                  <div style={{display:"flex",gap:2,height:64}}>
+                    {Array.from({length:24}).map((_,i)=>(
+                      <div key={i} className="sp-shimmer" style={{flex:1,height:`${32+Math.sin(i*0.8)*22}%`,borderRadius:"3px 3px 0 0",background:"#E2E8F0",alignSelf:"flex-end"}}/>
+                    ))}
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
+                    {["00:00","06:00","12:00","18:00","23:00"].map(h=>(
+                      <div key={h} className="sp-shimmer" style={{height:8,width:34,borderRadius:4,background:"#E2E8F0"}}/>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -492,7 +533,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                 </div>
                 <div style={{textAlign:"right"}}>
                   <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginBottom:6}}>↻ {updatedStr??"…"}</div>
-                  <div style={{fontSize:16,color:"rgba(255,255,255,0.7)"}}>= <strong style={{color:currentCol,fontSize:20}}>€{currentMwh!=null?retailFmt(currentMwh):"—"}/kWh</strong></div>
+                  <div style={{fontSize:16,color:"rgba(255,255,255,0.7)"}}>= <strong style={{color:currentCol,fontSize:20}}>€{currentMwh!=null?fmtKwh(currentMwh):"—"}/kWh</strong></div>
                   <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:4}}>incl. distribution</div>
                 </div>
               </div>
@@ -505,18 +546,18 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                       {cheapIsNow?"⚡ Cheapest — plug in now":"Best window today"}
                     </div>
                     <div style={{fontSize:"clamp(20px,3vw,28px)",fontWeight:900,color:C.text,marginBottom:6}}>{cheapIsNow?"Right now!":` ${fmtHour(cheapHour)} – ${fmtHour(cheapWindowEnd??cheapHour+2)}`}</div>
-                    <div style={{fontSize:20,fontWeight:800,color:"#16A34A"}}>€{retailFmt(cheapMwh)}/kWh</div>
+                    <div style={{fontSize:20,fontWeight:800,color:"#16A34A"}}>€{fmtKwh(cheapMwh)}/kWh</div>
                   </div>
                   <div className="sp-metric-card sp-metric-red">
                     <div style={{fontSize:11,fontWeight:800,color:C.red,textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>Peak — avoid charging</div>
                     <div style={{fontSize:"clamp(20px,3vw,28px)",fontWeight:900,color:C.text,marginBottom:6}}>{peakH!=null?`${fmtHour(peakH)} – ${fmtHour(peakH+2)}`:"—"}</div>
-                    <div style={{fontSize:20,fontWeight:800,color:C.red}}>€{peakMwh!=null?retailFmt(peakMwh):"—"}/kWh</div>
+                    <div style={{fontSize:20,fontWeight:800,color:C.red}}>€{peakMwh!=null?fmtKwh(peakMwh):"—"}/kWh</div>
                   </div>
                   {savingToday!=null&&savingToday>0.3&&(
                     <div className="sp-metric-card sp-metric-amber">
                       <div style={{fontSize:11,fontWeight:800,color:C.amber,textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>Full charge (40 kWh)</div>
-                      <div style={{fontSize:"clamp(20px,3vw,28px)",fontWeight:900,color:C.text,marginBottom:6}}>€{(retailKwh(cheapMwh)*40).toFixed(2)}</div>
-                      <div style={{fontSize:16,fontWeight:700,color:C.amber}}>Save €{savingToday.toFixed(2)} vs now</div>
+                      <div style={{fontSize:"clamp(20px,3vw,28px)",fontWeight:900,color:C.text,marginBottom:6}}>€{fmtNum2(retailKwh(cheapMwh)*40)}</div>
+                      <div style={{fontSize:16,fontWeight:700,color:C.amber}}>Save €{fmtNum2(savingToday)} vs now</div>
                     </div>
                   )}
                 </div>
@@ -533,8 +574,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                     <div style={{display:"inline-flex",alignItems:"center",gap:8,background:barTooltip.col,color:"#fff",borderRadius:20,padding:"5px 14px",fontSize:12,fontWeight:700,marginBottom:10,boxShadow:`0 4px 16px ${barTooltip.col}55`}}>
                       <span>{String(barTooltip.hour).padStart(2,"0")}:00 – {String(barTooltip.hour+1).padStart(2,"0")}:00</span>
                       <span style={{opacity:0.8}}>·</span>
-                      <span>€{retailFmt(barTooltip.mwh)}/kWh</span>
-                      <span style={{opacity:0.7,fontSize:10}}>({barTooltip.mwh?.toFixed(0)} €/MWh)</span>
+                      <span>€{fmtKwh(barTooltip.mwh)}/kWh</span>
+                      <span style={{opacity:0.7,fontSize:10}}>({fmtNum0(barTooltip.mwh)} €/MWh)</span>
                     </div>
                   )}
 
@@ -575,7 +616,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                   <div style={{background:"rgba(251,191,36,0.06)",border:"1px solid rgba(251,191,36,0.25)",borderRadius:14,padding:"16px 20px",marginBottom:24}}>
                     <div style={{fontSize:14,fontWeight:700,color:"#92400E",marginBottom:6}}>☀️ Fluvius capacity tariff</div>
                     <div style={{fontSize:13,color:"#78350F",lineHeight:1.75}}>
-                      Charging at peak ({fmtHour(peakH??19)}) raises your Fluvius bill by ~€20–30/month. Charging at {fmtHour(cheapHour)} avoids this. <strong>Real saving: €{((savingToday??0)+22).toFixed(0)}/month.</strong>
+                      Charging at peak ({fmtHour(peakH??19)}) raises your Fluvius bill by ~€20–30/month. Charging at {fmtHour(cheapHour)} avoids this. <strong>Real saving: €{fmtNum0((savingToday??0)+22)}/month.</strong>
                     </div>
                   </div>
                 )}
@@ -678,21 +719,21 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                       <div style={{fontSize:"clamp(36px,5vw,56px)",fontWeight:900,color:C.primary,fontFamily:"monospace",letterSpacing:"-2px",lineHeight:1,marginBottom:6}}>
                         {fmtHour(planResult.start)} – {fmtHour(planResult.end)}
                       </div>
-                      <div style={{fontSize:13,color:C.muted}}>{planResult.hours}h charging · {planResult.needed.toFixed(0)} kWh</div>
+                      <div style={{fontSize:13,color:C.muted}}>{planResult.hours}h charging · {fmtNum0(planResult.needed)} kWh</div>
                     </div>
                     <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
                       <div style={{textAlign:"center"}}>
                         <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>Cost</div>
-                        <div style={{fontSize:"clamp(28px,4vw,40px)",fontWeight:900,color:C.primary,fontFamily:"monospace"}}>€{planResult.cost.toFixed(2)}</div>
+                        <div style={{fontSize:"clamp(28px,4vw,40px)",fontWeight:900,color:C.primary,fontFamily:"monospace"}}>€{fmtNum2(planResult.cost)}</div>
                       </div>
                       {planResult.saving>0.1&&<>
                         <div style={{textAlign:"center"}}>
                           <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>vs charging now</div>
-                          <div style={{fontSize:"clamp(28px,4vw,40px)",fontWeight:900,color:C.amber,fontFamily:"monospace"}}>-€{planResult.saving.toFixed(2)}</div>
+                          <div style={{fontSize:"clamp(28px,4vw,40px)",fontWeight:900,color:C.amber,fontFamily:"monospace"}}>-€{fmtNum2(planResult.saving)}</div>
                         </div>
                         <div style={{textAlign:"center"}}>
                           <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>per year ×250</div>
-                          <div style={{fontSize:"clamp(28px,4vw,40px)",fontWeight:900,color:C.amber,fontFamily:"monospace"}}>-€{(planResult.saving*250).toFixed(0)}</div>
+                          <div style={{fontSize:"clamp(28px,4vw,40px)",fontWeight:900,color:C.amber,fontFamily:"monospace"}}>-€{fmtNum0(planResult.saving*250)}</div>
                         </div>
                       </>}
                     </div>
@@ -739,8 +780,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                   <div style={{width:52,height:52,borderRadius:16,background:"rgba(249,115,22,0.1)",border:"1px solid rgba(249,115,22,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26}}>🔥</div>
                   <div>
                     <div style={{fontSize:11,color:C.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",marginBottom:4}}>TTF Natural Gas · Today</div>
-                    <div style={{fontSize:"clamp(28px,4vw,36px)",fontWeight:900,color:"#F97316",fontFamily:"monospace",letterSpacing:"-1.5px",lineHeight:1}}>{gasCurrent?`€${gasCurrent.price?.toFixed(1)}/MWh`:"—"}</div>
-                    {gasCurrent?.ttf_cEkWh!=null&&<div style={{fontSize:12,color:C.muted,marginTop:2}}>{gasCurrent.ttf_cEkWh.toFixed(3)} c€/kWh</div>}
+                    <div style={{fontSize:"clamp(28px,4vw,36px)",fontWeight:900,color:"#F97316",fontFamily:"monospace",letterSpacing:"-1.5px",lineHeight:1}}>{gasCurrent&&gasCurrent.price!=null?`€${fmtNum1(gasCurrent.price)}/MWh`:"—"}</div>
+                    {gasCurrent?.ttf_cEkWh!=null&&<div style={{fontSize:12,color:C.muted,marginTop:2}}>{fmtNum3(gasCurrent.ttf_cEkWh)} c€/kWh</div>}
                   </div>
                 </div>
                 <p style={{fontSize:13,color:C.muted,lineHeight:1.75,marginBottom:20}}><strong style={{color:"#F97316"}}>~40%</strong> of your gas bill directly tracks this market price.</p>
@@ -1069,6 +1110,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           transform: translateY(-8px);
           box-shadow: 0 24px 64px rgba(22,163,74,0.16);
         }
+
+        /* Skeleton shimmer */
+        @keyframes sp-shimmer {
+          0%,100% { opacity: 0.55; }
+          50%      { opacity: 1; }
+        }
+        .sp-shimmer { animation: sp-shimmer 1.5s ease-in-out infinite; }
 
         /* Metric cards */
         .sp-metric-card {
