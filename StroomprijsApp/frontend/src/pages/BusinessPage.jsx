@@ -19,9 +19,8 @@ const C = {
   muted:     "#475569",
   light:     "#94A3B8",
   green:     "#22C55E",
-  highlight: "#EFF6FF",
-  border2:   "rgba(30,64,175,0.25)",
-  badgeText: "#1E40AF",
+  highlight: "#DCFCE7",
+  border2:   "rgba(22,163,74,0.2)",
   amber:     "#D97706",
   purple:    "#7C3AED",
   red:       "#DC2626",
@@ -234,12 +233,12 @@ export default function BusinessPage({ onNavigate }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => onNavigate?.("/")}>
           <span style={{ fontSize: 22 }}>🇧🇪</span>
           <span style={{ fontWeight: 900, fontSize: 17, color: C.text, letterSpacing: "-0.3px" }}>SmartPrice</span>
-          <span style={{ fontSize: 11, color: C.badgeText, fontWeight: 800, background: C.highlight, padding: "3px 12px", borderRadius: 20, border: `1px solid ${C.border2}` }}>Business</span>
+          <span style={{ fontSize: 11, color: "#1E40AF", fontWeight: 800, background: "#EFF6FF", padding: "3px 12px", borderRadius: 20, border: "1px solid rgba(30,64,175,0.25)" }}>Business</span>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <LangSwitcher />
-          <a href="/fleet-audit" style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "#FEF3C7", border: "1px solid rgba(180,83,9,0.25)", color: "#B45309", textDecoration: "none" }}>{L.navFleetAudit||"Free Fleet Audit →"}</a>
-          <button onClick={() => setShowModal(true)} style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(22,163,74,0.3)" }}>
+          <a href="/fleet-audit" style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "#FEF3C7", border: "1px solid rgba(180,83,9,0.25)", color: "#B45309", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>{L.navFleetAudit||"Free Fleet Audit →"}</a>
+          <button onClick={() => setShowModal(true)} style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(22,163,74,0.3)", whiteSpace: "nowrap", flexShrink: 0 }}>
             {L.navAudit||"Request audit"}
           </button>
         </div>
