@@ -358,38 +358,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
       </div>
 
-      {/* ── PLATFORM STRIP ────────────────────────────────────────── */}
-      <div style={{background:C.card,borderBottom:`1px solid ${C.border}`,position:"sticky",top:68,zIndex:100}}>
-        <div style={{maxWidth:1200,margin:"0 auto",display:"flex",overflow:"auto"}}>
-          {[
-            {icon:"⚡",label:L.navSmartPrices||"Smart Prices",  accent:C.primary,href:null,          active:true},
-            {icon:"🏢",label:L.navSmartBusiness||"Smart Business",accent:"#1E40AF",href:"/business",    active:false},
-            {icon:"🚗",label:L.navSmartFleet||"Smart Fleet",   accent:C.amber,  href:"/fleet-audit", active:false},
-            {icon:"🔌",label:L.navSmartConnect||"Smart Connect", accent:C.purple, href:"/api-docs",    active:false},
-          ].map(s=>(
-            <a key={s.label} href={s.href||"#"} onClick={s.href?undefined:e=>e.preventDefault()}
-              style={{display:"flex",alignItems:"center",gap:7,padding:"12px 28px",fontSize:13,fontWeight:700,color:s.active?s.accent:C.muted,textDecoration:"none",borderBottom:`2px solid ${s.active?s.accent:"transparent"}`,whiteSpace:"nowrap",transition:"color 0.2s"}}>
-              {s.icon} {s.label}
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* ── TICKER STRIP ──────────────────────────────────────────── */}
-      {tickerItems.length > 0 && (
-        <div style={{background:"linear-gradient(90deg,#15803D,#16A34A)",overflow:"hidden",padding:"10px 0",borderBottom:`1px solid rgba(255,255,255,0.1)`}}>
-          <div className="sp-ticker-track">
-            {[...tickerItems,...tickerItems].map((item,i)=>(
-              <span key={i} style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.9)",whiteSpace:"nowrap",padding:"0 40px"}}>
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* ── STATS BAR ─────────────────────────────────────────────── */}
-      <div style={{background:C.card,borderBottom:`1px solid ${C.border}`,padding:"28px 32px"}}>
+      <div style={{background:C.card,borderBottom:`1px solid ${C.border}`,padding:"16px 32px"}}>
         <div style={{maxWidth:1200,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:32,textAlign:"center"}}>
           {[
             {value:siteStats?.registered_users??100,suffix:"+",label:L.stat1Label||"Belgian households",accent:C.primary},
@@ -398,7 +368,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
             {value:200,prefix:"€",suffix:"+",label:L.stat4Label||"avg. annual saving",accent:"#10B981"},
           ].map((s,i)=>(
             <div key={i} className="sp-animate" style={{transitionDelay:`${i*0.1}s`}}>
-              <div style={{fontSize:32,fontWeight:900,color:s.accent,letterSpacing:"-1px",lineHeight:1}}>
+              <div style={{fontSize:24,fontWeight:900,color:s.accent,letterSpacing:"-1px",lineHeight:1}}>
                 <AnimatedNumber value={s.value} prefix={s.prefix??""} suffix={s.suffix} />
               </div>
               <div style={{fontSize:12,color:C.muted,marginTop:6,fontWeight:600}}>{s.label}</div>
@@ -411,7 +381,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       <div ref={toolsRef}>
 
         {/* ── LIVE PRICE SECTION ──────────────────────────────────── */}
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"72px 32px 0"}}>
+        <div style={{maxWidth:1200,margin:"0 auto",padding:"48px 32px 0"}}>
           <div className="sp-animate" style={{textAlign:"center",marginBottom:48}}>
             <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>{L.sectionLiveLabel||"Live right now"}</div>
             <h2 style={{fontSize:"clamp(28px,4vw,46px)",fontWeight:900,color:C.text,marginBottom:12,letterSpacing:"-1px"}}>{L.sectionTodayTitle||"Today's electricity prices"}</h2>
@@ -631,7 +601,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
 
         {/* ── SMART TOOLS ─────────────────────────────────────────── */}
-        <div style={{background:isDark ? C.bg : "linear-gradient(180deg,#F0FDF4,#F7FEF9)",padding:"80px 32px"}}>
+        <div style={{background:isDark ? C.bg : "linear-gradient(180deg,#F0FDF4,#F7FEF9)",padding:"56px 32px 40px"}}>
           <div style={{maxWidth:1200,margin:"0 auto"}}>
             <div className="sp-animate" style={{textAlign:"center",marginBottom:56}}>
               <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>{L.toolsLabel||"Smart tools · Smart services"}</div>
@@ -643,7 +613,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
               {[
                 {icon:"🔋",title:L.toolPlannerTitle||"Smart Planner", badge:"Live",    badgeCol:C.primary,accent:C.primary, delay:0,
                   desc:L.toolPlannerDesc||"Battery %, charger speed, deadline — we calculate the cheapest window instantly.",
-                  cta:L.toolPlannerCta||"Try Smart Planner →",onClick:()=>document.getElementById("planner")?.scrollIntoView({behavior:"smooth"})},
+                  cta:L.toolPlannerCta||"Try Smart Planner →",onClick:onGetStarted},
                 {icon:"🔔",title:L.toolAlertsTitle||"Smart Alerts",   badge:"Free",    badgeCol:"#0EA5E9",accent:"#0EA5E9",  delay:0.1,
                   desc:L.toolAlertsDesc||"Every day at 13:00 CET, we confirm tomorrow's cheapest window and send it to your inbox.",
                   cta:L.toolAlertsCta||"Set up alerts →",onClick:onGetStarted},
@@ -668,245 +638,41 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           </div>
         </div>
 
-        {/* ── EV PLANNER ──────────────────────────────────────────── */}
-        <div id="planner" style={{maxWidth:1200,margin:"0 auto",padding:"80px 32px"}}>
-          <div style={{background:C.card,borderRadius:28,border:`1px solid ${C.border}`,boxShadow:"0 8px 48px rgba(0,0,0,0.06)",overflow:"hidden"}}>
-            <div style={{background:"linear-gradient(135deg,#15803D,#16A34A,#22C55E)",padding:"36px 40px"}}>
-              <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",letterSpacing:3,marginBottom:10}}>{L.plannerLabel||"Smart Planner"}</div>
-              <h2 style={{fontSize:"clamp(24px,3vw,38px)",fontWeight:900,color:"#fff",marginBottom:8,letterSpacing:"-0.5px"}}>{L.plannerTitle||"Find your cheapest energy window"}</h2>
-              <p style={{fontSize:15,color:"rgba(255,255,255,0.75)",lineHeight:1.7}}>{L.plannerDesc||"Set your battery and deadline — optimal window calculated in real time."}</p>
-            </div>
 
-            <div style={{padding:"40px"}}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:28,marginBottom:32}}>
+        {/* ── EMAIL ALERTS BAR ─────────────────────────────────────── */}
+        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 32px 48px"}}>
+          <div className="sp-animate sp-card-enterprise" style={{borderRadius:20,padding:"28px 32px"}}>
+            {leadState==="done" ? (
+              <div style={{display:"flex",gap:16,alignItems:"center"}}>
+                <span style={{fontSize:32}}>✅</span>
                 <div>
-                  <label style={{fontSize:11,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",fontWeight:700,display:"block",marginBottom:10}}>
-                    Battery now: <strong style={{color:C.primary}}>{battPct}%</strong>
-                  </label>
-                  <input type="range" min={5} max={90} step={5} value={battPct} onChange={e=>setBattPct(+e.target.value)} style={{width:"100%",accentColor:C.primary,cursor:"pointer",height:6}}/>
-                  <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.light,marginTop:4}}><span>5%</span><span>90%</span></div>
-                </div>
-                <div>
-                  <label style={{fontSize:11,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",fontWeight:700,display:"block",marginBottom:10}}>Full by:</label>
-                  <select value={needByHour} onChange={e=>setNeedByHour(+e.target.value)}
-                    style={{width:"100%",background:C.bg,border:`1px solid ${C.border}`,borderRadius:12,padding:"11px 14px",color:C.text,fontSize:14,fontWeight:700,cursor:"pointer",outline:"none"}}>
-                    {Array.from({length:23},(_,i)=>(new Date().getHours()+1+i)%24).map(h=>(
-                      <option key={h} value={h}>{String(h).padStart(2,"0")}:00{h>=5&&h<=9?" (morning)":h>=17&&h<=20?" (evening)":""}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{fontSize:11,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",fontWeight:700,display:"block",marginBottom:10}}>Charger speed:</label>
-                  <div style={{display:"flex",gap:8}}>
-                    {[3.7,7.4,11,22].map(kw=>(
-                      <button key={kw} onClick={()=>setChargerKw(kw)} style={{flex:1,padding:"11px 4px",borderRadius:12,fontSize:12,fontWeight:700,border:`1.5px solid ${chargerKw===kw?C.primary:C.border}`,background:chargerKw===kw?C.highlight:C.bg,color:chargerKw===kw?C.primary:C.muted,cursor:"pointer",transition:"all 0.2s"}}>
-                        {kw}kW
-                      </button>
-                    ))}
-                  </div>
+                  <div style={{fontSize:16,fontWeight:800,color:C.primary,marginBottom:4}}>{L.alertDoneTitle||"You're on the list!"}</div>
+                  <div style={{fontSize:13,color:C.muted}}>{L.alertDoneSub||"Daily alert at 13:00 · No spam · Unsubscribe anytime"}</div>
                 </div>
               </div>
-
-              {planResult ? (
-                <div style={{background:"linear-gradient(135deg,rgba(22,163,74,0.05),rgba(34,197,94,0.03))",border:`1px solid rgba(22,163,74,0.2)`,borderRadius:20,padding:"28px 32px"}}>
-                  <div style={{display:"flex",gap:32,flexWrap:"wrap",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
-                    <div>
-                      <div style={{fontSize:11,color:C.primary,textTransform:"uppercase",letterSpacing:"2px",fontWeight:700,marginBottom:8}}>⚡ Optimal window</div>
-                      <div style={{fontSize:"clamp(36px,5vw,56px)",fontWeight:900,color:C.primary,fontFamily:"monospace",letterSpacing:"-2px",lineHeight:1,marginBottom:6}}>
-                        {fmtHour(planResult.start)} – {fmtHour(planResult.end)}
-                      </div>
-                      <div style={{fontSize:13,color:C.muted}}>{planResult.hours}h charging · {fmtNum0(planResult.needed)} kWh</div>
-                    </div>
-                    <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
-                      <div style={{textAlign:"center"}}>
-                        <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>Cost</div>
-                        <div style={{fontSize:"clamp(28px,4vw,40px)",fontWeight:900,color:C.primary,fontFamily:"monospace"}}>€{fmtNum2(planResult.cost)}</div>
-                      </div>
-                      {planResult.saving>0.1&&<>
-                        <div style={{textAlign:"center"}}>
-                          <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>vs charging now</div>
-                          <div style={{fontSize:"clamp(28px,4vw,40px)",fontWeight:900,color:C.amber,fontFamily:"monospace"}}>-€{fmtNum2(planResult.saving)}</div>
-                        </div>
-                        <div style={{textAlign:"center"}}>
-                          <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>per year ×250</div>
-                          <div style={{fontSize:"clamp(28px,4vw,40px)",fontWeight:900,color:C.amber,fontFamily:"monospace"}}>-€{fmtNum0(planResult.saving*250)}</div>
-                        </div>
-                      </>}
-                    </div>
-                  </div>
-                  <button onClick={onGetStarted} className="sp-cta-green-solid">
-                    Get daily alerts for this window →
+            ) : (
+              <div style={{display:"flex",gap:20,flexWrap:"wrap",alignItems:"center"}}>
+                <div style={{flex:"1 1 240px"}}>
+                  <div style={{fontSize:11,color:C.primary,fontWeight:800,textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>🔔 {L.alertBarLabel||"Free daily price alerts"}</div>
+                  <div style={{fontSize:17,fontWeight:800,color:C.text}}>{L.alertBarTitle||"Get notified when the cheapest window opens"}</div>
+                  <div style={{fontSize:12,color:C.muted,marginTop:4}}>{L.alertBarSub||"Every day at 13:00 · No spam · Unsubscribe anytime"}</div>
+                </div>
+                <form onSubmit={submitLead} style={{display:"flex",gap:10,flexWrap:"wrap",flex:"1 1 320px"}}>
+                  <input type="email" required placeholder="your@email.com" value={leadEmail} onChange={e=>setLeadEmail(e.target.value)}
+                    style={{flex:1,minWidth:180,padding:"12px 18px",borderRadius:24,fontSize:14,background:C.bg,border:`1.5px solid ${C.border}`,color:C.text,outline:"none",fontFamily:"inherit",transition:"border 0.2s"}}
+                    onFocus={e=>e.target.style.border=`1.5px solid ${C.primary}`}
+                    onBlur={e=>e.target.style.border=`1.5px solid ${C.border}`}/>
+                  <button type="submit" disabled={leadState==="loading"} className="sp-cta-green-solid" style={{opacity:leadState==="loading"?0.7:1,fontSize:13,padding:"12px 24px"}}>
+                    {leadState==="loading"?"…":(L.alertBarCta||"Notify me →")}
                   </button>
-                  <span style={{fontSize:11,color:C.light,marginLeft:16}}>Free · No credit card</span>
-                </div>
-              ) : (
-                <div style={{background:C.bg,borderRadius:14,padding:"20px",textAlign:"center",fontSize:13,color:C.muted}}>
-                  {prices.length?"Adjust inputs above to calculate":"Loading prices…"}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── SUPPLIERS + EMAIL/GAS GRID ───────────────────────────── */}
-        <div style={{background:isDark ? C.bg : "linear-gradient(180deg,#F7FEF9,#F0FDF4)",padding:"0 32px 80px"}}>
-          <div style={{maxWidth:1200,margin:"0 auto"}}>
-
-            {/* Suppliers */}
-            <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,padding:"32px 40px",marginBottom:32,textAlign:"center"}}>
-              <div style={{fontSize:13,fontWeight:800,color:C.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:24}}>7 Belgian suppliers tracked in real time</div>
-              <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap",marginBottom:20}}>
-                {SUPPLIERS.map(s=>(
-                  <div key={s.name} style={{display:"flex",alignItems:"center",gap:8,transition:"transform 0.2s"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>
-                    <div style={{width:38,height:38,borderRadius:10,background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900,color:s.color,flexShrink:0}}>{s.abbr}</div>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>{s.name}</span>
-                  </div>
-                ))}
-              </div>
-              <button onClick={()=>onOpenCalculator?.("electricity")} className="sp-cta-outline-green">
-                Compare all 7 suppliers →
-              </button>
-            </div>
-
-            {/* Gas + Email row */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:24,marginBottom:32}}>
-              {/* Gas */}
-              <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,padding:"32px"}}>
-                <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:16}}>
-                  <div style={{width:52,height:52,borderRadius:16,background:"rgba(249,115,22,0.1)",border:"1px solid rgba(249,115,22,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26}}>🔥</div>
-                  <div>
-                    <div style={{fontSize:11,color:C.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",marginBottom:4}}>TTF Natural Gas · Today</div>
-                    <div style={{fontSize:"clamp(28px,4vw,36px)",fontWeight:900,color:"#F97316",fontFamily:"monospace",letterSpacing:"-1.5px",lineHeight:1}}>{gasCurrent&&gasCurrent.price!=null?`€${fmtNum1(gasCurrent.price)}/MWh`:"—"}</div>
-                    {gasCurrent?.ttf_cEkWh!=null&&<div style={{fontSize:12,color:C.muted,marginTop:2}}>{fmtNum3(gasCurrent.ttf_cEkWh)} c€/kWh</div>}
-                  </div>
-                </div>
-                <p style={{fontSize:13,color:C.muted,lineHeight:1.75,marginBottom:20}}><strong style={{color:"#F97316"}}>~40%</strong> of your gas bill directly tracks this market price.</p>
-                <a href="/calculator/gas" className="sp-cta-outline-amber">Compare gas plans →</a>
-              </div>
-
-              {/* Email */}
-              <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,padding:"32px",background:leadState==="done"?"rgba(34,197,94,0.04)":C.card}}>
-                {leadState==="done"?(
-                  <div style={{display:"flex",gap:16,alignItems:"center",height:"100%"}}>
-                    <span style={{fontSize:40}}>✅</span>
-                    <div><div style={{fontSize:18,fontWeight:800,color:C.primary,marginBottom:6}}>You're on the list!</div><div style={{fontSize:13,color:C.muted,lineHeight:1.65}}>We'll alert you every day at 13:00 when the cheapest window is confirmed.</div></div>
-                  </div>
-                ):(
-                  <>
-                    <div style={{fontSize:11,color:C.primary,fontWeight:800,textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>🔔 Daily Smart Alerts</div>
-                    <div style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:6}}>Alert me when the cheapest window opens</div>
-                    <div style={{fontSize:13,color:C.muted,marginBottom:20}}>Every day at 13:00 · No spam · Unsubscribe anytime</div>
-                    <form onSubmit={submitLead} style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-                      <input type="email" required placeholder="your@email.com" value={leadEmail} onChange={e=>setLeadEmail(e.target.value)}
-                        style={{flex:1,minWidth:160,padding:"12px 16px",borderRadius:24,fontSize:14,background:C.bg,border:`1.5px solid ${C.border}`,color:C.text,outline:"none",fontFamily:"inherit",transition:"border 0.2s"}}
-                        onFocus={e=>e.target.style.border=`1.5px solid ${C.primary}`}
-                        onBlur={e=>e.target.style.border=`1.5px solid ${C.border}`}/>
-                      <button type="submit" disabled={leadState==="loading"} className="sp-cta-green-solid" style={{opacity:leadState==="loading"?0.7:1,fontSize:13,padding:"12px 22px"}}>
-                        {leadState==="loading"?"…":"Notify me →"}
-                      </button>
-                    </form>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Fluvius teaser */}
-            <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,padding:"36px 40px",border:"1px solid rgba(251,191,36,0.25)",display:"flex",gap:40,flexWrap:"wrap",alignItems:"flex-start"}}>
-              <div style={{flex:"1 1 280px"}}>
-                <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.3)",borderRadius:20,padding:"4px 14px",fontSize:11,fontWeight:800,color:"#92400E",marginBottom:16,textTransform:"uppercase",letterSpacing:"1px"}}>⚡ Coming soon</div>
-                <h3 style={{fontSize:"clamp(18px,2.5vw,26px)",fontWeight:900,color:C.text,marginBottom:10,letterSpacing:"-0.5px"}}>Fluvius capacity tariff integration</h3>
-                <p style={{fontSize:14,color:C.muted,lineHeight:1.8,marginBottom:20}}>Since 2023, Belgian households with a smart meter pay a capacity tariff. Charging at the wrong hour can add €20–30 to your monthly grid bill.</p>
-                <form onSubmit={submitFluvius} style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-                  {fluviusState==="done"?(
-                    <div style={{fontSize:14,fontWeight:700,color:"#92400E"}}>✅ You're on the waitlist</div>
-                  ):(
-                    <>
-                      <input type="email" required placeholder="your@email.com" value={fluviusEmail} onChange={e=>setFluviusEmail(e.target.value)}
-                        style={{flex:1,minWidth:160,padding:"10px 16px",borderRadius:24,fontSize:13,background:C.bg,border:"1.5px solid rgba(251,191,36,0.35)",color:C.text,outline:"none",fontFamily:"inherit"}}
-                        onFocus={e=>e.target.style.border="1.5px solid rgba(251,191,36,0.7)"}
-                        onBlur={e=>e.target.style.border="1.5px solid rgba(251,191,36,0.35)"}/>
-                      <button type="submit" disabled={fluviusState==="loading"} style={{padding:"10px 20px",borderRadius:24,fontSize:13,fontWeight:700,background:"linear-gradient(135deg,#f59e0b,#d97706)",border:"none",color:"#1c1917",cursor:"pointer",opacity:fluviusState==="loading"?0.7:1}}>
-                        {fluviusState==="loading"?"…":"Notify me →"}
-                      </button>
-                    </>
-                  )}
                 </form>
               </div>
-              <div style={{flex:"0 0 auto",background:C.bg,borderRadius:16,padding:"20px 24px",border:`1px solid ${C.border}`,minWidth:190}}>
-                <div style={{fontSize:11,color:C.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",marginBottom:14}}>What we'll show</div>
-                {["Real cost incl. capacity tariff","Best charge time for solar owners","Monthly peak demand tracker","Fluvius bill simulator"].map(f=>(
-                  <div key={f} style={{display:"flex",gap:8,fontSize:13,color:C.muted,marginBottom:10}}>
-                    <span style={{color:C.primary,flexShrink:0}}>→</span>{f}
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </div>
-
-        {/* ── DEVELOPER / HOME ASSISTANT ──────────────────────────── */}
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 32px 80px"}}>
-          <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,overflow:"hidden"}}>
-            {/* Dark code panel */}
-            <div style={{background:"linear-gradient(135deg,#0F172A,#1E293B)",padding:"40px",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:40,alignItems:"center"}}>
-              <div>
-                <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(124,58,237,0.18)",border:"1px solid rgba(124,58,237,0.4)",borderRadius:20,padding:"4px 14px",fontSize:11,fontWeight:800,color:"#A78BFA",marginBottom:18,textTransform:"uppercase",letterSpacing:"1px"}}>🔌 Free Public API</div>
-                <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:8}}>{L.devSub||"Built for developers & Home Assistant"}</div>
-                <h3 style={{fontSize:"clamp(20px,3vw,30px)",fontWeight:900,color:"#fff",marginBottom:10,letterSpacing:"-0.5px",lineHeight:1.2}}>{L.devTitle||"🚀 Open Data for the Belgian Energy Community"}</h3>
-                <p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.8,marginBottom:24}}>{L.devDesc||"Zero authentication. Just hit the endpoint. Get live EPEX Spot prices, gas TTF, and hourly schedules as clean JSON — perfect for dashboards, automations, and HACS."}</p>
-                <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-                  <a href="/api-docs" style={{display:"inline-block",padding:"10px 22px",borderRadius:24,fontSize:13,fontWeight:700,background:"rgba(124,58,237,0.15)",border:"1px solid rgba(124,58,237,0.35)",color:"#A78BFA",textDecoration:"none",transition:"background 0.2s"}}
-                    onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,0.28)"}
-                    onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,0.15)"}>
-                    {L.devCtaHA||"View HA integration →"}
-                  </a>
-                  <a href="/api-docs" style={{display:"inline-block",padding:"10px 22px",borderRadius:24,fontSize:13,fontWeight:700,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.7)",textDecoration:"none",transition:"background 0.2s"}}
-                    onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.12)"}
-                    onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.06)"}>
-                    {L.devCtaApi||"API docs →"}
-                  </a>
-                </div>
-              </div>
-              {/* Code block */}
-              <div style={{background:"rgba(0,0,0,0.35)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"22px 24px",fontFamily:"'Fira Code','Cascadia Code','SFMono-Regular','Menlo','Courier New',monospace",fontSize:12,overflowX:"hidden"}}>
-                <div style={{display:"flex",gap:6,marginBottom:14}}>
-                  {["#EF4444","#F59E0B","#22C55E"].map(c=><div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}}/>)}
-                </div>
-                <div style={{color:"rgba(255,255,255,0.35)",marginBottom:8,fontSize:11,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
-                  <span>$ curl request</span>
-                  <button onClick={()=>{navigator.clipboard?.writeText("curl https://smartprice.be/api/prices/today");setCopiedCmd(true);setTimeout(()=>setCopiedCmd(false),2000);}}
-                    style={{background:copiedCmd?"rgba(74,222,128,0.15)":"rgba(255,255,255,0.08)",border:`1px solid ${copiedCmd?"rgba(74,222,128,0.4)":"rgba(255,255,255,0.15)"}`,borderRadius:8,padding:"3px 10px",color:copiedCmd?"#4ADE80":"rgba(255,255,255,0.45)",fontSize:10,fontWeight:700,cursor:"pointer",transition:"all 0.2s",fontFamily:"inherit",flexShrink:0}}>
-                    {copiedCmd?"✓ Copied":"Copy"}
-                  </button>
-                </div>
-                <div style={{color:"#4ADE80",marginBottom:16,wordBreak:"break-all",lineHeight:1.7}}>
-                  curl https://smartprice.be/api/prices/today
-                </div>
-                <div style={{color:"rgba(255,255,255,0.25)",marginBottom:6,fontSize:11}}>// response</div>
-                <pre style={{color:"rgba(255,255,255,0.65)",margin:0,lineHeight:1.8,fontSize:11,whiteSpace:"pre-wrap",wordBreak:"break-word",overflowX:"auto"}}>{`{
-  "data": [
-    { "hour": 14,
-      "price_eur_mwh": 42.3,
-      "is_current": true },
-    ...
-  ]
-}`}</pre>
-              </div>
-            </div>
-            {/* Feature strip */}
-            <div style={{background:"rgba(15,23,42,0.96)",borderTop:"1px solid rgba(255,255,255,0.06)",padding:"16px 40px",display:"flex",gap:28,flexWrap:"wrap"}}>
-              {["No API key","EPEX Spot Belgium","Gas TTF","15-min updates","HACS integration","Open source"].map(f=>(
-                <div key={f} style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"rgba(255,255,255,0.4)",fontWeight:600}}>
-                  <span style={{color:"#4ADE80",fontWeight:800}}>✓</span>{f}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* ── FAQ ─────────────────────────────────────────────────── */}
-        <div style={{maxWidth:800,margin:"0 auto",padding:"0 32px 80px"}}>
-          <div className="sp-animate" style={{textAlign:"center",marginBottom:48}}>
+        <div style={{maxWidth:800,margin:"0 auto",padding:"0 32px 56px"}}>
+          <div className="sp-animate" style={{textAlign:"center",marginBottom:36}}>
             <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>FAQ</div>
             <h2 style={{fontSize:"clamp(26px,4vw,42px)",fontWeight:900,color:C.text,letterSpacing:"-1px"}}>Frequently asked questions</h2>
           </div>
@@ -924,28 +690,6 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
 
       </div>{/* /content wrapper */}
-
-      {/* ── FINAL CTA ─────────────────────────────────────────────── */}
-      <div className="sp-hero" style={{padding:"80px 32px",textAlign:"center",minHeight:"auto"}}>
-        <div className="sp-blob sp-blob-1" style={{opacity:0.3}} />
-        <div className="sp-animate" style={{position:"relative",zIndex:2}}>
-          <div style={{fontSize:40,marginBottom:16}}>⚡</div>
-          <h3 style={{fontSize:"clamp(26px,4vw,48px)",fontWeight:900,color:"#fff",marginBottom:12,letterSpacing:"-1px"}}>
-            Join {siteStats?.registered_users??"100"}+ Belgians who charge smarter
-          </h3>
-          <p style={{fontSize:16,color:"rgba(255,255,255,0.75)",marginBottom:36,maxWidth:420,margin:"0 auto 36px",lineHeight:1.7}}>
-            Free forever. No credit card. Set up in 30 seconds.
-          </p>
-          <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap"}}>
-            <button onClick={onGetStarted} className="sp-cta-primary">
-              Get started free →
-            </button>
-            <a href="/business" style={{padding:"14px 28px",borderRadius:30,fontSize:15,fontWeight:700,background:"rgba(255,255,255,0.12)",color:"#fff",textDecoration:"none",border:"1px solid rgba(255,255,255,0.25)"}}>
-              SmartPrice for Business →
-            </a>
-          </div>
-        </div>
-      </div>
 
       {/* ── FOOTER ────────────────────────────────────────────────── */}
       <div style={{borderTop:`1px solid ${C.border}`,background:C.card,padding:"32px",textAlign:"center",fontSize:12,color:C.light}}>
