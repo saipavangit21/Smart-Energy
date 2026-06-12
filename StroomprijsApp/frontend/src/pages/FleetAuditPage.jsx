@@ -14,19 +14,20 @@ const DYNAMIC_RATE_FALLBACK = 0.1920; // €/kWh fallback if API unavailable
 const AVG_KWH_PER_CAR    = 280;    // kWh/month average Belgian company EV home charging
 
 const C = {
-  bg:        "#F7FEF9",
+  bg:        "#F8FAFC",
   card:      "#FFFFFF",
   border:    "rgba(0,0,0,0.08)",
   shadow:    "0 2px 16px rgba(0,0,0,0.07)",
   blue:      "#16A34A",
   teal:      "#22C55E",
-  text:      "#1E293B",
-  muted:     "#64748B",
+  text:      "#0F172A",
+  muted:     "#475569",
   light:     "#94A3B8",
   green:     "#22C55E",
   red:       "#DC2626",
-  highlight: "#DCFCE7",
-  blueBorder:"rgba(22,163,74,0.2)",
+  highlight: "#FEF3C7",
+  blueBorder:"rgba(180,83,9,0.25)",
+  badgeText: "#B45309",
 };
 
 function fmt(n) { return n.toLocaleString("nl-BE", { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
@@ -174,7 +175,7 @@ export default function FleetAuditPage({ onNavigate }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => onNavigate && onNavigate("/")}>
           <span style={{ fontSize: 22 }}>⚡</span>
           <span style={{ fontWeight: 800, fontSize: 16, color: C.blue }}>SmartPrice</span>
-          <span style={{ fontSize: 12, color: C.muted, fontWeight: 600, background: C.highlight, padding: "2px 8px", borderRadius: 20, border: `1px solid ${C.blueBorder}` }}>Business</span>
+          <span style={{ fontSize: 12, color: C.badgeText, fontWeight: 800, background: C.highlight, padding: "2px 8px", borderRadius: 20, border: `1px solid ${C.blueBorder}` }}>Fleet</span>
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <LangSwitcher />
@@ -189,7 +190,7 @@ export default function FleetAuditPage({ onNavigate }) {
           <>
             {/* Hero */}
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.highlight, border: `1px solid ${C.blueBorder}`, borderRadius: 30, padding: "6px 16px", marginBottom: 20, fontSize: 13, color: C.blue, fontWeight: 700 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.highlight, border: `1px solid ${C.blueBorder}`, borderRadius: 30, padding: "6px 16px", marginBottom: 20, fontSize: 13, color: C.badgeText, fontWeight: 700 }}>
                 🚗 {L.heroTitle||"Free Fleet Cost Audit Tool"}
               </div>
               <h1 style={{ fontSize: 36, fontWeight: 900, lineHeight: 1.15, color: C.text, marginBottom: 16 }}>

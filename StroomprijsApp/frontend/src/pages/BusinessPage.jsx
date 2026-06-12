@@ -9,18 +9,19 @@ import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher  from "../components/LangSwitcher";
 
 const C = {
-  bg:        "#F7FEF9",
+  bg:        "#F8FAFC",
   card:      "#FFFFFF",
   border:    "rgba(0,0,0,0.08)",
   shadow:    "0 4px 24px rgba(0,0,0,0.07)",
   primary:   "#16A34A",
   bright:    "#22C55E",
-  text:      "#0F1A0F",
-  muted:     "#52635A",
-  light:     "#9DB3A3",
+  text:      "#0F172A",
+  muted:     "#475569",
+  light:     "#94A3B8",
   green:     "#22C55E",
-  highlight: "#DCFCE7",
-  border2:   "rgba(22,163,74,0.2)",
+  highlight: "#EFF6FF",
+  border2:   "rgba(30,64,175,0.25)",
+  badgeText: "#1E40AF",
   amber:     "#D97706",
   purple:    "#7C3AED",
   red:       "#DC2626",
@@ -233,11 +234,11 @@ export default function BusinessPage({ onNavigate }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => onNavigate?.("/")}>
           <span style={{ fontSize: 22 }}>🇧🇪</span>
           <span style={{ fontWeight: 900, fontSize: 17, color: C.text, letterSpacing: "-0.3px" }}>SmartPrice</span>
-          <span style={{ fontSize: 11, color: C.primary, fontWeight: 800, background: C.highlight, padding: "3px 12px", borderRadius: 20, border: `1px solid ${C.border2}` }}>Business</span>
+          <span style={{ fontSize: 11, color: C.badgeText, fontWeight: 800, background: C.highlight, padding: "3px 12px", borderRadius: 20, border: `1px solid ${C.border2}` }}>Business</span>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <LangSwitcher />
-          <a href="/fleet-audit" style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: C.highlight, border: `1px solid ${C.border2}`, color: C.primary, textDecoration: "none" }}>{L.navFleetAudit||"Free Fleet Audit →"}</a>
+          <a href="/fleet-audit" style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "#FEF3C7", border: "1px solid rgba(180,83,9,0.25)", color: "#B45309", textDecoration: "none" }}>{L.navFleetAudit||"Free Fleet Audit →"}</a>
           <button onClick={() => setShowModal(true)} style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(22,163,74,0.3)" }}>
             {L.navAudit||"Request audit"}
           </button>
