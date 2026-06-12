@@ -242,10 +242,10 @@ export default function BusinessPage({ onNavigate }) {
       </nav>
 
       {/* ── HERO ──────────────────────────────────────────────────── */}
-      <div style={{ background: "linear-gradient(135deg, #0A0700 0%, #1C1400 40%, #2A1C00 70%, #1C1400 100%)", color: "#fff", padding: "80px 32px 72px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-        {/* decorative blobs — Belgian amber glow */}
-        <div style={{ position: "absolute", width: 500, height: 500, borderRadius: "50%", background: "rgba(245,166,35,0.08)", top: -200, right: -100, pointerEvents: "none" }} />
-        <div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", background: "rgba(239,35,60,0.06)", bottom: -100, left: -50, pointerEvents: "none" }} />
+      <div style={{ background: "linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #2563EB 100%)", color: "#fff", padding: "80px 32px 72px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        {/* decorative blobs — enterprise blue/teal */}
+        <div style={{ position: "absolute", width: 500, height: 500, borderRadius: "50%", background: "rgba(59,130,246,0.12)", top: -200, right: -100, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", background: "rgba(13,148,136,0.1)", bottom: -100, left: -50, pointerEvents: "none" }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 30, padding: "6px 20px", marginBottom: 28, fontSize: 13, fontWeight: 700, backdropFilter: "blur(8px)" }}>
@@ -260,7 +260,7 @@ export default function BusinessPage({ onNavigate }) {
             {L.heroSub||"Stop overpaying based on fixed CREG averages. SmartPrice tracks live EPEX data to calculate exact home-charging costs for your employees."}
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={() => setShowModal(true)} style={{ padding: "15px 36px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "linear-gradient(135deg,#F5A623,#E8900A)", color: "#0A0700", border: "none", cursor: "pointer", boxShadow: "0 6px 28px rgba(245,166,35,0.4)" }}>
+            <button onClick={() => setShowModal(true)} style={{ padding: "15px 36px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FFFFFF", color: "#1E3A8A", border: "none", cursor: "pointer", boxShadow: "0 6px 28px rgba(0,0,0,0.25)" }}>
               {L.heroCta||"Get a Detailed Cost Audit →"}
             </button>
             <a href="/fleet-audit" style={{ padding: "15px 28px", borderRadius: 30, fontSize: 14, fontWeight: 700, background: "rgba(255,255,255,0.12)", color: "#fff", textDecoration: "none", border: "1px solid rgba(255,255,255,0.28)", backdropFilter: "blur(8px)" }}>
