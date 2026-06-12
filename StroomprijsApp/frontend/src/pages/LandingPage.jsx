@@ -257,7 +257,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       {/* ── NAV — transparent over hero, solid on scroll ─────────── */}
       <nav style={{
         position:"fixed",top:0,left:0,right:0,zIndex:200,
-        background: scrolled ? "rgba(255,255,255,0.97)" : "transparent",
+        background: scrolled ? C.navBg : "transparent",
         backdropFilter: scrolled ? "blur(12px)" : "none",
         borderBottom: scrolled ? `1px solid ${C.border}` : "none",
         boxShadow: scrolled ? "0 2px 20px rgba(0,0,0,0.08)" : "none",
@@ -272,8 +272,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <ThemeSwitcher />
           <LangSwitcher />
-          <a href="/ev-charging-belgium" style={{padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,background:scrolled?"rgba(34,197,94,0.08)":"rgba(255,255,255,0.12)",border:scrolled?"1px solid rgba(34,197,94,0.2)":"1px solid rgba(255,255,255,0.25)",color:scrolled?C.primary:"#fff",textDecoration:"none"}}>🚗 EV</a>
-          <a href="/business" style={{padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,background:scrolled?C.highlight:"rgba(255,255,255,0.12)",border:scrolled?`1px solid ${C.border2}`:"1px solid rgba(255,255,255,0.25)",color:scrolled?C.primary:"#fff",textDecoration:"none"}}>🏢 Business</a>
+          <a href="/ev-charging-belgium" style={{padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,background:scrolled?"rgba(34,197,94,0.08)":"rgba(255,255,255,0.12)",border:scrolled?"1px solid rgba(34,197,94,0.2)":"1px solid rgba(255,255,255,0.25)",color:scrolled?C.primary:"#fff",textDecoration:"none"}}>{L.navEv||"🚗 EV"}</a>
+          <a href="/business" style={{padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,background:scrolled?C.highlight:"rgba(255,255,255,0.12)",border:scrolled?`1px solid ${C.border2}`:"1px solid rgba(255,255,255,0.25)",color:scrolled?C.primary:"#fff",textDecoration:"none"}}>{L.navBusiness||"🏢 Business"}</a>
           <button onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:20,fontSize:13,fontWeight:800,background:scrolled?"linear-gradient(135deg,#16A34A,#22C55E)":"rgba(255,255,255,0.2)",color:"#fff",border:scrolled?"none":"1px solid rgba(255,255,255,0.35)",cursor:"pointer",boxShadow:scrolled?"0 4px 16px rgba(22,163,74,0.3)":"none"}}>
             {L.navDashboard||"Dashboard →"}
           </button>
@@ -634,25 +634,25 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         <div style={{background:isDark ? C.bg : "linear-gradient(180deg,#F0FDF4,#F7FEF9)",padding:"80px 32px"}}>
           <div style={{maxWidth:1200,margin:"0 auto"}}>
             <div className="sp-animate" style={{textAlign:"center",marginBottom:56}}>
-              <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>Smart tools · Smart services</div>
-              <h2 style={{fontSize:"clamp(28px,4vw,46px)",fontWeight:900,color:C.text,letterSpacing:"-1px",marginBottom:12}}>Everything you need to pay less</h2>
-              <p style={{fontSize:16,color:C.muted,maxWidth:500,margin:"0 auto",lineHeight:1.8}}>Four tools, one platform, zero cost. SmartPrice does the monitoring — you just plug in at the right time.</p>
+              <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>{L.toolsLabel||"Smart tools · Smart services"}</div>
+              <h2 style={{fontSize:"clamp(28px,4vw,46px)",fontWeight:900,color:C.text,letterSpacing:"-1px",marginBottom:12}}>{L.toolsTitle||"Everything you need to pay less"}</h2>
+              <p style={{fontSize:16,color:C.muted,maxWidth:500,margin:"0 auto",lineHeight:1.8}}>{L.toolsDesc||"Four tools, one platform, zero cost. SmartPrice does the monitoring — you just plug in at the right time."}</p>
             </div>
 
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:24}}>
               {[
-                {icon:"🔋",title:"Smart Planner",   badge:"Live",    badgeCol:C.primary,accent:C.primary, delay:0,
-                  desc:"Battery %, charger speed, deadline — we calculate the cheapest window instantly. Real cost, not estimates.",
-                  cta:"Try Smart Planner →",onClick:()=>document.getElementById("planner")?.scrollIntoView({behavior:"smooth"})},
-                {icon:"🔔",title:"Smart Alerts",    badge:"Free",    badgeCol:"#0EA5E9",accent:"#0EA5E9",  delay:0.1,
-                  desc:"Every day at 13:00 CET, we confirm tomorrow's cheapest window and send it to your inbox.",
-                  cta:"Set up alerts →",onClick:onGetStarted},
-                {icon:"📊",title:"Smart Compare",   badge:"7 plans", badgeCol:C.amber,  accent:C.amber,   delay:0.2,
-                  desc:"Compare all 7 Belgian electricity suppliers side by side. See your exact annual cost in 30 seconds.",
-                  cta:"Compare suppliers →",onClick:()=>onOpenCalculator?.("electricity")},
-                {icon:"🏠",title:"Smart Connect",   badge:"HACS",    badgeCol:C.purple, accent:C.purple,  delay:0.3,
-                  desc:"Official Home Assistant integration. 6 sensors, EPEX + gas. Automate your EV charger by price.",
-                  cta:"View integration →",onClick:()=>window.location.href="/api-docs"},
+                {icon:"🔋",title:L.toolPlannerTitle||"Smart Planner", badge:"Live",    badgeCol:C.primary,accent:C.primary, delay:0,
+                  desc:L.toolPlannerDesc||"Battery %, charger speed, deadline — we calculate the cheapest window instantly.",
+                  cta:L.toolPlannerCta||"Try Smart Planner →",onClick:()=>document.getElementById("planner")?.scrollIntoView({behavior:"smooth"})},
+                {icon:"🔔",title:L.toolAlertsTitle||"Smart Alerts",   badge:"Free",    badgeCol:"#0EA5E9",accent:"#0EA5E9",  delay:0.1,
+                  desc:L.toolAlertsDesc||"Every day at 13:00 CET, we confirm tomorrow's cheapest window and send it to your inbox.",
+                  cta:L.toolAlertsCta||"Set up alerts →",onClick:onGetStarted},
+                {icon:"📊",title:L.toolCompareTitle||"Smart Compare", badge:"7 plans", badgeCol:C.amber,  accent:C.amber,   delay:0.2,
+                  desc:L.toolCompareDesc||"Compare all 7 Belgian electricity suppliers side by side. See your exact annual cost in 30 seconds.",
+                  cta:L.toolCompareCta||"Compare suppliers →",onClick:()=>onOpenCalculator?.("electricity")},
+                {icon:"🏠",title:L.toolConnectTitle||"Smart Connect", badge:"HACS",    badgeCol:C.purple, accent:C.purple,  delay:0.3,
+                  desc:L.toolConnectDesc||"Official Home Assistant integration. 6 sensors, EPEX + gas. Automate your EV charger by price.",
+                  cta:L.toolConnectCta||"View integration →",onClick:()=>window.location.href="/api-docs"},
               ].map((p,i)=>(
                 <div key={p.title} className="sp-animate sp-card-tool" style={{transitionDelay:`${p.delay}s`}} onClick={p.onClick}>
                   <div style={{width:52,height:52,borderRadius:16,background:`${p.accent}12`,border:`1px solid ${p.accent}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,marginBottom:20}}>{p.icon}</div>
@@ -672,9 +672,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         <div id="planner" style={{maxWidth:1200,margin:"0 auto",padding:"80px 32px"}}>
           <div style={{background:C.card,borderRadius:28,border:`1px solid ${C.border}`,boxShadow:"0 8px 48px rgba(0,0,0,0.06)",overflow:"hidden"}}>
             <div style={{background:"linear-gradient(135deg,#15803D,#16A34A,#22C55E)",padding:"36px 40px"}}>
-              <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",letterSpacing:3,marginBottom:10}}>Smart Planner</div>
-              <h2 style={{fontSize:"clamp(24px,3vw,38px)",fontWeight:900,color:"#fff",marginBottom:8,letterSpacing:"-0.5px"}}>Find your cheapest energy window</h2>
-              <p style={{fontSize:15,color:"rgba(255,255,255,0.75)",lineHeight:1.7}}>Set your battery and deadline — optimal window calculated in real time.</p>
+              <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",letterSpacing:3,marginBottom:10}}>{L.plannerLabel||"Smart Planner"}</div>
+              <h2 style={{fontSize:"clamp(24px,3vw,38px)",fontWeight:900,color:"#fff",marginBottom:8,letterSpacing:"-0.5px"}}>{L.plannerTitle||"Find your cheapest energy window"}</h2>
+              <p style={{fontSize:15,color:"rgba(255,255,255,0.75)",lineHeight:1.7}}>{L.plannerDesc||"Set your battery and deadline — optimal window calculated in real time."}</p>
             </div>
 
             <div style={{padding:"40px"}}>
