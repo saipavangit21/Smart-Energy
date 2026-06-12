@@ -631,7 +631,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
 
         {/* ── SMART TOOLS ─────────────────────────────────────────── */}
-        <div style={{background:"linear-gradient(180deg,#F0FDF4,#F7FEF9)",padding:"80px 32px"}}>
+        <div style={{background:isDark ? C.bg : "linear-gradient(180deg,#F0FDF4,#F7FEF9)",padding:"80px 32px"}}>
           <div style={{maxWidth:1200,margin:"0 auto"}}>
             <div className="sp-animate" style={{textAlign:"center",marginBottom:56}}>
               <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>Smart tools · Smart services</div>
@@ -749,7 +749,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
 
         {/* ── SUPPLIERS + EMAIL/GAS GRID ───────────────────────────── */}
-        <div style={{background:"linear-gradient(180deg,#F7FEF9,#F0FDF4)",padding:"0 32px 80px"}}>
+        <div style={{background:isDark ? C.bg : "linear-gradient(180deg,#F7FEF9,#F0FDF4)",padding:"0 32px 80px"}}>
           <div style={{maxWidth:1200,margin:"0 auto"}}>
 
             {/* Suppliers */}
