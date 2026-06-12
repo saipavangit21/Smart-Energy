@@ -5,34 +5,16 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "../context/LanguageContext";
+import { useColors, useTheme } from "../context/ThemeContext";
 import LangSwitcher  from "../components/LangSwitcher";
 import ThemeSwitcher from "../components/ThemeSwitcher";
-
-const C = {
-  bg:        "#F7FEF9",
-  card:      "#FFFFFF",
-  border:    "rgba(0,0,0,0.08)",
-  shadow:    "0 4px 24px rgba(0,0,0,0.08)",
-  shadowHover:"0 20px 60px rgba(22,163,74,0.18)",
-  primary:   "#16A34A",
-  bright:    "#22C55E",
-  text:      "#0F1A0F",
-  muted:     "#52635A",
-  light:     "#9DB3A3",
-  green:     "#22C55E",
-  highlight: "#DCFCE7",
-  border2:   "rgba(22,163,74,0.2)",
-  amber:     "#D97706",
-  purple:    "#7C3AED",
-  red:       "#DC2626",
-};
 
 /* ── helpers ─────────────────────────────────────────────────── */
 const retailKwh = mwh => (mwh / 1000) + 0.173;
 const fmtHour   = h   => `${String(h).padStart(2,"0")}:00`;
 
 function priceColor(mwh) {
-  if (mwh == null) return C.light;
+  if (mwh == null) return "#94A3B8";
   if (mwh < 0)   return "#10B981";
   if (mwh < 60)  return "#10B981";
   if (mwh < 110) return "#84CC16";
@@ -97,6 +79,20 @@ function useScrollReveal() {
 export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate }) {
   const { tSection, lang } = useLanguage();
   const L = tSection("landing");
+  const themeC = useColors();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const C = {
+    ...themeC,
+    primary:    themeC.green,
+    bright:     themeC.green,
+    light:      themeC.soft,
+    highlight:  isDark ? "rgba(16,185,129,0.08)" : "#DCFCE7",
+    border2:    isDark ? "rgba(16,185,129,0.22)" : "rgba(22,163,74,0.2)",
+    amber:      themeC.yellow,
+    purple:     "#7C3AED",
+    shadowHover:`0 20px 60px ${themeC.green}30`,
+  };
   const locale = lang === "fr" ? "fr-BE" : lang === "nl" ? "nl-BE" : "en-BE";
   const fmtKwh  = mwh => new Intl.NumberFormat(locale, {minimumFractionDigits:3,maximumFractionDigits:3}).format(retailKwh(mwh));
   const fmtNum0 = val => new Intl.NumberFormat(locale, {minimumFractionDigits:0,maximumFractionDigits:0}).format(val);
@@ -279,7 +275,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           <a href="/ev-charging-belgium" style={{padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,background:scrolled?"rgba(34,197,94,0.08)":"rgba(255,255,255,0.12)",border:scrolled?"1px solid rgba(34,197,94,0.2)":"1px solid rgba(255,255,255,0.25)",color:scrolled?C.primary:"#fff",textDecoration:"none"}}>🚗 EV</a>
           <a href="/business" style={{padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,background:scrolled?C.highlight:"rgba(255,255,255,0.12)",border:scrolled?`1px solid ${C.border2}`:"1px solid rgba(255,255,255,0.25)",color:scrolled?C.primary:"#fff",textDecoration:"none"}}>🏢 Business</a>
           <button onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:20,fontSize:13,fontWeight:800,background:scrolled?"linear-gradient(135deg,#16A34A,#22C55E)":"rgba(255,255,255,0.2)",color:"#fff",border:scrolled?"none":"1px solid rgba(255,255,255,0.35)",cursor:"pointer",boxShadow:scrolled?"0 4px 16px rgba(22,163,74,0.3)":"none"}}>
-            Dashboard →
+            {L.navDashboard||"Dashboard →"}
           </button>
         </div>
       </nav>
@@ -294,7 +290,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
         {/* Badge */}
         <div className="sp-animate" style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.3)",borderRadius:30,padding:"6px 20px",marginBottom:28,fontSize:13,fontWeight:700,color:"#fff",backdropFilter:"blur(8px)"}}>
-          🇧🇪 Belgium · EPEX Spot · Live now
+          {L.heroBadgeLive||"🇧🇪 Belgium · EPEX Spot · Live now"}
         </div>
 
         {/* Headline */}
@@ -311,7 +307,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         {currentMwh!=null && (
           <div className="sp-animate sp-delay-3 sp-glass" style={{display:"inline-flex",alignItems:"center",gap:24,borderRadius:20,padding:"20px 32px",marginBottom:40,flexWrap:"wrap",justifyContent:"center"}}>
             <div style={{textAlign:"center"}}>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",fontWeight:700,textTransform:"uppercase",letterSpacing:"2px",marginBottom:4}}>Right now</div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",fontWeight:700,textTransform:"uppercase",letterSpacing:"2px",marginBottom:4}}>{L.liveNowLabel||"Right now"}</div>
               <div style={{display:"flex",alignItems:"baseline",gap:8}}>
                 <span style={{fontSize:"clamp(40px,6vw,64px)",fontWeight:900,fontFamily:"monospace",color:currentCol,letterSpacing:"-3px",lineHeight:1}}>{Math.round(currentMwh)}</span>
                 <span style={{fontSize:16,color:"rgba(255,255,255,0.5)",fontWeight:600}}>€/MWh</span>
@@ -323,9 +319,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                 <div style={{width:1,height:48,background:"rgba(255,255,255,0.15)"}} />
                 <div style={{textAlign:"left"}}>
                   <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",fontWeight:700,textTransform:"uppercase",letterSpacing:"2px",marginBottom:4}}>
-                    {cheapIsNow?"Cheapest — now":"Best window"}
+                    {cheapIsNow?(L.cheapestNowLabel||"Cheapest — now"):(L.bestWindowLabel||"Best window")}
                   </div>
-                  <div style={{fontSize:20,fontWeight:800,color:"#fff"}}>{cheapIsNow?"Right now!":` ${fmtHour(cheapHour)} – ${fmtHour(cheapWindowEnd??cheapHour+1)}`}</div>
+                  <div style={{fontSize:20,fontWeight:800,color:"#fff"}}>{cheapIsNow?(L.rightNowText||"Right now!"):` ${fmtHour(cheapHour)} – ${fmtHour(cheapWindowEnd??cheapHour+1)}`}</div>
                   <div style={{fontSize:13,color:"#4ADE80",fontWeight:700}}>€{fmtKwh(cheapMwh)}/kWh{savingToday!=null&&savingToday>0.3?` · save €${fmtNum2(savingToday)}`:""}</div>
                 </div>
               </>
@@ -337,7 +333,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         {/* Urgency */}
         {(cheapNow||cheapSoon) && (
           <div className="sp-animate sp-delay-3" style={{display:"inline-block",background:"rgba(34,197,94,0.2)",border:"1px solid rgba(34,197,94,0.5)",borderRadius:12,padding:"8px 22px",fontSize:14,fontWeight:700,color:"#4ADE80",marginBottom:32}}>
-            {cheapNow ? "⚡ Cheapest window RIGHT NOW — plug in" : `⚡ Cheapest window in ${minsUntilCheap<60?`${minsUntilCheap} min`:`${Math.floor(minsUntilCheap/60)}h ${minsUntilCheap%60}m`}`}
+            {cheapNow ? (L.cheapestNowBadge||"⚡ Cheapest window RIGHT NOW — plug in") : (L.cheapestSoonBadge||"⚡ Cheapest window in {x}").replace("{x}", minsUntilCheap<60?`${minsUntilCheap} min`:`${Math.floor(minsUntilCheap/60)}h ${minsUntilCheap%60}m`)}
           </div>
         )}
 
@@ -366,10 +362,10 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       <div style={{background:C.card,borderBottom:`1px solid ${C.border}`,position:"sticky",top:68,zIndex:100}}>
         <div style={{maxWidth:1200,margin:"0 auto",display:"flex",overflow:"auto"}}>
           {[
-            {icon:"⚡",label:"Smart Prices",  accent:C.primary,href:null,          active:true},
-            {icon:"🏢",label:"Smart Business",accent:"#1E40AF",href:"/business",    active:false},
-            {icon:"🚗",label:"Smart Fleet",   accent:C.amber,  href:"/fleet-audit", active:false},
-            {icon:"🔌",label:"Smart Connect", accent:C.purple, href:"/api-docs",    active:false},
+            {icon:"⚡",label:L.navSmartPrices||"Smart Prices",  accent:C.primary,href:null,          active:true},
+            {icon:"🏢",label:L.navSmartBusiness||"Smart Business",accent:"#1E40AF",href:"/business",    active:false},
+            {icon:"🚗",label:L.navSmartFleet||"Smart Fleet",   accent:C.amber,  href:"/fleet-audit", active:false},
+            {icon:"🔌",label:L.navSmartConnect||"Smart Connect", accent:C.purple, href:"/api-docs",    active:false},
           ].map(s=>(
             <a key={s.label} href={s.href||"#"} onClick={s.href?undefined:e=>e.preventDefault()}
               style={{display:"flex",alignItems:"center",gap:7,padding:"12px 28px",fontSize:13,fontWeight:700,color:s.active?s.accent:C.muted,textDecoration:"none",borderBottom:`2px solid ${s.active?s.accent:"transparent"}`,whiteSpace:"nowrap",transition:"color 0.2s"}}>
@@ -396,10 +392,10 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       <div style={{background:C.card,borderBottom:`1px solid ${C.border}`,padding:"28px 32px"}}>
         <div style={{maxWidth:1200,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:32,textAlign:"center"}}>
           {[
-            {value:siteStats?.registered_users??100,suffix:"+",label:"Belgian households",accent:C.primary},
-            {value:7,suffix:"",label:"suppliers compared",accent:C.amber},
-            {value:15,suffix:" min",label:"price update interval",accent:C.purple},
-            {value:200,prefix:"€",suffix:"+",label:"avg. annual EV saving",accent:"#10B981"},
+            {value:siteStats?.registered_users??100,suffix:"+",label:L.stat1Label||"Belgian households",accent:C.primary},
+            {value:7,suffix:"",label:L.stat2Label||"suppliers compared",accent:C.amber},
+            {value:15,suffix:" min",label:L.stat3Label||"price update interval",accent:C.purple},
+            {value:200,prefix:"€",suffix:"+",label:L.stat4Label||"avg. annual saving",accent:"#10B981"},
           ].map((s,i)=>(
             <div key={i} className="sp-animate" style={{transitionDelay:`${i*0.1}s`}}>
               <div style={{fontSize:32,fontWeight:900,color:s.accent,letterSpacing:"-1px",lineHeight:1}}>
@@ -417,19 +413,19 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         {/* ── LIVE PRICE SECTION ──────────────────────────────────── */}
         <div style={{maxWidth:1200,margin:"0 auto",padding:"72px 32px 0"}}>
           <div className="sp-animate" style={{textAlign:"center",marginBottom:48}}>
-            <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>Live right now</div>
-            <h2 style={{fontSize:"clamp(28px,4vw,46px)",fontWeight:900,color:C.text,marginBottom:12,letterSpacing:"-1px"}}>Today's electricity prices</h2>
-            <p style={{fontSize:16,color:C.muted,maxWidth:520,margin:"0 auto",lineHeight:1.8}}>Real-time EPEX Spot Belgium. Cheapest window, peak hours, and your exact cost per charge.</p>
+            <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>{L.sectionLiveLabel||"Live right now"}</div>
+            <h2 style={{fontSize:"clamp(28px,4vw,46px)",fontWeight:900,color:C.text,marginBottom:12,letterSpacing:"-1px"}}>{L.sectionTodayTitle||"Today's electricity prices"}</h2>
+            <p style={{fontSize:16,color:C.muted,maxWidth:520,margin:"0 auto",lineHeight:1.8}}>{L.sectionTodayDesc||"Real-time EPEX Spot Belgium. Cheapest window, peak hours, and your exact cost per kWh."}</p>
           </div>
 
           {/* ── AT A GLANCE — structured window table ─────────────── */}
           {prices.length>0&&(cheapHour!=null||peakH!=null) && (
-            <div className="sp-animate" style={{background:"#fff",border:`1.5px solid ${C.border2}`,borderRadius:20,padding:"24px 28px",marginBottom:32,boxShadow:"0 4px 20px rgba(22,163,74,0.07)",overflowX:"auto"}}>
+            <div className="sp-animate" style={{background:C.card,border:`1.5px solid ${C.border2}`,borderRadius:20,padding:"24px 28px",marginBottom:32,boxShadow:C.shadow,overflowX:"auto"}}>
               <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:"2px",marginBottom:18}}>{L.glanceTitle||"Best charging windows — today"}</div>
 
               {/* Column headers */}
               <div className="sp-glance-header">
-                {["Window","Timing Today","Your Action","Rate"].map(h=>(
+                {[L.glanceColWindow||"Window",L.glanceColTiming||"Timing Today",L.glanceColAction||"Your Action",L.glanceColRate||"Rate"].map(h=>(
                   <div key={h} style={{fontSize:9,fontWeight:800,color:C.light,textTransform:"uppercase",letterSpacing:"1.5px"}}>{h}</div>
                 ))}
               </div>
@@ -490,26 +486,26 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                   <div className="sp-shimmer" style={{height:28,width:60,borderRadius:6,background:"rgba(255,255,255,0.10)"}}/>
                 </div>
               </div>
-              <div style={{padding:"32px 36px",background:"#fff"}}>
+              <div style={{padding:"32px 36px",background:C.card}}>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:16,marginBottom:28}}>
                   {[0,1,2].map(i=>(
-                    <div key={i} style={{borderRadius:18,padding:"22px 24px",background:"#F8FAFC",border:"1px solid #E2E8F0"}}>
-                      <div className="sp-shimmer" style={{height:10,width:96,borderRadius:6,background:"#E2E8F0",marginBottom:12}}/>
-                      <div className="sp-shimmer" style={{height:26,width:130,borderRadius:6,background:"#E2E8F0",marginBottom:8}}/>
-                      <div className="sp-shimmer" style={{height:18,width:80,borderRadius:6,background:"#E2E8F0"}}/>
+                    <div key={i} style={{borderRadius:18,padding:"22px 24px",background:C.bg2,border:`1px solid ${C.border}`}}>
+                      <div className="sp-shimmer" style={{height:10,width:96,borderRadius:6,background:C.border,marginBottom:12}}/>
+                      <div className="sp-shimmer" style={{height:26,width:130,borderRadius:6,background:C.border,marginBottom:8}}/>
+                      <div className="sp-shimmer" style={{height:18,width:80,borderRadius:6,background:C.border}}/>
                     </div>
                   ))}
                 </div>
-                <div style={{background:"#F8FAFC",borderRadius:16,padding:"20px 24px"}}>
-                  <div className="sp-shimmer" style={{height:10,width:150,borderRadius:6,background:"#E2E8F0",marginBottom:14}}/>
+                <div style={{background:C.bg2,borderRadius:16,padding:"20px 24px"}}>
+                  <div className="sp-shimmer" style={{height:10,width:150,borderRadius:6,background:C.border,marginBottom:14}}/>
                   <div style={{display:"flex",gap:2,height:64}}>
                     {Array.from({length:24}).map((_,i)=>(
-                      <div key={i} className="sp-shimmer" style={{flex:1,height:`${32+Math.sin(i*0.8)*22}%`,borderRadius:"3px 3px 0 0",background:"#E2E8F0",alignSelf:"flex-end"}}/>
+                      <div key={i} className="sp-shimmer" style={{flex:1,height:`${32+Math.sin(i*0.8)*22}%`,borderRadius:"3px 3px 0 0",background:C.border,alignSelf:"flex-end"}}/>
                     ))}
                   </div>
                   <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
                     {["00:00","06:00","12:00","18:00","23:00"].map(h=>(
-                      <div key={h} className="sp-shimmer" style={{height:8,width:34,borderRadius:4,background:"#E2E8F0"}}/>
+                      <div key={h} className="sp-shimmer" style={{height:8,width:34,borderRadius:4,background:C.border}}/>
                     ))}
                   </div>
                 </div>
@@ -545,7 +541,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                     <div style={{fontSize:11,fontWeight:800,color:"#16A34A",textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>
                       {cheapIsNow?"⚡ Cheapest — plug in now":"Best window today"}
                     </div>
-                    <div style={{fontSize:"clamp(20px,3vw,28px)",fontWeight:900,color:C.text,marginBottom:6}}>{cheapIsNow?"Right now!":` ${fmtHour(cheapHour)} – ${fmtHour(cheapWindowEnd??cheapHour+2)}`}</div>
+                    <div style={{fontSize:"clamp(20px,3vw,28px)",fontWeight:900,color:C.text,marginBottom:6}}>{cheapIsNow?(L.rightNowText||"Right now!"):` ${fmtHour(cheapHour)} – ${fmtHour(cheapWindowEnd??cheapHour+2)}`}</div>
                     <div style={{fontSize:20,fontWeight:800,color:"#16A34A"}}>€{fmtKwh(cheapMwh)}/kWh</div>
                   </div>
                   <div className="sp-metric-card sp-metric-red">
@@ -565,8 +561,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                 {/* 24h bar chart */}
                 <div style={{background:C.bg,borderRadius:16,padding:"20px 24px",marginBottom:24}} onClick={()=>setBarTooltip(null)}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                    <div style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"1.5px"}}>24-hour price schedule</div>
-                    <div style={{fontSize:9,color:C.light,fontWeight:600}}>tap bar for details</div>
+                    <div style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"1.5px"}}>{L.chart24hTitle||"24-hour price schedule"}</div>
+                    <div style={{fontSize:9,color:C.light,fontWeight:600}}>{L.chartTapHint||"tap bar for details"}</div>
                   </div>
 
                   {/* Touch tooltip chip — renders above bars when a bar is tapped */}
@@ -1084,20 +1080,20 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
         /* Enterprise card base */
         .sp-card-enterprise {
-          background: #fff;
-          border: 1px solid rgba(0,0,0,0.08);
-          box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+          background: ${C.card};
+          border: 1px solid ${C.border};
+          box-shadow: ${C.shadow};
           transition: box-shadow 0.3s ease, transform 0.3s ease;
         }
         .sp-card-enterprise:hover {
-          box-shadow: 0 16px 48px rgba(22,163,74,0.12);
+          box-shadow: 0 16px 48px rgba(16,185,129,0.12);
         }
 
         /* Tool cards (clickable) */
         .sp-card-tool {
-          background: #fff;
-          border: 1px solid rgba(0,0,0,0.08);
-          box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+          background: ${C.card};
+          border: 1px solid ${C.border};
+          box-shadow: ${C.shadow};
           border-radius: 20px;
           padding: 28px 24px;
           cursor: pointer;
