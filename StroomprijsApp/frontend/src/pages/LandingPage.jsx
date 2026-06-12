@@ -339,7 +339,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
         {/* Dual-entry portal — B2C + B2B */}
         <div className="sp-animate sp-delay-4" style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",marginBottom:16}}>
-          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} className="sp-cta-primary">
+          <button onClick={onGetStarted} className="sp-cta-primary">
             {L.ctaPersonal||"👉 Track My Energy Use (Free)"}
           </button>
           <button onClick={()=>onNavigate?.("/business")} className="sp-cta-ghost" style={{cursor:"pointer"}}>
