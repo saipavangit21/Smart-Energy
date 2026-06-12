@@ -23,7 +23,30 @@ function getSession(req, res) {
   return sid;
 }
 
-async function track(pool, { event, method = null, userId = null, sessionId, path, ip }) {
+// In-memory dedup: prevents polling endpoints from inflating page-view counts.
+// Key: "sessionId:event" → timestamp of last tracked fire.
+// Entries expire after DEDUP_TTL_MS; the map is pruned every 10 min.
+const _dedupMap = new Map();
+const DEDUP_TTL_MS = 60 * 60 * 1000; // 1 hour per session per event
+
+setInterval(() => {
+  const cutoff = Date.now() - DEDUP_TTL_MS;
+  for (const [k, ts] of _dedupMap) {
+    if (ts < cutoff) _dedupMap.delete(k);
+  }
+}, 10 * 60 * 1000);
+
+function shouldTrackOnce(sessionId, event) {
+  if (!sessionId) return true;
+  const key = `${sessionId}:${event}`;
+  const last = _dedupMap.get(key);
+  if (last && Date.now() - last < DEDUP_TTL_MS) return false;
+  _dedupMap.set(key, Date.now());
+  return true;
+}
+
+async function track(pool, { event, method = null, userId = null, sessionId, path, ip, dedup = false }) {
+  if (dedup && !shouldTrackOnce(sessionId, event)) return;
   try {
     await pool.query(
       `INSERT INTO analytics_events (event, method, user_id, session_id, path, ip)
@@ -92,7 +115,7 @@ module.exports = function attachAnalytics(app, pool) {
     next();
   });
 
-  // Dashboard loads
+  // Dashboard loads — dedup:true prevents each auto-refresh from counting as a new view
   app.use("/api/prices/today", (req, res, next) => {
     if (req.method === "GET") {
       const hasToken = !!(req.cookies?.access_token || req.headers.authorization);
@@ -103,12 +126,14 @@ module.exports = function attachAnalytics(app, pool) {
         sessionId: req._sessionId,
         path: req.originalUrl,
         ip: req._ip,
+        dedup: true,
       });
     }
     next();
   });
 
   // EV page loads — track via /api/cheapest endpoint
+  // dedup:true → only count once per session per hour (endpoint is called by multiple components on mount)
   app.use("/api/cheapest", (req, res, next) => {
     if (req.method === "GET") {
       track(pool, {
@@ -118,12 +143,14 @@ module.exports = function attachAnalytics(app, pool) {
         sessionId: req._sessionId,
         path: req.originalUrl,
         ip: req._ip,
+        dedup: true,
       });
     }
     next();
   });
 
   // SEO page views — track via /api/current endpoint
+  // dedup:true → only count once per session per hour (/api/current is polled every 60s for live price)
   app.use("/api/current", (req, res, next) => {
     if (req.method === "GET") {
       track(pool, {
@@ -133,6 +160,7 @@ module.exports = function attachAnalytics(app, pool) {
         sessionId: req._sessionId,
         path: req.originalUrl,
         ip: req._ip,
+        dedup: true,
       });
     }
     next();

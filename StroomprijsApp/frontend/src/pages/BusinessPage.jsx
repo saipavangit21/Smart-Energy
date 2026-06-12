@@ -273,24 +273,27 @@ export default function BusinessPage({ onNavigate }) {
         </div>
       </div>
 
-      {/* ── STATS BAR ─────────────────────────────────────────────── */}
-      <div style={{ background: C.card, borderBottom: `1px solid ${C.border}`, padding: "24px 32px" }}>
+      {/* ── STATS BAR — dark, extends hero zone ───────────────────── */}
+      <div style={{ background: "linear-gradient(180deg, #1A2F6E 0%, #0F172A 100%)", padding: "24px 32px" }}>
         <div style={{ maxWidth: 960, margin: "0 auto", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 24, textAlign: "center" }}>
           {[
-            { n: "€300–500", label: "overpayment per EV per year on CREG rate", accent: C.primary },
-            { n: "CIR 92",   label: "Belgian tax law compliance — accepted by all secretariaten", accent: C.amber },
-            { n: "40%",      label: "average corporate energy bill reduction", accent: C.bright },
-            { n: "Free",     label: "instant fleet audit — no subscription required", accent: "#0EA5E9" },
+            { n: "€300–500", label: "overpayment per EV per year on CREG rate",              accent: "#22C55E" },
+            { n: "CIR 92",   label: "Belgian tax law compliance — accepted by all secretariaten", accent: "#FBBF24" },
+            { n: "40%",      label: "average corporate energy bill reduction",                 accent: "#34D399" },
+            { n: "Free",     label: "instant fleet audit — no subscription required",          accent: "#38BDF8" },
           ].map(s => (
             <div key={s.label}>
               <div style={{ fontSize: 24, fontWeight: 900, color: s.accent, letterSpacing: "-0.5px" }}>{s.n}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 4, maxWidth: 160, lineHeight: 1.5 }}>{s.label}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 4, maxWidth: 160, lineHeight: 1.5 }}>{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "60px 32px 80px" }}>
+      {/* Dark-to-light gradient bridge */}
+      <div style={{ height: 60, background: "linear-gradient(180deg, #0F172A 0%, #F8FAFC 100%)" }} />
+
+      <div style={{ maxWidth: 960, margin: "0 auto", padding: "8px 32px 80px" }}>
 
         {/* ── PROBLEM ───────────────────────────────────────────────── */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
