@@ -312,6 +312,9 @@ export const translations = {
       toolConnectTitle: "Smart Connect",
       toolConnectDesc: "Official Home Assistant integration. 6 sensors, EPEX + gas. Automate your EV charger by price.",
       toolConnectCta: "View integration →",
+      toolBusinessTitle: "Smart Business",
+      toolBusinessDesc: "CIR 92-compliant EV fleet reimbursements. Stop overpaying on fixed CREG rates — use live EPEX per charging session.",
+      toolBusinessCta: "Fleet audit →",
       // planner section
       plannerLabel: "Smart Planner",
       plannerTitle: "Find your cheapest energy window",
@@ -540,6 +543,9 @@ export const translations = {
       toolConnectTitle: "Smart Connect",
       toolConnectDesc: "Officiële Home Assistant integratie. 6 sensoren, EPEX + gas. Automatiseer uw EV-lader op prijs.",
       toolConnectCta: "Integratie bekijken →",
+      toolBusinessTitle: "Smart Business",
+      toolBusinessDesc: "CIR 92-conforme EV-vlootvergoedingen. Stop met te veel betalen op vaste CREG-tarieven — gebruik live EPEX per laadsessie.",
+      toolBusinessCta: "Vlootaudit →",
       // planner section
       plannerLabel: "Slimme Planner",
       plannerTitle: "Vind uw goedkoopste energievenster",
@@ -733,6 +739,9 @@ export const translations = {
       toolConnectTitle: "Smart Connect",
       toolConnectDesc: "Intégration officielle Home Assistant. 6 capteurs, EPEX + gaz. Automatisez votre chargeur VE par prix.",
       toolConnectCta: "Voir l'intégration →",
+      toolBusinessTitle: "Smart Business",
+      toolBusinessDesc: "Remboursements flotte VE conformes CIR 92. Arrêtez de trop payer sur les taux CREG fixes — utilisez l'EPEX en direct par session.",
+      toolBusinessCta: "Audit flotte →",
       // planner section
       plannerLabel: "Planificateur",
       plannerTitle: "Trouvez votre fenêtre énergétique la moins chère",

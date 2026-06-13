@@ -626,6 +626,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                 {icon:"🏠",title:L.toolConnectTitle||"Smart Connect", badge:"HACS",    badgeCol:C.purple, accent:C.purple,  delay:0.3,
                   desc:L.toolConnectDesc||"Official Home Assistant integration. 6 sensors, EPEX + gas. Automate your EV charger by price.",
                   cta:L.toolConnectCta||"View integration →",onClick:()=>window.location.href="/api-docs"},
+                {icon:"💼",title:L.toolBusinessTitle||"Smart Business", badge:"B2B",   badgeCol:"#1E40AF", accent:"#1E40AF", delay:0.4,
+                  desc:L.toolBusinessDesc||"CIR 92-compliant EV fleet reimbursements. Stop overpaying on fixed CREG rates — use live EPEX per charging session.",
+                  cta:L.toolBusinessCta||"Fleet audit →",onClick:()=>window.location.href="/business"},
               ].map((p,i)=>(
                 <div key={p.title} className="sp-animate sp-card-tool" style={{transitionDelay:`${p.delay}s`}} onClick={p.onClick}>
                   <div style={{width:52,height:52,borderRadius:16,background:`${p.accent}12`,border:`1px solid ${p.accent}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,marginBottom:20}}>{p.icon}</div>
