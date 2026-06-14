@@ -347,8 +347,15 @@ export default function AdminDashboard() {
 
             {/* Daily sessions chart — EV vs Page views */}
             {(analytics?.daily_breakdown || []).length > 0 && (() => {
-              // Build per-day totals for ev_page_view and page_view
+              // Pre-fill all dates in window with zeros so days with no events still show a bar
               const days = {};
+              const windowDays = Math.min(period, 14);
+              for (let i = windowDays - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().substring(0, 10);
+                days[key] = { day: key, ev: 0, page: 0, seo: 0 };
+              }
               (analytics.daily_breakdown || []).forEach(row => {
                 const d = row.day?.substring(0, 10);
                 if (!d) return;
