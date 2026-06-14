@@ -8,18 +8,29 @@
     <meta name="google-site-verification" content="kbVLPHFPPJsoi1-yTAPiTCNK5POuwEstFQzyacZah3o" />
 
     <!-- SEO -->
-    <title>SmartPrice.be — Belgium Real-Time Electricity Prices</title>
-    <meta name="description" content="Track live EPEX Spot electricity prices for Belgium. Find the 5 cheapest hours, compare suppliers, get price drop alerts. Free for Belgian households." />
-    <meta name="keywords" content="electricity price Belgium, EPEX Spot, stroomprijs, prix électricité, dynamic contract, Bolt Energy, Engie" />
+    <title>SmartPrice.be — Belgium Real-Time Electricity &amp; Gas Prices</title>
+    <meta name="description" content="Track live EPEX Spot electricity and gas prices for Belgium. Compare all suppliers, calculate your best plan with our 4-step wizard, get price drop alerts. Free for Belgian households." />
+    <meta name="keywords" content="electricity price Belgium, gas price Belgium, EPEX Spot, stroomprijs, gasprijs, prix électricité, dynamic contract, Bolt Energy, Engie, plan calculator Belgium" />
     <meta name="author" content="SmartPrice.be" />
-    <link rel="canonical" href="https://smartprice.be" />
+    <link rel="canonical" href="" id="canonical-tag" />
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="SmartPrice.be — Belgium Real-Time Electricity Prices" />
-    <meta property="og:description" content="Track live EPEX Spot prices, find the cheapest hours, get price alerts. Free for Belgian households." />
+    <!-- Open Graph (LinkedIn, Facebook, WhatsApp) -->
+    <meta property="og:title" content="SmartPrice.be — Belgium Real-Time Energy Prices" />
+    <meta property="og:description" content="Live EPEX Spot prices · Compare 7 Belgian suppliers · 4-step plan calculator for electricity &amp; gas · Price alerts. Free." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://smartprice.be" />
     <meta property="og:locale" content="en_BE" />
+    <meta property="og:image" content="https://smartprice.be/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="SmartPrice.be — Belgium real-time electricity and gas price tracker" />
+    <meta property="og:site_name" content="SmartPrice.be" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SmartPrice.be — Belgium Real-Time Energy Prices" />
+    <meta name="twitter:description" content="Live EPEX Spot prices · Compare 7 Belgian suppliers · 4-step plan calculator · Price alerts. Free." />
+    <meta name="twitter:image" content="https://smartprice.be/og-image.png" />
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
@@ -37,10 +48,92 @@
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { background: #060B14; }
+      /* ── SmartPrice Light Mode Override ── */
+/* Injected by ThemeContext when data-theme="light" */
+
+[data-theme="light"] {
+  --sp-bg: #F8FAFC;
+  --sp-card: #FFFFFF;
+  --sp-border: rgba(0,0,0,0.09);
+  --sp-text: #1E293B;
+  --sp-muted: #64748B;
+}
+
+/* Force body and root backgrounds */
+[data-theme="light"] body,
+[data-theme="light"] #root { 
+  background: #F8FAFC !important; 
+  color: #1E293B !important; 
+}
+
+/* Main page wrappers */
+[data-theme="light"] [style*="background: C.bg"],
+[data-theme="light"] [style*="#060B14"],
+[data-theme="light"] [style*="0A1220"],
+[data-theme="light"] [style*="0D1626"],
+[data-theme="light"] [style*="060B14"] {
+  background: #F8FAFC !important;
+}
+
+/* Card backgrounds */
+[data-theme="light"] [style*="rgba(255,255,255,0.03)"],
+[data-theme="light"] [style*="rgba(255,255,255,0.02)"],
+[data-theme="light"] [style*="rgba(255,255,255,0.04)"],
+[data-theme="light"] [style*="rgba(255,255,255,0.05)"],
+[data-theme="light"] [style*="rgba(255,255,255,0.06)"],
+[data-theme="light"] [style*="rgba(10,18,32"],
+[data-theme="light"] [style*="rgba(13,22,38"] {
+  background: #FFFFFF !important;
+  border-color: rgba(0,0,0,0.09) !important;
+}
+
+/* Text colors */
+[data-theme="light"] [style*="color: \"#E2E8F0\""],
+[data-theme="light"] [style*="color: \"#E8EDF5\""],
+[data-theme="light"] [style*="color: \"#C4D4E0\""],
+[data-theme="light"] [style*="color: \"#D4E0EC\""] { color: #1E293B !important; }
+
+[data-theme="light"] [style*="color: \"#94A3B8\""],
+[data-theme="light"] [style*="color: \"#64748B\""],
+[data-theme="light"] [style*="color: \"#778\""],
+[data-theme="light"] [style*="color: \"#667\""],
+[data-theme="light"] [style*="color: \"#556\""],
+[data-theme="light"] [style*="color: \"#445\""],
+[data-theme="light"] [style*="color: \"#334\""],
+[data-theme="light"] [style*="color: \"#556B82\""] { color: #475569 !important; }
+
+/* Nav bars */
+[data-theme="light"] nav,
+[data-theme="light"] [style*="rgba(6,11,20,0.95)"],
+[data-theme="light"] [style*="rgba(6,11,20,0.97)"] {
+  background: rgba(248,250,252,0.97) !important;
+  border-color: rgba(0,0,0,0.09) !important;
+}
+
+/* Bottom mobile nav */
+[data-theme="light"] [style*="rgba(6,11,20,0.97)"] {
+  background: rgba(248,250,252,0.97) !important;
+}
+
+/* Chart and graph backgrounds */
+[data-theme="light"] .recharts-wrapper { background: transparent !important; }
+
+/* Inputs */
+[data-theme="light"] input[type="range"] { accent-color: #0D9488; }
+[data-theme="light"] input:not([type="range"]),
+[data-theme="light"] select {
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+  border-color: rgba(0,0,0,0.15) !important;
+}
+
+/* Transitions */
+* { transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease !important; }
+
     </style>
-    <script type="module" crossorigin src="/assets/index-DOsBX_YF.js"></script>
+    <script type="module" crossorigin src="/assets/index-DZDRkGYl.js"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>

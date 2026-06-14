@@ -106,6 +106,7 @@ export default function BusinessPage({ onNavigate }) {
     setMeta("og:type",        "website", true);
     setMeta("twitter:card",   "summary_large_image");
     setMeta("twitter:title",  "SmartPrice for Business — EV Fleet Energy Optimization");
+    fetch("/api/business-ping").catch(() => {});
   }, []);
 
   /* Form submit */

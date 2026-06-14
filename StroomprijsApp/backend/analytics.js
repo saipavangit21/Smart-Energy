@@ -166,6 +166,20 @@ module.exports = function attachAnalytics(app, pool) {
     next();
   });
 
+  // Business page views — lightweight ping called on mount by BusinessPage.jsx
+  app.get("/api/business-ping", (req, res) => {
+    track(pool, {
+      event: "business_page_view",
+      method: "guest",
+      userId: null,
+      sessionId: req._sessionId,
+      path: req.originalUrl,
+      ip: req._ip,
+      dedup: true,
+    });
+    res.json({ ok: true });
+  });
+
   // Admin analytics endpoint
   app.get("/api/admin/analytics", async (req, res) => {
     const secret = req.headers["x-admin-secret"];
