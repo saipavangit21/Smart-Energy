@@ -18,6 +18,7 @@ const { checkAndSendAlerts, checkAndSendGasAlerts, sendWeeklyDigest } = require(
 const { startUptimeMonitor } = require("./uptime-monitor");
 const { router: gasRoutes } = require("./routes/gas");
 const { router: suppliersRoutes, runWeeklyScrape } = require("./routes/suppliers");
+const outreachRoutes = require("./routes/outreach-send");
 const pool = require("./db").pool;
 const { requireAuth } = require("./middleware/auth");
 
@@ -56,6 +57,7 @@ app.use("/auth/tesla", teslaRoutes);
 app.use("/api/tesla", teslaRoutes);
 app.use("/api/gas", gasRoutes);
 app.use("/api/suppliers", suppliersRoutes);
+app.use("/api/admin/send-outreach", outreachRoutes);
 
 const TZ = "Europe/Brussels";
 function toLocalISODate(d) { return new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(d); }
