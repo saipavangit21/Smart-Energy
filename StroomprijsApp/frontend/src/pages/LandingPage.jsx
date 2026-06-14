@@ -117,6 +117,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
   const [hasSolar,     setHasSolar]     = useState(false);
   const [leadEmail,    setLeadEmail]    = useState("");
   const [leadState,    setLeadState]    = useState("idle");
+  const [nlEmail,      setNlEmail]      = useState("");
+  const [nlState,      setNlState]      = useState("idle");
   const [fluviusEmail, setFluviusEmail] = useState("");
   const [fluviusState, setFluviusState] = useState("idle");
   const [copiedCmd,    setCopiedCmd]    = useState(false);
@@ -211,6 +213,19 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
   const updatedStr = updatedMinsAgo===null?null:updatedMinsAgo===0?"just now":`${updatedMinsAgo} min ago`;
 
   /* form handlers */
+  async function submitNewsletter(e) {
+    e.preventDefault();
+    if (!nlEmail || nlState !== "idle") return;
+    setNlState("loading");
+    try {
+      const r = await fetch("/api/newsletter/subscribe", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: nlEmail, language: lang }),
+      });
+      setNlState(r.ok ? "done" : "error");
+    } catch { setNlState("error"); }
+  }
+
   async function submitLead(e) {
     e.preventDefault();
     if (!leadEmail||leadState!=="idle") return;
@@ -693,6 +708,38 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
               </div>
             </div>
           ))}
+        </div>
+
+        {/* ── WEEKLY DIGEST OPT-IN ─────────────────────────────────── */}
+        <div style={{maxWidth:800,margin:"0 auto",padding:"0 32px 56px"}}>
+          <div className="sp-animate" style={{background:isDark?"rgba(10,18,32,0.9)":"#F0F9FF",border:`1px solid ${isDark?"rgba(59,130,246,0.2)":"rgba(59,130,246,0.25)"}`,borderRadius:20,padding:"28px 32px",display:"flex",gap:20,flexWrap:"wrap",alignItems:"center"}}>
+            {nlState === "done" ? (
+              <div style={{display:"flex",gap:16,alignItems:"center",width:"100%"}}>
+                <span style={{fontSize:32}}>📬</span>
+                <div>
+                  <div style={{fontSize:16,fontWeight:800,color:"#3B82F6",marginBottom:4}}>You're subscribed!</div>
+                  <div style={{fontSize:13,color:C.muted}}>First digest lands next Monday at 08:00 Brussels · One-click unsubscribe in every email</div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{flex:"1 1 220px"}}>
+                  <div style={{fontSize:11,color:"#3B82F6",fontWeight:800,textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>📊 Free weekly digest</div>
+                  <div style={{fontSize:17,fontWeight:800,color:C.text,marginBottom:4}}>EPEX Belgium — every Monday 08:00</div>
+                  <div style={{fontSize:12,color:C.muted}}>Last week's avg / min / max · Cheapest window insight · No account needed</div>
+                </div>
+                <form onSubmit={submitNewsletter} style={{display:"flex",gap:10,flexWrap:"wrap",flex:"1 1 280px"}}>
+                  <input type="email" required placeholder="your@email.com" value={nlEmail} onChange={e=>setNlEmail(e.target.value)}
+                    style={{flex:1,minWidth:160,padding:"11px 16px",borderRadius:24,fontSize:14,background:isDark?"rgba(255,255,255,0.06)":C.bg,border:`1.5px solid ${C.border}`,color:C.text,outline:"none",fontFamily:"inherit"}}
+                    onFocus={e=>e.target.style.border="1.5px solid #3B82F6"}
+                    onBlur={e=>e.target.style.border=`1.5px solid ${C.border}`}/>
+                  <button type="submit" disabled={nlState==="loading"} style={{padding:"11px 22px",borderRadius:24,fontSize:13,fontWeight:700,border:"none",cursor:"pointer",background:"linear-gradient(135deg,#1D4ED8,#1E40AF)",color:"#fff",opacity:nlState==="loading"?0.7:1}}>
+                    {nlState==="loading"?"…":"Subscribe →"}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
         </div>
 
       </div>{/* /content wrapper */}

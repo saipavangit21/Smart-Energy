@@ -572,6 +572,125 @@ app.get("/api/referral-source", async (req, res) => {
   res.redirect("https://smartprice.be/?ref_tracked=1");
 });
 
+// POST /api/newsletter/subscribe
+app.post("/api/newsletter/subscribe", async (req, res) => {
+  const { email, name, language = "nl" } = req.body || {};
+  if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+    return res.status(400).json({ success: false, error: "Invalid email" });
+  }
+  const crypto = require("crypto");
+  const token  = crypto.randomBytes(32).toString("hex");
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT,
+        language TEXT DEFAULT 'nl',
+        unsubscribe_token TEXT UNIQUE NOT NULL DEFAULT gen_random_uuid()::text,
+        subscribed_at TIMESTAMPTZ DEFAULT NOW(),
+        active BOOLEAN DEFAULT TRUE
+      )
+    `);
+    const { rows } = await pool.query(
+      `INSERT INTO newsletter_subscribers (email, name, language, unsubscribe_token)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (email) DO UPDATE SET active = true,
+         name = COALESCE(EXCLUDED.name, newsletter_subscribers.name)
+       RETURNING id, unsubscribe_token, (xmax = 0) AS is_new`,
+      [email.toLowerCase().trim(), name || null, language, token]
+    );
+    const savedToken = rows[0].unsubscribe_token;
+    const unsubUrl   = `${APP_URL}/api/newsletter/unsubscribe?token=${savedToken}`;
+    if (process.env.RESEND_API_KEY) {
+      axios.post("https://api.resend.com/emails", {
+        from: "SmartPrice.be <info@smartprice.be>",
+        to: email,
+        subject: "⚡ Weekly EPEX digest confirmed — SmartPrice.be",
+        html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#060B14;font-family:'Helvetica Neue',Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;padding:40px 24px;">
+  <div style="text-align:center;margin-bottom:28px;">
+    <div style="font-size:36px;">⚡🇧🇪</div>
+    <h1 style="color:#fff;font-size:20px;font-weight:900;margin:10px 0 4px;">You're on the list!</h1>
+    <p style="color:#64748B;font-size:13px;margin:0;">Weekly EPEX digest · Every Monday 08:00 Brussels</p>
+  </div>
+  <div style="background:#0A1220;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:24px;margin-bottom:20px;color:#94A3B8;font-size:14px;line-height:1.8;">
+    Every Monday morning you'll receive:<br>
+    <strong style="color:#E2E8F0;">📊 Last week's EPEX Belgium stats</strong> — avg, min, max, negative hours<br>
+    <strong style="color:#E2E8F0;">💡 Insight</strong> — what it means for EV charging & home appliances<br>
+    <strong style="color:#E2E8F0;">⚡ Live link</strong> — to today's cheapest hours at smartprice.be
+  </div>
+  <div style="text-align:center;margin-bottom:24px;">
+    <a href="https://smartprice.be" style="display:inline-block;background:linear-gradient(135deg,#0D9488,#1A56A4);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 28px;border-radius:30px;">See live prices →</a>
+  </div>
+  <div style="text-align:center;color:#334155;font-size:11px;">
+    SmartPrice.be · <a href="${unsubUrl}" style="color:#475569;">Unsubscribe</a>
+  </div>
+</div></body></html>`,
+      }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } })
+      .catch(e => console.warn("[newsletter] welcome email failed:", e.message));
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// GET /api/newsletter/unsubscribe?token=... — one-click unsubscribe
+app.get("/api/newsletter/unsubscribe", async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).send("Missing token");
+  try {
+    const { rows } = await pool.query(
+      "UPDATE newsletter_subscribers SET active = false WHERE unsubscribe_token = $1 RETURNING email",
+      [token]
+    );
+    const html = rows.length
+      ? `<html><head><meta charset="utf-8"></head><body style="font-family:system-ui;text-align:center;padding:80px 24px;background:#F0FDF4;"><h2 style="color:#16A34A">✅ Unsubscribed</h2><p style="color:#475569">${rows[0].email} has been removed from the SmartPrice weekly digest.</p><a href="https://smartprice.be" style="color:#16A34A;font-weight:700;">← Back to SmartPrice</a></body></html>`
+      : `<html><head><meta charset="utf-8"></head><body style="font-family:system-ui;text-align:center;padding:80px 24px;"><h2>Already unsubscribed or link not found.</h2><a href="https://smartprice.be">← Back</a></body></html>`;
+    res.send(html);
+  } catch (e) {
+    res.status(500).send("Error");
+  }
+});
+
+// GET /api/user/unsubscribe-digest?email=... — one-click unsubscribe for registered users
+app.get("/api/user/unsubscribe-digest", async (req, res) => {
+  const email = req.query.email ? Buffer.from(req.query.email, "base64").toString() : null;
+  if (!email) return res.status(400).send("Missing email");
+  try {
+    await pool.query(
+      `UPDATE users SET preferences = COALESCE(preferences, '{}') || '{"email_opt_out":true}'::jsonb WHERE email = $1`,
+      [email.toLowerCase().trim()]
+    );
+    res.send(`<html><head><meta charset="utf-8"></head><body style="font-family:system-ui;text-align:center;padding:80px 24px;background:#F0FDF4;"><h2 style="color:#16A34A">✅ Unsubscribed</h2><p style="color:#475569">${email} will no longer receive the weekly digest.</p><a href="https://smartprice.be" style="color:#16A34A;font-weight:700;">← Back to SmartPrice</a></body></html>`);
+  } catch (e) {
+    res.status(500).send("Error");
+  }
+});
+
+// GET /api/admin/newsletter-stats — subscriber count for admin dashboard
+app.get("/api/admin/newsletter-stats", async (req, res) => {
+  const secret = req.headers["x-admin-secret"];
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      id SERIAL PRIMARY KEY, email TEXT UNIQUE NOT NULL, name TEXT, language TEXT DEFAULT 'nl',
+      unsubscribe_token TEXT UNIQUE NOT NULL DEFAULT gen_random_uuid()::text,
+      subscribed_at TIMESTAMPTZ DEFAULT NOW(), active BOOLEAN DEFAULT TRUE
+    )`);
+    const { rows } = await pool.query(
+      "SELECT COUNT(*) FILTER (WHERE active) AS active, COUNT(*) AS total FROM newsletter_subscribers"
+    );
+    res.json({ success: true, active: parseInt(rows[0].active), total: parseInt(rows[0].total) });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // POST /api/admin/unsubscribe-user { secret, email } — GDPR: opt a user out of all email communication
 app.post("/api/admin/unsubscribe-user", async (req, res) => {
   const { secret, email } = req.body || {};

@@ -390,11 +390,25 @@ async function sendWeeklyDigest(pool, force = false) {
   _lastDigestDate = todayBrussels;
 
   try {
-    // Get all users with email addresses
-    const { rows: users } = await pool.query(
-      "SELECT id, name, email FROM users WHERE email IS NOT NULL AND email != '' AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false ORDER BY created_at"
+    // Get all registered users who haven't opted out
+    const { rows: registeredUsers } = await pool.query(
+      "SELECT id, name, email, NULL AS unsubscribe_token FROM users WHERE email IS NOT NULL AND email != '' AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false ORDER BY created_at"
     );
-    if (users.length === 0) { console.log("[weekly-digest] No email users found"); return; }
+    // Get active newsletter subscribers (guest opt-ins)
+    let newsletterSubs = [];
+    try {
+      const { rows } = await pool.query(
+        "SELECT id, name, email, unsubscribe_token FROM newsletter_subscribers WHERE active = true ORDER BY subscribed_at"
+      );
+      newsletterSubs = rows;
+    } catch (_) {} // table may not exist yet on first run
+
+    // Merge, dedup by email (registered user wins)
+    const emailSeen = new Set(registeredUsers.map(u => u.email.toLowerCase()));
+    const extraSubs = newsletterSubs.filter(s => !emailSeen.has(s.email.toLowerCase()));
+    const users = [...registeredUsers, ...extraSubs];
+    if (users.length === 0) { console.log("[weekly-digest] No recipients found"); return; }
+    console.log(`[weekly-digest] Recipients: ${registeredUsers.length} registered + ${extraSubs.length} newsletter subs = ${users.length} total`);
 
     // Fetch last 7 days using SmartPrice's own history endpoint (has caching + fallbacks)
     let weekStats = null;
@@ -456,6 +470,11 @@ async function sendWeeklyDigest(pool, force = false) {
 
     let sent = 0;
     for (const user of users) {
+      // Build the correct unsubscribe URL for this recipient
+      const unsubUrl = user.unsubscribe_token
+        ? `${APP_URL}/api/newsletter/unsubscribe?token=${user.unsubscribe_token}`
+        : `${APP_URL}/api/user/unsubscribe-digest?email=${Buffer.from(user.email).toString("base64")}`;
+
       try {
         await axios.post("https://api.resend.com/emails", {
           from: "SmartPrice.be <info@smartprice.be>",
@@ -512,6 +531,18 @@ async function sendWeeklyDigest(pool, force = false) {
                   </a>
                 </div>
 
+                <!-- Business CTA -->
+                <div style="background:rgba(30,64,175,0.08);border:1px solid rgba(30,64,175,0.25);border-radius:16px;padding:20px 24px;margin-bottom:20px;">
+                  <div style="font-size:13px;font-weight:800;color:#60A5FA;margin-bottom:6px;">💼 Beheert u een EV-vloot? / Managing a company EV fleet?</div>
+                  <div style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:14px;">
+                    De wet (CIR 92) vereist vergoedingen op basis van werkelijke EPEX-tarieven — niet vaste CREG-gemiddelden. SmartPrice Business genereert CIR 92-conforme rapporten per laadsessie, klaar voor SD Worx, Securex en Acerta.<br>
+                    <span style="color:#556B82;font-size:12px;">Belgian tax law (CIR 92) requires reimbursements at actual EPEX rates per session. SmartPrice Business automates this.</span>
+                  </div>
+                  <a href="${APP_URL}/business" style="display:inline-block;background:linear-gradient(135deg,#1E40AF,#1D4ED8);color:#fff;text-decoration:none;font-weight:700;font-size:13px;padding:10px 22px;border-radius:30px;">
+                    Gratis vlootaudit / Free fleet audit →
+                  </a>
+                </div>
+
                 <!-- Share ask -->
                 <div style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.25);border-radius:16px;padding:20px 24px;margin-bottom:20px;text-align:center;">
                   <div style="font-size:15px;font-weight:800;color:#F59E0B;margin-bottom:8px;">📢 Ken je iemand die dit nuttig zou vinden?</div>
@@ -537,7 +568,7 @@ async function sendWeeklyDigest(pool, force = false) {
                   <div style="margin-top:6px;">
                     <a href="https://smartprice.be/privacy" style="color:#475569;text-decoration:none;">Privacy</a>
                     &nbsp;·&nbsp;
-                    <a href="mailto:info@smartprice.be" style="color:#475569;text-decoration:none;">Unsubscribe</a>
+                    <a href="${unsubUrl}" style="color:#475569;text-decoration:none;">Unsubscribe</a>
                   </div>
                 </div>
 
