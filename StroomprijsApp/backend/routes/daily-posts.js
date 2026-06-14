@@ -135,7 +135,7 @@ router.post("/", async (req, res) => {
     ]);
 
     const current  = curRes?.data?.current  || null;
-    const cheapest = cheapRes?.data?.cheapest || [];
+    const cheapest = cheapRes?.data?.cheapest_hours || cheapRes?.data?.cheapest || [];
 
     const now     = new Date();
     const dateStr = new Intl.DateTimeFormat("nl-BE", {
