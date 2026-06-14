@@ -152,19 +152,78 @@ function buildHtml(name, company, lang) {
 </body></html>`;
 }
 
-function subject(company, lang) {
+function subject(company, lang, followUp = false) {
+  if (followUp) {
+    if (lang === "nl") return `Re: SmartPrice Business — bereikte dit de juiste persoon bij ${company}?`;
+    if (lang === "fr") return `Re: SmartPrice Business — ce message est-il parvenu à la bonne personne chez ${company} ?`;
+    return `Re: SmartPrice Business — did this reach the right person at ${company}?`;
+  }
   if (lang === "nl") return `SmartPrice Business — CIR 92-conforme EV-vlootvergoeding voor ${company}`;
   if (lang === "fr") return `SmartPrice Business — Remboursement flotte VE conforme CIR 92 pour ${company}`;
   return `SmartPrice Business — CIR 92-compliant EV fleet reimbursement for ${company}`;
 }
 
-async function sendOne({ to, name, company, lang }) {
-  const html = buildHtml(name, company, lang);
-  const sub  = subject(company, lang);
+function buildFollowUpHtml(name, company, lang) {
+  const t = {
+    nl: {
+      greeting: `Dag ${name}`,
+      line1: `Ik stuurde u vorige week een bericht over CIR 92-conforme EV-laadvergoedingen voor uw vloot bij ${company}. Ik wilde even controleren of dit bij de juiste persoon is terechtgekomen.`,
+      line2: `Als u interesse heeft om te zien hoeveel uw vloot overbetaalt op het huidige CREG-tarief, staat de gratis audit in 2 minuten klaar — geen account, geen installatie.`,
+      cta: "Gratis vlootaudit →",
+      line3: `Anders verwijs ik u graag door naar de juiste collega. Geef gewoon even aan wie dat is.`,
+      closing: "Met vriendelijke groet",
+    },
+    fr: {
+      greeting: `Bonjour ${name}`,
+      line1: `Je vous ai envoyé un message la semaine dernière concernant les remboursements de recharge VE conformes CIR 92 pour la flotte de ${company}. Je voulais juste vérifier si ce message est bien parvenu à la bonne personne.`,
+      line2: `Si vous souhaitez voir combien votre flotte sur-paie sur le tarif CREG actuel, l'audit gratuit est prêt en 2 minutes — sans compte ni installation.`,
+      cta: "Audit flotte gratuit →",
+      line3: `Sinon, n'hésitez pas à me rediriger vers le bon collègue.`,
+      closing: "Cordialement",
+    },
+    en: {
+      greeting: `Hi ${name}`,
+      line1: `I sent you a note last week about CIR 92-compliant EV fleet reimbursements for ${company}. Just checking this reached the right person.`,
+      line2: `If you'd like to see exactly how much your fleet is overpaying on the current CREG rate, the free audit takes 2 minutes — no account or installation needed.`,
+      cta: "Free fleet audit →",
+      line3: `If this isn't your area, happy to be pointed to the right colleague.`,
+      closing: "Best regards",
+    },
+  };
+  const c = t[lang] || t.en;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:'Segoe UI',Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+  <div style="text-align:center;margin-bottom:24px;">
+    <div style="display:inline-flex;align-items:center;gap:10px;background:#EFF6FF;border:1px solid rgba(30,64,175,0.15);border-radius:30px;padding:8px 20px;">
+      <span style="font-size:18px;">🇧🇪</span>
+      <span style="font-weight:900;font-size:16px;color:#1E3A8A;">SmartPrice</span>
+      <span style="font-size:11px;font-weight:700;color:#1E40AF;background:#DBEAFE;border-radius:20px;padding:2px 10px;">Business</span>
+    </div>
+  </div>
+  <div style="background:#fff;border-radius:20px;border:1px solid rgba(0,0,0,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.06);padding:32px 36px;">
+    <p style="font-size:16px;font-weight:700;color:#0F172A;margin:0 0 16px;">${c.greeting},</p>
+    <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 16px;">${c.line1}</p>
+    <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 24px;">${c.line2}</p>
+    <div style="text-align:center;margin-bottom:24px;">
+      <a href="https://smartprice.be/fleet-audit" style="display:inline-block;background:linear-gradient(135deg,#15803D,#16A34A);color:#fff;text-decoration:none;padding:13px 32px;border-radius:30px;font-weight:800;font-size:14px;box-shadow:0 4px 16px rgba(22,163,74,0.3);">${c.cta}</a>
+    </div>
+    <p style="font-size:13px;color:#94A3B8;line-height:1.7;margin:0;">${c.line3}</p>
+    <p style="font-size:14px;color:#475569;margin:20px 0 0;">${c.closing},<br><strong style="color:#0F172A;">SmartPrice Business</strong><br><span style="color:#94A3B8;font-size:13px;">info@smartprice.be · smartprice.be</span></p>
+  </div>
+  <div style="text-align:center;color:#94A3B8;font-size:11px;margin-top:20px;">SmartPrice.be · Belgium · GDPR Compliant · Reply to unsubscribe.</div>
+</div>
+</body></html>`;
+}
+
+async function sendOne({ to, name, company, lang, followUp = false }) {
+  const html = followUp ? buildFollowUpHtml(name, company, lang) : buildHtml(name, company, lang);
+  const sub  = subject(company, lang, followUp);
+  const tag  = followUp ? "fleet_followup_jun2026" : "fleet_outreach_jun2026";
   await axiosHttp.post("https://api.resend.com/emails", {
     from: FROM, to, subject: sub, html,
     reply_to: "info@smartprice.be",
-    tags: [{ name: "campaign", value: "fleet_outreach_jun2026" }],
+    tags: [{ name: "campaign", value: tag }],
   }, {
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
   });
@@ -184,7 +243,7 @@ router.post("/", async (req, res) => {
     return res.status(500).json({ success: false, error: "RESEND_API_KEY not configured" });
   }
 
-  const { contacts, preset, dryRun = false } = req.body || {};
+  const { contacts, preset, dryRun = false, followUp = false } = req.body || {};
   const list = contacts || (preset === "all" ? PRESET_CONTACTS : []);
 
   if (!list.length) {
@@ -198,7 +257,7 @@ router.post("/", async (req, res) => {
   const sent = [], failed = [];
   for (const contact of list) {
     try {
-      const result = await sendOne(contact);
+      const result = await sendOne({ ...contact, followUp });
       sent.push(result);
       console.log(`[outreach] ✓ sent → ${contact.to}`);
     } catch (e) {
