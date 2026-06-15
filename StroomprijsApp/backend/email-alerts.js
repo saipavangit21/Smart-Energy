@@ -7,6 +7,10 @@ const axios = require("axios");
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL     = process.env.FROM_EMAIL || "alerts@smartprice.be";
 const APP_URL        = process.env.FRONTEND_URL || "https://smartprice.be";
+// Self-URL for internal API calls: prefer Railway domain to avoid going through Vercel rewrite
+const SELF_URL = process.env.RAILWAY_PUBLIC_DOMAIN
+  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+  : "https://smart-energy-production-aef3.up.railway.app";
 
 const TZ = "Europe/Brussels";
 function toLocalISODate(d) {
@@ -413,7 +417,7 @@ async function sendWeeklyDigest(pool, force = false) {
     // Fetch last 7 days using SmartPrice's own history endpoint (has caching + fallbacks)
     let weekStats = null;
     try {
-      const r = await axios.get(`${APP_URL}/api/prices/history?days=7`, { timeout: 20000 });
+      const r = await axios.get(`${SELF_URL}/api/prices/history?days=7`, { timeout: 20000 });
       const days = r.data?.days || [];
       const allPrices = days.flatMap(d => (d.prices || d.hourly || []).map(h => h.price_eur_mwh)).filter(p => p != null && !isNaN(p));
       if (allPrices.length > 0) {

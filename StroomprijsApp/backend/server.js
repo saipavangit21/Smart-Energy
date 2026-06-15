@@ -710,6 +710,47 @@ app.post("/api/admin/unsubscribe-user", async (req, res) => {
   }
 });
 
+// GET /api/admin/weekly-digest-preview — check what data the next digest would send WITHOUT sending
+app.get("/api/admin/weekly-digest-preview", async (req, res) => {
+  const secret = req.headers["x-admin-secret"];
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  try {
+    const selfUrl = process.env.RAILWAY_PUBLIC_DOMAIN
+      ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+      : "https://smart-energy-production-aef3.up.railway.app";
+
+    const [rUsers, rNl, rHistory] = await Promise.all([
+      pool.query("SELECT COUNT(*) AS c FROM users WHERE email IS NOT NULL AND email != '' AND COALESCE((preferences->>'email_opt_out')::boolean, false) = false"),
+      pool.query("SELECT COUNT(*) AS c FROM newsletter_subscribers WHERE active = true").catch(() => ({ rows: [{ c: 0 }] })),
+      axios.get(`${selfUrl}/api/prices/history?days=7`, { timeout: 15000 }).catch(e => ({ error: e.message })),
+    ]);
+
+    const historyOk = !rHistory.error;
+    const days = rHistory.data?.days || [];
+    const allPrices = days.flatMap(d => (d.prices || []).map(h => h.price_eur_mwh)).filter(p => p != null && !isNaN(p));
+    const weekStats = allPrices.length > 0 ? {
+      avg: (allPrices.reduce((a, b) => a + b, 0) / allPrices.length).toFixed(1),
+      min: Math.min(...allPrices).toFixed(1),
+      max: Math.max(...allPrices).toFixed(1),
+      negative: allPrices.filter(p => p < 0).length,
+      price_points: allPrices.length,
+      days: days.length,
+    } : null;
+
+    res.json({
+      success: true,
+      recipients: { registered: parseInt(rUsers.rows[0].c), newsletter: parseInt(rNl.rows[0].c) },
+      history_fetch: historyOk ? "ok" : `FAILED: ${rHistory.error}`,
+      week_stats: weekStats,
+      ready_to_send: historyOk && weekStats !== null,
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // Manual trigger: POST /api/admin/send-weekly-digest { secret, force? }
 // Add "force": true to bypass the once-per-day guard
 app.post("/api/admin/send-weekly-digest", async (req, res) => {
