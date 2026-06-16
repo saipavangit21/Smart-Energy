@@ -200,6 +200,8 @@ export default function EvChargingPage({ onGetStarted, onOpenCalculator }) {
   const [socTarget,     setSocTarget]     = useState(80);
   const [chargerKw,     setChargerKw]     = useState(EV_MODELS[0].charger);
   const [openFaq,       setOpenFaq]       = useState(null);
+  const [nlEmail,       setNlEmail]       = useState("");
+  const [nlState,       setNlState]       = useState("idle"); // idle | loading | done | error
 
   useEffect(() => {
     Promise.all([
@@ -236,6 +238,19 @@ export default function EvChargingPage({ onGetStarted, onOpenCalculator }) {
       setChargerKw(EV_MODELS[i].charger);
     }
   };
+
+  async function submitNl(e) {
+    e.preventDefault();
+    if (!nlEmail || nlState !== "idle") return;
+    setNlState("loading");
+    try {
+      const r = await fetch(`${API}/api/newsletter/subscribe`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: nlEmail, language: "en" }),
+      });
+      setNlState(r.ok ? "done" : "error");
+    } catch { setNlState("error"); }
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
@@ -396,6 +411,39 @@ export default function EvChargingPage({ onGetStarted, onOpenCalculator }) {
               </div>
             )}
           </div>
+        </div>
+
+        {/* ── Newsletter subscribe — shown inline after calculator ── */}
+        <div style={{ background: "rgba(0,200,150,0.05)", border: "1px solid rgba(0,200,150,0.18)", borderRadius: 20, padding: "24px 28px", marginBottom: 20 }}>
+          {nlState === "done" ? (
+            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+              <span style={{ fontSize: 28 }}>📬</span>
+              <div>
+                <div style={{ fontWeight: 800, color: C.green, marginBottom: 3 }}>You're in!</div>
+                <div style={{ fontSize: 12, color: C.muted }}>Tomorrow's cheapest window lands in your inbox at 08:00 Brussels · One-click unsubscribe anytime</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ flex: "1 1 200px" }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: C.green, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 5 }}>📅 Free weekly digest</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 3 }}>Get next week's cheapest hours by email</div>
+                <div style={{ fontSize: 12, color: C.muted }}>Every Monday 08:00 · EPEX stats · No account needed</div>
+              </div>
+              <form onSubmit={submitNl} style={{ display: "flex", gap: 8, flex: "1 1 260px", flexWrap: "wrap" }}>
+                <input
+                  type="email" required placeholder="your@email.com"
+                  value={nlEmail} onChange={e => setNlEmail(e.target.value)}
+                  style={{ flex: 1, minWidth: 150, padding: "11px 16px", borderRadius: 24, fontSize: 13, background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.1)", color: C.text, outline: "none", fontFamily: "inherit" }}
+                  onFocus={e => e.target.style.border = "1.5px solid #00C896"}
+                  onBlur={e  => e.target.style.border = "1.5px solid rgba(255,255,255,0.1)"}
+                />
+                <button type="submit" disabled={nlState === "loading"} style={{ padding: "11px 22px", borderRadius: 24, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#0D9488,#00C896)", color: "#fff", opacity: nlState === "loading" ? 0.7 : 1, whiteSpace: "nowrap" }}>
+                  {nlState === "loading" ? "…" : "Send me the digest →"}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
 
         {/* CTA */}
