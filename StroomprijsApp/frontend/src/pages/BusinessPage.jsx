@@ -203,18 +203,25 @@ export default function BusinessPage({ onNavigate }) {
                     </div>
                   </div>
 
+                  {/* CREG / EPEX mini-explainer */}
+                  <div style={{ background: "#F0F9FF", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 10, padding: "10px 14px", fontSize: 11, color: "#0369A1", lineHeight: 1.65 }}>
+                    <strong>CREG</strong> = Belgium's federal regulator — publishes a flat quarterly tariff (€{CREG_RATE}/kWh Q2 2026) used by most HR teams.<br />
+                    <strong>EPEX Spot</strong> = real-time hourly market price — varies from €0.05 to €0.45/kWh depending on time of day. SmartPrice tracks this to calculate exact reimbursements.
+                  </div>
+
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>Current reimbursement method *</label>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>Current reimbursement / billing method *</label>
                     <select required value={leadReimbMethod} onChange={e => setLeadReimbMethod(e.target.value)}
                       style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, color: leadReimbMethod ? C.text : C.light, background: C.bg, outline: "none", fontFamily: "inherit", cursor: "pointer" }}
                       onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
                       onBlur={e => e.target.style.border = `1.5px solid ${C.border}`}>
-                      <option value="" disabled>How do you reimburse now?</option>
-                      <option value="creg-flat">Fixed CREG Allowances</option>
-                      <option value="fuel-card">Flat Fuel / Charge Cards</option>
-                      <option value="excel">Manual Excel Tracking</option>
-                      <option value="dynamic">Dynamic EPEX Tariff (already tracking)</option>
-                      <option value="not-yet">Not reimbursing yet</option>
+                      <option value="" disabled>How does your fleet pay for charging?</option>
+                      <option value="fleet-card">Fleet energy cards (Velocity / DKV / UTA) — billed to company</option>
+                      <option value="creg-flat">Fixed CREG allowance — reimburse employees at quarterly CREG rate</option>
+                      <option value="fuel-card">Other flat rate / fuel card</option>
+                      <option value="excel">Manual Excel tracking</option>
+                      <option value="dynamic">Dynamic EPEX tariff — already tracking hourly prices</option>
+                      <option value="not-yet">Not reimbursing / no system yet</option>
                       <option value="other">Other / not sure</option>
                     </select>
                   </div>

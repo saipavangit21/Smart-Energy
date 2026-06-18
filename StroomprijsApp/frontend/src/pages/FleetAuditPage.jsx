@@ -202,10 +202,35 @@ export default function FleetAuditPage({ onNavigate }) {
             </div>
 
             {/* Trust bar */}
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 40 }}>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 32 }}>
               {["✅ Based on real EPEX Spot Belgium data", "🔒 GDPR compliant", "⚡ Free — takes 60 seconds", "📄 Downloadable PDF report"].map(t => (
                 <span key={t} style={{ fontSize: 12, color: C.muted, fontWeight: 600, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: "5px 14px" }}>{t}</span>
               ))}
+            </div>
+
+            {/* CREG vs EPEX glossary */}
+            <div style={{ background: "#F0F9FF", border: "1px solid rgba(14,165,233,0.22)", borderRadius: 16, padding: "20px 24px", marginBottom: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#0369A1", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 14 }}>Key terms — what do CREG and EPEX mean?</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 20 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 6 }}>📋 CREG rate</div>
+                  <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.75 }}>
+                    Belgium's federal energy regulator (<strong>Commissie voor de Regulering van de Elektriciteit en het Gas</strong>) publishes a standard reference tariff each quarter. Currently <strong style={{ color: C.red }}>€{CREG_RATE_KWH.toFixed(4)}/kWh</strong> (Q2 2026). Most HR teams use this flat rate to reimburse employees — but it's a lagging average, not your employees' actual cost.
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 6 }}>⚡ EPEX Spot</div>
+                  <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.75 }}>
+                    The <strong>European Power Exchange</strong> sets real-time Belgian electricity prices every hour. Off-peak hours (midnight–6am) can drop to <strong style={{ color: "#059669" }}>€0.05–0.12/kWh</strong>. Employees who charge overnight often pay far less than the CREG rate — your company is over-reimbursing them if you use the fixed rate.
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 6 }}>💳 Fleet energy cards</div>
+                  <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.75 }}>
+                    Cards like <strong>Velocity, DKV, UTA</strong> let employees charge at public stations — the cost goes directly to your company account. Charges happen at whatever tariff the network sets at that hour, often peak rates with no visibility into when or why.
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Form card */}
@@ -238,9 +263,10 @@ export default function FleetAuditPage({ onNavigate }) {
                   </label>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {[
-                      { id: "creg",    label: "CREG reference tariff (official Belgian rate)",        sub: "Most common — updated quarterly by the CREG regulator" },
-                      { id: "fixed",   label: "Fixed rate we set ourselves",                          sub: "e.g. €0.28/kWh regardless of market" },
-                      { id: "unsure",  label: "Not sure / mixed method",                              sub: "Our audit will show the gap vs. optimal" },
+                      { id: "creg",       label: "CREG reference tariff (official Belgian rate)",      sub: `Most common — flat quarterly average currently €${CREG_RATE_KWH}/kWh, regardless of when employees charge` },
+                      { id: "fleet-card", label: "Fleet energy cards (Velocity, DKV, UTA)",            sub: "Employees charge at public stations on your company card — billed at network peak tariffs with no hourly visibility" },
+                      { id: "fixed",      label: "Fixed rate we set ourselves",                         sub: "e.g. a company-defined €/kWh regardless of market or time of charging" },
+                      { id: "unsure",     label: "Not sure / mixed method",                             sub: "Our audit will show the gap between what you're paying and real EPEX market rates" },
                     ].map(opt => (
                       <div
                         key={opt.id}
