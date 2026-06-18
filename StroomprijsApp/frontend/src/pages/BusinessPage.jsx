@@ -400,12 +400,12 @@ export default function BusinessPage({ onNavigate }) {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 20, marginBottom: 52 }}>
           {[
-            { icon: "📤", accent: C.primary,  title: L.tool1Title||"Automated Social Secretariat Exports", badge: L.tool1Badge||"Coming Q3 2026", badgeCol: C.amber,   desc: L.tool1Desc||"Export monthly employee charging reports formatted perfectly for SD Worx, Liantis, Securex, and Acerta.", cta: L.tool1Cta||"Join waitlist →", href: "#contact" },
-            { icon: "⚖️", accent: "#0EA5E9", title: L.tool2Title||"CREG vs. EPEX Intelligence",           badge: L.tool2Badge||"Live now",       badgeCol: C.primary, desc: L.tool2Desc||"Automatically detect whether an employee is on a dynamic or fixed-rate tariff.",                           cta: L.tool2Cta||"See how it works →", href: "/fleet-audit" },
-            { icon: "🔌", accent: C.purple,   title: L.tool3Title||"Smart Connect — Fleet Throttling",    badge: L.tool3Badge||"Beta",           badgeCol: C.purple,  desc: L.tool3Desc||"Intelligently manage EV charging speeds via the HACS integration.",                                       cta: L.tool3Cta||"Join beta →", href: "#contact" },
-            { icon: "🚗", accent: C.amber,    title: L.tool4Title||"Smart Audit — Instant Overpayment Report", badge: L.tool4Badge||"Free",      badgeCol: C.bright,  desc: L.tool4Desc||"Enter your fleet size and current reimbursement rate. Instantly see your annual overpayment.",        cta: L.tool4Cta||"Start Smart Audit →", href: "/fleet-audit" },
-            { icon: "📡", accent: C.muted,    title: L.tool5Title||"Smart API — REST Integration",        badge: L.tool5Badge||"Free",           badgeCol: C.bright,  desc: L.tool5Desc||"Live EPEX Spot Belgium prices via public REST API. No API key required.",                              cta: L.tool5Cta||"View Smart API →", href: "/api-docs" },
-            { icon: "📊", accent: "#0EA5E9", title: L.tool6Title||"Smart Reimburse — Per-Session Dashboard", badge: L.tool6Badge||"Coming Q3 2026", badgeCol: C.amber, desc: L.tool6Desc||"Each employee logs a charge session. SmartPrice calculates the exact reimbursement per EPEX hour.", cta: L.tool6Cta||"Join waitlist →", href: "#contact" },
+            { icon: "📤", accent: C.primary,  title: L.tool1Title||"Fleet Card Invoice Optimizer",         badge: L.tool1Badge||"Coming Q3 2026", badgeCol: C.amber,   desc: L.tool1Desc||"Connect your Velocity, DKV, or UTA invoice. SmartPrice maps each session against EPEX Spot prices.", cta: L.tool1Cta||"Join waitlist →", modal: true },
+            { icon: "⚖️", accent: "#0EA5E9", title: L.tool2Title||"CREG vs. EPEX Intelligence",           badge: L.tool2Badge||"Live now",       badgeCol: C.primary, desc: L.tool2Desc||"Automatically detect whether an employee is on a dynamic or fixed-rate tariff.",                      cta: L.tool2Cta||"See how it works →", href: "/fleet-audit" },
+            { icon: "🔌", accent: C.purple,   title: L.tool3Title||"Smart Connect — Fleet Throttling",    badge: L.tool3Badge||"Beta",           badgeCol: C.purple,  desc: L.tool3Desc||"Intelligently manage EV charging speeds via the HACS integration.",                                  cta: L.tool3Cta||"Join beta →", modal: true },
+            { icon: "🚗", accent: C.amber,    title: L.tool4Title||"Smart Audit — Instant Overpayment Report", badge: L.tool4Badge||"Free",      badgeCol: C.bright,  desc: L.tool4Desc||"Enter your fleet size and current reimbursement rate. Instantly see your annual overpayment.",   cta: L.tool4Cta||"Start Smart Audit →", href: "/fleet-audit" },
+            { icon: "📡", accent: C.muted,    title: L.tool5Title||"Smart API — REST Integration",        badge: L.tool5Badge||"Free",           badgeCol: C.bright,  desc: L.tool5Desc||"Live EPEX Spot Belgium prices via public REST API. No API key required.",                         cta: L.tool5Cta||"View Smart API →", href: "/api-docs" },
+            { icon: "📊", accent: "#0EA5E9", title: L.tool6Title||"Smart Reimburse — Per-Session Dashboard", badge: L.tool6Badge||"Coming Q3 2026", badgeCol: C.amber, desc: L.tool6Desc||"Each employee logs a charge session. SmartPrice calculates the exact reimbursement per EPEX hour.", cta: L.tool6Cta||"Join waitlist →", modal: true },
           ].map(p => (
             <div key={p.title} style={{ background: C.card, borderRadius: 20, border: `1px solid ${C.border}`, boxShadow: C.shadow, padding: "28px 26px", display: "flex", flexDirection: "column", transition: "transform 0.25s ease, box-shadow 0.25s ease" }}
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-6px)"; e.currentTarget.style.boxShadow = `0 20px 48px rgba(22,163,74,0.14)`; }}
@@ -416,7 +416,10 @@ export default function BusinessPage({ onNavigate }) {
                 <span style={{ fontSize: 10, fontWeight: 700, color: p.badgeCol, background: `${p.badgeCol}15`, border: `1px solid ${p.badgeCol}28`, borderRadius: 20, padding: "2px 9px", flexShrink: 0 }}>{p.badge}</span>
               </div>
               <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.8, flex: 1, marginBottom: 18 }}>{p.desc}</div>
-              <a href={p.href} style={{ display: "inline-block", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `${p.accent}10`, border: `1px solid ${p.accent}28`, color: p.accent, textDecoration: "none" }}>{p.cta}</a>
+              {p.modal
+                ? <button onClick={() => setShowModal(true)} style={{ display: "inline-block", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `${p.accent}10`, border: `1px solid ${p.accent}28`, color: p.accent, cursor: "pointer", fontFamily: "inherit" }}>{p.cta}</button>
+                : <a href={p.href} style={{ display: "inline-block", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `${p.accent}10`, border: `1px solid ${p.accent}28`, color: p.accent, textDecoration: "none" }}>{p.cta}</a>
+              }
             </div>
           ))}
         </div>
