@@ -9,9 +9,10 @@ import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher  from "../components/LangSwitcher";
 
 // CREG official Belgian electricity reference rate (updated quarterly)
-const CREG_RATE_KWH      = 0.2833; // €/kWh — CREG Q2 2026 reference tariff
+const CREG_RATE_KWH         = 0.2833; // €/kWh — CREG Q2 2026 reference tariff
 const DYNAMIC_RATE_FALLBACK = 0.1920; // €/kWh fallback if API unavailable
-const AVG_KWH_PER_CAR    = 280;    // kWh/month average Belgian company EV home charging
+const AVG_KWH_PER_CAR       = 280;   // kWh/month average Belgian company EV home charging
+const PUBLIC_NETWORK_RATE   = 0.45;  // €/kWh conservative Belgian public network average (Velocity/DKV/UTA AC charging)
 
 const C = {
   bg:        "#F8FAFC",
@@ -40,6 +41,7 @@ export default function FleetAuditPage({ onNavigate }) {
   const [step, setStep]           = useState("form"); // form | results | done
   const [fleetSize, setFleetSize] = useState("");
   const [currentMethod, setCurrentMethod] = useState("creg");
+  const [fleetCardRate, setFleetCardRate] = useState("");
   const [monthlyPerCar, setMonthlyPerCar] = useState("");
   const [audit, setAudit]         = useState(null);
   const [email, setEmail]         = useState("");
@@ -69,21 +71,26 @@ export default function FleetAuditPage({ onNavigate }) {
     const n = parseInt(fleetSize);
     if (!n || n < 1) return;
 
-    const DYNAMIC_RATE_KWH = liveRate;
-    const cregAnnual    = CREG_RATE_KWH   * AVG_KWH_PER_CAR * 12 * n;
-    const dynamicAnnual = DYNAMIC_RATE_KWH * AVG_KWH_PER_CAR * 12 * n;
-    const overpayment   = cregAnnual - dynamicAnnual;
-    const perCarMonth   = (CREG_RATE_KWH - liveRate) * AVG_KWH_PER_CAR;
-    const savingsPct    = Math.round((overpayment / cregAnnual) * 100);
+    const isFleetCard   = currentMethod === "fleet-card";
+    const baselineRate  = isFleetCard
+      ? (parseFloat(fleetCardRate) || PUBLIC_NETWORK_RATE)
+      : CREG_RATE_KWH;
 
-    // If user entered their own monthly cost, use that as current
+    const baselineAnnual = baselineRate * AVG_KWH_PER_CAR * 12 * n;
+    const dynamicAnnual  = liveRate     * AVG_KWH_PER_CAR * 12 * n;
+    const overpayment    = baselineAnnual - dynamicAnnual;
+    const perCarMonth    = (baselineRate - liveRate) * AVG_KWH_PER_CAR;
+    const savingsPct     = Math.round((overpayment / baselineAnnual) * 100);
+
     const userMonthly   = parseFloat(monthlyPerCar) || null;
     const userAnnual    = userMonthly ? userMonthly * 12 * n : null;
     const userOverpay   = userAnnual ? userAnnual - dynamicAnnual : null;
 
     setAudit({
       fleetSize: n,
-      cregAnnual,
+      isFleetCard,
+      baselineRate,
+      baselineAnnual,
       dynamicAnnual,
       overpayment,
       perCarMonth,
@@ -145,20 +152,23 @@ export default function FleetAuditPage({ onNavigate }) {
       <div style="opacity:0.8;margin-top:6px;">${audit.savingsPct}% of current reimbursement spend</div>
     </div>
     <div class="grid">
-      <div class="card"><div class="val" style="color:#DC2626;">${fmtE(audit.cregAnnual)}</div><div class="lbl">Annual cost at CREG rate (${fmtE(audit.cregRateKwh)}/kWh)</div></div>
-      <div class="card"><div class="val" style="color:#059669;">${fmtE(audit.dynamicAnnual)}</div><div class="lbl">Annual cost with dynamic EPEX tracking (${fmtE(audit.dynamicRateKwh)}/kWh)</div></div>
+      <div class="card"><div class="val" style="color:#DC2626;">${fmtE(audit.baselineAnnual)}</div><div class="lbl">${audit.isFleetCard ? `Fleet card spend (${fmtE(audit.baselineRate)}/kWh)` : `CREG rate (${fmtE(audit.cregRateKwh)}/kWh)`}</div></div>
+      <div class="card"><div class="val" style="color:#059669;">${fmtE(audit.dynamicAnnual)}</div><div class="lbl">EPEX smart charging (${fmtE(audit.dynamicRateKwh)}/kWh)</div></div>
       <div class="card"><div class="val" style="color:#0D9488;">${fmtE(audit.perCarMonth)}</div><div class="lbl">Saving per car per month</div></div>
     </div>
     <table><tr><th>Metric</th><th>Value</th><th>Basis</th></tr>
       <tr><td>Fleet size</td><td>${audit.fleetSize} EVs</td><td>As entered</td></tr>
-      <tr><td>Avg. home charging</td><td>${fmt(audit.avgKwhPerCar)} kWh/month/car</td><td>Belgian average (VDAB / Febiac data)</td></tr>
-      <tr><td>CREG reference tariff</td><td>${fmtE(audit.cregRateKwh)}/kWh</td><td>CREG Q2 2026 official rate</td></tr>
+      <tr><td>Avg. charging</td><td>${fmt(audit.avgKwhPerCar)} kWh/month/car</td><td>Belgian average (VDAB / Febiac data)</td></tr>
+      <tr><td>${audit.isFleetCard ? "Fleet card average rate" : "CREG reference tariff"}</td><td>${fmtE(audit.baselineRate)}/kWh</td><td>${audit.isFleetCard ? "Belgian public network average (Velocity/DKV/UTA)" : "CREG Q2 2026 official rate"}</td></tr>
       <tr><td>EPEX dynamic rate (30-day avg)</td><td>${fmtE(audit.dynamicRateKwh)}/kWh</td><td>SmartPrice live EPEX Spot Belgium + grid costs</td></tr>
-      <tr><td>Annual CREG spend</td><td><strong>${fmtE(audit.cregAnnual)}</strong></td><td></td></tr>
-      <tr><td>Annual dynamic cost</td><td><strong style="color:#059669;">${fmtE(audit.dynamicAnnual)}</strong></td><td></td></tr>
+      <tr><td>Annual current spend</td><td><strong>${fmtE(audit.baselineAnnual)}</strong></td><td></td></tr>
+      <tr><td>Annual EPEX-optimised cost</td><td><strong style="color:#059669;">${fmtE(audit.dynamicAnnual)}</strong></td><td></td></tr>
       <tr><td><strong>Annual overpayment</strong></td><td><strong style="color:#DC2626;">${fmtE(audit.overpayment)}</strong></td><td>${audit.savingsPct}% reduction possible</td></tr>
     </table>
-    <p style="font-size:13px;color:#475569;line-height:1.7;"><strong>Legal basis:</strong> Belgian tax law (CIR 92, art. 31) allows reimbursement at actual cost with proper documentation. SmartPrice's hourly EPEX-based calculation provides an auditable, fiscally compliant record accepted by social secretariats (SD Worx, Securex, Partena).</p>
+    <p style="font-size:13px;color:#475569;line-height:1.7;">${audit.isFleetCard
+      ? "<strong>How SmartPrice helps:</strong> By monitoring real-time EPEX Spot Belgium prices, SmartPrice identifies when your drivers charge at expensive peak rates and guides them toward off-peak sessions — directly cutting your Velocity/DKV/UTA invoice."
+      : "<strong>Legal basis:</strong> Belgian tax law (CIR 92, art. 31) allows reimbursement at actual cost with proper documentation. SmartPrice's hourly EPEX-based calculation provides an auditable, fiscally compliant record accepted by social secretariats (SD Worx, Securex, Partena)."
+    }</p>
     <p style="font-size:13px;color:#475569;line-height:1.7;"><strong>Next step:</strong> Contact SmartPrice Business at <strong>info@smartprice.be</strong> to set up automated monthly reimbursement reports for your fleet.</p>
     <div class="footer">SmartPrice.be Business · info@smartprice.be · smartprice.be/fleet-audit · GDPR compliant · Data stored in EU · Generated ${new Date().toISOString().split("T")[0]}</div>
     <script>window.onload = function() { window.print(); }</script>
@@ -285,6 +295,31 @@ export default function FleetAuditPage({ onNavigate }) {
                   </div>
                 </div>
 
+                {/* Fleet card rate input — only shown for fleet card method */}
+                {currentMethod === "fleet-card" && (
+                  <div style={{ background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.15)", borderRadius: 12, padding: "18px 20px" }}>
+                    <label style={{ display: "block", fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 6 }}>
+                      Average rate on your fleet card invoices (€/kWh) <span style={{ color: C.light, fontWeight: 500 }}>(optional)</span>
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 15, color: C.muted, fontWeight: 600 }}>€</span>
+                      <input
+                        type="number"
+                        min="0.05"
+                        max="1.50"
+                        step="0.01"
+                        value={fleetCardRate}
+                        onChange={e => setFleetCardRate(e.target.value)}
+                        placeholder={PUBLIC_NETWORK_RATE.toFixed(2)}
+                        style={{ width: "100%", padding: "12px 16px 12px 30px", borderRadius: 10, border: `1.5px solid ${fleetCardRate ? C.teal : C.border}`, fontSize: 16, color: C.text, background: C.bg, outline: "none" }}
+                      />
+                    </div>
+                    <div style={{ fontSize: 12, color: C.muted, marginTop: 6, lineHeight: 1.6 }}>
+                      Check your last Velocity/DKV/UTA invoice — look for "prijs per kWh" or "tariff/kWh". Leave blank to use our Belgian average of <strong>€{PUBLIC_NETWORK_RATE}/kWh</strong>.
+                    </div>
+                  </div>
+                )}
+
                 {/* Optional monthly amount */}
                 <div>
                   <label style={{ display: "block", fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 8 }}>
@@ -345,7 +380,13 @@ export default function FleetAuditPage({ onNavigate }) {
             <div style={{ textAlign: "center", marginBottom: 32 }}>
               <div style={{ fontSize: 48, marginBottom: 8 }}>📊</div>
               <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, marginBottom: 8 }}>{L.resultTitle||"Your Fleet Charging Audit"}</h1>
-              <p style={{ fontSize: 14, color: C.muted }}>Fleet size: <strong>{audit.fleetSize} EVs</strong> · Based on CREG Q2 2026 reference tariff vs. real EPEX Spot Belgium (12-month avg)</p>
+              <p style={{ fontSize: 14, color: C.muted }}>
+                Fleet size: <strong>{audit.fleetSize} EVs</strong> ·{" "}
+                {audit.isFleetCard
+                  ? `Public network rate (€${audit.baselineRate.toFixed(2)}/kWh) vs. EPEX Spot Belgium (12-month avg)`
+                  : "CREG Q2 2026 reference tariff vs. real EPEX Spot Belgium (12-month avg)"
+                }
+              </p>
             </div>
 
             {/* Headline overpayment */}
@@ -359,9 +400,24 @@ export default function FleetAuditPage({ onNavigate }) {
             {/* Breakdown cards */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
               {[
-                { label: "Using CREG flat rate", value: fmtE(audit.cregAnnual), sub: `${fmtE(audit.cregRateKwh)}/kWh × ${fmt(audit.avgKwhPerCar)} kWh/mo × ${audit.fleetSize} cars × 12`, color: C.red, icon: "📋" },
-                { label: "With dynamic EPEX tracking", value: fmtE(audit.dynamicAnnual), sub: `${fmtE(audit.dynamicRateKwh)}/kWh × ${fmt(audit.avgKwhPerCar)} kWh/mo × ${audit.fleetSize} cars × 12`, color: C.green, icon: "⚡" },
-                { label: "Per car per month saving", value: fmtE(audit.perCarMonth), sub: `${fmtE(audit.cregRateKwh - audit.dynamicRateKwh)}/kWh × ${fmt(audit.avgKwhPerCar)} kWh`, color: C.teal, icon: "💰" },
+                {
+                  label: audit.isFleetCard ? "Current fleet card spend" : "Using CREG flat rate",
+                  value: fmtE(audit.baselineAnnual),
+                  sub: `${fmtE(audit.baselineRate)}/kWh × ${fmt(audit.avgKwhPerCar)} kWh/mo × ${audit.fleetSize} cars × 12`,
+                  color: C.red, icon: audit.isFleetCard ? "💳" : "📋"
+                },
+                {
+                  label: "With EPEX smart charging",
+                  value: fmtE(audit.dynamicAnnual),
+                  sub: `${fmtE(audit.dynamicRateKwh)}/kWh × ${fmt(audit.avgKwhPerCar)} kWh/mo × ${audit.fleetSize} cars × 12`,
+                  color: C.green, icon: "⚡"
+                },
+                {
+                  label: "Saving per car per month",
+                  value: fmtE(audit.perCarMonth),
+                  sub: `${fmtE(audit.baselineRate - audit.dynamicRateKwh)}/kWh × ${fmt(audit.avgKwhPerCar)} kWh`,
+                  color: C.teal, icon: "💰"
+                },
               ].map(c => (
                 <div key={c.label} style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, boxShadow: C.shadow, padding: "20px 18px", textAlign: "center" }}>
                   <div style={{ fontSize: 24, marginBottom: 6 }}>{c.icon}</div>
@@ -384,12 +440,18 @@ export default function FleetAuditPage({ onNavigate }) {
               </div>
             )}
 
-            {/* Why this matters */}
+            {/* Why the gap exists */}
             <div style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, boxShadow: C.shadow, padding: "24px 28px", marginBottom: 20 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Why the gap exists</div>
-              <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.8 }}>
-                The CREG reference tariff is a quarterly average that includes worst-case margins for suppliers. Real EPEX Spot Belgium prices fluctuate hourly — employees who charge overnight or during off-peak periods pay significantly less. SmartPrice tracks every hourly price and calculates the <strong style={{ color: C.text }}>exact reimbursement amount based on when each employee actually plugged in</strong>, eliminating the fixed-rate overestimate.
-              </div>
+              {audit.isFleetCard ? (
+                <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.8 }}>
+                  Public charging networks (Velocity, DKV, UTA, Allego) set their own tariffs — typically <strong style={{ color: C.text }}>€0.35–0.60/kWh</strong> — regardless of what electricity actually costs on the Belgian wholesale market. EPEX Spot Belgium prices change every hour and can drop to <strong style={{ color: C.text }}>€0.05–0.15/kWh</strong> at night and on weekends. SmartPrice monitors real-time EPEX data so you can identify <strong style={{ color: C.text }}>when and where your fleet is charging at peak network rates</strong>, and guides drivers toward cheaper sessions — cutting your fleet card invoice significantly.
+                </div>
+              ) : (
+                <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.8 }}>
+                  The CREG reference tariff is a quarterly average that includes worst-case margins for suppliers. Real EPEX Spot Belgium prices fluctuate hourly — employees who charge overnight or during off-peak periods pay significantly less. SmartPrice tracks every hourly price and calculates the <strong style={{ color: C.text }}>exact reimbursement amount based on when each employee actually plugged in</strong>, eliminating the fixed-rate overestimate.
+                </div>
+              )}
             </div>
 
             {/* Legal note */}
