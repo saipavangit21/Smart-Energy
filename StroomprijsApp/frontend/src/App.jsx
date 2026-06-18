@@ -30,6 +30,7 @@ import EvStationsPage   from "./pages/seo/EvStationsPage";
 import ApiPage           from "./pages/ApiPage";
 import FleetAuditPage    from "./pages/FleetAuditPage";
 import BusinessPage      from "./pages/BusinessPage";
+import SessionCalcPage   from "./pages/SessionCalcPage";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
 function getFullPath() { return window.location.pathname + window.location.search; }
@@ -119,6 +120,8 @@ export default function App() {
     return <EvChargingPage onGetStarted={() => navigate("/")} onOpenCalculator={(t) => navigate(`/calculator/${t}`)} />;
   if (path === "/fleet-audit")
     return <FleetAuditPage onNavigate={navigate} />;
+  if (path === "/session-calc")
+    return <SessionCalcPage onNavigate={navigate} />;
   if (path === "/business")
     return <BusinessPage onNavigate={navigate} />;
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
