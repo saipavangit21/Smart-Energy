@@ -245,6 +245,7 @@ export default function BusinessPage({ onNavigate }) {
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <LangSwitcher />
+          <a href="/session-calc" style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "rgba(22,163,74,0.08)", border: `1px solid ${C.border2}`, color: C.primary, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>⚡ Session Calculator</a>
           <a href="/fleet-audit" style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "#FEF3C7", border: "1px solid rgba(180,83,9,0.25)", color: "#B45309", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>{L.navFleetAudit||"Free Fleet Audit →"}</a>
           <button onClick={() => setShowModal(true)} style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(22,163,74,0.3)", whiteSpace: "nowrap", flexShrink: 0 }}>
             {L.navAudit||"Request audit"}
@@ -536,6 +537,7 @@ export default function BusinessPage({ onNavigate }) {
         <div style={{ marginBottom: 10, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
           <a href="/" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>SmartPrice Personal</a>
           <a href="/fleet-audit" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>Fleet Audit</a>
+          <a href="/session-calc" style={{ color: C.primary, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>⚡ Session Calculator</a>
           <a href="/api-docs" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>API & HA</a>
           <a href="mailto:info@smartprice.be" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>info@smartprice.be</a>
         </div>
