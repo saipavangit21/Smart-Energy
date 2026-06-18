@@ -192,13 +192,13 @@ export default function BusinessPage({ onNavigate }) {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>{L.modalPayroll||"Payroll provider"}</label>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 5 }}>{L.modalPayroll||"Fleet setup"}</label>
                       <select value={leadPayroll} onChange={e => setLeadPayroll(e.target.value)}
                         style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, color: leadPayroll ? C.text : C.light, background: C.bg, outline: "none", fontFamily: "inherit", cursor: "pointer" }}
                         onFocus={e => e.target.style.border = `1.5px solid ${C.primary}`}
                         onBlur={e => e.target.style.border = `1.5px solid ${C.border}`}>
                         <option value="">Select…</option>
-                        {["SD Worx","Securex","Partena","Group S","Acerta","Liantis","Other"].map(o => <option key={o} value={o}>{o}</option>)}
+                        {["Fleet cards (Velocity / DKV / UTA)","Home charging + reimbursement","Both models","Not sure / other"].map(o => <option key={o} value={o}>{o}</option>)}
                       </select>
                     </div>
                   </div>
@@ -421,10 +421,32 @@ export default function BusinessPage({ onNavigate }) {
           ))}
         </div>
 
-        <SectionDivider label={L.sectionPayroll||"Payroll integrations"} />
-        {/* ── SOCIAL SECRETARIATEN ──────────────────────────────────── */}
+        <SectionDivider label={L.sectionPayroll||"Fleet ecosystem"} />
+        {/* ── FLEET ECOSYSTEM ───────────────────────────────────────── */}
         <div style={{ background: C.card, borderRadius: 22, border: `1px solid ${C.border}`, boxShadow: C.shadow, padding: "30px 36px", marginBottom: 40, textAlign: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 22 }}>{L.payrollLabel||"Works with your existing payroll systems"}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 20 }}>{L.payrollLabel||"Works with your fleet cards & payroll systems"}</div>
+
+          {/* Fleet card providers */}
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.light, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Fleet energy cards</div>
+          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", alignItems: "center", marginBottom: 20 }}>
+            {[
+              { name: "Velocity",     initials: "VL", color: "#DC2626", bg: "#FEF2F2" },
+              { name: "DKV",          initials: "DK", color: "#1D4ED8", bg: "#EFF6FF" },
+              { name: "UTA",          initials: "UT", color: "#059669", bg: "#F0FDF4" },
+              { name: "Total Fleet",  initials: "TF", color: "#D97706", bg: "#FFFBEB" },
+            ].map(s => (
+              <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: s.bg, border: `1.5px solid ${s.color}22`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13, color: s.color, flexShrink: 0 }}>{s.initials}</div>
+                <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{s.name}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop: `1px dashed ${C.border}`, margin: "0 0 16px" }} />
+
+          {/* Social secretariaten */}
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.light, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Social secretariaten</div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", alignItems: "center", marginBottom: 18 }}>
             {[
               { name: "SD Worx",  initials: "SD", color: "#E30613", bg: "#FEF2F2" },
@@ -440,8 +462,9 @@ export default function BusinessPage({ onNavigate }) {
               </div>
             ))}
           </div>
+
           <div style={{ fontSize: 12, color: C.light, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
-            ✅ {L.payrollNote||"SmartPrice reimbursement calculations are CIR 92 compliant and accepted by all Belgian social secretariaten"}
+            ✅ {L.payrollNote||"SmartPrice integrates with fleet card providers and social secretariaten — CIR 92 compliant"}
           </div>
         </div>
 
