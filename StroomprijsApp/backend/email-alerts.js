@@ -512,17 +512,48 @@ async function sendWeeklyDigest(pool, force = false) {
                   </div>
                 </div>
 
-                <!-- Tesla feature highlight -->
-                <div style="background:rgba(0,200,150,0.07);border:1px solid rgba(0,200,150,0.25);border-radius:16px;padding:20px 24px;margin-bottom:20px;">
-                  <div style="font-size:13px;font-weight:800;color:#00C896;margin-bottom:8px;">🚗 Nieuw: Koppel je Tesla aan SmartPrice / Connect your Tesla</div>
-                  <div style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:14px;">
-                    Open het <strong style="color:#E2E8F0;">EV-tabblad</strong> op SmartPrice en klik op <strong style="color:#E2E8F0;">"Koppel je Tesla"</strong> om meteen te zien:<br>
-                    <em style="color:#00C896;">"Je Model 3 staat op 45% — opladen tot 80% kost nu €8,20. Wacht tot 23:00 voor €3,10. Bespaar €5,10."</em><br>
-                    <span style="color:#556B82;font-size:12px;">Open the EV tab, click "Connect your Tesla" to see real-time cost for your car.</span>
+                <!-- What's new section -->
+                <div style="background:#0A1220;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:24px;margin-bottom:20px;">
+                  <div style="font-size:13px;font-weight:700;color:#94A3B8;margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;">🆕 Nieuw deze week / What's new</div>
+
+                  <!-- Fluvius P1 -->
+                  <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size:28px;flex-shrink:0;">📡</div>
+                    <div>
+                      <div style="font-size:14px;font-weight:800;color:#E2E8F0;margin-bottom:4px;">Fluvius P1 Slimme Meter</div>
+                      <div style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:10px;">
+                        Koppel uw P1-poort aan SmartPrice via Home Assistant. Uw EV-dashboard toont dan live stroomverbruik, zonne-export én een <strong style="color:#10B981;">oplaadsignaal</strong> — groen als de EPEX-prijs onder €0,12/kWh zit.<br>
+                        <span style="color:#556B82;font-size:12px;">Connect your Fluvius P1 port via Home Assistant. Your EV dashboard shows live power, solar export, and a charge-now / wait signal.</span>
+                      </div>
+                      <a href="${APP_URL}/api-docs#fluvius" style="font-size:12px;color:#818CF8;text-decoration:none;font-weight:700;">Bekijk de installatie-instructies / Setup guide →</a>
+                    </div>
                   </div>
-                  <a href="${APP_URL}/?type=ev" style="display:inline-block;background:linear-gradient(135deg,#0D9488,#1A56A4);color:#fff;text-decoration:none;font-weight:700;font-size:13px;padding:10px 22px;border-radius:30px;">
-                    Koppel mijn Tesla / Connect my Tesla →
-                  </a>
+
+                  <!-- Session Calculator -->
+                  <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size:28px;flex-shrink:0;">⚡</div>
+                    <div>
+                      <div style="font-size:14px;font-weight:800;color:#E2E8F0;margin-bottom:4px;">Sessie-calculator — Exacte EPEX-prijs per laadsessie</div>
+                      <div style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:10px;">
+                        Voer datum, uur en kWh in van een laadsessie en zie de werkelijke EPEX-prijs op dat exacte moment. Ideaal voor CIR 92-conforme thuislaadvergoedingen of om uw Velocity/DKV/UTA-factuur te controleren.<br>
+                        <span style="color:#556B82;font-size:12px;">Enter date, time, and kWh for any charging session — see the real EPEX price at that exact hour. Works for home reimbursements and fleet card invoice checks.</span>
+                      </div>
+                      <a href="${APP_URL}/session-calc" style="font-size:12px;color:#10B981;text-decoration:none;font-weight:700;">Probeer gratis / Try free →</a>
+                    </div>
+                  </div>
+
+                  <!-- Fleet Audit -->
+                  <div style="display:flex;gap:14px;align-items:flex-start;">
+                    <div style="font-size:28px;flex-shrink:0;">🚛</div>
+                    <div>
+                      <div style="font-size:14px;font-weight:800;color:#E2E8F0;margin-bottom:4px;">Vlootaudit — Nu ook voor laadpassen</div>
+                      <div style="font-size:13px;color:#94A3B8;line-height:1.7;margin-bottom:10px;">
+                        De gratis vlootaudit berekent nu ook de meerkosten van Velocity, DKV of UTA laadpassen ten opzichte van live EPEX-tarieven. Gemiddeld €73 besparing per wagen per maand.<br>
+                        <span style="color:#556B82;font-size:12px;">The free fleet audit now also covers fleet energy cards (Velocity/DKV/UTA) vs live EPEX — average saving €73/car/month.</span>
+                      </div>
+                      <a href="${APP_URL}/fleet-audit" style="font-size:12px;color:#60A5FA;text-decoration:none;font-weight:700;">Gratis vlootaudit starten / Start free audit →</a>
+                    </div>
+                  </div>
                 </div>
 
                 <div style="text-align:center;margin-bottom:24px;">
