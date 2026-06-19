@@ -1579,7 +1579,7 @@ export const translations = {
       cregTitle: "How Belgian fleets currently pay",
       cregItems: ["Fleet cards billed at public network peak tariffs", "Home reimbursements use fixed CREG quarterly average", "No visibility into when or where drivers actually charge", "No comparison against live EPEX Spot prices", "No cost audit trail for fleet managers or tax authorities"],
       spTitle: "SmartPrice Business",
-      spItems: ["Fleet card invoices mapped against EPEX Spot — per session", "Home charging: real EPEX price at the exact charge hour", "Driver behaviour dashboard — peak vs off-peak patterns", "Fair reimbursements, legally correct under CIR 92", "Full audit trail for fleet managers and tax authorities"],
+      spItems: ["Fleet card invoices mapped against EPEX Spot — per session", "Home charging: real EPEX price at the exact charge hour", "Driver behaviour dashboard — peak vs off-peak patterns (coming soon)", "Fair reimbursements, legally correct under CIR 92", "Full audit trail for fleet managers and tax authorities (coming soon)"],
       // ROI calculator
       roiCalcLabel: "Smart Audit · ROI Calculator",
       roiCalcTitle: "How much is your fleet overpaying — and is your audit trail CIR 92-ready?",
@@ -1672,7 +1672,7 @@ export const translations = {
       cregTitle: "Hoe Belgische vloten momenteel betalen",
       cregItems: ["Vlootkaarten aangerekend aan openbare piekuurtarieven", "Thuisvergoedingen gebruiken vast CREG-kwartaalgemiddelde", "Geen zicht op wanneer of waar chauffeurs laden", "Geen vergelijking met live EPEX Spot-prijzen", "Geen kostenauditspoor voor wagenparkbeheerders of belastingdienst"],
       spTitle: "SmartPrice Business",
-      spItems: ["Vlootkaartfacturen gekoppeld aan EPEX Spot — per sessie", "Thuisladen: werkelijke EPEX-prijs op het exacte laaduur", "Chauffeursgedragsdashboard — piek- vs. daluurpatronen", "Eerlijke vergoedingen, wettelijk correct onder CIR 92", "Volledig auditspoor voor wagenparkbeheerders en belastingdienst"],
+      spItems: ["Vlootkaartfacturen gekoppeld aan EPEX Spot — per sessie", "Thuisladen: werkelijke EPEX-prijs op het exacte laaduur", "Chauffeursgedragsdashboard — piek- vs. daluurpatronen (binnenkort)", "Eerlijke vergoedingen, wettelijk correct onder CIR 92", "Volledig auditspoor voor wagenparkbeheerders en belastingdienst (binnenkort)"],
       // ROI calculator
       roiCalcLabel: "Smart Audit · ROI-calculator",
       roiCalcTitle: "Hoeveel betaalt uw wagenpark te veel — en is uw auditspoor CIR 92-klaar?",
@@ -1765,7 +1765,7 @@ export const translations = {
       cregTitle: "Comment les flottes belges paient actuellement",
       cregItems: ["Cartes de flotte facturées aux tarifs publics aux heures de pointe", "Remboursements à domicile sur base de la moyenne CREG trimestrielle fixe", "Aucune visibilité sur quand ou où les conducteurs rechargent réellement", "Aucune comparaison avec les prix EPEX Spot en direct", "Aucune piste d'audit des coûts pour les gestionnaires de flotte ou le fisc"],
       spTitle: "SmartPrice Business",
-      spItems: ["Factures de cartes de flotte mappées contre l'EPEX Spot — par session", "Recharge à domicile : prix EPEX réel à l'heure exacte de charge", "Tableau de bord comportement conducteur — heures creuses vs heures de pointe", "Remboursements équitables, légalement corrects sous CIR 92", "Piste d'audit complète pour gestionnaires de flotte et autorités fiscales"],
+      spItems: ["Factures de cartes de flotte mappées contre l'EPEX Spot — par session", "Recharge à domicile : prix EPEX réel à l'heure exacte de charge", "Tableau de bord comportement conducteur — heures creuses vs heures de pointe (à venir)", "Remboursements équitables, légalement corrects sous CIR 92", "Piste d'audit complète pour gestionnaires de flotte et autorités fiscales (à venir)"],
       // ROI calculator
       roiCalcLabel: "Smart Audit · Calculateur ROI",
       roiCalcTitle: "Combien votre flotte surpaie-t-elle — et votre piste d'audit est-elle prête pour le CIR 92 ?",

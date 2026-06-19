@@ -498,13 +498,13 @@ export default function FleetAuditPage({ onNavigate }) {
             )}
 
             {/* Per-session calculator nudge */}
-            <div style={{ background: "rgba(22,163,74,0.06)", border: `1px solid ${C.border2}`, borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ background: "rgba(22,163,74,0.06)", border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
               <div style={{ fontSize: 28 }}>⚡</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: 15, color: C.text, marginBottom: 3 }}>Want per-session breakdown?</div>
                 <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>Enter individual charging sessions from your invoice or reimbursement records — see the exact EPEX price at that hour vs what you paid.</div>
               </div>
-              <a href={`/session-calc?mode=${audit?.isFleetCard ? "fleet" : "reimburse"}`} style={{ padding: "11px 22px", borderRadius: 12, fontSize: 14, fontWeight: 700, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", textDecoration: "none", whiteSpace: "nowrap", boxShadow: "0 4px 16px rgba(22,163,74,0.3)" }}>Try Session Calculator →</a>
+              <a href={`/session-calc?mode=${audit?.isFleetCard ? "fleet" : "reimburse"}`} style={{ padding: "11px 22px", borderRadius: 12, fontSize: 14, fontWeight: 700, background: `linear-gradient(135deg,${C.blue},${C.teal})`, color: "#fff", textDecoration: "none", whiteSpace: "nowrap", boxShadow: "0 4px 16px rgba(22,163,74,0.3)" }}>Try Session Calculator →</a>
             </div>
 
             <div style={{ textAlign: "center", marginTop: 20 }}>
