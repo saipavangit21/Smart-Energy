@@ -295,6 +295,81 @@ if (price < 50) {
 }`}</Code>
         </Section>
 
+        {/* Fluvius P1 section */}
+        <div id="fluvius">
+          <Section title="📡 Fluvius P1 Smart Meter">
+            <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 16 }}>
+              Push real-time readings from your Fluvius digital meter (P1 port) to SmartPrice. Your dashboard will show live power consumption, solar export, and a <strong style={{ color: C.text }}>charge signal</strong> — "charge now" when the EPEX all-in price is below €0.12/kWh.
+            </p>
+            <div style={{ background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: C.muted, lineHeight: 1.7, marginBottom: 20 }}>
+              <strong style={{ color: C.text }}>Auth:</strong> Use your SmartPrice JWT token as <code style={{ color: "#818CF8" }}>x-api-key</code> header in HA — same token you get from logging in. Find it in your browser's localStorage under <code style={{ color: "#818CF8" }}>sp_access_token</code>.
+            </div>
+
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>configuration.yaml — push P1 readings every 10 seconds</div>
+            <Code>{`rest_command:
+  push_p1_to_smartprice:
+    url: ${API}/api/fluvius/push
+    method: POST
+    headers:
+      x-api-key: "YOUR_SMARTPRICE_JWT_TOKEN"
+      Content-Type: application/json
+    payload: >
+      {
+        "power_w": {{ states('sensor.power_consumption_w') | int(0) }},
+        "solar_w": {{ states('sensor.solar_power_w') | int(0) }},
+        "energy_kwh": {{ states('sensor.energy_kwh_total') | float(0) }},
+        "gas_m3": {{ states('sensor.gas_m3_total') | float(0) }}
+      }
+
+automation:
+  - alias: "Push P1 to SmartPrice every 10s"
+    trigger:
+      platform: time_pattern
+      seconds: "/10"
+    action:
+      service: rest_command.push_p1_to_smartprice`}</Code>
+
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8, marginTop: 20 }}>GET /api/fluvius/latest — read back with charge signal</div>
+            <Code>{`# Response
+{
+  "reading": {
+    "power_w": 1234,
+    "solar_w": 456,
+    "energy_kwh": 12345.678,
+    "gas_m3": 1234.567,
+    "recorded_at": "2026-06-19T08:00:00Z"
+  },
+  "epex": {
+    "price_eur_kwh": 0.087,
+    "charge_signal": "charge_now",
+    "charge_threshold_eur_kwh": 0.12
+  }
+}`}</Code>
+
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8, marginTop: 20 }}>Common P1 entity names (DSMR / Dutch Smart Meter)</div>
+            <Code>{`# Power consumption (W)
+sensor.power_consumption        # DSMR component
+sensor.p1_power_use             # Home Wizard P1
+sensor.electricity_currently_delivered_1  # Slimme Meter
+
+# Solar / return power (W)
+sensor.power_production
+sensor.p1_power_return
+
+# Cumulative energy (kWh)
+sensor.energy_consumption_total_kwh
+sensor.p1_electricity_delivered_1
+
+# Gas (m³)
+sensor.gas_consumption_total
+sensor.p1_gas_delivered`}</Code>
+
+            <div style={{ background: "rgba(13,148,136,0.06)", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: C.muted, lineHeight: 1.7, marginTop: 16 }}>
+              💡 <strong style={{ color: C.text }}>History endpoint:</strong> <code style={{ color: C.teal }}>/api/fluvius/history?hours=24</code> returns 5-minute bucketed readings for the last 24 hours (max 168h / 7 days). Good for daily energy dashboards.
+            </div>
+          </Section>
+        </div>
+
         <div style={{ textAlign: "center", fontSize: 12, color: C.muted, paddingTop: 24, borderTop: `1px solid ${C.border}` }}>
           Questions? <a href="mailto:hello@smartprice.be" style={{ color: C.teal }}>hello@smartprice.be</a>
           {" · "}Data: Energy-Charts.info · Elia Open Data (CC BY 4.0)

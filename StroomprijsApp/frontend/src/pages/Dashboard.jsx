@@ -356,6 +356,26 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
   const [teslaLoading, setTeslaLoading] = useState(false);
   const [teslaError, setTeslaError] = useState(null);
 
+  // Fluvius P1 smart meter
+  const [fluvius, setFluvius] = useState(null);
+  useEffect(() => {
+    if (!user || user.isGuest) return;
+    const fetchFluvius = () => {
+      fetch("/api/fluvius/latest", { credentials: "include" })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d?.success) setFluvius(d); })
+        .catch(() => {});
+    };
+    fetchFluvius();
+    const iv = setInterval(fetchFluvius, 10000);
+    return () => clearInterval(iv);
+  }, [user]);
+  const fluviusReading   = fluvius?.reading;
+  const fluviusChargeNow = fluvius?.epex?.charge_signal === "charge_now";
+  const fluviusPrice     = fluvius?.epex?.price_eur_kwh;
+  const powerW           = fluviusReading?.power_w;
+  const solarW           = fluviusReading?.solar_w;
+
   // Check Tesla connection + URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -587,6 +607,64 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
         </div>
       )}
 
+      {/* ── Fluvius P1 smart meter tile ── */}
+      {fluviusReading && (
+        <div style={{ background: fluviusChargeNow ? "rgba(16,185,129,0.07)" : "rgba(255,255,255,0.025)", border: `1px solid ${fluviusChargeNow ? "rgba(16,185,129,0.35)" : C.border}`, borderRadius: 18, padding: "18px 22px", marginBottom: 16 }}>
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.soft }}>📡 Smart Meter (P1)</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px #10B981", display: "inline-block", animation: "pulse-elec 2s infinite" }} />
+              <span style={{ fontSize: 11, color: "#10B981", fontWeight: 700 }}>LIVE</span>
+            </div>
+          </div>
+
+          {/* Stat row */}
+          <div style={{ display: "grid", gridTemplateColumns: solarW > 0 ? "1fr 1fr 1fr" : "1fr 1fr", gap: 12, marginBottom: 14 }}>
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Consuming</div>
+              <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "monospace", color: "#E2E8F0" }}>{(powerW / 1000).toFixed(2)}</div>
+              <div style={{ fontSize: 11, color: C.muted }}>kW</div>
+            </div>
+            {solarW > 0 && (
+              <div style={{ background: "rgba(245,158,11,0.06)", borderRadius: 12, padding: "12px 14px" }}>
+                <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>☀️ Solar export</div>
+                <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "monospace", color: "#F59E0B" }}>{(solarW / 1000).toFixed(2)}</div>
+                <div style={{ fontSize: 11, color: C.muted }}>kW</div>
+              </div>
+            )}
+            <div style={{ background: fluviusChargeNow ? "rgba(16,185,129,0.06)" : "rgba(245,158,11,0.05)", borderRadius: 12, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>EPEX now</div>
+              <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "monospace", color: fluviusChargeNow ? "#10B981" : "#F59E0B" }}>
+                {fluviusPrice != null ? `€${fluviusPrice.toFixed(3)}` : "—"}
+              </div>
+              <div style={{ fontSize: 11, color: C.muted }}>/kWh all-in</div>
+            </div>
+          </div>
+
+          {/* Charge signal banner */}
+          <div style={{ background: fluviusChargeNow ? "rgba(16,185,129,0.13)" : "rgba(245,158,11,0.08)", border: `1px solid ${fluviusChargeNow ? "rgba(16,185,129,0.35)" : "rgba(245,158,11,0.28)"}`, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: fluviusChargeNow ? "#10B981" : "#F59E0B" }}>
+                {fluviusChargeNow ? "⚡ Good time to charge" : "⏳ Hold off — peak rate"}
+              </div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                {fluviusChargeNow
+                  ? `${fluviusPrice != null ? `€${fluviusPrice.toFixed(3)}/kWh` : ""} — off-peak, below €0.12 threshold`
+                  : `${fluviusPrice != null ? `€${fluviusPrice.toFixed(3)}/kWh` : ""} — wait for prices below €0.12/kWh`}
+              </div>
+            </div>
+            <div style={{ fontSize: 26 }}>{fluviusChargeNow ? "🟢" : "🟡"}</div>
+          </div>
+
+          {fluviusReading.recorded_at && (
+            <div style={{ fontSize: 10, color: C.muted, marginTop: 8, textAlign: "right" }}>
+              Updated {Math.round((Date.now() - new Date(fluviusReading.recorded_at).getTime()) / 1000)}s ago
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Cheapest windows */}
       <div style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 18, padding: "20px 22px", marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -677,6 +755,15 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
             <div style={{ fontSize: 11, color: C.muted }}>Tips, savings, Belgium data</div>
           </div>
         </button>
+        {!user?.isGuest && !fluviusReading && (
+          <button onClick={() => window.location.href = "/api-docs#fluvius"} style={{ flex: "1 1 140px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.25)", color: "#E2E8F0" }}>
+            <span style={{ fontSize: 24 }}>📡</span>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#818CF8" }}>P1 Smart Meter</div>
+              <div style={{ fontSize: 11, color: C.muted }}>Connect Fluvius meter for live signal</div>
+            </div>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -726,7 +813,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   const [alertThreshold, setAlertThreshold] = useState(user?.preferences?.alertThreshold || 80);
   const [alertActive,    setAlertActive]    = useState(user?.preferences?.alertEnabled || false);
   const [notification,   setNotification]   = useState(null);
-const [viewMode,       setViewMode]       = useState("graph"); // "graph" | "table"
+  const [viewMode,       setViewMode]       = useState("table"); // "table" | "graph"
   const [isMobile,       setIsMobile]       = useState(window.innerWidth < 768);
 
   // ── Energy type toggle + URL sync ─────────────────────────
@@ -1107,7 +1194,7 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
             </div>
             {energyType === "electricity" && (tab === "today" || tab === "tomorrow") && (
               <div style={{ display: "flex", background: C.card, borderRadius: 8, padding: 3, gap: 2 }}>
-                {["graph", "table"].map(v => (
+                {["table", "graph"].map(v => (
                   <button key={v} onClick={() => setViewMode(v)} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", background: viewMode === v ? "rgba(255,255,255,0.12)" : "transparent", color: viewMode === v ? "#fff" : "#556" }}>
                     {v === "graph" ? `📊 ${T.graph}` : `📋 ${T.table}`}
                   </button>
@@ -1141,7 +1228,7 @@ const changeSupplier     = async s => { setSupplier(s); try { await updatePrefer
                       <div style={{ fontSize: 11, color: "#556", marginTop: 2 }}>{T.epexUpdated} {lastFetched && lastFetched.toLocaleTimeString("en-GB")}</div>
                     </div>
                     <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3, gap: 2 }}>
-                      {["graph", "table"].map(v => (
+                      {["table", "graph"].map(v => (
                         <button key={v} onClick={() => setViewMode(v)} style={{ padding: "5px 14px", borderRadius: 6, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: viewMode === v ? "rgba(255,255,255,0.1)" : "transparent", color: viewMode === v ? "#fff" : "#556" }}>
                           {v === "graph" ? `📊 ${T.graph}` : `📋 ${T.table}`}
                         </button>
