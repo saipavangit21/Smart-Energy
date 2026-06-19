@@ -216,6 +216,90 @@ function buildFollowUpHtml(name, company, lang) {
 </body></html>`;
 }
 
+// ── Fluvius waitlist update email (NL) ───────────────────────────────────────
+const FLUVIUS_WAITLIST_CONTACTS = [
+  { to: "danny.maesen@telenet.be",        name: "Danny"   },
+  { to: "dion@dionverbeke.com",           name: "Dion"    },
+  { to: "smartprice@chacsam.be",          name: "Team"    },
+  { to: "karel.vanderkerken@outlook.be",  name: "Karel"   },
+  { to: "christian.joret@gmail.com",      name: "Christian" },
+  { to: "marianne@hotmail.be",            name: "Marianne" },
+  { to: "pollarisjan@gmail.com",          name: "Jan"     },
+  { to: "cleberson.eng@gmail.com",        name: "Cleberson" },
+  { to: "lucdc@telenet.be",              name: "Luc"     },
+  { to: "patrick.berghmans@gmail.com",    name: "Patrick" },
+  { to: "vaddamanis@yahoo.com",           name: "daar"    },
+];
+
+function buildFluviusUpdateHtml(name) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:'Segoe UI',Arial,sans-serif;">
+<div style="max-width:580px;margin:0 auto;padding:32px 16px;">
+
+  <div style="text-align:center;margin-bottom:28px;">
+    <div style="display:inline-flex;align-items:center;gap:10px;background:#EFF6FF;border:1px solid rgba(30,64,175,0.15);border-radius:30px;padding:8px 20px;">
+      <span style="font-size:20px;">🇧🇪</span>
+      <span style="font-weight:900;font-size:18px;color:#1E3A8A;letter-spacing:-0.5px;">SmartPrice</span>
+      <span style="font-size:11px;font-weight:700;color:#1E40AF;background:#DBEAFE;border-radius:20px;padding:2px 10px;">Update</span>
+    </div>
+  </div>
+
+  <div style="background:#fff;border-radius:20px;border:1px solid rgba(0,0,0,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.06);padding:36px;">
+
+    <p style="font-size:16px;font-weight:700;color:#0F172A;margin:0 0 16px;">Dag ${name},</p>
+    <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 20px;">
+      Bedankt dat u zich hebt aangemeld voor de <strong>Fluvius-koppeling</strong> van SmartPrice. We zijn actief bezig met de integratie van digitale meters — en willen u alvast een update geven over waar we staan.
+    </p>
+
+    <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:20px 24px;margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:800;color:#D97706;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">📡 Status Fluvius-koppeling</div>
+      <p style="font-size:13px;color:#475569;line-height:1.8;margin:0;">
+        De directe Fluvius P1-poortkoppeling is gepland voor <strong>later dit jaar</strong>. We werken samen met meterfabrikanten en testen de betrouwbaarheid van de uitlezing voordat we het voor iedereen openstellen. Zodra het live gaat, bent u als eerste aan de beurt — u hoeft niets te doen.
+      </p>
+    </div>
+
+    <div style="background:rgba(22,163,74,0.04);border:1px solid rgba(22,163,74,0.18);border-radius:14px;padding:20px 24px;margin-bottom:24px;">
+      <div style="font-size:11px;font-weight:800;color:#16A34A;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">✅ Wat u vandaag al kunt gebruiken</div>
+      <ul style="font-size:13px;color:#475569;line-height:1.9;margin:0;padding-left:18px;">
+        <li><strong>Live EPEX Spot-prijzen</strong> — zie uur per uur wanneer stroom het goedkoopst is in België</li>
+        <li><strong>Goedkoopste uren van morgen</strong> — dagelijkse alert wanneer de laagste laad-uren bekend zijn</li>
+        <li><strong>Sessie-calculator</strong> — bereken de werkelijke prijs van elke laadsessie op basis van het EPEX-uurtarief</li>
+        <li><strong>Gratis · geen installatie</strong> — werkt direct via de browser, geen app nodig</li>
+      </ul>
+    </div>
+
+    <div style="text-align:center;margin-bottom:8px;">
+      <p style="font-size:13px;color:#475569;margin:0 0 16px;">Ga naar SmartPrice.be en ontdek wat u nu al kunt besparen.</p>
+      <a href="https://smartprice.be" style="display:inline-block;background:linear-gradient(135deg,#15803D,#16A34A);color:#fff;text-decoration:none;padding:14px 36px;border-radius:30px;font-weight:800;font-size:15px;box-shadow:0 6px 20px rgba(22,163,74,0.3);">
+        Open SmartPrice.be →
+      </a>
+    </div>
+
+    <p style="font-size:14px;color:#475569;margin:24px 0 0;">Met vriendelijke groet,<br><strong style="color:#0F172A;">Het SmartPrice-team</strong><br><span style="color:#94A3B8;font-size:13px;">info@smartprice.be · smartprice.be</span></p>
+  </div>
+
+  <div style="text-align:center;color:#94A3B8;font-size:11px;margin-top:24px;line-height:1.8;">
+    <div>SmartPrice.be · België · GDPR Conform · EU-hosting</div>
+    <div style="margin-top:6px;">Antwoord op deze e-mail om u af te melden.</div>
+  </div>
+</div>
+</body></html>`;
+}
+
+async function sendFluviusUpdate({ to, name }) {
+  await axiosHttp.post("https://api.resend.com/emails", {
+    from: FROM,
+    to,
+    subject: `SmartPrice — update over uw Fluvius-registratie`,
+    html: buildFluviusUpdateHtml(name),
+    reply_to: "info@smartprice.be",
+    tags: [{ name: "campaign", value: "fluvius_waitlist_update_jun2026" }],
+  }, {
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+  });
+  return { to, name, status: "sent" };
+}
+
 async function sendOne({ to, name, company, lang, followUp = false }) {
   const html = followUp ? buildFollowUpHtml(name, company, lang) : buildHtml(name, company, lang);
   const sub  = subject(company, lang, followUp);
@@ -233,7 +317,7 @@ async function sendOne({ to, name, company, lang, followUp = false }) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // POST /api/admin/send-outreach
-// Body: { contacts?: [...], preset?: "all", dryRun?: true }
+// Body: { contacts?: [...], preset?: "all"|"fluvius_waitlist", dryRun?: true }
 router.post("/", async (req, res) => {
   const secret = req.headers["x-admin-secret"];
   if (!ADMIN_SECRET || secret !== ADMIN_SECRET) {
@@ -244,10 +328,33 @@ router.post("/", async (req, res) => {
   }
 
   const { contacts, preset, dryRun = false, followUp = false } = req.body || {};
+
+  // Fluvius waitlist update — separate template
+  if (preset === "fluvius_waitlist") {
+    const list = FLUVIUS_WAITLIST_CONTACTS;
+    if (dryRun) {
+      return res.json({ success: true, dryRun: true, would_send: list.map(c => ({ to: c.to, name: c.name })) });
+    }
+    const sent = [], failed = [];
+    for (const contact of list) {
+      try {
+        const result = await sendFluviusUpdate(contact);
+        sent.push(result);
+        console.log(`[fluvius-update] ✓ sent → ${contact.to}`);
+      } catch (e) {
+        const msg = e.response?.data?.message || e.message;
+        failed.push({ to: contact.to, error: msg });
+        console.error(`[fluvius-update] ✗ failed → ${contact.to}: ${msg}`);
+      }
+      await sleep(600);
+    }
+    return res.json({ success: true, total: list.length, sent: sent.length, failed: failed.length, results: { sent, failed } });
+  }
+
   const list = contacts || (preset === "all" ? PRESET_CONTACTS : []);
 
   if (!list.length) {
-    return res.status(400).json({ success: false, error: "No contacts. Pass contacts[] or preset:'all'" });
+    return res.status(400).json({ success: false, error: "No contacts. Pass contacts[] or preset:'all'|'fluvius_waitlist'" });
   }
 
   if (dryRun) {
@@ -265,7 +372,7 @@ router.post("/", async (req, res) => {
       failed.push({ to: contact.to, company: contact.company, error: msg });
       console.error(`[outreach] ✗ failed → ${contact.to}: ${msg}`);
     }
-    await sleep(600); // 600ms between sends — stays well within Resend rate limits
+    await sleep(600);
   }
 
   res.json({ success: true, total: list.length, sent: sent.length, failed: failed.length, results: { sent, failed } });
