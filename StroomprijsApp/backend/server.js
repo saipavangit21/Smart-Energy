@@ -23,6 +23,7 @@ const dailyPostsRoutes = require("./routes/daily-posts");
 const fluviusRoutes    = require("./routes/fluvius");
 const pool = require("./db").pool;
 const { requireAuth } = require("./middleware/auth");
+const { trackHaPing, getHaStats } = require("./ha-tracking");
 
 const app   = express();
 app.set("trust proxy", 1);
@@ -52,6 +53,7 @@ app.use(express.json());
 app.use(cookieParser());
 // ── Analytics middleware — must be BEFORE route mounts ──────
 attachAnalytics(app, pool);
+app.use(trackHaPing(pool)); // no-op unless X-SmartPrice-Client: homeassistant header present
 
 app.use("/auth", authRoutes);
 app.use("/auth/google", googleRoutes);
@@ -707,6 +709,20 @@ app.post("/api/admin/unsubscribe-user", async (req, res) => {
     );
     if (rows.length === 0) return res.status(404).json({ success: false, error: "User not found" });
     res.json({ success: true, message: `${rows[0].email} unsubscribed from all email communication` });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// GET /api/admin/ha-integration-stats — distinct Home Assistant integration installs (by hashed IP)
+app.get("/api/admin/ha-integration-stats", async (req, res) => {
+  const secret = req.headers["x-admin-secret"];
+  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  try {
+    const stats = await getHaStats(pool);
+    res.json({ success: true, ...stats });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

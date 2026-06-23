@@ -113,6 +113,7 @@ export default function AdminDashboard() {
   const [copied,    setCopied]    = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [nlStats,   setNlStats]   = useState(null);
+  const [haStats,   setHaStats]   = useState(null);
 
   const hdrs = (s) => {
     const key = s || secret || localStorage.getItem("sp_admin_secret") || SECRET;
@@ -123,13 +124,14 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [aRes, uRes, lRes, nlRes] = await Promise.all([
+      const [aRes, uRes, lRes, nlRes, haRes] = await Promise.all([
         fetch(`${API}/api/admin/analytics?days=${period}`,    { headers: hdrs(s) }),
         fetch(`${API}/api/admin/users`,                       { headers: hdrs(s) }),
         fetch(`${API}/api/admin/leads`,                       { headers: hdrs(s) }),
         fetch(`${API}/api/admin/newsletter-stats`,            { headers: hdrs(s) }),
+        fetch(`${API}/api/admin/ha-integration-stats`,        { headers: hdrs(s) }),
       ]);
-      const [aData, uData, lData, nlData] = await Promise.all([aRes.json(), uRes.json(), lRes.json(), nlRes.json()]);
+      const [aData, uData, lData, nlData, haData] = await Promise.all([aRes.json(), uRes.json(), lRes.json(), nlRes.json(), haRes.json()]);
       if (aRes.status === 401 || !aData.success) {
         // Only sign out on 401 - not on other errors
         if (aRes.status === 401) {
@@ -142,6 +144,7 @@ export default function AdminDashboard() {
       if (uData.success) setUsers(uData.users);
       if (lData.success) setLeads(lData.leads);
       if (nlData.success) setNlStats(nlData);
+      if (haData.success) setHaStats(haData);
       setAuthed(true);
       localStorage.setItem("sp_admin_secret", s || secret);
     } catch (e) {
@@ -281,6 +284,7 @@ export default function AdminDashboard() {
           <StatCard label="SEO Page Views" value={seoPageViews} sub={period === 1 ? "today" : `last ${period}d`} color={C.blue} />
           <StatCard label="Business Page Views" value={bizPageViews} sub={period === 1 ? "today" : `last ${period}d`} color="#7C3AED" />
           <StatCard label="Newsletter Subs" value={nlStats?.active ?? "—"} sub={`${nlStats?.total ?? 0} total · weekly digest`} color="#3B82F6" />
+          <StatCard label="HACS Integrations" value={haStats?.active_7d ?? "—"} sub={`${haStats?.active_today ?? 0} today · ${haStats?.total_ever ?? 0} all-time`} color="#41BDF5" />
         </div>
 
         {/* Next goal banner */}

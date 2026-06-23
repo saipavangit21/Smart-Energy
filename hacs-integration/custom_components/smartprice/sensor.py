@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import API_BASE, DEFAULT_SCAN_INTERVAL, DOMAIN, PRICE_LEVELS
+from .const import API_BASE, CLIENT_HEADERS, DEFAULT_SCAN_INTERVAL, DOMAIN, PRICE_LEVELS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,19 +77,19 @@ class SmartPriceCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             async with self._session.get(
-                f"{API_BASE}/current", timeout=aiohttp.ClientTimeout(total=10)
+                f"{API_BASE}/current", headers=CLIENT_HEADERS, timeout=aiohttp.ClientTimeout(total=10)
             ) as resp:
                 current = await resp.json()
 
             async with self._session.get(
-                f"{API_BASE}/cheapest?hours=5", timeout=aiohttp.ClientTimeout(total=10)
+                f"{API_BASE}/cheapest?hours=5", headers=CLIENT_HEADERS, timeout=aiohttp.ClientTimeout(total=10)
             ) as resp:
                 cheapest = await resp.json()
 
             gas = {}
             try:
                 async with self._session.get(
-                    f"{API_BASE}/gas/current", timeout=aiohttp.ClientTimeout(total=10)
+                    f"{API_BASE}/gas/current", headers=CLIENT_HEADERS, timeout=aiohttp.ClientTimeout(total=10)
                 ) as resp:
                     gas = await resp.json()
             except Exception:
