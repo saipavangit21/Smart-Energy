@@ -764,6 +764,13 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
             </div>
           </button>
         )}
+        <button onClick={() => window.location.href = "/fleet-audit"} style={{ flex: "1 1 140px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(22,163,74,0.07)", border: "1px solid rgba(22,163,74,0.25)", color: "#E2E8F0" }}>
+          <span style={{ fontSize: 24 }}>🚛</span>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.green }}>Manage a fleet?</div>
+            <div style={{ fontSize: 11, color: C.muted }}>Free EV fleet cost audit for your company</div>
+          </div>
+        </button>
       </div>
     </div>
   );
