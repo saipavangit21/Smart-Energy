@@ -332,7 +332,7 @@ export default function SessionCalcPage({ onNavigate }) {
           <p style={{ fontSize:14, opacity:0.85, marginBottom:20, maxWidth:480, margin:"0 auto 20px", lineHeight:1.7 }}>
             SmartPrice Business can generate monthly reimbursement reports for all your drivers and analyse your fleet card invoices automatically — no manual entry required.
           </p>
-          <button onClick={() => onNavigate?.("/business")}
+          <button onClick={() => onNavigate?.("/business?lead=fleet")}
             style={{ padding:"12px 32px", borderRadius:30, fontSize:14, fontWeight:800, background:"#FCD34D", color:"#15803D", border:"none", cursor:"pointer", boxShadow:"0 4px 20px rgba(0,0,0,0.2)" }}>
             Talk to SmartPrice Business →
           </button>

@@ -99,7 +99,7 @@ export default function App() {
 
   const navigate = useCallback((to) => {
     window.history.pushState({}, "", to);
-    setPath(to);
+    setPath(to.split("?")[0]);
   }, []);
 
   // ── Hard-coded path matches ──────────────────────────────────

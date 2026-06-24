@@ -109,6 +109,15 @@ export default function BusinessPage({ onNavigate }) {
     fetch("/api/business-ping").catch(() => {});
   }, []);
 
+  /* Auto-open the lead form when arriving with high-intent (e.g. /business?lead=fleet from Session Calculator) */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("lead")) {
+      setShowModal(true);
+      document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
+
   /* Form submit */
   async function submitLead(e) {
     e.preventDefault();
