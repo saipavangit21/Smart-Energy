@@ -6,6 +6,8 @@
  * No registration required. Fetches live EPEX Spot Belgium price history.
  */
 import { useState, useEffect } from "react";
+import { useLanguage } from "../context/LanguageContext";
+import LangSwitcher from "../components/LangSwitcher";
 
 const GRID_COST = 0.13;  // Belgian distribution + taxes €/kWh (approximation)
 const VAT       = 1.21;  // 21% VAT on Belgian electricity
@@ -24,6 +26,8 @@ function fmtR(n)  { return `€${n.toLocaleString("nl-BE",{minimumFractionDigits
 function padH(h)  { return String(h).padStart(2,"0"); }
 
 export default function SessionCalcPage({ onNavigate }) {
+  const { tSection } = useLanguage();
+  const L = tSection("sessionCalc");
   const initMode = new URLSearchParams(window.location.search).get("mode") === "fleet" ? "fleet" : "reimburse";
   const [mode, setMode]           = useState(initMode);
   const [priceMap, setPriceMap]   = useState({});
@@ -65,11 +69,12 @@ export default function SessionCalcPage({ onNavigate }) {
   function addSession(e) {
     e.preventDefault();
     const kwhN = parseFloat(kwh);
-    if (!kwh || kwhN <= 0) { setAddError("Enter a valid kWh amount."); return; }
+    if (!kwh || kwhN <= 0) { setAddError(L.errNoKwh || "Enter a valid kWh amount."); return; }
     const dayPrices = priceMap[date];
     const epexRate  = dayPrices?.[parseInt(hour)];
     if (!epexRate) {
-      setAddError(`No EPEX data for ${date} at ${padH(hour)}:00. Only the last 90 days are available.`);
+      const tmpl = L.errNoData || "No EPEX data for {date} at {hour}:00. Only the last 90 days are available.";
+      setAddError(tmpl.replace("{date}", date).replace("{hour}", padH(hour)));
       return;
     }
     const reimb  = kwhN * epexRate;
@@ -115,7 +120,10 @@ export default function SessionCalcPage({ onNavigate }) {
           <span style={{ fontWeight:800, fontSize:16, color:C.primary }}>SmartPrice</span>
           <span style={{ fontSize:12, color:"#1E40AF", fontWeight:800, background:"#EFF6FF", padding:"2px 10px", borderRadius:20, border:"1px solid rgba(30,64,175,0.2)" }}>Business</span>
         </div>
-        <a href="mailto:info@smartprice.be" style={{ fontSize:13, color:C.muted, textDecoration:"none" }}>info@smartprice.be</a>
+        <div style={{ display:"flex", alignItems:"center", gap:16 }}>
+          <LangSwitcher />
+          <a href="mailto:info@smartprice.be" style={{ fontSize:13, color:C.muted, textDecoration:"none" }}>info@smartprice.be</a>
+        </div>
       </nav>
 
       <div style={{ maxWidth:860, margin:"0 auto", padding:"40px 20px 80px" }}>
@@ -123,21 +131,21 @@ export default function SessionCalcPage({ onNavigate }) {
         {/* Hero */}
         <div style={{ textAlign:"center", marginBottom:32 }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:C.highlight, border:`1px solid ${C.border2}`, borderRadius:30, padding:"5px 16px", marginBottom:14, fontSize:12, color:C.primary, fontWeight:700 }}>
-            ⚡ Live EPEX Spot Belgium · 90-day history
+            {L.badge || "⚡ Live EPEX Spot Belgium · 90-day history"}
           </div>
           <h1 style={{ fontSize:"clamp(24px,4vw,36px)", fontWeight:900, letterSpacing:"-0.8px", marginBottom:10 }}>
-            EPEX Session Calculator
+            {L.title || "EPEX Session Calculator"}
           </h1>
           <p style={{ fontSize:15, color:C.muted, maxWidth:560, margin:"0 auto", lineHeight:1.75 }}>
-            Look up the real EPEX electricity price for any past charging session — calculate exact CIR 92-compliant reimbursements or audit your fleet card invoice vs. market rates.
+            {L.subtitle || "Look up the real EPEX electricity price for any past charging session — calculate exact CIR 92-compliant reimbursements or audit your fleet card invoice vs. market rates."}
           </p>
         </div>
 
         {/* Mode toggle */}
         <div style={{ display:"flex", gap:0, background:C.card, border:`1px solid ${C.border}`, borderRadius:16, overflow:"hidden", marginBottom:28, maxWidth:500, margin:"0 auto 28px" }}>
           {[
-            { id:"reimburse", icon:"💶", label:"Reimbursement Calculator", sub:"Home charging · CIR 92" },
-            { id:"fleet",     icon:"💳", label:"Fleet Card Invoice Check",  sub:"Velocity · DKV · UTA" },
+            { id:"reimburse", icon:"💶", label:L.modeReimburseLabel || "Reimbursement Calculator", sub:L.modeReimburseSub || "Home charging · CIR 92" },
+            { id:"fleet",     icon:"💳", label:L.modeFleetLabel || "Fleet Card Invoice Check",  sub:L.modeFleetSub || "Velocity · DKV · UTA" },
           ].map(m => (
             <button key={m.id} onClick={() => setMode(m.id)}
               style={{ flex:1, padding:"14px 8px", border:"none", cursor:"pointer", fontFamily:"inherit", transition:"all 0.15s",
@@ -152,7 +160,7 @@ export default function SessionCalcPage({ onNavigate }) {
 
         {loading && (
           <div style={{ textAlign:"center", padding:"20px", color:C.muted, fontSize:13 }}>
-            Loading 90 days of EPEX price data…
+            {L.loadingText || "Loading 90 days of EPEX price data…"}
           </div>
         )}
 
@@ -161,9 +169,10 @@ export default function SessionCalcPage({ onNavigate }) {
           <div style={{ background: mode==="fleet" ? "rgba(220,38,38,0.04)" : "rgba(22,163,74,0.04)",
             border: `1px solid ${mode==="fleet" ? "rgba(220,38,38,0.15)" : C.border2}`,
             borderRadius:12, padding:"12px 18px", marginBottom:20, fontSize:13, color:C.muted, lineHeight:1.65 }}>
+            <strong style={{color:C.text}}>{L.howToUseLabel || "How to use:"}</strong>{" "}
             {mode === "reimburse"
-              ? <><strong style={{color:C.text}}>How to use:</strong> Enter the date, time, and kWh for a charging session. SmartPrice looks up the real EPEX Spot price at that exact hour and calculates the exact CIR 92-compliant reimbursement amount.</>
-              : <><strong style={{color:C.text}}>How to use:</strong> Take a session from your Velocity, DKV, or UTA invoice (date, time, kWh, amount charged). SmartPrice shows the EPEX market price at that hour so you can see exactly how much the network overcharged vs. real market rates.</>
+              ? (L.howToUseReimburse || "Enter the date, time, and kWh for a charging session. SmartPrice looks up the real EPEX Spot price at that exact hour and calculates the exact CIR 92-compliant reimbursement amount.")
+              : (L.howToUseFleet || "Take a session from your Velocity, DKV, or UTA invoice (date, time, kWh, amount charged). SmartPrice shows the EPEX market price at that hour so you can see exactly how much the network overcharged vs. real market rates.")
             }
           </div>
         )}
@@ -172,18 +181,18 @@ export default function SessionCalcPage({ onNavigate }) {
         {!loading && (
           <div style={{ background:C.card, borderRadius:20, border:`1px solid ${C.border}`, boxShadow:C.shadow, padding:"26px 28px", marginBottom:22 }}>
             <div style={{ fontSize:11, fontWeight:800, color:C.primary, textTransform:"uppercase", letterSpacing:2, marginBottom:18 }}>
-              Add a session
+              {L.addSessionLabel || "Add a session"}
             </div>
             <form onSubmit={addSession}>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:14, marginBottom:14 }}>
 
                 <div>
-                  <label style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:5 }}>Date *</label>
+                  <label style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:5 }}>{L.dateLabel || "Date *"}</label>
                   <input type="date" value={date} max={today} onChange={e => setDate(e.target.value)} style={inp} />
                 </div>
 
                 <div>
-                  <label style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:5 }}>Hour *</label>
+                  <label style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:5 }}>{L.hourLabel || "Hour *"}</label>
                   <select value={hour} onChange={e => setHour(e.target.value)} style={{ ...inp, cursor:"pointer" }}>
                     {Array.from({length:24},(_,i) => (
                       <option key={i} value={i}>{padH(i)}:00 – {padH(i+1)}:00</option>
@@ -192,16 +201,16 @@ export default function SessionCalcPage({ onNavigate }) {
                 </div>
 
                 <div>
-                  <label style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:5 }}>kWh charged *</label>
-                  <input type="number" min="0.1" step="0.1" value={kwh} onChange={e => setKwh(e.target.value)} placeholder="e.g. 45.0" style={inp} />
+                  <label style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:5 }}>{L.kwhLabel || "kWh charged *"}</label>
+                  <input type="number" min="0.1" step="0.1" value={kwh} onChange={e => setKwh(e.target.value)} placeholder={L.kwhPlaceholder || "e.g. 45.0"} style={inp} />
                 </div>
 
                 {mode === "fleet" && (
                   <div>
-                    <label style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:5 }}>Card charged (€) *</label>
+                    <label style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:5 }}>{L.cardChargedLabel || "Card charged (€) *"}</label>
                     <div style={{ position:"relative" }}>
                       <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:C.muted, fontWeight:700, fontSize:14 }}>€</span>
-                      <input type="number" min="0" step="0.01" value={cardAmount} onChange={e => setCardAmount(e.target.value)} placeholder="e.g. 22.50"
+                      <input type="number" min="0" step="0.01" value={cardAmount} onChange={e => setCardAmount(e.target.value)} placeholder={L.cardPlaceholder || "e.g. 22.50"}
                         style={{ ...inp, paddingLeft:26 }} />
                     </div>
                   </div>
@@ -214,7 +223,7 @@ export default function SessionCalcPage({ onNavigate }) {
 
               <button type="submit"
                 style={{ padding:"11px 28px", borderRadius:30, fontSize:14, fontWeight:800, background:`linear-gradient(135deg,${C.primary},${C.bright})`, color:"#fff", border:"none", cursor:"pointer", boxShadow:"0 4px 16px rgba(22,163,74,0.25)", fontFamily:"inherit" }}>
-                + Add session
+                {L.addBtn || "+ Add session"}
               </button>
             </form>
           </div>
@@ -224,17 +233,17 @@ export default function SessionCalcPage({ onNavigate }) {
         {sessions.length > 0 && (
           <div style={{ background:C.card, borderRadius:20, border:`1px solid ${C.border}`, boxShadow:C.shadow, overflow:"hidden", marginBottom:20 }}>
             <div style={{ padding:"18px 24px 0", fontSize:11, fontWeight:800, color:C.muted, textTransform:"uppercase", letterSpacing:2 }}>
-              {sessions.length} session{sessions.length!==1?"s":""}
+              {sessions.length} {sessions.length !== 1 ? (L.sessionsLabelPlural || "sessions") : (L.sessionsLabel || "session")}
             </div>
             <div style={{ overflowX:"auto" }}>
               <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
                 <thead>
                   <tr style={{ background:C.bg }}>
                     {[
-                      "Date", "Time", "kWh",
-                      "EPEX rate (all-in)",
-                      mode==="reimburse" ? "Reimbursement" : "EPEX cost",
-                      ...(mode==="fleet" ? ["Card charged","Overpayment"] : []),
+                      L.thDate || "Date", L.thTime || "Time", L.thKwh || "kWh",
+                      L.thRate || "EPEX rate (all-in)",
+                      mode==="reimburse" ? (L.thReimb || "Reimbursement") : (L.thCost || "EPEX cost"),
+                      ...(mode==="fleet" ? [L.thCard || "Card charged", L.thOverpay || "Overpayment"] : []),
                       ""
                     ].map(h => (
                       <th key={h} style={{ padding:"10px 16px", textAlign:"left", fontWeight:700, color:C.muted, fontSize:11, textTransform:"uppercase", letterSpacing:1, borderBottom:`1px solid ${C.border}`, whiteSpace:"nowrap" }}>{h}</th>
@@ -271,23 +280,23 @@ export default function SessionCalcPage({ onNavigate }) {
             <div style={{ background:`linear-gradient(135deg,rgba(22,163,74,0.05),rgba(34,197,94,0.02))`, borderTop:`1px solid ${C.border}`, padding:"20px 24px", display:"flex", flexWrap:"wrap", gap:24, alignItems:"center", justifyContent:"space-between" }}>
               <div style={{ display:"flex", gap:28, flexWrap:"wrap" }}>
                 <div>
-                  <div style={{ fontSize:10, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>Total kWh</div>
+                  <div style={{ fontSize:10, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>{L.totalKwhLabel || "Total kWh"}</div>
                   <div style={{ fontSize:22, fontWeight:900, color:C.text }}>{totKwh.toFixed(1)}</div>
                 </div>
                 <div>
                   <div style={{ fontSize:10, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>
-                    {mode==="reimburse" ? "Total reimbursement" : "Total EPEX cost"}
+                    {mode==="reimburse" ? (L.totalReimbLabel || "Total reimbursement") : (L.totalCostLabel || "Total EPEX cost")}
                   </div>
                   <div style={{ fontSize:22, fontWeight:900, color:C.primary }}>{fmtE(totReim)}</div>
                 </div>
                 {mode==="fleet" && hasCard && totCard > 0 && (
                   <>
                     <div>
-                      <div style={{ fontSize:10, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>Total card charged</div>
+                      <div style={{ fontSize:10, color:C.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>{L.totalCardLabel || "Total card charged"}</div>
                       <div style={{ fontSize:22, fontWeight:900, color:C.muted }}>{fmtE(totCard)}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize:10, color:C.red, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>Total overpayment</div>
+                      <div style={{ fontSize:10, color:C.red, fontWeight:700, textTransform:"uppercase", letterSpacing:1.2 }}>{L.totalOverpayLabel || "Total overpayment"}</div>
                       <div style={{ fontSize:22, fontWeight:900, color:C.red }}>{fmtE(totOver)}</div>
                     </div>
                   </>
@@ -295,7 +304,7 @@ export default function SessionCalcPage({ onNavigate }) {
               </div>
               <button onClick={exportCSV}
                 style={{ padding:"10px 22px", borderRadius:20, fontSize:13, fontWeight:700, background:C.highlight, border:`1px solid ${C.border2}`, color:C.primary, cursor:"pointer" }}>
-                Export CSV →
+                {L.exportBtn || "Export CSV →"}
               </button>
             </div>
           </div>
@@ -303,38 +312,38 @@ export default function SessionCalcPage({ onNavigate }) {
 
         {sessions.length === 0 && !loading && (
           <div style={{ textAlign:"center", padding:"32px", color:C.light, fontSize:13, background:C.card, borderRadius:16, border:`1px solid ${C.border}` }}>
-            Add your first session above to see the EPEX price breakdown.
+            {L.emptyStateText || "Add your first session above to see the EPEX price breakdown."}
           </div>
         )}
 
         {/* How it works */}
         <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, padding:"22px 28px", marginTop:20 }}>
-          <div style={{ fontSize:11, fontWeight:800, color:C.muted, textTransform:"uppercase", letterSpacing:2, marginBottom:14 }}>How the prices are calculated</div>
+          <div style={{ fontSize:11, fontWeight:800, color:C.muted, textTransform:"uppercase", letterSpacing:2, marginBottom:14 }}>{L.howCalcTitle || "How the prices are calculated"}</div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:16, fontSize:13, color:C.muted, lineHeight:1.75 }}>
             <div>
-              <strong style={{color:C.text}}>EPEX Spot Belgium</strong><br/>
-              Real-time hourly electricity prices from the European Power Exchange. The actual wholesale market price Belgian grid operators pay — updated every hour.
+              <strong style={{color:C.text}}>{L.howCalcEpexTitle || "EPEX Spot Belgium"}</strong><br/>
+              {L.howCalcEpexBody || "Real-time hourly electricity prices from the European Power Exchange. The actual wholesale market price Belgian grid operators pay — updated every hour."}
             </div>
             <div>
-              <strong style={{color:C.text}}>All-in consumer price</strong><br/>
-              EPEX spot × 1.21 VAT + €0.13/kWh grid & taxes = the actual consumer price at that exact hour. This is what CIR 92 (art. 31) reimbursement should be based on.
+              <strong style={{color:C.text}}>{L.howCalcAllInTitle || "All-in consumer price"}</strong><br/>
+              {L.howCalcAllInBody || "EPEX spot × 1.21 VAT + €0.13/kWh grid & taxes = the actual consumer price at that exact hour. This is what CIR 92 (art. 31) reimbursement should be based on."}
             </div>
             <div>
-              <strong style={{color:C.text}}>Fleet card overpayment</strong><br/>
-              Velocity, DKV, and UTA charge fixed network tariffs regardless of what the market price is at that hour. The difference is your direct overpayment per session.
+              <strong style={{color:C.text}}>{L.howCalcFleetTitle || "Fleet card overpayment"}</strong><br/>
+              {L.howCalcFleetBody || "Velocity, DKV, and UTA charge fixed network tariffs regardless of what the market price is at that hour. The difference is your direct overpayment per session."}
             </div>
           </div>
         </div>
 
         {/* CTA */}
         <div style={{ marginTop:28, background:`linear-gradient(135deg,#15803D,#16A34A)`, borderRadius:20, padding:"28px 32px", color:"#fff", textAlign:"center" }}>
-          <div style={{ fontSize:20, fontWeight:900, marginBottom:8 }}>Want this automated for your entire fleet?</div>
+          <div style={{ fontSize:20, fontWeight:900, marginBottom:8 }}>{L.ctaTitle || "Want this automated for your entire fleet?"}</div>
           <p style={{ fontSize:14, opacity:0.85, marginBottom:20, maxWidth:480, margin:"0 auto 20px", lineHeight:1.7 }}>
-            SmartPrice Business can generate monthly reimbursement reports for all your drivers and analyse your fleet card invoices automatically — no manual entry required.
+            {L.ctaBody || "SmartPrice Business can generate monthly reimbursement reports for all your drivers and analyse your fleet card invoices automatically — no manual entry required."}
           </p>
           <button onClick={() => onNavigate?.("/business?lead=fleet")}
             style={{ padding:"12px 32px", borderRadius:30, fontSize:14, fontWeight:800, background:"#FCD34D", color:"#15803D", border:"none", cursor:"pointer", boxShadow:"0 4px 20px rgba(0,0,0,0.2)" }}>
-            Talk to SmartPrice Business →
+            {L.ctaBtn || "Talk to SmartPrice Business →"}
           </button>
         </div>
 

@@ -182,7 +182,7 @@ export default function FleetAuditPage({ onNavigate }) {
 
       {/* Nav */}
       <nav style={{ background: C.card, borderBottom: `1px solid ${C.border}`, padding: "0 24px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 8px rgba(0,0,0,0.06)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => onNavigate && onNavigate("/")}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => onNavigate && onNavigate("/business")}>
           <span style={{ fontSize: 22 }}>⚡</span>
           <span style={{ fontWeight: 800, fontSize: 16, color: C.blue }}>SmartPrice</span>
           <span style={{ fontSize: 12, color: C.badgeText, fontWeight: 800, background: C.highlight, padding: "2px 8px", borderRadius: 20, border: `1px solid ${C.blueBorder}` }}>Fleet</span>
