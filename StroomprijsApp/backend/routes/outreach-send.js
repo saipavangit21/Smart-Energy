@@ -152,7 +152,12 @@ function buildHtml(name, company, lang) {
 </body></html>`;
 }
 
-function subject(company, lang, followUp = false) {
+function subject(company, lang, followUp = false, finalTouch = false) {
+  if (finalTouch) {
+    if (lang === "nl") return `SmartPrice & ${company} — afsluiting`;
+    if (lang === "fr") return `SmartPrice & ${company} — dernier message`;
+    return `SmartPrice & ${company} — closing the loop`;
+  }
   if (followUp) {
     if (lang === "nl") return `Re: SmartPrice Business — bereikte dit de juiste persoon bij ${company}?`;
     if (lang === "fr") return `Re: SmartPrice Business — ce message est-il parvenu à la bonne personne chez ${company} ?`;
@@ -161,6 +166,53 @@ function subject(company, lang, followUp = false) {
   if (lang === "nl") return `SmartPrice Business — CIR 92-conforme EV-vlootvergoeding voor ${company}`;
   if (lang === "fr") return `SmartPrice Business — Remboursement flotte VE conforme CIR 92 pour ${company}`;
   return `SmartPrice Business — CIR 92-compliant EV fleet reimbursement for ${company}`;
+}
+
+function buildFinalTouchHtml(name, company, lang) {
+  const t = {
+    nl: {
+      greeting: `Dag ${name}`,
+      line1: `Ik stuur u nog één kort bericht voor ik mijn outreach naar ${company} afsluit.`,
+      line2: `Als CIR 92-conforme EV-laadvergoedingen ooit relevant worden — de gratis vlootaudit staat op elk moment beschikbaar op <a href="https://smartprice.be/fleet-audit" style="color:#16A34A;font-weight:700;">smartprice.be/fleet-audit</a>. Twee minuten, geen account nodig.`,
+      line3: `Als het moment niet juist is of dit niet uw domein is, geen probleem. Bedankt voor uw tijd.`,
+      closing: "Met vriendelijke groet",
+    },
+    fr: {
+      greeting: `Bonjour ${name}`,
+      line1: `Je vous envoie un dernier message avant de clôturer mes démarches auprès de ${company}.`,
+      line2: `Si les remboursements de recharge VE conformes CIR 92 deviennent un jour pertinents, l'audit gratuit reste disponible à tout moment sur <a href="https://smartprice.be/fleet-audit" style="color:#16A34A;font-weight:700;">smartprice.be/fleet-audit</a> — 2 minutes, sans inscription.`,
+      line3: `Si le moment n'est pas opportun ou si ce n'est pas votre domaine, pas de souci. Merci pour votre temps.`,
+      closing: "Cordialement",
+    },
+    en: {
+      greeting: `Hi ${name}`,
+      line1: `One last note before I close out my outreach to ${company}.`,
+      line2: `If CIR 92-compliant EV fleet reimbursements ever become relevant, the free audit is available any time at <a href="https://smartprice.be/fleet-audit" style="color:#16A34A;font-weight:700;">smartprice.be/fleet-audit</a> — 2 minutes, no account needed.`,
+      line3: `If the timing's off or this isn't your area, no worries at all — I appreciate your time.`,
+      closing: "Best regards",
+    },
+  };
+  const c = t[lang] || t.en;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:'Segoe UI',Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;padding:32px 16px;">
+  <div style="text-align:center;margin-bottom:24px;">
+    <div style="display:inline-flex;align-items:center;gap:10px;background:#EFF6FF;border:1px solid rgba(30,64,175,0.15);border-radius:30px;padding:8px 20px;">
+      <span style="font-size:18px;">🇧🇪</span>
+      <span style="font-weight:900;font-size:16px;color:#1E3A8A;">SmartPrice</span>
+      <span style="font-size:11px;font-weight:700;color:#1E40AF;background:#DBEAFE;border-radius:20px;padding:2px 10px;">Business</span>
+    </div>
+  </div>
+  <div style="background:#fff;border-radius:20px;border:1px solid rgba(0,0,0,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.06);padding:32px 36px;">
+    <p style="font-size:16px;font-weight:700;color:#0F172A;margin:0 0 16px;">${c.greeting},</p>
+    <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 14px;">${c.line1}</p>
+    <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 20px;">${c.line2}</p>
+    <p style="font-size:13px;color:#94A3B8;line-height:1.7;margin:0 0 20px;">${c.line3}</p>
+    <p style="font-size:14px;color:#475569;margin:0;">${c.closing},<br><strong style="color:#0F172A;">SmartPrice Business</strong><br><span style="color:#94A3B8;font-size:13px;">info@smartprice.be · smartprice.be</span></p>
+  </div>
+  <div style="text-align:center;color:#94A3B8;font-size:11px;margin-top:20px;">SmartPrice.be · Belgium · GDPR Compliant · Reply to unsubscribe.</div>
+</div>
+</body></html>`;
 }
 
 function buildFollowUpHtml(name, company, lang) {
@@ -300,10 +352,14 @@ async function sendFluviusUpdate({ to, name }) {
   return { to, name, status: "sent" };
 }
 
-async function sendOne({ to, name, company, lang, followUp = false }) {
-  const html = followUp ? buildFollowUpHtml(name, company, lang) : buildHtml(name, company, lang);
-  const sub  = subject(company, lang, followUp);
-  const tag  = followUp ? "fleet_followup_jun2026" : "fleet_outreach_jun2026";
+async function sendOne({ to, name, company, lang, followUp = false, finalTouch = false }) {
+  const html = finalTouch ? buildFinalTouchHtml(name, company, lang)
+             : followUp   ? buildFollowUpHtml(name, company, lang)
+             :               buildHtml(name, company, lang);
+  const sub  = subject(company, lang, followUp, finalTouch);
+  const tag  = finalTouch ? "fleet_finaltouch_jun2026"
+             : followUp   ? "fleet_followup_jun2026"
+             :               "fleet_outreach_jun2026";
   await axiosHttp.post("https://api.resend.com/emails", {
     from: FROM, to, subject: sub, html,
     reply_to: "info@smartprice.be",
@@ -327,7 +383,7 @@ router.post("/", async (req, res) => {
     return res.status(500).json({ success: false, error: "RESEND_API_KEY not configured" });
   }
 
-  const { contacts, preset, dryRun = false, followUp = false } = req.body || {};
+  const { contacts, preset, dryRun = false, followUp = false, finalTouch = false } = req.body || {};
 
   // Fluvius waitlist update — separate template
   if (preset === "fluvius_waitlist") {
@@ -364,7 +420,7 @@ router.post("/", async (req, res) => {
   const sent = [], failed = [];
   for (const contact of list) {
     try {
-      const result = await sendOne({ ...contact, followUp });
+      const result = await sendOne({ ...contact, followUp, finalTouch });
       sent.push(result);
       console.log(`[outreach] ✓ sent → ${contact.to}`);
     } catch (e) {
