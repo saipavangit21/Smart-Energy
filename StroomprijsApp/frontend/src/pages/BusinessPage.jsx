@@ -275,18 +275,18 @@ export default function BusinessPage({ onNavigate }) {
 
           {/* Updated hero headline per review */}
           <h1 style={{ fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 900, lineHeight: 1.08, margin: "0 auto 24px", maxWidth: 760, letterSpacing: "-2px", textShadow: "0 2px 24px rgba(0,0,0,0.15)" }}>
-            {L.heroTitle||"Automate EV Fleet Reimbursements"}
+            {L.heroTitle||"Stop overpaying €300–500 per EV per year."}
           </h1>
-          <p style={{ fontSize: "clamp(15px,2vw,19px)", opacity: 0.88, maxWidth: 580, margin: "0 auto 40px", lineHeight: 1.75 }}>
-            {L.heroSub||"Stop overpaying based on fixed CREG averages. SmartPrice tracks live EPEX data to calculate exact home-charging costs for your employees."}
+          <p style={{ fontSize: "clamp(15px,2vw,19px)", opacity: 0.88, maxWidth: 560, margin: "0 auto 40px", lineHeight: 1.75 }}>
+            {L.heroSub||"Get a CIR 92-ready fleet audit in 5 minutes — no signup, no consultant, no spreadsheet."}
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={() => setShowModal(true)} style={{ padding: "15px 36px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FFFFFF", color: "#1E3A8A", border: "none", cursor: "pointer", boxShadow: "0 6px 28px rgba(0,0,0,0.25)" }}>
-              {L.heroCta||"Get a Detailed Cost Audit →"}
-            </button>
-            <a href="/fleet-audit" style={{ padding: "15px 28px", borderRadius: 30, fontSize: 14, fontWeight: 700, background: "rgba(255,255,255,0.12)", color: "#fff", textDecoration: "none", border: "1px solid rgba(255,255,255,0.28)", backdropFilter: "blur(8px)" }}>
-              {L.navFleetAudit||"Free instant fleet audit"}
+            <a href="/fleet-audit" style={{ padding: "15px 36px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FFFFFF", color: "#1E3A8A", textDecoration: "none", boxShadow: "0 6px 28px rgba(0,0,0,0.25)" }}>
+              {L.heroCta||"Get free fleet audit →"}
             </a>
+            <button onClick={() => setShowModal(true)} style={{ padding: "15px 28px", borderRadius: 30, fontSize: 14, fontWeight: 700, background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.28)", cursor: "pointer", backdropFilter: "blur(8px)" }}>
+              {L.navAudit||"Talk to an expert"}
+            </button>
           </div>
         </div>
       </div>
@@ -312,6 +312,23 @@ export default function BusinessPage({ onNavigate }) {
       <div style={{ height: 60, background: "linear-gradient(180deg, #0F172A 0%, #F8FAFC 100%)" }} />
 
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "8px 32px 80px" }}>
+
+        {/* ── GLOSSARY — plain-language anchor ──────────────────────── */}
+        <div style={{ background: "#F0F9FF", border: "1px solid rgba(14,165,233,0.22)", borderRadius: 18, padding: "22px 28px", marginBottom: 48 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#0369A1", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 14 }}>{L.glossaryTitle||"What do EPEX, CREG and CIR 92 mean?"}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 18 }}>
+            {[
+              { label: L.glossaryEpexLabel||"EPEX Spot", def: L.glossaryEpexDef||"The European wholesale electricity exchange. Prices change every hour — your dynamic energy contract follows this market." },
+              { label: L.glossaryCregLabel||"CREG", def: L.glossaryCregDef||"Belgium's energy regulator. Publishes a flat quarterly rate most companies use for reimbursements — but it doesn't reflect actual hourly cost." },
+              { label: L.glossaryCir92Label||"CIR 92", def: L.glossaryCir92Def||"Belgian tax law (art. 31) that requires home-charging reimbursements to reflect the actual cost at the moment of charging — not a quarterly average." },
+            ].map(g => (
+              <div key={g.label}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#0369A1", marginBottom: 5 }}>{g.label}</div>
+                <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7 }}>{g.def}</div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* ── PROBLEM ───────────────────────────────────────────────── */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
@@ -402,7 +419,13 @@ export default function BusinessPage({ onNavigate }) {
               <button onClick={() => setShowModal(true)} style={{ padding: "14px 40px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 6px 24px rgba(22,163,74,0.3)" }}>
                 {L.roiCtaBtn||"Get a Detailed Cost Audit →"}
               </button>
-              <div style={{ fontSize: 12, color: C.light, marginTop: 10 }}>{L.roiCtaSub||"Personalised PDF ready to share with your CFO · Free · No spam"}</div>
+              <div style={{ marginTop: 14 }}>
+                <a href={`mailto:?subject=Fleet EV reimbursement overpayment estimate — ${fleetSize} EVs&body=Based on ${fleetSize} EVs at ${monthlyKm} km/month, our fleet is estimated to overpay €${fmtInt(annualSaving)}/year on the current CREG rate versus real EPEX prices.%0A%0AEstimated saving per vehicle: €${fmtInt(perCarSaving)}/year.%0A%0AFull free audit (2 min, no signup): https://smartprice.be/fleet-audit`}
+                  style={{ fontSize: 13, fontWeight: 700, color: C.primary, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", borderRadius: 20, background: C.highlight, border: `1px solid ${C.border2}` }}>
+                  {L.shareCfoBtn||"📤 Share with your CFO →"}
+                </a>
+                <div style={{ fontSize: 11, color: C.light, marginTop: 6 }}>{L.shareCfoSub||"Opens in your email client with the numbers pre-filled"}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -485,6 +508,26 @@ export default function BusinessPage({ onNavigate }) {
 
           <div style={{ fontSize: 12, color: C.light, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
             ✅ {L.payrollNote||"SmartPrice integrates with fleet card providers and social secretariaten — CIR 92 compliant"}
+          </div>
+        </div>
+
+        <SectionDivider label={L.sectionFaq||"Frequently asked questions"} />
+        {/* ── FAQ ───────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 64 }}>
+          <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", marginBottom: 28, textAlign: "center" }}>{L.faqTitle||"Common questions from fleet managers & HR teams"}</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {[
+              { q: L.faqQ1||"Is this accepted by SD Worx, Securex, Partena and other social secretariaten?", a: L.faqA1||"Yes. SmartPrice generates an exportable audit log — EPEX price, timestamp, kWh, employee ID — that satisfies the documentation requirements of all major Belgian social secretariaten for CIR 92 compliance." },
+              { q: L.faqQ2||"Do my employees need to change their energy contract?", a: L.faqA2||"No. SmartPrice works regardless of the employee's energy supplier or tariff type. We use the public EPEX market price as the reference — no changes required on the employee side." },
+              { q: L.faqQ3||"How is employee data protected? Is this GDPR-compliant?", a: L.faqA3||"Fully. Employee charging data is isolated per employer account, stored on EU servers only (Frankfurt/Ireland), and never shared with third parties. Designed to GDPR Article 25 (privacy by design) standards." },
+              { q: L.faqQ4||"Our payroll runs through Excel or our ERP. Can we export the data?", a: L.faqA4||"Yes — all audit reports export as CSV and printable PDF, ready to import into SD Worx, Securex, Partena, Acerta, Group S, or any payroll system. No vendor lock-in." },
+              { q: L.faqQ5||"How long does the free audit take?", a: L.faqA5||"Under 5 minutes. Enter your fleet size and current reimbursement method — the tool immediately shows your estimated annual overpayment and generates a shareable PDF your CFO can review today." },
+            ].map((item, i) => (
+              <div key={i} style={{ borderBottom: `1px solid ${C.border}`, padding: "20px 0" }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 8 }}>Q: {item.q}</div>
+                <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.8 }}>{item.a}</div>
+              </div>
+            ))}
           </div>
         </div>
 
