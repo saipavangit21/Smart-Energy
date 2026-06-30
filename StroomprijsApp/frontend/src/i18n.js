@@ -1574,7 +1574,7 @@ export const translations = {
       stat4N: "Free", stat4Label: "instant fleet audit — no subscription required",
       // Problem section
       problemLabel: "The problem",
-      problemTitle: "Two ways Belgian fleets are losing money",
+      problemTitle: "Flat-rate reimbursements fail CIR 92 audits",
       problemBody: "Whether your drivers charge at public stations with Velocity, DKV, or UTA cards — or at home and claim reimbursement — the billing has no link to live EPEX spot prices. You're always paying more than necessary.",
       cregTitle: "How Belgian fleets currently pay",
       cregItems: ["Fleet cards billed at public network peak tariffs", "Home reimbursements use fixed CREG quarterly average", "No visibility into when or where drivers actually charge", "No comparison against live EPEX Spot prices", "No cost audit trail for fleet managers or tax authorities"],
@@ -1691,7 +1691,7 @@ export const translations = {
       stat4N: "Gratis", stat4Label: "directe vlootaudit — geen abonnement vereist",
       // Problem section
       problemLabel: "Het probleem",
-      problemTitle: "Twee manieren waarop Belgische wagenparkbeheerders geld verliezen",
+      problemTitle: "Vaste vergoedingen slagen niet voor CIR 92-audits",
       problemBody: "Of uw chauffeurs nu laden aan openbare laadpalen met Velocity-, DKV- of UTA-kaarten — of thuis laden en vergoeding claimen — de facturatie heeft geen link met live EPEX-spotprijzen. U betaalt altijd meer dan nodig.",
       cregTitle: "Hoe Belgische vloten momenteel betalen",
       cregItems: ["Vlootkaarten aangerekend aan openbare piekuurtarieven", "Thuisvergoedingen gebruiken vast CREG-kwartaalgemiddelde", "Geen zicht op wanneer of waar chauffeurs laden", "Geen vergelijking met live EPEX Spot-prijzen", "Geen kostenauditspoor voor wagenparkbeheerders of belastingdienst"],
@@ -1808,7 +1808,7 @@ export const translations = {
       stat4N: "Gratuit", stat4Label: "audit de flotte instantané — sans abonnement requis",
       // Problem section
       problemLabel: "Le problème",
-      problemTitle: "Deux façons pour les flottes belges de perdre de l'argent",
+      problemTitle: "Les remboursements forfaitaires échouent aux audits CIR 92",
       problemBody: "Que vos conducteurs rechargent dans des stations publiques avec des cartes Velocity, DKV ou UTA — ou à domicile avec remboursement — la facturation n'est pas liée aux prix EPEX spot en temps réel. Vous payez toujours plus que nécessaire.",
       cregTitle: "Comment les flottes belges paient actuellement",
       cregItems: ["Cartes de flotte facturées aux tarifs publics aux heures de pointe", "Remboursements à domicile sur base de la moyenne CREG trimestrielle fixe", "Aucune visibilité sur quand ou où les conducteurs rechargent réellement", "Aucune comparaison avec les prix EPEX Spot en direct", "Aucune piste d'audit des coûts pour les gestionnaires de flotte ou le fisc"],
