@@ -39,7 +39,7 @@ const PRESET_CONTACTS = [
   { to: "servicecenter@arval.be",                    name: "Fleet Team",   company: "Arval Belgium",                 lang: "en" },
   { to: "info@alphabet.be",                          name: "Fleet Team",   company: "Alphabet Belgium",              lang: "en" },
   { to: "sblanckaert@renta.be",                      name: "Stijn",        company: "RENTA",                         lang: "nl" },
-  { to: "steve.vanslype@mercedes-benz.com",          name: "Steve",        company: "Mercedes-Benz Belgium",         lang: "en" },
+  // steve.vanslype@mercedes-benz.com — unsubscribed 2026-07-01
   { to: "steven.schurmann@astara.com",               name: "Steven",       company: "Hyundai Belgium / Astara",      lang: "en" },
 ];
 
