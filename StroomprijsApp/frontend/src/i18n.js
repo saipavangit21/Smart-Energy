@@ -364,6 +364,12 @@ export const translations = {
       journey3Tag: "The surprise", journey3Title: "Price drops to €0.04/kWh",
       journey3Body: "Same 7.5 kWh charge costs €0.30 instead of €3.60. One small habit change — €200+ saved every year, automatically.",
       journey3Stat: "€200+", journey3StatSub: "saved per year",
+      // Eco strip
+      ecoLabel: "Grid impact",
+      ecoLine: "EPEX prices fall when wind and solar flood the Belgian grid. Cheap hours = peak renewables. Negative prices = surplus clean energy going to waste — SmartPrice tells you exactly when to use it.",
+      ecoPill1: "🌱 Lower grid carbon",
+      ecoPill2: "💨 Wind surplus hours",
+      ecoPill3: "⚡ Zero renewable waste",
     },
     nl: {
       hero: "Slimste Belgische energieprijstracker",
@@ -608,6 +614,12 @@ export const translations = {
       journey3Tag: "De verrassing", journey3Title: "Prijs daalt naar €0,04/kWh",
       journey3Body: "Dezelfde laadbeurt van 7,5 kWh kost €0,30 in plaats van €3,60. Eén kleine gewoonte — elk jaar automatisch €200+ bespaard.",
       journey3Stat: "€200+", journey3StatSub: "bespaard per jaar",
+      // Eco strip
+      ecoLabel: "Impact op het net",
+      ecoLine: "EPEX-prijzen dalen wanneer wind en zon het Belgische net overspoelen. Goedkope uren = piek hernieuwbare energie. Negatieve prijzen = overtollige groene stroom die verloren gaat — SmartPrice zegt u exact wanneer u die kunt gebruiken.",
+      ecoPill1: "🌱 Minder CO₂ op het net",
+      ecoPill2: "💨 Windoverschoturen",
+      ecoPill3: "⚡ Geen verspilling van groene stroom",
     },
     fr: {
       hero: "Le meilleur tracker de prix d'énergie en Belgique",
@@ -817,6 +829,12 @@ export const translations = {
       journey3Tag: "La surprise", journey3Title: "Prix tombe à 0,04 €/kWh",
       journey3Body: "La même charge de 7,5 kWh coûte 0,30 € au lieu de 3,60 €. Une petite habitude — plus de 200 € économisés chaque année, automatiquement.",
       journey3Stat: "200 €+", journey3StatSub: "économisés par an",
+      // Eco strip
+      ecoLabel: "Impact sur le réseau",
+      ecoLine: "Les prix EPEX chutent quand l'éolien et le solaire inondent le réseau belge. Les heures bon marché = pic de renouvelables. Les prix négatifs = énergie propre excédentaire gaspillée — SmartPrice vous dit exactement quand l'utiliser.",
+      ecoPill1: "🌱 Moins de CO₂ sur le réseau",
+      ecoPill2: "💨 Heures d'excédent éolien",
+      ecoPill3: "⚡ Zéro gaspillage d'énergie verte",
     },
   },
 

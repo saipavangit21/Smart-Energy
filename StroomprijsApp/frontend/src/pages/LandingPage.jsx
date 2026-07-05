@@ -449,6 +449,21 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
       </div>
 
+      {/* ── ECO STRIP ────────────────────────────────────────────── */}
+      <div style={{borderTop:`1px solid ${C.border||"rgba(255,255,255,0.07)"}`,borderBottom:`1px solid ${C.border||"rgba(255,255,255,0.07)"}`,background:isDark?"rgba(16,185,129,0.05)":"rgba(16,185,129,0.04)",padding:"20px 32px"}}>
+        <div style={{maxWidth:900,margin:"0 auto"}}>
+          <div style={{display:"flex",alignItems:"flex-start",gap:20,flexWrap:"wrap"}}>
+            <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:2,flexShrink:0,marginTop:2,whiteSpace:"nowrap"}}>{L.ecoLabel||"Grid impact"}</div>
+            <div style={{fontSize:13,color:C.muted,lineHeight:1.75,flex:1,minWidth:260}}>{L.ecoLine||"EPEX prices fall when wind and solar flood the Belgian grid. Cheap hours = peak renewables. Negative prices = surplus clean energy going to waste — SmartPrice tells you exactly when to use it."}</div>
+          </div>
+          <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:14}}>
+            {[L.ecoPill1||"🌱 Lower grid carbon",L.ecoPill2||"💨 Wind surplus hours",L.ecoPill3||"⚡ Zero renewable waste"].map((p,i)=>(
+              <span key={i} style={{fontSize:11,fontWeight:700,color:C.primary,background:isDark?"rgba(16,185,129,0.1)":"rgba(16,185,129,0.08)",border:`1px solid rgba(16,185,129,0.2)`,borderRadius:20,padding:"4px 12px"}}>{p}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ── JOURNEY STRIP ────────────────────────────────────────── */}
       <JourneyStrip C={C} L={L} />
 
