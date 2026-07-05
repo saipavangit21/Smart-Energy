@@ -730,6 +730,35 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
 
 
+        {/* ── EV API SECTION ───────────────────────────────────────── */}
+        <div style={{maxWidth:1100,margin:"0 auto",padding:"0 32px 72px"}}>
+          <div className="sp-animate" style={{textAlign:"center",marginBottom:48}}>
+            <div style={{fontSize:10,fontWeight:800,color:"#3B82F6",textTransform:"uppercase",letterSpacing:2.5,marginBottom:14}}>{L.evApiLabel||"For charging apps · EV platforms · Fleet software"}</div>
+            <h2 style={{fontSize:"clamp(22px,3.5vw,38px)",fontWeight:900,color:C.text,letterSpacing:"-0.8px",margin:"0 0 16px"}}>{L.evApiTitle||"Your app shows where to charge. Add ours — tell users when."}</h2>
+            <p style={{fontSize:15,color:C.muted,maxWidth:640,margin:"0 auto",lineHeight:1.85}}>{L.evApiDesc||"Tesla, BMW and every charging network already show the nearest station and its price. What none show: is right now a good time — or does waiting 2 hours save €4? One API call adds that layer to any app."}</p>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:20,marginBottom:36}}>
+            {[
+              {icon:"🗺️",title:L.evApiCase1Title||"Charging map apps",   desc:L.evApiCase1Desc||"Overlay live EPEX price next to station price. Let drivers compare: public charger at €0.69/kWh now vs. home charging at €0.04/kWh in 3 hours.",color:"#3B82F6",bg:"rgba(59,130,246,0.06)",border:"rgba(59,130,246,0.18)"},
+              {icon:"🚗",title:L.evApiCase2Title||"In-car & navigation",  desc:L.evApiCase2Desc||"\"Cheapest window tonight: 02:00–05:00 · €0.03/kWh · Saves €3.20 vs charging now\" — one endpoint, no infrastructure needed.",color:"#8B5CF6",bg:"rgba(139,92,246,0.06)",border:"rgba(139,92,246,0.18)"},
+              {icon:"🚛",title:L.evApiCase3Title||"Fleet & dispatch",      desc:L.evApiCase3Desc||"Only authorise public charging when EPEX is below your cost threshold. Route drivers to depot before peak hours automatically.",color:"#F59E0B",bg:"rgba(245,158,11,0.06)",border:"rgba(245,158,11,0.18)"},
+            ].map((c,i)=>(
+              <div key={i} className="sp-animate" style={{transitionDelay:`${i*0.12}s`,background:c.bg,border:`1px solid ${c.border}`,borderRadius:20,padding:"28px 24px"}}>
+                <div style={{fontSize:36,marginBottom:14}}>{c.icon}</div>
+                <div style={{fontSize:14,fontWeight:800,color:c.color,marginBottom:10}}>{c.title}</div>
+                <div style={{fontSize:13,color:C.muted,lineHeight:1.8}}>{c.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{background:isDark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.03)",border:`1px solid ${C.border}`,borderRadius:16,padding:"18px 24px",marginBottom:24,fontFamily:"monospace",fontSize:12,color:C.muted,lineHeight:1.9}}>
+            {L.evApiSpec||"GET /api/current · /api/cheapest · /api/prices/today — No key · Belgium · Every 15 min · Free forever"}
+          </div>
+          <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+            <a href="/api-docs" style={{fontSize:14,fontWeight:700,color:"#fff",background:"#3B82F6",borderRadius:24,padding:"12px 28px",textDecoration:"none"}}>{L.evApiCta||"View API docs →"}</a>
+            <a href="mailto:info@smartprice.be" style={{fontSize:14,fontWeight:700,color:"#3B82F6",background:"transparent",border:"1.5px solid #3B82F6",borderRadius:24,padding:"12px 28px",textDecoration:"none"}}>{L.evApiCtaContact||"Contact for enterprise integration →"}</a>
+          </div>
+        </div>
+
         {/* ── EMAIL ALERTS BAR ─────────────────────────────────────── */}
         <div style={{maxWidth:1200,margin:"0 auto",padding:"0 32px 48px"}}>
           <div className="sp-animate sp-card-enterprise" style={{borderRadius:20,padding:"28px 32px"}}>
