@@ -27,7 +27,7 @@ const C = {
 };
 
 /* ── Animated journey strip ──────────────────────────────────── */
-function JourneyStrip() {
+function JourneyStrip({ L }) {
   const ref = useRef(null);
   const [vis, setVis] = useState(false);
   useEffect(() => {
@@ -39,23 +39,23 @@ function JourneyStrip() {
   }, []);
   const steps = [
     { emoji: "😰", color: "#DC2626", bg: "rgba(220,38,38,0.05)", border: "rgba(220,38,38,0.18)",
-      tag: "The situation", title: "HR signs off €42,000/year",
-      body: "50 company EVs reimbursed at the flat CREG rate: €840/EV/year. Seems reasonable — but there's no session log and CIR 92 says otherwise.",
-      stat: "€42,000", statSub: "annual cost · no audit trail" },
+      tag: L.journey1Tag||"The situation", title: L.journey1Title||"HR signs off €42,000/year",
+      body: L.journey1Body||"50 company EVs reimbursed at the flat CREG rate: €840/EV/year. Seems reasonable — but there's no session log and CIR 92 says otherwise.",
+      stat: L.journey1Stat||"€42,000", statSub: L.journey1StatSub||"annual cost · no audit trail" },
     { emoji: "🔍", color: "#2563EB", bg: "rgba(37,99,235,0.05)", border: "rgba(37,99,235,0.18)",
-      tag: "The audit", title: "Runs SmartPrice Fleet Audit",
-      body: "Enter: 50 EVs · 1,500 km/month · current reimbursement method. SmartPrice calculates the real EPEX cost per session. Takes 2 minutes.",
-      stat: "2 min", statSub: "free · no signup required" },
+      tag: L.journey2Tag||"The audit", title: L.journey2Title||"Runs SmartPrice Fleet Audit",
+      body: L.journey2Body||"Enter: 50 EVs · 1,500 km/month · current reimbursement method. SmartPrice calculates the real EPEX cost per session. Takes 2 minutes.",
+      stat: L.journey2Stat||"2 min", statSub: L.journey2StatSub||"free · no signup required" },
     { emoji: "😮", color: "#16A34A", bg: "rgba(22,163,74,0.05)", border: "rgba(22,163,74,0.18)",
-      tag: "The revelation", title: "Overpaying €13,000/year",
-      body: "Actual EPEX cost: €580/EV/year. The company overpays €260 per EV and is exposed on CIR 92. SmartPrice closes both gaps automatically.",
-      stat: "€13,000", statSub: "overpayment revealed · CIR 92 gap closed" },
+      tag: L.journey3Tag||"The revelation", title: L.journey3Title||"Overpaying €13,000/year",
+      body: L.journey3Body||"Actual EPEX cost: €580/EV/year. The company overpays €260 per EV and is exposed on CIR 92. SmartPrice closes both gaps automatically.",
+      stat: L.journey3Stat||"€13,000", statSub: L.journey3StatSub||"overpayment revealed · CIR 92 gap closed" },
   ];
   return (
     <div ref={ref} style={{ margin: "48px 0 64px" }}>
       <div style={{ textAlign: "center", marginBottom: 40 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>How it works in practice</div>
-        <h2 style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", margin: "0 0 10px" }}>A fleet manager's journey — from risk to savings</h2>
+        <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>{L.journeyLabel||"How it works in practice"}</div>
+        <h2 style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", margin: "0 0 10px" }}>{L.journeyTitle||"A fleet manager's journey — from risk to savings"}</h2>
       </div>
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
         {steps.flatMap((s, i) => {
@@ -384,7 +384,7 @@ export default function BusinessPage({ onNavigate }) {
         </div>
 
         {/* ── JOURNEY STRIP ────────────────────────────────────────── */}
-        <JourneyStrip />
+        <JourneyStrip L={L} />
 
         {/* ── PROBLEM ───────────────────────────────────────────────── */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>

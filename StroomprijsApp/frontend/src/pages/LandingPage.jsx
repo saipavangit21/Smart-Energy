@@ -76,7 +76,7 @@ function useScrollReveal() {
 }
 
 /* ── Animated journey strip ──────────────────────────────────── */
-function JourneyStrip({ C }) {
+function JourneyStrip({ C, L }) {
   const ref = useRef(null);
   const [vis, setVis] = useState(false);
   useEffect(() => {
@@ -88,24 +88,24 @@ function JourneyStrip({ C }) {
   }, []);
   const steps = [
     { emoji: "😰", color: "#EF4444", bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.2)",
-      tag: "The problem", title: "Peak hour — 18:00",
-      body: "Belgian electricity hits €0.48/kWh during evening peaks. Charging your EV right now costs €3.60 for a standard 7.5 kWh top-up.",
-      stat: "€3.60", statSub: "at peak price tonight" },
+      tag: L.journey1Tag||"The problem", title: L.journey1Title||"Peak hour — 18:00",
+      body: L.journey1Body||"Belgian electricity hits €0.48/kWh during evening peaks. Charging your EV right now costs €3.60 for a standard 7.5 kWh top-up.",
+      stat: L.journey1Stat||"€3.60", statSub: L.journey1StatSub||"at peak price tonight" },
     { emoji: "🔍", color: "#3B82F6", bg: "rgba(59,130,246,0.06)", border: "rgba(59,130,246,0.2)",
-      tag: "The discovery", title: "Finds SmartPrice.be",
-      body: "Free charge planner shows tonight's cheapest hours. No account, no app — just live EPEX prices and your exact charging window.",
-      stat: "03:00", statSub: "cheapest hour tonight" },
+      tag: L.journey2Tag||"The discovery", title: L.journey2Title||"Finds SmartPrice.be",
+      body: L.journey2Body||"Free charge planner shows tonight's cheapest hours. No account, no app — just live EPEX prices and your exact charging window.",
+      stat: L.journey2Stat||"03:00", statSub: L.journey2StatSub||"cheapest hour tonight" },
     { emoji: "😮", color: "#10B981", bg: "rgba(16,185,129,0.06)", border: "rgba(16,185,129,0.2)",
-      tag: "The surprise", title: "Price drops to €0.04/kWh",
-      body: "Same 7.5 kWh charge costs €0.30 instead of €3.60. One small habit change — €200+ saved every year, automatically.",
-      stat: "€200+", statSub: "saved per year" },
+      tag: L.journey3Tag||"The surprise", title: L.journey3Title||"Price drops to €0.04/kWh",
+      body: L.journey3Body||"Same 7.5 kWh charge costs €0.30 instead of €3.60. One small habit change — €200+ saved every year, automatically.",
+      stat: L.journey3Stat||"€200+", statSub: L.journey3StatSub||"saved per year" },
   ];
   return (
     <div ref={ref} style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 32px" }}>
       <div style={{ textAlign: "center", marginBottom: 48 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 3, marginBottom: 12 }}>Why EPEX matters</div>
-        <h2 style={{ fontSize: "clamp(20px,3vw,32px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", margin: "0 0 10px" }}>From €3.60 to €0.30 — same charge, smarter hour</h2>
-        <p style={{ fontSize: 14, color: C.muted, margin: 0 }}>Real EPEX data. Real money saved. No subscription needed.</p>
+        <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 3, marginBottom: 12 }}>{L.journeyLabel||"Why EPEX matters"}</div>
+        <h2 style={{ fontSize: "clamp(20px,3vw,32px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", margin: "0 0 10px" }}>{L.journeyTitle||"From €3.60 to €0.30 — same charge, smarter hour"}</h2>
+        <p style={{ fontSize: 14, color: C.muted, margin: 0 }}>{L.journeySub||"Real EPEX data. Real money saved. No subscription needed."}</p>
       </div>
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
         {steps.flatMap((s, i) => {
@@ -450,7 +450,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       </div>
 
       {/* ── JOURNEY STRIP ────────────────────────────────────────── */}
-      <JourneyStrip C={C} />
+      <JourneyStrip C={C} L={L} />
 
       {/* ── CONTENT WRAPPER ───────────────────────────────────────── */}
       <div ref={toolsRef}>
