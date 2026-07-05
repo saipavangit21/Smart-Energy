@@ -403,16 +403,20 @@ app.get("/api/cheapest",async(req,res)=>{ try{const n=parseInt(req.query.hours||
 app.get("/api/prices/history",async(req,res)=>{
   try {
     const days = Math.min(parseInt(req.query.days||7), 30);
-    const now = new Date(); const results = [];
-    for (let i = days; i >= 1; i--) {
-      const d = new Date(now.getTime() - i * 86400000); const dateStr = toLocalISODate(d);
-      try {
-        const {prices} = await getPrices(dateStr, dateStr);
-        const dayPrices = prices.map(p => { const pd = new Date(p.timestamp); const localHour = getLocalHour(pd); return { ...p, hour: localHour, hour_label: `${String(localHour).padStart(2,"0")}:00` }; });
-        const vals = dayPrices.map(p => p.price_eur_mwh);
-        results.push({ date: dateStr, label: d.toLocaleDateString("nl-BE", { weekday:"short", day:"numeric", month:"short", timeZone:"Europe/Brussels" }), prices: dayPrices, avg: +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2), min: +Math.min(...vals).toFixed(2), max: +Math.max(...vals).toFixed(2), negative_hours: dayPrices.filter(p=>p.price_eur_mwh<0).length });
-      } catch(e2) {}
-    }
+    const now = new Date();
+    const slots = Array.from({ length: days }, (_, i) => {
+      const d = new Date(now.getTime() - (days - i) * 86400000);
+      return { d, dateStr: toLocalISODate(d) };
+    });
+    const settled = await Promise.allSettled(slots.map(({ dateStr }) => getPrices(dateStr, dateStr)));
+    const results = [];
+    settled.forEach((r, i) => {
+      if (r.status !== "fulfilled") return;
+      const { d, dateStr } = slots[i];
+      const dayPrices = r.value.prices.map(p => { const pd = new Date(p.timestamp); const localHour = getLocalHour(pd); return { ...p, hour: localHour, hour_label: `${String(localHour).padStart(2,"0")}:00` }; });
+      const vals = dayPrices.map(p => p.price_eur_mwh);
+      results.push({ date: dateStr, label: d.toLocaleDateString("nl-BE", { weekday:"short", day:"numeric", month:"short", timeZone:"Europe/Brussels" }), prices: dayPrices, avg: +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2), min: +Math.min(...vals).toFixed(2), max: +Math.max(...vals).toFixed(2), negative_hours: dayPrices.filter(p=>p.price_eur_mwh<0).length });
+    });
     res.json({ success:true, days: results });
   } catch(e){res.status(500).json({success:false,error:e.message});}
 });
