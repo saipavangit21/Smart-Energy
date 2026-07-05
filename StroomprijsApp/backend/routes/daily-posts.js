@@ -12,6 +12,8 @@ const RESEND_API_KEY   = process.env.RESEND_API_KEY;
 const ADMIN_SECRET     = process.env.ADMIN_SECRET;
 const TELEGRAM_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const FB_PAGE_ID       = process.env.FACEBOOK_PAGE_ID;
+const FB_PAGE_TOKEN    = process.env.FACEBOOK_PAGE_TOKEN;
 const SELF_URL         = process.env.RAILWAY_PUBLIC_DOMAIN
   ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
   : "https://smart-energy-production-aef3.up.railway.app";
@@ -23,6 +25,23 @@ async function sendTelegram(text) {
     { chat_id: TELEGRAM_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true },
     { timeout: 8000 }
   ).catch(e => console.warn("[daily-posts] Telegram send failed:", e.message));
+}
+
+async function postToFacebook(message) {
+  if (!FB_PAGE_ID || !FB_PAGE_TOKEN) return { skipped: true };
+  try {
+    const r = await axiosHttp.post(
+      `https://graph.facebook.com/${FB_PAGE_ID}/feed`,
+      { message, access_token: FB_PAGE_TOKEN },
+      { timeout: 12000 }
+    );
+    console.log("[daily-posts] Facebook posted:", r.data.id);
+    return { ok: true, post_id: r.data.id };
+  } catch (e) {
+    const msg = e.response?.data?.error?.message || e.message;
+    console.error("[daily-posts] Facebook post failed:", msg);
+    return { ok: false, error: msg };
+  }
 }
 
 function fmt(mwh) {
@@ -196,7 +215,10 @@ router.post("/", async (req, res) => {
 
     await sendTelegram(tgMsg);
 
-    res.json({ success: true, date: dateStr, nlPost, enPost, telegram: !!TELEGRAM_TOKEN });
+    // Auto-post Dutch content to Facebook Page
+    const fbResult = await postToFacebook(nlPost);
+
+    res.json({ success: true, date: dateStr, nlPost, enPost, telegram: !!TELEGRAM_TOKEN, facebook: fbResult });
 
   } catch (e) {
     console.error("[daily-posts] error:", e.message);
