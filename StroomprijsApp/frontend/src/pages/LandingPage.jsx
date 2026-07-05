@@ -450,15 +450,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       </div>
 
       {/* ── ECO STRIP ────────────────────────────────────────────── */}
-      <div style={{borderTop:`1px solid ${C.border||"rgba(255,255,255,0.07)"}`,borderBottom:`1px solid ${C.border||"rgba(255,255,255,0.07)"}`,background:isDark?"rgba(16,185,129,0.05)":"rgba(16,185,129,0.04)",padding:"20px 32px"}}>
-        <div style={{maxWidth:900,margin:"0 auto"}}>
-          <div style={{display:"flex",alignItems:"flex-start",gap:20,flexWrap:"wrap"}}>
-            <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:2,flexShrink:0,marginTop:2,whiteSpace:"nowrap"}}>{L.ecoLabel||"Grid impact"}</div>
-            <div style={{fontSize:13,color:C.muted,lineHeight:1.75,flex:1,minWidth:260}}>{L.ecoLine||"EPEX prices fall when wind and solar flood the Belgian grid. Cheap hours = peak renewables. Negative prices = surplus clean energy going to waste — SmartPrice tells you exactly when to use it."}</div>
-          </div>
-          <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:14}}>
+      <div style={{background:isDark?"linear-gradient(135deg,rgba(16,185,129,0.18) 0%,rgba(5,150,105,0.12) 100%)":"linear-gradient(135deg,rgba(16,185,129,0.12) 0%,rgba(5,150,105,0.07) 100%)",borderTop:"1px solid rgba(16,185,129,0.25)",borderBottom:"1px solid rgba(16,185,129,0.25)",padding:"28px 32px"}}>
+        <div style={{maxWidth:720,margin:"0 auto",textAlign:"center"}}>
+          <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:2.5,marginBottom:12}}>{L.ecoLabel||"Grid impact"}</div>
+          <p style={{fontSize:14,color:isDark?"rgba(255,255,255,0.72)":"C.muted",lineHeight:1.8,margin:"0 0 18px"}}>{L.ecoLine||"EPEX prices fall when wind and solar flood the Belgian grid. Cheap hours = peak renewables. Negative prices = surplus clean energy going to waste — SmartPrice tells you exactly when to use it."}</p>
+          <div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}>
             {[L.ecoPill1||"🌱 Lower grid carbon",L.ecoPill2||"💨 Wind surplus hours",L.ecoPill3||"⚡ Zero renewable waste"].map((p,i)=>(
-              <span key={i} style={{fontSize:11,fontWeight:700,color:C.primary,background:isDark?"rgba(16,185,129,0.1)":"rgba(16,185,129,0.08)",border:`1px solid rgba(16,185,129,0.2)`,borderRadius:20,padding:"4px 12px"}}>{p}</span>
+              <span key={i} style={{fontSize:12,fontWeight:700,color:isDark?"#6EE7B7":"#065F46",background:isDark?"rgba(16,185,129,0.15)":"rgba(16,185,129,0.12)",border:"1px solid rgba(16,185,129,0.3)",borderRadius:20,padding:"5px 14px"}}>{p}</span>
             ))}
           </div>
         </div>
