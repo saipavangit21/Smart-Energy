@@ -13,6 +13,9 @@ Consumer electricity & gas dashboard for Belgian households.
 
 - **Live EPEX Spot prices** — hourly Belgian electricity prices, updated every 15 min
 - **5 cheapest hours today/tomorrow** — optimal windows for EV charging, heat pump, dishwasher
+- **Animated journey strip** — scroll-triggered slide-up cards showing €3.60 peak → SmartPrice → €0.30 at 3am (EN/NL/FR)
+- **Eco strip** — factual grid-impact messaging: cheap hours = peak renewables, negative prices = surplus wind/solar going to waste
+- **EV API section** — targets charging app devs, in-car navigation teams, fleet software with "your app shows where, we show when" positioning
 - **Price alerts** — email when prices drop below your threshold
 - **Weekly digest** — every Monday 08:00 Brussels, EPEX stats + cheapest hours
 - **TTF gas prices** — real-time via ICE/TTF; compact tile on landing page
@@ -28,6 +31,7 @@ Consumer electricity & gas dashboard for Belgian households.
 ### 2. SmartPrice Business (`/business`)
 B2B page targeting Belgian fleet managers.
 
+- **Animated fleet journey strip** — scroll-triggered cards: €42k/yr CREG → 2-min audit → €13k overpayment revealed (EN/NL/FR)
 - Dual-model pitch: **fleet energy cards** (Velocity, DKV, UTA) + **home-charging reimbursements**
 - CREG vs EPEX explainer — why the quarterly flat rate costs fleets money
 - Fleet ecosystem section: fleet card providers + social secretariaten (SD Worx, Securex, Partena, Group S, Acerta, Liantis)
@@ -337,7 +341,7 @@ All admin endpoints require `x-admin-secret` header matching `ADMIN_SECRET` env 
 | GET | `/api/admin/leads` | All email leads |
 | GET | `/api/admin/newsletter-stats` | Newsletter subscriber count + active/unsubscribed |
 | POST | `/api/admin/send-outreach` | Send B2B outreach or Fluvius waitlist emails |
-| GET | `/api/admin/daily-posts` | Generate daily social media content |
+| POST | `/api/admin/daily-posts` | Generate EPEX posts, email to info@smartprice.be, auto-post to Facebook Page |
 
 **`/api/admin/send-outreach` body options:**
 
@@ -431,7 +435,7 @@ VAT       = 1.21               // Belgian VAT 21%
 
 ## Outreach System
 
-**Preset contacts** (`outreach-send.js`): 24 verified contacts — Belgian leasing companies (Athlon, KBC Autolease, Drivalia, Van Mossel, MHC Mobility, Arval, Alphabet, Ayvens, Financial Fleet Services) + OEM fleet teams (BMW, Volvo, VW, Audi, Toyota, Renault, Tesla, Mercedes, Kia, Hyundai/Astara) + RENTA.
+**Preset contacts** (`outreach-send.js`): 23 verified contacts — Belgian leasing companies (Athlon, KBC Autolease, Drivalia, Van Mossel, MHC Mobility, Arval, Alphabet, Ayvens, Financial Fleet Services) + OEM fleet teams (BMW, Volvo, VW, Audi, Toyota, Renault, Tesla, Kia, Hyundai/Astara) + RENTA. Mercedes-Benz removed 2026-07-01 (unsubscribed).
 
 **Templates**:
 - Initial outreach (EN/NL/FR) — CIR 92 compliance pitch
@@ -465,6 +469,10 @@ OIL_PRICE_API_KEY=...                   # OilPriceAPI for TTF gas (fallback: €
 TESLA_CLIENT_ID=...
 TESLA_CLIENT_SECRET=...
 ALERT_ADMIN_EMAIL=info@smartprice.be
+FACEBOOK_PAGE_ID=1278145935386175
+FACEBOOK_PAGE_TOKEN=...                 # Permanent Page Access Token (Graph API, never expires)
+TELEGRAM_BOT_TOKEN=...                  # Optional — not active (Belgians don't use Telegram)
+TELEGRAM_CHAT_ID=...                    # Optional — not active
 ```
 
 ### Vercel (Frontend)
@@ -549,12 +557,44 @@ For the Railway backend itself, set up an external check at [UptimeRobot](https:
 | AI assistant | Returns 503 if `ANTHROPIC_API_KEY` not set; 402 if credits depleted. |
 | CREG rate | Must be updated manually each quarter (`FleetAuditPage.jsx` + `SessionCalcPage.jsx`). Q2 2026 = €0.2833/kWh. |
 | Fluvius P1 frontend | Backend endpoint live; dashboard tile not yet built. |
+| Weekly digest schedule | Railway restarts after 08:00 Monday skip that week — last-sent date not persisted in Postgres. |
+| 16 users with NULL email | Password-signup accounts where email wasn't stored at registration. Bug not yet fixed. |
+| Facebook Page Token | Permanent token generated 2026-06. If it expires, follow 3-step refresh: short-lived user token → long-lived → Page token via `/me/accounts`. |
+
+---
+
+## Facebook Automation
+
+Daily posts flow (active since July 2026):
+1. Cloud agent (CCR) fires daily at **06:00 UTC** → `POST https://smartprice.be/api/admin/daily-posts` with `x-admin-secret` header
+2. Backend fetches live EPEX from `/api/current` + `/api/cheapest?hours=8`, deduplicates to one entry per hour
+3. Builds Dutch post with top 5 cheapest hours + current price label
+4. Posts to **Facebook Page ID `1278145935386175`** via Graph API (`/{page-id}/feed`)
+5. Emails both NL + EN posts to `info@smartprice.be` via Resend with copy-paste formatting
+
+**Cloud agent must route via Vercel proxy** (`smartprice.be/api/...`) — Railway's direct URL is blocked by network policy for external callers.
+
+---
+
+## Performance (as of July 2026)
+
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| `/api/prices/history` (7 days) | ~1,470 ms | ~200 ms | 7× faster |
+| Frontend main bundle | 1,072 KB | 251 KB | −76% |
+| Vendor chunk (React/Recharts) | bundled | 537 KB (cached) | separate, cached |
+
+History endpoint: changed sequential `await` in for-loop → `Promise.allSettled()` parallel fetch.
+Bundle: Vite `manualChunks` splits vendor / page-admin / page-business / page-seo.
 
 ---
 
 ## Roadmap
 
 - [ ] Fluvius dashboard tile — live power + solar + charge signal on user dashboard
+- [ ] Weekly digest schedule fix — persist last-sent date in Postgres so Railway restarts don't skip the week
+- [ ] Fix 16 NULL-email users — registration bug where email wasn't stored for password-signup accounts
+- [ ] LinkedIn page — content plan exists in `outreach/linkedin_content.md`, page not yet fully set up
 - [ ] Fleet card API integration — auto-import Velocity/DKV/UTA invoice sessions
 - [ ] Smart Connect — fleet EV throttling based on EPEX peak hours (B2B)
 - [ ] CIR 92 export — one-click SD Worx / Securex payroll export per employee
