@@ -135,7 +135,14 @@ router.post("/", async (req, res) => {
     ]);
 
     const current  = curRes?.data?.current  || null;
-    const cheapest = cheapRes?.data?.cheapest_hours || cheapRes?.data?.cheapest || [];
+    const rawCheapest = cheapRes?.data?.cheapest_hours || cheapRes?.data?.cheapest || [];
+    // Deduplicate to one entry per hour (cheapest slot wins)
+    const seen = new Set();
+    const cheapest = rawCheapest.filter(h => {
+      if (seen.has(h.hour)) return false;
+      seen.add(h.hour);
+      return true;
+    });
 
     const now     = new Date();
     const dateStr = new Intl.DateTimeFormat("nl-BE", {
