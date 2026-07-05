@@ -75,6 +75,60 @@ function useScrollReveal() {
   });
 }
 
+/* ── Animated journey strip ──────────────────────────────────── */
+function JourneyStrip({ C }) {
+  const ref = useRef(null);
+  const [vis, setVis] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVis(true); obs.disconnect(); }
+    }, { threshold: 0.15 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  const steps = [
+    { emoji: "😰", color: "#EF4444", bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.2)",
+      tag: "The problem", title: "Peak hour — 18:00",
+      body: "Belgian electricity hits €0.48/kWh during evening peaks. Charging your EV right now costs €3.60 for a standard 7.5 kWh top-up.",
+      stat: "€3.60", statSub: "at peak price tonight" },
+    { emoji: "🔍", color: "#3B82F6", bg: "rgba(59,130,246,0.06)", border: "rgba(59,130,246,0.2)",
+      tag: "The discovery", title: "Finds SmartPrice.be",
+      body: "Free charge planner shows tonight's cheapest hours. No account, no app — just live EPEX prices and your exact charging window.",
+      stat: "03:00", statSub: "cheapest hour tonight" },
+    { emoji: "😮", color: "#10B981", bg: "rgba(16,185,129,0.06)", border: "rgba(16,185,129,0.2)",
+      tag: "The surprise", title: "Price drops to €0.04/kWh",
+      body: "Same 7.5 kWh charge costs €0.30 instead of €3.60. One small habit change — €200+ saved every year, automatically.",
+      stat: "€200+", statSub: "saved per year" },
+  ];
+  return (
+    <div ref={ref} style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 32px" }}>
+      <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 3, marginBottom: 12 }}>Why EPEX matters</div>
+        <h2 style={{ fontSize: "clamp(20px,3vw,32px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", margin: "0 0 10px" }}>From €3.60 to €0.30 — same charge, smarter hour</h2>
+        <p style={{ fontSize: 14, color: C.muted, margin: 0 }}>Real EPEX data. Real money saved. No subscription needed.</p>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
+        {steps.flatMap((s, i) => {
+          const card = (
+            <div key={`c${i}`} style={{ flex: "1 1 220px", maxWidth: 300, background: s.bg, border: `1px solid ${s.border}`, borderRadius: 20, padding: "28px 22px", opacity: vis ? 1 : 0, transform: vis ? "translateY(0px)" : "translateY(44px)", transition: "opacity 0.65s ease, transform 0.65s ease", transitionDelay: `${i * 0.42}s` }}>
+              <div style={{ fontSize: 42, marginBottom: 14 }}>{s.emoji}</div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: s.color, textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>{s.tag}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 10, lineHeight: 1.35 }}>{s.title}</div>
+              <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.8, marginBottom: 20 }}>{s.body}</div>
+              <div style={{ fontSize: 30, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.stat}</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 5, fontWeight: 600 }}>{s.statSub}</div>
+            </div>
+          );
+          const arrow = i < steps.length - 1 ? (
+            <div key={`a${i}`} style={{ fontSize: 26, color: C.muted, padding: "0 10px", flexShrink: 0, opacity: vis ? 1 : 0, transition: "opacity 0.4s ease", transitionDelay: `${i * 0.42 + 0.22}s` }}>→</div>
+          ) : null;
+          return arrow ? [card, arrow] : [card];
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════ */
 export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate }) {
   const { tSection, lang } = useLanguage();
@@ -394,6 +448,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           ))}
         </div>
       </div>
+
+      {/* ── JOURNEY STRIP ────────────────────────────────────────── */}
+      <JourneyStrip C={C} />
 
       {/* ── CONTENT WRAPPER ───────────────────────────────────────── */}
       <div ref={toolsRef}>

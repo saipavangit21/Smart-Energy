@@ -4,7 +4,7 @@
  * v2: updated hero copy, ROI calculator, GDPR trust section,
  *     3-column Belgian feature grid, OG meta tags, audit form modal.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher  from "../components/LangSwitcher";
 
@@ -25,6 +25,59 @@ const C = {
   purple:    "#7C3AED",
   red:       "#DC2626",
 };
+
+/* ── Animated journey strip ──────────────────────────────────── */
+function JourneyStrip() {
+  const ref = useRef(null);
+  const [vis, setVis] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVis(true); obs.disconnect(); }
+    }, { threshold: 0.15 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  const steps = [
+    { emoji: "😰", color: "#DC2626", bg: "rgba(220,38,38,0.05)", border: "rgba(220,38,38,0.18)",
+      tag: "The situation", title: "HR signs off €42,000/year",
+      body: "50 company EVs reimbursed at the flat CREG rate: €840/EV/year. Seems reasonable — but there's no session log and CIR 92 says otherwise.",
+      stat: "€42,000", statSub: "annual cost · no audit trail" },
+    { emoji: "🔍", color: "#2563EB", bg: "rgba(37,99,235,0.05)", border: "rgba(37,99,235,0.18)",
+      tag: "The audit", title: "Runs SmartPrice Fleet Audit",
+      body: "Enter: 50 EVs · 1,500 km/month · current reimbursement method. SmartPrice calculates the real EPEX cost per session. Takes 2 minutes.",
+      stat: "2 min", statSub: "free · no signup required" },
+    { emoji: "😮", color: "#16A34A", bg: "rgba(22,163,74,0.05)", border: "rgba(22,163,74,0.18)",
+      tag: "The revelation", title: "Overpaying €13,000/year",
+      body: "Actual EPEX cost: €580/EV/year. The company overpays €260 per EV and is exposed on CIR 92. SmartPrice closes both gaps automatically.",
+      stat: "€13,000", statSub: "overpayment revealed · CIR 92 gap closed" },
+  ];
+  return (
+    <div ref={ref} style={{ margin: "48px 0 64px" }}>
+      <div style={{ textAlign: "center", marginBottom: 40 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>How it works in practice</div>
+        <h2 style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", margin: "0 0 10px" }}>A fleet manager's journey — from risk to savings</h2>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
+        {steps.flatMap((s, i) => {
+          const card = (
+            <div key={`c${i}`} style={{ flex: "1 1 220px", maxWidth: 300, background: s.bg, border: `1px solid ${s.border}`, borderRadius: 20, padding: "28px 22px", opacity: vis ? 1 : 0, transform: vis ? "translateY(0px)" : "translateY(44px)", transition: "opacity 0.65s ease, transform 0.65s ease", transitionDelay: `${i * 0.42}s` }}>
+              <div style={{ fontSize: 42, marginBottom: 14 }}>{s.emoji}</div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: s.color, textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>{s.tag}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 10, lineHeight: 1.35 }}>{s.title}</div>
+              <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.8, marginBottom: 20 }}>{s.body}</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.stat}</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 5, fontWeight: 600 }}>{s.statSub}</div>
+            </div>
+          );
+          const arrow = i < steps.length - 1 ? (
+            <div key={`a${i}`} style={{ fontSize: 26, color: C.muted, padding: "0 10px", flexShrink: 0, opacity: vis ? 1 : 0, transition: "opacity 0.4s ease", transitionDelay: `${i * 0.42 + 0.22}s` }}>→</div>
+          ) : null;
+          return arrow ? [card, arrow] : [card];
+        })}
+      </div>
+    </div>
+  );
+}
 
 /* CREG Q2 2026 vs dynamic EPEX saving per kWh */
 const CREG_RATE   = 0.2833;
@@ -329,6 +382,9 @@ export default function BusinessPage({ onNavigate }) {
             ))}
           </div>
         </div>
+
+        {/* ── JOURNEY STRIP ────────────────────────────────────────── */}
+        <JourneyStrip />
 
         {/* ── PROBLEM ───────────────────────────────────────────────── */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
