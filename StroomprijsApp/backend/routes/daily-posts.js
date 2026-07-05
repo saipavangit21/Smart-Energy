@@ -8,11 +8,22 @@ const express   = require("express");
 const axiosHttp = require("axios");
 const router    = express.Router();
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const ADMIN_SECRET   = process.env.ADMIN_SECRET;
-const SELF_URL       = process.env.RAILWAY_PUBLIC_DOMAIN
+const RESEND_API_KEY   = process.env.RESEND_API_KEY;
+const ADMIN_SECRET     = process.env.ADMIN_SECRET;
+const TELEGRAM_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const SELF_URL         = process.env.RAILWAY_PUBLIC_DOMAIN
   ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
   : "https://smart-energy-production-aef3.up.railway.app";
+
+async function sendTelegram(text) {
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
+  await axiosHttp.post(
+    `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
+    { chat_id: TELEGRAM_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true },
+    { timeout: 8000 }
+  ).catch(e => console.warn("[daily-posts] Telegram send failed:", e.message));
+}
 
 function fmt(mwh) {
   return (mwh / 1000).toFixed(4); // MWh → kWh
@@ -151,7 +162,7 @@ router.post("/", async (req, res) => {
 
     const { nlPost, enPost, html } = buildEmail(current, cheapest, dateStr);
 
-    // Send via Resend
+    // Send email via Resend
     await axiosHttp.post("https://api.resend.com/emails", {
       from: "SmartPrice Posts <info@smartprice.be>",
       to:   "info@smartprice.be",
@@ -162,7 +173,30 @@ router.post("/", async (req, res) => {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     });
 
-    res.json({ success: true, date: dateStr, nlPost, enPost });
+    // Send Telegram notification with ready-to-paste NL post
+    const top5 = cheapest.slice(0, 5);
+    const cheapLines = top5.map(h =>
+      `${String(h.hour).padStart(2,"0")}:00 → €${Math.round(h.price_eur_mwh)}/MWh`
+    ).join("\n");
+    const curHour = current?.hour ?? new Date().getHours();
+    const curPrice = current?.price_eur_mwh ?? 0;
+    const tgMsg = [
+      `⚡ <b>SmartPrice — posts klaar voor ${dateStr}</b>`,
+      ``,
+      `Nu (${String(curHour).padStart(2,"0")}:00): <b>€${Math.round(curPrice)}/MWh</b>${curPrice < 0 ? " 🟣 NEGATIEF!" : ""}`,
+      ``,
+      `Goedkoopste uren vandaag:`,
+      cheapLines,
+      ``,
+      `📋 <b>Kopieer &amp; plak NL post:</b>`,
+      `<code>${nlPost.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</code>`,
+      ``,
+      `🔗 <a href="https://www.facebook.com">Facebook</a> · <a href="https://www.reddit.com/r/belgium">Reddit r/belgium</a> · <a href="https://www.linkedin.com">LinkedIn</a>`,
+    ].join("\n");
+
+    await sendTelegram(tgMsg);
+
+    res.json({ success: true, date: dateStr, nlPost, enPost, telegram: !!TELEGRAM_TOKEN });
 
   } catch (e) {
     console.error("[daily-posts] error:", e.message);
