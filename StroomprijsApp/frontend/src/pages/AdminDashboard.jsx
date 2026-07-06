@@ -114,6 +114,7 @@ export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState("");
   const [nlStats,   setNlStats]   = useState(null);
   const [haStats,   setHaStats]   = useState(null);
+  const [gscData,   setGscData]   = useState(null);
 
   const hdrs = (s) => {
     const key = s || secret || localStorage.getItem("sp_admin_secret") || SECRET;
@@ -124,14 +125,15 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [aRes, uRes, lRes, nlRes, haRes] = await Promise.all([
+      const [aRes, uRes, lRes, nlRes, haRes, gscRes] = await Promise.all([
         fetch(`${API}/api/admin/analytics?days=${period}`,    { headers: hdrs(s) }),
         fetch(`${API}/api/admin/users`,                       { headers: hdrs(s) }),
         fetch(`${API}/api/admin/leads`,                       { headers: hdrs(s) }),
         fetch(`${API}/api/admin/newsletter-stats`,            { headers: hdrs(s) }),
         fetch(`${API}/api/admin/ha-integration-stats`,        { headers: hdrs(s) }),
+        fetch(`${API}/api/admin/search-console`,              { headers: hdrs(s) }),
       ]);
-      const [aData, uData, lData, nlData, haData] = await Promise.all([aRes.json(), uRes.json(), lRes.json(), nlRes.json(), haRes.json()]);
+      const [aData, uData, lData, nlData, haData, gscD] = await Promise.all([aRes.json(), uRes.json(), lRes.json(), nlRes.json(), haRes.json(), gscRes.json()]);
       if (aRes.status === 401 || !aData.success) {
         // Only sign out on 401 - not on other errors
         if (aRes.status === 401) {
@@ -145,6 +147,7 @@ export default function AdminDashboard() {
       if (lData.success) setLeads(lData.leads);
       if (nlData.success) setNlStats(nlData);
       if (haData.success) setHaStats(haData);
+      setGscData(gscD);
       setAuthed(true);
       localStorage.setItem("sp_admin_secret", s || secret);
     } catch (e) {
@@ -306,6 +309,7 @@ export default function AdminDashboard() {
           {[
             { id: "goals",     label: "🎯 Goals" },
             { id: "analytics", label: "📊 Analytics" },
+            { id: "search",    label: "🔍 Search" },
             { id: "users",     label: `👥 Users (${users?.length || 0})` },
             { id: "leads",     label: `📧 Leads (${leads?.length || 0})` },
           ].map(t => (
@@ -420,6 +424,88 @@ export default function AdminDashboard() {
         )}
 
         {/* ── USERS TAB ── */}
+        {tab === "search" && (
+          <div>
+            {!gscData?.configured ? (
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "28px 28px" }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 10 }}>🔍 Google Search Console</div>
+                <div style={{ fontSize: 13, color: C.muted, marginBottom: 20, lineHeight: 1.7 }}>
+                  Not connected yet. Set up a Google Service Account to pull clicks, impressions, CTR, and top queries directly here.
+                </div>
+                <div style={{ fontSize: 13, color: C.text, lineHeight: 1.9 }}>
+                  <b>Setup (5 min):</b><br/>
+                  1. Go to <span style={{ color: C.cyan }}>console.cloud.google.com</span> → new project → enable "Google Search Console API"<br/>
+                  2. IAM → Service Accounts → Create → download JSON key<br/>
+                  3. Go to <span style={{ color: C.cyan }}>search.google.com/search-console</span> → Settings → Users → Add user (paste service account email, give Full access)<br/>
+                  4. On Railway → add env var <code style={{ background: "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: 4 }}>GOOGLE_SERVICE_ACCOUNT_JSON</code> → paste the entire JSON as a single line
+                </div>
+                {gscData?.error && <div style={{ marginTop: 16, fontSize: 12, color: "#F87171", background: "rgba(239,68,68,0.08)", padding: "8px 12px", borderRadius: 8 }}>Error: {gscData.error}</div>}
+              </div>
+            ) : !gscData?.success ? (
+              <div style={{ background: C.card, border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 14, padding: "20px 24px", fontSize: 13, color: "#F87171" }}>
+                Search Console error: {gscData?.error || "Unknown error"}
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>
+                  Google organic search — {gscData.period?.startDate} → {gscData.period?.endDate} (28 days)
+                </div>
+
+                {/* Overview stat cards */}
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28 }}>
+                  <StatCard label="Total Clicks" value={gscData.overview?.clicks?.toLocaleString() ?? "—"} sub="from Google Search" color={C.teal} />
+                  <StatCard label="Impressions" value={gscData.overview?.impressions?.toLocaleString() ?? "—"} sub="times shown in results" color={C.cyan} />
+                  <StatCard label="Avg CTR" value={gscData.overview ? `${(gscData.overview.ctr * 100).toFixed(1)}%` : "—"} sub="click-through rate" color={C.yellow} />
+                  <StatCard label="Avg Position" value={gscData.overview ? gscData.overview.position.toFixed(1) : "—"} sub="avg rank in results" color={C.blue} />
+                </div>
+
+                {/* Top queries */}
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 12 }}>Top queries</div>
+                  <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 90px 70px 80px", padding: "10px 20px", background: "rgba(255,255,255,0.04)", borderBottom: `1px solid ${C.border}`, fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8 }}>
+                      <span>Query</span><span style={{textAlign:"right"}}>Clicks</span><span style={{textAlign:"right"}}>Impress.</span><span style={{textAlign:"right"}}>CTR</span><span style={{textAlign:"right"}}>Position</span>
+                    </div>
+                    {(gscData.topQueries || []).length === 0
+                      ? <div style={{ padding: "24px 20px", textAlign: "center", color: C.muted, fontSize: 13 }}>No query data yet</div>
+                      : (gscData.topQueries || []).map((q, i) => (
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 90px 70px 80px", padding: "11px 20px", borderBottom: i < gscData.topQueries.length - 1 ? `1px solid ${C.border}` : "none", fontSize: 13, alignItems: "center" }}>
+                          <span style={{ color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{q.query}</span>
+                          <span style={{ color: C.teal, fontWeight: 700, textAlign: "right" }}>{q.clicks.toLocaleString()}</span>
+                          <span style={{ color: C.muted, textAlign: "right" }}>{q.impressions.toLocaleString()}</span>
+                          <span style={{ color: C.yellow, textAlign: "right" }}>{(q.ctr * 100).toFixed(1)}%</span>
+                          <span style={{ color: C.muted, textAlign: "right" }}>#{q.position.toFixed(1)}</span>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+
+                {/* Top pages */}
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 12 }}>Top pages</div>
+                  <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 90px 70px", padding: "10px 20px", background: "rgba(255,255,255,0.04)", borderBottom: `1px solid ${C.border}`, fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8 }}>
+                      <span>Page</span><span style={{textAlign:"right"}}>Clicks</span><span style={{textAlign:"right"}}>Impress.</span><span style={{textAlign:"right"}}>CTR</span>
+                    </div>
+                    {(gscData.topPages || []).length === 0
+                      ? <div style={{ padding: "24px 20px", textAlign: "center", color: C.muted, fontSize: 13 }}>No page data yet</div>
+                      : (gscData.topPages || []).map((p, i) => (
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 90px 70px", padding: "11px 20px", borderBottom: i < gscData.topPages.length - 1 ? `1px solid ${C.border}` : "none", fontSize: 13, alignItems: "center" }}>
+                          <span style={{ color: C.text, fontFamily: "monospace", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.page || "/"}</span>
+                          <span style={{ color: C.teal, fontWeight: 700, textAlign: "right" }}>{p.clicks.toLocaleString()}</span>
+                          <span style={{ color: C.muted, textAlign: "right" }}>{p.impressions.toLocaleString()}</span>
+                          <span style={{ color: C.yellow, textAlign: "right" }}>{(p.ctr * 100).toFixed(1)}%</span>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {tab === "users" && (
           <div>
             {/* Actions bar */}

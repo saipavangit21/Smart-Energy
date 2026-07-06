@@ -784,6 +784,60 @@ app.post("/api/admin/send-weekly-digest", async (req, res) => {
   sendWeeklyDigest(pool, force).catch(e => console.error("[weekly-digest] Manual trigger error:", e.message));
 });
 
+// GET /api/admin/search-console — Google Search Console data (last 28 days)
+// Requires GOOGLE_SERVICE_ACCOUNT_JSON env var (service account with Search Console access)
+app.get("/api/admin/search-console", async (req, res) => {
+  if (!process.env.ADMIN_SECRET || req.headers["x-admin-secret"] !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+  const gscJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!gscJson) {
+    return res.json({ success: false, configured: false, error: "GOOGLE_SERVICE_ACCOUNT_JSON not set" });
+  }
+  try {
+    const jwt  = require("jsonwebtoken");
+    const creds = JSON.parse(gscJson);
+    const now   = Math.floor(Date.now() / 1000);
+    const assertion = jwt.sign(
+      { iss: creds.client_email, scope: "https://www.googleapis.com/auth/webmasters.readonly",
+        aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 },
+      creds.private_key, { algorithm: "RS256" }
+    );
+    const tokenRes = await axios.post("https://oauth2.googleapis.com/token",
+      new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion }),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    );
+    const accessToken = tokenRes.data.access_token;
+    const siteUrl  = "https://www.smartprice.be/";
+    const encoded  = encodeURIComponent(siteUrl);
+    const endDate  = new Date().toISOString().split("T")[0];
+    const startDate = new Date(Date.now() - 28 * 86400000).toISOString().split("T")[0];
+    const hdrs = { Authorization: `Bearer ${accessToken}` };
+    const base = `https://searchconsole.googleapis.com/webmasters/v3/sites/${encoded}/searchAnalytics/query`;
+
+    const [ov, qRes, pRes] = await Promise.allSettled([
+      axios.post(base, { startDate, endDate, rowLimit: 1 }, { headers: hdrs }),
+      axios.post(base, { startDate, endDate, dimensions: ["query"], rowLimit: 10 }, { headers: hdrs }),
+      axios.post(base, { startDate, endDate, dimensions: ["page"],  rowLimit: 10 }, { headers: hdrs }),
+    ]);
+
+    const ovRows = ov.status    === "fulfilled" ? (ov.value.data.rows    || []) : [];
+    const qRows  = qRes.status  === "fulfilled" ? (qRes.value.data.rows  || []) : [];
+    const pRows  = pRes.status  === "fulfilled" ? (pRes.value.data.rows  || []) : [];
+
+    res.json({
+      success: true, configured: true, period: { startDate, endDate },
+      overview: ovRows[0]
+        ? { clicks: ovRows[0].clicks, impressions: ovRows[0].impressions, ctr: ovRows[0].ctr, position: ovRows[0].position }
+        : null,
+      topQueries: qRows.map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
+      topPages:   pRows.map(r => ({ page: r.keys[0].replace("https://www.smartprice.be", ""), clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position })),
+    });
+  } catch (e) {
+    res.json({ success: false, configured: true, error: e.response?.data?.error?.message || e.message });
+  }
+});
+
 // POST /api/admin/broadcast { secret, subject, html } — send one-off email to ALL email users
 app.post("/api/admin/broadcast", async (req, res) => {
   const { secret, subject, html } = req.body || {};
