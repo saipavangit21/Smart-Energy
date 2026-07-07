@@ -412,25 +412,65 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           </div>
         )}
 
-        {/* CTA buttons — 3 audiences */}
-        <div className="sp-animate sp-delay-4" style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginBottom:52}}>
-          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})}
-            style={{padding:"14px 28px",borderRadius:30,fontSize:15,fontWeight:700,border:"none",cursor:"pointer",background:"linear-gradient(135deg,#15803D,#16A34A)",color:"#fff",boxShadow:"0 4px 16px rgba(22,163,74,0.35)",whiteSpace:"nowrap"}}>
-            🏠 {L.ctaHouseholds||"Households"}
-          </button>
-          <a href="/business"
-            style={{padding:"14px 28px",borderRadius:30,fontSize:15,fontWeight:700,textDecoration:"none",background:"linear-gradient(135deg,#1E40AF,#2563EB)",color:"#fff",boxShadow:"0 4px 16px rgba(37,99,235,0.35)",whiteSpace:"nowrap"}}>
-            💼 {L.ctaBusiness||"Business"}
-          </a>
-          <button onClick={()=>evApiRef.current?.scrollIntoView({behavior:"smooth"})}
-            style={{padding:"14px 28px",borderRadius:30,fontSize:15,fontWeight:700,border:"none",cursor:"pointer",background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.9)",border:"1px solid rgba(255,255,255,0.2)",backdropFilter:"blur(8px)",whiteSpace:"nowrap"}}>
-            ⚡ {L.ctaEv||"EV Companies"}
-          </button>
-        </div>
-
         {/* Scroll indicator */}
-        <div className="sp-scroll-indicator" onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})}>
+        <div className="sp-scroll-indicator" onClick={()=>document.getElementById("sp-products")?.scrollIntoView({behavior:"smooth"})}>
           <div className="sp-scroll-chevron" />
+        </div>
+      </div>
+
+      {/* ── PRODUCT PICKER ───────────────────────────────────────── */}
+      <div id="sp-products" style={{background:isDark?"#0A1525":"#F0F7FF",borderTop:`1px solid ${isDark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.07)"}`,padding:"64px 32px 72px"}}>
+        <div style={{maxWidth:1100,margin:"0 auto"}}>
+          <div className="sp-animate" style={{textAlign:"center",marginBottom:56}}>
+            <h2 style={{fontSize:"clamp(26px,4vw,42px)",fontWeight:900,color:C.text,letterSpacing:"-0.8px",lineHeight:1.2}}>
+              {L.pickerTitle||<>Choose the solution that <span style={{color:C.primary}}>fits your needs</span></>}
+            </h2>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:32}}>
+            {[
+              {
+                color:"#16A34A", bg:"rgba(22,163,74,0.12)", iconBg:"linear-gradient(135deg,#15803D,#22C55E)",
+                icon:"🏠",
+                title: L.pickerHHTitle||"Households",
+                desc: L.pickerHHDesc||"Live EPEX prices, cheapest EV charging window, supplier comparison, and daily alerts. No account needed. Free forever.",
+                cta: L.pickerHHCta||"Explore →",
+                onClick: ()=>toolsRef.current?.scrollIntoView({behavior:"smooth"}),
+                href: null,
+              },
+              {
+                color:"#2563EB", bg:"rgba(37,99,235,0.10)", iconBg:"linear-gradient(135deg,#1E40AF,#3B82F6)",
+                icon:"💼",
+                title: L.pickerBizTitle||"Business & Fleets",
+                desc: L.pickerBizDesc||"CIR 92-compliant EV reimbursements. Free audit shows exactly what your company overpays on fixed CREG rates vs. real EPEX prices.",
+                cta: L.pickerBizCta||"Get free fleet audit →",
+                href: "/business",
+              },
+              {
+                color:"#D97706", bg:"rgba(217,119,6,0.10)", iconBg:"linear-gradient(135deg,#B45309,#F59E0B)",
+                icon:"⚡",
+                title: L.pickerEvTitle||"EV Companies & Apps",
+                desc: L.pickerEvDesc||"Add live EPEX price intelligence to any charging app. Your app shows where to charge — we show when. One API call, no key, free.",
+                cta: L.pickerEvCta||"View API →",
+                onClick: ()=>evApiRef.current?.scrollIntoView({behavior:"smooth"}),
+                href: null,
+              },
+            ].map((p,i)=>(
+              <div key={i} className="sp-animate" style={{transitionDelay:`${i*0.1}s`,background:isDark?C.card:"#fff",border:`1px solid ${isDark?C.border:"rgba(0,0,0,0.08)"}`,borderRadius:24,padding:"36px 32px",display:"flex",flexDirection:"column",gap:0,boxShadow:isDark?"none":"0 4px 24px rgba(0,0,0,0.06)",cursor:"pointer",transition:"transform 0.15s,box-shadow 0.15s"}}
+                onClick={p.href?()=>window.location.href=p.href:p.onClick}
+                onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow=isDark?`0 8px 32px ${p.color}22`:"0 12px 40px rgba(0,0,0,0.12)";}}
+                onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow=isDark?"none":"0 4px 24px rgba(0,0,0,0.06)";}}>
+                {/* Circle icon */}
+                <div style={{width:72,height:72,borderRadius:"50%",background:p.iconBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,marginBottom:24,boxShadow:`0 8px 24px ${p.color}40`}}>
+                  {p.icon}
+                </div>
+                <div style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:14,letterSpacing:"-0.3px"}}>{p.title}</div>
+                <div style={{fontSize:14,color:C.muted,lineHeight:1.8,flex:1,marginBottom:24}}>{p.desc}</div>
+                <div style={{fontSize:14,fontWeight:700,color:p.color,display:"flex",alignItems:"center",gap:6}}>
+                  {p.cta} <span style={{fontSize:16}}>›</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
