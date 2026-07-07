@@ -680,12 +680,6 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                   </div>
                 )}
 
-                <div style={{textAlign:"center",padding:"8px 0"}}>
-                  <button onClick={onGetStarted} className="sp-cta-green-solid">
-                    {L.mainCta||"Start saving on every charge →"}
-                  </button>
-                  <div style={{fontSize:12,color:C.light,marginTop:10}}>Free · No account needed · 30 sec to set alerts</div>
-                </div>
               </div>
             </div>
           ) : (
