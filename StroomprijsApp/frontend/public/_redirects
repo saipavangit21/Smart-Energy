@@ -1,0 +1,4 @@
+/api/*     https://smart-energy-production-aef3.up.railway.app/api/:splat  200
+/auth/*    https://smart-energy-production-aef3.up.railway.app/auth/:splat 200
+/.well-known/appspecific/com.tesla.3p.public-key.pem  https://smart-energy-production-aef3.up.railway.app/api/tesla/public-key.pem  200
+/*         /index.html  200
