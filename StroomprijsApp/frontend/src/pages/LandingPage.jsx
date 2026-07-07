@@ -514,31 +514,66 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
 
         {/* ── EV API SECTION ───────────────────────────────────────── */}
-        <div ref={evApiRef} style={{maxWidth:1100,margin:"0 auto",padding:"0 32px 72px"}}>
-          <div className="sp-animate" style={{textAlign:"center",marginBottom:48}}>
-            <div style={{fontSize:10,fontWeight:800,color:"#3B82F6",textTransform:"uppercase",letterSpacing:2.5,marginBottom:14}}>{L.evApiLabel||"For charging apps · EV platforms · Fleet software"}</div>
-            <h2 style={{fontSize:"clamp(22px,3.5vw,38px)",fontWeight:900,color:C.text,letterSpacing:"-0.8px",margin:"0 0 8px"}}>{L.evApiTitle||"Your App Shows Where. We Show When."}</h2>
-            <div style={{fontSize:15,color:C.primary,fontWeight:700,marginBottom:14}}>{L.evApiTagline||"(Charge smart. Pay less.)"}</div>
-            <p style={{fontSize:15,color:C.muted,maxWidth:580,margin:"0 auto",lineHeight:1.85}}>{L.evApiDesc||"Tesla, BMW and every charging network already show the nearest station and its price. What none show: is right now a good time — or does waiting 2 hours save €4? One API call adds that layer to any app."}</p>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:20,marginBottom:36}}>
-            {[
-              {icon:"🗺️",title:L.evApiCase1Title||"Charging map apps",   desc:L.evApiCase1Desc||"Overlay live EPEX price next to station price. Let drivers compare: public charger at €0.69/kWh now vs. home charging at €0.04/kWh in 3 hours.",color:"#3B82F6",bg:"rgba(59,130,246,0.06)",border:"rgba(59,130,246,0.18)"},
-              {icon:"🚗",title:L.evApiCase2Title||"In-car & navigation",  desc:L.evApiCase2Desc||"\"Cheapest window tonight: 02:00–05:00 · €0.03/kWh · Saves €3.20 vs charging now\" — one endpoint, no infrastructure needed.",color:"#8B5CF6",bg:"rgba(139,92,246,0.06)",border:"rgba(139,92,246,0.18)"},
-              {icon:"🚛",title:L.evApiCase3Title||"Fleet & dispatch",      desc:L.evApiCase3Desc||"Only authorise public charging when EPEX is below your cost threshold. Route drivers to depot before peak hours automatically.",color:"#F59E0B",bg:"rgba(245,158,11,0.06)",border:"rgba(245,158,11,0.18)"},
-            ].map((c,i)=>(
-              <div key={i} className="sp-animate" style={{transitionDelay:`${i*0.12}s`,background:c.bg,border:`1px solid ${c.border}`,borderRadius:20,padding:"28px 24px"}}>
-                <div style={{fontSize:36,marginBottom:14}}>{c.icon}</div>
-                <div style={{fontSize:14,fontWeight:800,color:c.color,marginBottom:10}}>{c.title}</div>
-                <div style={{fontSize:13,color:C.muted,lineHeight:1.8}}>{c.desc}</div>
+        <div ref={evApiRef} style={{background:isDark?"rgba(10,18,40,0.7)":"rgba(239,246,255,0.8)",borderTop:`1px solid ${C.border}`,borderBottom:`1px solid ${C.border}`,padding:"72px 32px 64px"}}>
+          <div style={{maxWidth:960,margin:"0 auto"}}>
+            <div className="sp-animate" style={{textAlign:"center",marginBottom:52}}>
+              <div style={{fontSize:10,fontWeight:800,color:"#3B82F6",textTransform:"uppercase",letterSpacing:2.5,marginBottom:14}}>{L.evApiLabel||"For charging apps · EV platforms · Fleet software"}</div>
+              <h2 style={{fontSize:"clamp(22px,3.5vw,38px)",fontWeight:900,color:C.text,letterSpacing:"-0.8px",margin:"0 0 8px"}}>{L.evApiTitle||"Your App Shows Where. We Show When."}</h2>
+              <div style={{fontSize:14,color:C.primary,fontWeight:700,marginBottom:0}}>{L.evApiTagline||"One API call. Free forever."}</div>
+            </div>
+
+            {/* Side-by-side comparison */}
+            <div className="sp-animate" style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:0,marginBottom:36,alignItems:"stretch"}}>
+              {/* Left — standard EV app */}
+              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:"20px 0 0 20px",padding:"28px 28px 24px"}}>
+                <div style={{fontSize:11,fontWeight:800,color:C.muted,textTransform:"uppercase",letterSpacing:2,marginBottom:20}}>Standard EV app</div>
+                {[
+                  {icon:"📍",label:"Nearest charger",val:"2 stations nearby"},
+                  {icon:"💰",label:"Station price",val:"€0.69/kWh"},
+                  {icon:"🗺️",label:"Route",val:"Turn left in 200m"},
+                  {icon:"❓",label:"Good time to charge?",val:"—",dim:true},
+                  {icon:"❓",label:"Cheapest window tonight",val:"—",dim:true},
+                  {icon:"❓",label:"Saving by waiting 2h",val:"—",dim:true},
+                ].map((r,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:i<5?`1px solid ${C.border}`:"none"}}>
+                    <span style={{fontSize:16,width:22,textAlign:"center",opacity:r.dim?0.3:1}}>{r.icon}</span>
+                    <span style={{flex:1,fontSize:13,color:r.dim?C.light:C.muted}}>{r.label}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:r.dim?"rgba(100,116,139,0.4)":C.text}}>{r.val}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div style={{background:isDark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.03)",border:`1px solid ${C.border}`,borderRadius:16,padding:"18px 24px",marginBottom:24,fontFamily:"monospace",fontSize:12,color:C.muted,lineHeight:1.9}}>
-            {L.evApiSpec||"GET /api/current · /api/cheapest · /api/prices/today — No key · Belgium · Every 15 min · Free forever"}
-          </div>
-          <div style={{textAlign:"center"}}>
-            <a href="/api-docs" style={{fontSize:14,fontWeight:700,color:"#3B82F6",textDecoration:"none"}}>API docs → smartprice.be/api-docs</a>
+
+              {/* Divider */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,background:isDark?"#0F1E3C":"#DBEAFE",flexShrink:0}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#3B82F6",writingMode:"vertical-rl",textTransform:"uppercase",letterSpacing:3}}>+ SmartPrice</div>
+              </div>
+
+              {/* Right — SmartPrice adds */}
+              <div style={{background:"rgba(37,99,235,0.07)",border:`1px solid rgba(59,130,246,0.25)`,borderLeft:"none",borderRadius:"0 20px 20px 0",padding:"28px 28px 24px"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#3B82F6",textTransform:"uppercase",letterSpacing:2,marginBottom:20}}>+ SmartPrice API adds</div>
+                {[
+                  {icon:"⚡",label:"Right now",val:"€38/MWh · €0.21/kWh"},
+                  {icon:"🕐",label:"Cheapest tonight",val:"14:00–15:00"},
+                  {icon:"💶",label:"Rate at best window",val:"€0.04/kWh"},
+                  {icon:"✅",label:"Good time to charge?",val:"Yes / Wait 2h",good:true},
+                  {icon:"✅",label:"Cheapest window found",val:"14:00–15:00",good:true},
+                  {icon:"✅",label:"Save by waiting",val:"€3.20 on 40 kWh",good:true},
+                ].map((r,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:i<5?`1px solid rgba(59,130,246,0.12)`:"none"}}>
+                    <span style={{fontSize:16,width:22,textAlign:"center"}}>{r.icon}</span>
+                    <span style={{flex:1,fontSize:13,color:r.good?"#3B82F6":C.muted}}>{r.label}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:r.good?"#22C55E":C.text}}>{r.val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{background:isDark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.03)",border:`1px solid ${C.border}`,borderRadius:14,padding:"14px 20px",marginBottom:20,fontFamily:"monospace",fontSize:12,color:C.muted,lineHeight:1.9,textAlign:"center"}}>
+              {L.evApiSpec||"GET /api/current · /api/cheapest · /api/prices/today — No key · Belgium · Every 15 min · Free forever"}
+            </div>
+            <div style={{textAlign:"center"}}>
+              <a href="/api-docs" style={{fontSize:14,fontWeight:700,color:"#3B82F6",textDecoration:"none"}}>Full API docs → smartprice.be/api-docs</a>
+            </div>
           </div>
         </div>
 
