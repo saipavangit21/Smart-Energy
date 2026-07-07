@@ -848,6 +848,29 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
       </div>{/* /content wrapper */}
 
+      {/* ── CTA STRIP ─────────────────────────────────────────────── */}
+      <div style={{position:"relative",overflow:"hidden",background:isDark?"linear-gradient(135deg,#0D1F3C 0%,#0F2A1E 100%)":"linear-gradient(135deg,#EFF6FF 0%,#F0FDF4 100%)",borderTop:`1px solid ${isDark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.07)"}`,borderBottom:`1px solid ${isDark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.07)"}`}}>
+        {/* Decorative chevrons */}
+        {[220,280,340].map(right=>(
+          <div key={right} style={{position:"absolute",top:0,right:right,height:"100%",width:48,borderRight:`2px solid ${isDark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.05)"}`,transform:"skewX(-18deg)",pointerEvents:"none"}} />
+        ))}
+        <div style={{maxWidth:1100,margin:"0 auto",padding:"36px 40px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:32,flexWrap:"wrap",position:"relative",zIndex:1}}>
+          <div style={{flex:1,minWidth:260}}>
+            <div style={{fontSize:"clamp(20px,2.5vw,28px)",fontWeight:900,color:isDark?"#F1F5F9":"#0F172A",letterSpacing:"-0.5px",marginBottom:8,lineHeight:1.2}}>
+              {L.ctaStripTitle||"Ready to charge smart?"}
+            </div>
+            <div style={{fontSize:15,color:isDark?"rgba(255,255,255,0.6)":"#475569",lineHeight:1.6}}>
+              {L.ctaStripSub||"See Belgium's cheapest electricity hour — free, no account needed."}
+            </div>
+          </div>
+          <a href="#prices" style={{flexShrink:0,display:"inline-block",background:"linear-gradient(135deg,#15803D,#16A34A)",color:"#fff",textDecoration:"none",padding:"14px 32px",borderRadius:40,fontWeight:800,fontSize:15,boxShadow:"0 6px 24px rgba(22,163,74,0.35)",whiteSpace:"nowrap",transition:"transform 0.15s,box-shadow 0.15s"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 10px 32px rgba(22,163,74,0.45)";}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="0 6px 24px rgba(22,163,74,0.35)";}}>
+            {L.ctaStripBtn||"See today's prices →"}
+          </a>
+        </div>
+      </div>
+
       {/* ── FOOTER ────────────────────────────────────────────────── */}
       <div style={{borderTop:`1px solid ${C.border}`,background:C.card,padding:"32px",textAlign:"center",fontSize:12,color:C.light}}>
         <div style={{marginBottom:12,display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap"}}>
