@@ -473,219 +473,42 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       {/* ── CONTENT WRAPPER ───────────────────────────────────────── */}
       <div ref={toolsRef}>
 
-        {/* ── LIVE PRICE SECTION ──────────────────────────────────── */}
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"48px 32px 0"}}>
-          <div className="sp-animate" style={{textAlign:"center",marginBottom:48}}>
-            <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>{L.sectionLiveLabel||"Live right now"}</div>
-            <h2 style={{fontSize:"clamp(28px,4vw,46px)",fontWeight:900,color:C.text,marginBottom:12,letterSpacing:"-1px"}}>{L.sectionTodayTitle||"Today's electricity prices"}</h2>
-            <p style={{fontSize:16,color:C.muted,maxWidth:520,margin:"0 auto",lineHeight:1.8}}>{L.sectionTodayDesc||"Real-time EPEX Spot Belgium. Cheapest window, peak hours, and your exact cost per kWh."}</p>
+        {/* ── FLEET / BUSINESS TEASER ─────────────────────────────── */}
+        <div style={{maxWidth:1200,margin:"0 auto",padding:"64px 32px 0"}}>
+          <div className="sp-animate" style={{textAlign:"center",marginBottom:56}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#1E40AF",textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>{L.bizLabel||"For HR & fleet managers"}</div>
+            <h2 style={{fontSize:"clamp(26px,4vw,44px)",fontWeight:900,color:C.text,marginBottom:14,letterSpacing:"-1px"}}>{L.bizTitle||"Your company is overpaying on EV reimbursements"}</h2>
+            <p style={{fontSize:16,color:C.muted,maxWidth:560,margin:"0 auto",lineHeight:1.8}}>{L.bizDesc||"Belgian law (CIR 92) requires reimbursement to reflect actual charging cost — not a fixed quarterly CREG rate. Most companies don't know the gap."}</p>
           </div>
 
-          {/* ── AT A GLANCE — structured window table ─────────────── */}
-          {prices.length>0&&(cheapHour!=null||peakH!=null) && (
-            <div className="sp-animate" style={{background:C.card,border:`1.5px solid ${C.border2}`,borderRadius:20,padding:"24px 28px",marginBottom:32,boxShadow:C.shadow,overflowX:"auto"}}>
-              <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:"2px",marginBottom:18}}>{L.glanceTitle||"Best charging windows — today"}</div>
-
-              {/* Column headers */}
-              <div className="sp-glance-header">
-                {[L.glanceColWindow||"Window",L.glanceColTiming||"Timing Today",L.glanceColAction||"Your Action",L.glanceColRate||"Rate"].map(h=>(
-                  <div key={h} style={{fontSize:9,fontWeight:800,color:C.light,textTransform:"uppercase",letterSpacing:"1.5px"}}>{h}</div>
-                ))}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:24,marginBottom:48}}>
+            {[
+              {icon:"📋",color:"#1E40AF",bg:"rgba(30,64,175,0.07)",border:"rgba(30,64,175,0.18)",
+                title:L.bizF1Title||"CIR 92 compliance",
+                body:L.bizF1Body||"Belgian tax law requires your reimbursement to track real EPEX prices per session — not a quarterly average. Get the audit trail your social secretariat needs."},
+              {icon:"💶",color:"#0D9488",bg:"rgba(13,148,136,0.07)",border:"rgba(13,148,136,0.18)",
+                title:L.bizF2Title||"Calculate the exact gap",
+                body:L.bizF2Body||"Our free tool compares what you paid on the fixed CREG rate against what you'd have paid on real EPEX. For most fleets: €150–300 per car per year."},
+              {icon:"📤",color:"#7C3AED",bg:"rgba(124,58,237,0.07)",border:"rgba(124,58,237,0.18)",
+                title:L.bizF3Title||"Export & send",
+                body:L.bizF3Body||"Download the session-by-session breakdown as a CSV and hand it directly to your social secretariat. No manual work, no spreadsheets."},
+            ].map((f,i)=>(
+              <div key={i} className="sp-animate" style={{transitionDelay:`${i*0.1}s`,background:f.bg,border:`1px solid ${f.border}`,borderRadius:20,padding:"28px 24px"}}>
+                <div style={{fontSize:32,marginBottom:16}}>{f.icon}</div>
+                <div style={{fontSize:15,fontWeight:800,color:f.color,marginBottom:10}}>{f.title}</div>
+                <div style={{fontSize:14,color:C.muted,lineHeight:1.8}}>{f.body}</div>
               </div>
+            ))}
+          </div>
 
-              {/* Row 1 — daytime cheapest (solar peak) */}
-              {cheapHour!=null && (
-                <div className="sp-glance-row" style={{borderTop:`1px solid ${C.border}`}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{width:9,height:9,borderRadius:"50%",background:"#22C55E",flexShrink:0,display:"inline-block"}}/>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>{L.glancePeak||"Best Solar Peak"}</span>
-                  </div>
-                  <div style={{fontSize:14,fontWeight:800,color:C.primary}}>{fmtHour(cheapHour)}–{fmtHour(cheapWindowEnd??cheapHour+1)}</div>
-                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>{L.glanceAction1||"Run washing machine / heat pump"}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.primary}}>{cheapMwh!=null?`€${fmtKwh(cheapMwh)}/kWh`:"low"}</div>
-                </div>
-              )}
-
-              {/* Row 2 — night window */}
-              {nightH!=null && (
-                <div className="sp-glance-row" style={{borderTop:`1px solid ${C.border}`}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{width:9,height:9,borderRadius:"50%",background:"#6366F1",flexShrink:0,display:"inline-block"}}/>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>{L.glanceNight||"Best Night Window"}</span>
-                  </div>
-                  <div style={{fontSize:14,fontWeight:800,color:"#6366F1"}}>{fmtHour(nightH)}–{fmtHour((nightH+3)%24)}</div>
-                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>{L.glanceAction2||"Automated overnight EV charge"}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:"#6366F1"}}>{nightMwh!=null?`€${fmtKwh(nightMwh)}/kWh`:"off-peak"}</div>
-                </div>
-              )}
-
-              {/* Row 3 — peak freeze */}
-              {peakH!=null && (
-                <div className="sp-glance-row" style={{borderTop:`1px solid ${C.border}`}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{width:9,height:9,borderRadius:"50%",background:C.red,flexShrink:0,display:"inline-block"}}/>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text}}>{L.glancePeakFreeze||"Peak Price Freeze"}</span>
-                  </div>
-                  <div style={{fontSize:14,fontWeight:800,color:C.red}}>{fmtHour(peakH)}–{fmtHour(peakH+2)}</div>
-                  <div style={{fontSize:13,color:C.muted,lineHeight:1.5}}>{L.glanceAction3||"Pause heavy appliances & charging"}</div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.red}}>{peakMwh!=null?`€${fmtKwh(peakMwh)}/kWh`:"avoid"}</div>
-                </div>
-              )}
-
-              {/* 13:00 release note */}
-              <div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:6,fontSize:11,color:C.muted}}>
-                <span>ℹ️</span>
-                <span>{L.glanceTomorrow||"Tomorrow's prices are published daily around 13:00 CET — check back then to plan next day's charging."}</span>
-              </div>
-            </div>
-          )}
-
-          {prices.length===0 && (
-            <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,overflow:"hidden",marginBottom:72}}>
-              <div style={{background:"linear-gradient(135deg,#15803D,#16A34A,#22C55E)",padding:"28px 36px"}}>
-                <div className="sp-shimmer" style={{height:11,width:140,borderRadius:8,background:"rgba(255,255,255,0.18)",marginBottom:14}}/>
-                <div style={{display:"flex",alignItems:"baseline",gap:12}}>
-                  <div className="sp-shimmer" style={{height:56,width:120,borderRadius:8,background:"rgba(255,255,255,0.13)"}}/>
-                  <div className="sp-shimmer" style={{height:28,width:60,borderRadius:6,background:"rgba(255,255,255,0.10)"}}/>
-                </div>
-              </div>
-              <div style={{padding:"32px 36px",background:C.card}}>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:16,marginBottom:28}}>
-                  {[0,1,2].map(i=>(
-                    <div key={i} style={{borderRadius:18,padding:"22px 24px",background:C.bg2,border:`1px solid ${C.border}`}}>
-                      <div className="sp-shimmer" style={{height:10,width:96,borderRadius:6,background:C.border,marginBottom:12}}/>
-                      <div className="sp-shimmer" style={{height:26,width:130,borderRadius:6,background:C.border,marginBottom:8}}/>
-                      <div className="sp-shimmer" style={{height:18,width:80,borderRadius:6,background:C.border}}/>
-                    </div>
-                  ))}
-                </div>
-                <div style={{background:C.bg2,borderRadius:16,padding:"20px 24px"}}>
-                  <div className="sp-shimmer" style={{height:10,width:150,borderRadius:6,background:C.border,marginBottom:14}}/>
-                  <div style={{display:"flex",gap:2,height:64}}>
-                    {Array.from({length:24}).map((_,i)=>(
-                      <div key={i} className="sp-shimmer" style={{flex:1,height:`${32+Math.sin(i*0.8)*22}%`,borderRadius:"3px 3px 0 0",background:C.border,alignSelf:"flex-end"}}/>
-                    ))}
-                  </div>
-                  <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
-                    {["00:00","06:00","12:00","18:00","23:00"].map(h=>(
-                      <div key={h} className="sp-shimmer" style={{height:8,width:34,borderRadius:4,background:C.border}}/>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {prices.length>0&&cheapHour!=null ? (
-            <div className="sp-animate sp-card-enterprise" style={{borderRadius:24,overflow:"hidden",marginBottom:72}}>
-              {/* Header */}
-              <div style={{background:"linear-gradient(135deg,#15803D,#16A34A,#22C55E)",backgroundSize:"200% 200%",padding:"28px 36px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:20}}>
-                <div>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:700,textTransform:"uppercase",letterSpacing:"2px",marginBottom:8}}>⚡ EPEX Spot Belgium</div>
-                  <div style={{display:"flex",alignItems:"baseline",gap:12}}>
-                    <span style={{fontSize:"clamp(48px,6vw,72px)",fontWeight:900,fontFamily:"monospace",color:currentCol,letterSpacing:"-3px",lineHeight:1}}>{Math.round(currentMwh??0)}</span>
-                    <div>
-                      <div style={{fontSize:18,color:"rgba(255,255,255,0.5)",fontWeight:600}}>€/MWh</div>
-                      {currentLbl && <div style={{fontSize:10,fontWeight:800,color:currentCol,background:`${currentCol}22`,border:`1px solid ${currentCol}55`,borderRadius:20,padding:"3px 12px",marginTop:4,display:"inline-block"}}>{currentLbl}</div>}
-                    </div>
-                  </div>
-                </div>
-                <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginBottom:6}}>↻ {updatedStr??"…"}</div>
-                  <div style={{fontSize:16,color:"rgba(255,255,255,0.7)"}}>= <strong style={{color:currentCol,fontSize:20}}>€{currentMwh!=null?fmtKwh(currentMwh):"—"}/kWh</strong></div>
-                  <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:4}}>incl. distribution</div>
-                </div>
-              </div>
-
-              <div style={{padding:"32px 36px",background:C.card}}>
-                {/* Price grid */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:16,marginBottom:28}}>
-                  <div className="sp-metric-card sp-metric-green">
-                    <div style={{fontSize:11,fontWeight:800,color:"#16A34A",textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>
-                      {cheapIsNow?"⚡ Cheapest — plug in now":"Best window today"}
-                    </div>
-                    <div style={{fontSize:"clamp(20px,3vw,28px)",fontWeight:900,color:C.text,marginBottom:6}}>{cheapIsNow?(L.rightNowText||"Right now!"):` ${fmtHour(cheapHour)} – ${fmtHour(cheapWindowEnd??cheapHour+2)}`}</div>
-                    <div style={{fontSize:20,fontWeight:800,color:"#16A34A"}}>€{fmtKwh(cheapMwh)}/kWh</div>
-                  </div>
-                  <div className="sp-metric-card sp-metric-red">
-                    <div style={{fontSize:11,fontWeight:800,color:C.red,textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>Peak — avoid charging</div>
-                    <div style={{fontSize:"clamp(20px,3vw,28px)",fontWeight:900,color:C.text,marginBottom:6}}>{peakH!=null?`${fmtHour(peakH)} – ${fmtHour(peakH+2)}`:"—"}</div>
-                    <div style={{fontSize:20,fontWeight:800,color:C.red}}>€{peakMwh!=null?fmtKwh(peakMwh):"—"}/kWh</div>
-                  </div>
-                  {savingToday!=null&&savingToday>0.3&&(
-                    <div className="sp-metric-card sp-metric-amber">
-                      <div style={{fontSize:11,fontWeight:800,color:C.amber,textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>Full charge (40 kWh)</div>
-                      <div style={{fontSize:"clamp(20px,3vw,28px)",fontWeight:900,color:C.text,marginBottom:6}}>€{fmtNum2(retailKwh(cheapMwh)*40)}</div>
-                      <div style={{fontSize:16,fontWeight:700,color:C.amber}}>Save €{fmtNum2(savingToday)} vs now</div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 24h bar chart */}
-                <div style={{background:C.bg,borderRadius:16,padding:"20px 24px",marginBottom:24}} onClick={()=>setBarTooltip(null)}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                    <div style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:"1.5px"}}>{L.chart24hTitle||"24-hour price schedule"}</div>
-                    <div style={{fontSize:9,color:C.light,fontWeight:600}}>{L.chartTapHint||"tap bar for details"}</div>
-                  </div>
-
-                  {/* Touch tooltip chip — renders above bars when a bar is tapped */}
-                  {barTooltip && (
-                    <div style={{display:"inline-flex",alignItems:"center",gap:8,background:barTooltip.col,color:"#fff",borderRadius:20,padding:"5px 14px",fontSize:12,fontWeight:700,marginBottom:10,boxShadow:`0 4px 16px ${barTooltip.col}55`}}>
-                      <span>{String(barTooltip.hour).padStart(2,"0")}:00 – {String(barTooltip.hour+1).padStart(2,"0")}:00</span>
-                      <span style={{opacity:0.8}}>·</span>
-                      <span>€{fmtKwh(barTooltip.mwh)}/kWh</span>
-                      <span style={{opacity:0.7,fontSize:10}}>({fmtNum0(barTooltip.mwh)} €/MWh)</span>
-                    </div>
-                  )}
-
-                  {/* Bars — full-height columns for reliable touch targets */}
-                  <div style={{display:"flex",gap:2,height:64}}>
-                    {prices.slice(0,24).map((p,i)=>{
-                      const maxP = Math.max(...prices.slice(0,24).map(x=>Math.max(x.price_eur_mwh,0)));
-                      const barH = maxP>0?Math.max((p.price_eur_mwh/maxP)*100,4):4;
-                      const col  = priceColor(p.price_eur_mwh);
-                      const pHour = new Date(p.timestamp_utc||p.timestamp).getHours();
-                      const hi  = p.is_current||pHour===cheapHour;
-                      const sel = barTooltip?.hour===pHour;
-                      return (
-                        <div key={i}
-                          style={{flex:1,height:"100%",display:"flex",alignItems:"flex-end",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}
-                          onClick={e=>{e.stopPropagation();setBarTooltip(sel?null:{hour:pHour,mwh:p.price_eur_mwh,col});}}
-                        >
-                          <div style={{width:"100%",height:`${barH}%`,borderRadius:"3px 3px 0 0",background:sel?col:(hi?col:`${col}55`),outline:sel?`2px solid ${col}`:undefined,outlineOffset:1,transition:"height 0.5s ease,background 0.2s",transitionDelay:`${i*0.02}s`}}/>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.light,marginTop:6}}>
-                    {["00:00","06:00","12:00","18:00","23:00"].map(h=><span key={h}>{h}</span>)}
-                  </div>
-                </div>
-
-                {/* Solar toggle */}
-                <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 18px",background:hasSolar?"rgba(251,191,36,0.06)":C.bg,border:`1px solid ${hasSolar?"rgba(251,191,36,0.3)":C.border}`,borderRadius:14,cursor:"pointer",transition:"all 0.3s",marginBottom:24}}
-                  onClick={()=>setHasSolar(s=>!s)}>
-                  <div style={{width:40,height:22,borderRadius:11,background:hasSolar?"#f59e0b":"#CBD5E1",position:"relative",transition:"background 0.3s",flexShrink:0}}>
-                    <div style={{position:"absolute",top:3,left:hasSolar?20:3,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left 0.3s",boxShadow:"0 1px 4px rgba(0,0,0,0.2)"}}/>
-                  </div>
-                  <span style={{fontSize:14,fontWeight:600,color:hasSolar?"#92400E":C.muted}}>☀️ I have solar panels — show capacity tariff impact</span>
-                </div>
-
-                {hasSolar&&cheapMwh!=null&&(
-                  <div style={{background:"rgba(251,191,36,0.06)",border:"1px solid rgba(251,191,36,0.25)",borderRadius:14,padding:"16px 20px",marginBottom:24}}>
-                    <div style={{fontSize:14,fontWeight:700,color:"#92400E",marginBottom:6}}>☀️ Fluvius capacity tariff</div>
-                    <div style={{fontSize:13,color:"#78350F",lineHeight:1.75}}>
-                      Charging at peak ({fmtHour(peakH??19)}) raises your Fluvius bill by ~€20–30/month. Charging at {fmtHour(cheapHour)} avoids this. <strong>Real saving: €{fmtNum0((savingToday??0)+22)}/month.</strong>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            </div>
-          ) : (
-            <div style={{background:C.card,borderRadius:20,border:`1px solid ${C.border}`,padding:"80px 24px",textAlign:"center",color:C.light,marginBottom:72}}>Loading live prices…</div>
-          )}
+          <div className="sp-animate" style={{textAlign:"center",paddingBottom:16}}>
+            <a href="/business" style={{display:"inline-block",textDecoration:"none",background:"linear-gradient(135deg,#1E40AF,#2563EB)",color:"#fff",padding:"15px 36px",borderRadius:40,fontWeight:800,fontSize:15,boxShadow:"0 6px 24px rgba(37,99,235,0.3)"}}>
+              {L.bizCta||"Get your free fleet audit →"}
+            </a>
+            <div style={{fontSize:12,color:C.muted,marginTop:10}}>{L.bizCtaSub||"Free · No account needed · Takes under 2 minutes"}</div>
+          </div>
         </div>
+
 
         {/* ── SMART TOOLS ─────────────────────────────────────────── */}
         <div style={{background:isDark ? C.bg : "linear-gradient(180deg,#F0FDF4,#F7FEF9)",padding:"56px 32px 40px"}}>
