@@ -344,6 +344,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           <LangSwitcher />
           <a href="/ev-charging-belgium" style={{padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,background:scrolled?"rgba(34,197,94,0.08)":"rgba(255,255,255,0.12)",border:scrolled?"1px solid rgba(34,197,94,0.2)":"1px solid rgba(255,255,255,0.25)",color:scrolled?C.primary:"#fff",textDecoration:"none"}}>{L.navEv||"🚗 EV"}</a>
           <a href="/business" style={{padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,background:scrolled?(isDark?"rgba(30,64,175,0.15)":"#EFF6FF"):"rgba(255,255,255,0.12)",border:scrolled?"1px solid rgba(30,64,175,0.25)":"1px solid rgba(255,255,255,0.25)",color:scrolled?(isDark?"#93C5FD":"#1E40AF"):"#fff",textDecoration:"none"}}>{L.navBusiness||"🏢 Business"}</a>
+          <a href="/ev-companies" style={{padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:700,background:scrolled?"rgba(217,119,6,0.10)":"rgba(255,255,255,0.12)",border:scrolled?"1px solid rgba(217,119,6,0.3)":"1px solid rgba(255,255,255,0.25)",color:scrolled?"#D97706":"#fff",textDecoration:"none"}}>{L.navEvCo||"⚡ EV API"}</a>
           <button onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:20,fontSize:13,fontWeight:800,background:scrolled?"linear-gradient(135deg,#16A34A,#22C55E)":"rgba(255,255,255,0.2)",color:"#fff",border:scrolled?"none":"1px solid rgba(255,255,255,0.35)",cursor:"pointer",boxShadow:scrolled?"0 4px 16px rgba(22,163,74,0.3)":"none"}}>
             {L.navDashboard||"Dashboard →"}
           </button>
@@ -451,7 +452,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                 title: L.pickerEvTitle||"EV Companies & Apps",
                 desc: L.pickerEvDesc||"Add live EPEX price intelligence to any charging app. Your app shows where to charge — we show when. One API call, no key, free.",
                 cta: L.pickerEvCta||"View API →",
-                onClick: ()=>evApiRef.current?.scrollIntoView({behavior:"smooth"}),
+                onClick: ()=>window.location.href="/ev-companies",
                 href: null,
               },
             ].map((p,i)=>(

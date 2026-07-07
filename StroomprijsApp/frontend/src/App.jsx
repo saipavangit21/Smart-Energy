@@ -30,6 +30,7 @@ import EvStationsPage   from "./pages/seo/EvStationsPage";
 import ApiPage           from "./pages/ApiPage";
 import FleetAuditPage    from "./pages/FleetAuditPage";
 import BusinessPage      from "./pages/BusinessPage";
+import EvCompaniesPage   from "./pages/EvCompaniesPage";
 import SessionCalcPage   from "./pages/SessionCalcPage";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
@@ -124,6 +125,8 @@ export default function App() {
     return <SessionCalcPage onNavigate={navigate} />;
   if (path === "/business")
     return <BusinessPage onNavigate={navigate} />;
+  if (path === "/ev-companies")
+    return <EvCompaniesPage onNavigate={navigate} />;
   if (showPrivacy)                return <PrivacyPolicy onClose={() => setShowPrivacy(false)} />;
 
   // ── Loading spinner ──────────────────────────────────────────
