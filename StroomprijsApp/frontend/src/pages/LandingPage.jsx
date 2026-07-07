@@ -434,25 +434,6 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
       </div>
 
-      {/* ── STATS BAR ─────────────────────────────────────────────── */}
-      <div style={{background:C.card,borderBottom:`1px solid ${C.border}`,padding:"16px 32px"}}>
-        <div style={{maxWidth:1200,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:32,textAlign:"center"}}>
-          {[
-            {value:siteStats?.registered_users??100,suffix:"+",label:L.stat1Label||"Belgian households",accent:C.primary},
-            {value:7,suffix:"",label:L.stat2Label||"suppliers compared",accent:C.amber},
-            {value:15,suffix:" min",label:L.stat3Label||"price update interval",accent:C.purple},
-            {value:200,prefix:"€",suffix:"+",label:L.stat4Label||"avg. annual saving",accent:"#10B981"},
-          ].map((s,i)=>(
-            <div key={i} className="sp-animate" style={{transitionDelay:`${i*0.1}s`}}>
-              <div style={{fontSize:24,fontWeight:900,color:s.accent,letterSpacing:"-1px",lineHeight:1}}>
-                <AnimatedNumber value={s.value} prefix={s.prefix??""} suffix={s.suffix} />
-              </div>
-              <div style={{fontSize:12,color:C.muted,marginTop:6,fontWeight:600}}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* ── ECO STRIP ────────────────────────────────────────────── */}
       <div style={{background:isDark?"linear-gradient(135deg,rgba(16,185,129,0.18) 0%,rgba(5,150,105,0.12) 100%)":"linear-gradient(135deg,rgba(16,185,129,0.12) 0%,rgba(5,150,105,0.07) 100%)",borderTop:"1px solid rgba(16,185,129,0.25)",borderBottom:"1px solid rgba(16,185,129,0.25)",padding:"28px 32px"}}>
         <div style={{maxWidth:720,margin:"0 auto",textAlign:"center"}}>
@@ -473,6 +454,25 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       <div ref={toolsRef}>
 
 
+
+        {/* ── STATS BAR ─────────────────────────────────────────────── */}
+        <div style={{background:C.card,borderBottom:`1px solid ${C.border}`,padding:"16px 32px"}}>
+          <div style={{maxWidth:1200,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:32,textAlign:"center"}}>
+            {[
+              {value:siteStats?.registered_users??100,suffix:"+",label:L.stat1Label||"Belgian households",accent:C.primary},
+              {value:7,suffix:"",label:L.stat2Label||"suppliers compared",accent:C.amber},
+              {value:15,suffix:" min",label:L.stat3Label||"price update interval",accent:C.purple},
+              {value:200,prefix:"€",suffix:"+",label:L.stat4Label||"avg. annual saving",accent:"#10B981"},
+            ].map((s,i)=>(
+              <div key={i} className="sp-animate" style={{transitionDelay:`${i*0.1}s`}}>
+                <div style={{fontSize:24,fontWeight:900,color:s.accent,letterSpacing:"-1px",lineHeight:1}}>
+                  <AnimatedNumber value={s.value} prefix={s.prefix??""} suffix={s.suffix} />
+                </div>
+                <div style={{fontSize:12,color:C.muted,marginTop:6,fontWeight:600}}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* ── SMART TOOLS ─────────────────────────────────────────── */}
         <div style={{background:isDark ? C.bg : "linear-gradient(180deg,#F0FDF4,#F7FEF9)",padding:"56px 32px 40px"}}>
