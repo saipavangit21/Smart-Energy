@@ -375,7 +375,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
         {/* Subtitle */}
         <p className="sp-animate sp-delay-2" style={{fontSize:"clamp(16px,2vw,20px)",color:"rgba(255,255,255,0.75)",maxWidth:540,margin:"0 auto 40px",lineHeight:1.7,fontWeight:400}}>
-          {L.heroSubNew||"Live EPEX Spot Belgium — see today's cheapest charging window, compare 7 suppliers, and get daily alerts. Free forever."}
+          {L.heroSubNew||"Live Belgian EPEX prices — free for households, fleet managers, and EV platforms."}
         </p>
 
         {/* Live price display */}
