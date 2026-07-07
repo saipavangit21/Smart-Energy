@@ -180,7 +180,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
   const [fetchedAt,    setFetchedAt]    = useState(null);
   const [siteStats,    setSiteStats]    = useState(null);
   const [gasCurrent,   setGasCurrent]   = useState(null);
-  const toolsRef = useRef(null);
+  const toolsRef  = useRef(null);
+  const evApiRef  = useRef(null);
 
   /* scroll reveal */
   useScrollReveal();
@@ -411,21 +412,19 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           </div>
         )}
 
-        {/* CTA buttons */}
-        <div className="sp-animate sp-delay-4" style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",marginBottom:16}}>
-          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} className="sp-cta-primary">
-            {L.ctaPersonal||"See Today's Cheapest Hours →"}
+        {/* CTA buttons — 3 audiences */}
+        <div className="sp-animate sp-delay-4" style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginBottom:52}}>
+          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})}
+            style={{padding:"14px 28px",borderRadius:30,fontSize:15,fontWeight:700,border:"none",cursor:"pointer",background:"linear-gradient(135deg,#15803D,#16A34A)",color:"#fff",boxShadow:"0 4px 16px rgba(22,163,74,0.35)",whiteSpace:"nowrap"}}>
+            🏠 {L.ctaHouseholds||"Households"}
           </button>
-          <button onClick={onGetStarted} className="sp-cta-ghost" style={{cursor:"pointer"}}>
-            {L.ctaCorporate||"Start Free →"}
-          </button>
-          <a href="/business" style={{padding:"14px 28px",borderRadius:30,fontSize:15,fontWeight:700,background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.85)",textDecoration:"none",border:"1px solid rgba(255,255,255,0.2)",backdropFilter:"blur(8px)",whiteSpace:"nowrap"}}>
-            {L.ctaCorporate2||"💼 Corporate EV Fleets →"}
+          <a href="/business"
+            style={{padding:"14px 28px",borderRadius:30,fontSize:15,fontWeight:700,textDecoration:"none",background:"linear-gradient(135deg,#1E40AF,#2563EB)",color:"#fff",boxShadow:"0 4px 16px rgba(37,99,235,0.35)",whiteSpace:"nowrap"}}>
+            💼 {L.ctaBusiness||"Business"}
           </a>
-        </div>
-        <div className="sp-animate sp-delay-4" style={{marginBottom:52}}>
-          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:13,cursor:"pointer",fontWeight:600,letterSpacing:"0.3px"}}>
-            {L.seePrices||"↓ See live prices"}
+          <button onClick={()=>evApiRef.current?.scrollIntoView({behavior:"smooth"})}
+            style={{padding:"14px 28px",borderRadius:30,fontSize:15,fontWeight:700,border:"none",cursor:"pointer",background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.9)",border:"1px solid rgba(255,255,255,0.2)",backdropFilter:"blur(8px)",whiteSpace:"nowrap"}}>
+            ⚡ {L.ctaEv||"EV Companies"}
           </button>
         </div>
 
@@ -473,41 +472,6 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       {/* ── CONTENT WRAPPER ───────────────────────────────────────── */}
       <div ref={toolsRef}>
 
-        {/* ── FLEET / BUSINESS TEASER ─────────────────────────────── */}
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"64px 32px 0"}}>
-          <div className="sp-animate" style={{textAlign:"center",marginBottom:56}}>
-            <div style={{fontSize:11,fontWeight:800,color:"#1E40AF",textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>{L.bizLabel||"For HR & fleet managers"}</div>
-            <h2 style={{fontSize:"clamp(26px,4vw,44px)",fontWeight:900,color:C.text,marginBottom:14,letterSpacing:"-1px"}}>{L.bizTitle||"Your company is overpaying on EV reimbursements"}</h2>
-            <p style={{fontSize:16,color:C.muted,maxWidth:560,margin:"0 auto",lineHeight:1.8}}>{L.bizDesc||"Belgian law (CIR 92) requires reimbursement to reflect actual charging cost — not a fixed quarterly CREG rate. Most companies don't know the gap."}</p>
-          </div>
-
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:24,marginBottom:48}}>
-            {[
-              {icon:"📋",color:"#1E40AF",bg:"rgba(30,64,175,0.07)",border:"rgba(30,64,175,0.18)",
-                title:L.bizF1Title||"CIR 92 compliance",
-                body:L.bizF1Body||"Belgian tax law requires your reimbursement to track real EPEX prices per session — not a quarterly average. Get the audit trail your social secretariat needs."},
-              {icon:"💶",color:"#0D9488",bg:"rgba(13,148,136,0.07)",border:"rgba(13,148,136,0.18)",
-                title:L.bizF2Title||"Calculate the exact gap",
-                body:L.bizF2Body||"Our free tool compares what you paid on the fixed CREG rate against what you'd have paid on real EPEX. For most fleets: €150–300 per car per year."},
-              {icon:"📤",color:"#7C3AED",bg:"rgba(124,58,237,0.07)",border:"rgba(124,58,237,0.18)",
-                title:L.bizF3Title||"Export & send",
-                body:L.bizF3Body||"Download the session-by-session breakdown as a CSV and hand it directly to your social secretariat. No manual work, no spreadsheets."},
-            ].map((f,i)=>(
-              <div key={i} className="sp-animate" style={{transitionDelay:`${i*0.1}s`,background:f.bg,border:`1px solid ${f.border}`,borderRadius:20,padding:"28px 24px"}}>
-                <div style={{fontSize:32,marginBottom:16}}>{f.icon}</div>
-                <div style={{fontSize:15,fontWeight:800,color:f.color,marginBottom:10}}>{f.title}</div>
-                <div style={{fontSize:14,color:C.muted,lineHeight:1.8}}>{f.body}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="sp-animate" style={{textAlign:"center",paddingBottom:16}}>
-            <a href="/business" style={{display:"inline-block",textDecoration:"none",background:"linear-gradient(135deg,#1E40AF,#2563EB)",color:"#fff",padding:"15px 36px",borderRadius:40,fontWeight:800,fontSize:15,boxShadow:"0 6px 24px rgba(37,99,235,0.3)"}}>
-              {L.bizCta||"Get your free fleet audit →"}
-            </a>
-            <div style={{fontSize:12,color:C.muted,marginTop:10}}>{L.bizCtaSub||"Free · No account needed · Takes under 2 minutes"}</div>
-          </div>
-        </div>
 
 
         {/* ── SMART TOOLS ─────────────────────────────────────────── */}
@@ -533,9 +497,6 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                 {icon:"🏠",title:L.toolConnectTitle||"Smart Connect", badge:"HACS",    badgeCol:C.purple, accent:C.purple,  delay:0.3,
                   desc:L.toolConnectDesc||"Official Home Assistant integration. 6 sensors, EPEX + gas. Automate your EV charger by price.",
                   cta:L.toolConnectCta||"View integration →",onClick:()=>window.location.href="/api-docs"},
-                {icon:"💼",title:L.toolBusinessTitle||"Smart Business", badge:"B2B",   badgeCol:"#1E40AF", accent:"#1E40AF", delay:0.4,
-                  desc:L.toolBusinessDesc||"CIR 92-compliant EV fleet reimbursements. Stop overpaying on fixed CREG rates — use live EPEX per charging session.",
-                  cta:L.toolBusinessCta||"Fleet audit →",onClick:()=>window.location.href="/business"},
               ].map((p,i)=>(
                 <div key={p.title} className="sp-animate sp-card-tool" style={{transitionDelay:`${p.delay}s`}} onClick={p.onClick}>
                   <div style={{width:52,height:52,borderRadius:16,background:`${p.accent}12`,border:`1px solid ${p.accent}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,marginBottom:20}}>{p.icon}</div>
@@ -553,11 +514,12 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
 
         {/* ── EV API SECTION ───────────────────────────────────────── */}
-        <div style={{maxWidth:1100,margin:"0 auto",padding:"0 32px 72px"}}>
+        <div ref={evApiRef} style={{maxWidth:1100,margin:"0 auto",padding:"0 32px 72px"}}>
           <div className="sp-animate" style={{textAlign:"center",marginBottom:48}}>
             <div style={{fontSize:10,fontWeight:800,color:"#3B82F6",textTransform:"uppercase",letterSpacing:2.5,marginBottom:14}}>{L.evApiLabel||"For charging apps · EV platforms · Fleet software"}</div>
-            <h2 style={{fontSize:"clamp(22px,3.5vw,38px)",fontWeight:900,color:C.text,letterSpacing:"-0.8px",margin:"0 0 16px"}}>{L.evApiTitle||"Your app shows where to charge. Add ours — tell users when."}</h2>
-            <p style={{fontSize:15,color:C.muted,maxWidth:640,margin:"0 auto",lineHeight:1.85}}>{L.evApiDesc||"Tesla, BMW and every charging network already show the nearest station and its price. What none show: is right now a good time — or does waiting 2 hours save €4? One API call adds that layer to any app."}</p>
+            <h2 style={{fontSize:"clamp(22px,3.5vw,38px)",fontWeight:900,color:C.text,letterSpacing:"-0.8px",margin:"0 0 8px"}}>{L.evApiTitle||"Your App Shows Where. We Show When."}</h2>
+            <div style={{fontSize:15,color:C.primary,fontWeight:700,marginBottom:14}}>{L.evApiTagline||"(Charge smart. Pay less.)"}</div>
+            <p style={{fontSize:15,color:C.muted,maxWidth:580,margin:"0 auto",lineHeight:1.85}}>{L.evApiDesc||"Tesla, BMW and every charging network already show the nearest station and its price. What none show: is right now a good time — or does waiting 2 hours save €4? One API call adds that layer to any app."}</p>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:20,marginBottom:36}}>
             {[
@@ -575,9 +537,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           <div style={{background:isDark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.03)",border:`1px solid ${C.border}`,borderRadius:16,padding:"18px 24px",marginBottom:24,fontFamily:"monospace",fontSize:12,color:C.muted,lineHeight:1.9}}>
             {L.evApiSpec||"GET /api/current · /api/cheapest · /api/prices/today — No key · Belgium · Every 15 min · Free forever"}
           </div>
-          <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-            <a href="/api-docs" style={{fontSize:14,fontWeight:700,color:"#fff",background:"#3B82F6",borderRadius:24,padding:"12px 28px",textDecoration:"none"}}>{L.evApiCta||"View API docs →"}</a>
-            <a href="mailto:info@smartprice.be" style={{fontSize:14,fontWeight:700,color:"#3B82F6",background:"transparent",border:"1.5px solid #3B82F6",borderRadius:24,padding:"12px 28px",textDecoration:"none"}}>{L.evApiCtaContact||"Contact for enterprise integration →"}</a>
+          <div style={{textAlign:"center"}}>
+            <a href="/api-docs" style={{fontSize:14,fontWeight:700,color:"#3B82F6",textDecoration:"none"}}>API docs → smartprice.be/api-docs</a>
           </div>
         </div>
 
@@ -631,37 +592,6 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           ))}
         </div>
 
-        {/* ── WEEKLY DIGEST OPT-IN ─────────────────────────────────── */}
-        <div style={{maxWidth:800,margin:"0 auto",padding:"0 32px 56px"}}>
-          <div className="sp-animate" style={{background:isDark?"rgba(10,18,32,0.9)":"#F0F9FF",border:`1px solid ${isDark?"rgba(59,130,246,0.2)":"rgba(59,130,246,0.25)"}`,borderRadius:20,padding:"28px 32px",display:"flex",gap:20,flexWrap:"wrap",alignItems:"center"}}>
-            {nlState === "done" ? (
-              <div style={{display:"flex",gap:16,alignItems:"center",width:"100%"}}>
-                <span style={{fontSize:32}}>📬</span>
-                <div>
-                  <div style={{fontSize:16,fontWeight:800,color:"#3B82F6",marginBottom:4}}>You're subscribed!</div>
-                  <div style={{fontSize:13,color:C.muted}}>First digest lands next Monday at 08:00 Brussels · One-click unsubscribe in every email</div>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div style={{flex:"1 1 220px"}}>
-                  <div style={{fontSize:11,color:"#3B82F6",fontWeight:800,textTransform:"uppercase",letterSpacing:"1px",marginBottom:6}}>📊 Free weekly digest</div>
-                  <div style={{fontSize:17,fontWeight:800,color:C.text,marginBottom:4}}>EPEX Belgium — every Monday 08:00</div>
-                  <div style={{fontSize:12,color:C.muted}}>Last week's avg / min / max · Cheapest window insight · No account needed</div>
-                </div>
-                <form onSubmit={submitNewsletter} style={{display:"flex",gap:10,flexWrap:"wrap",flex:"1 1 280px"}}>
-                  <input type="email" required placeholder="your@email.com" value={nlEmail} onChange={e=>setNlEmail(e.target.value)}
-                    style={{flex:1,minWidth:160,padding:"11px 16px",borderRadius:24,fontSize:14,background:isDark?"rgba(255,255,255,0.06)":C.bg,border:`1.5px solid ${C.border}`,color:C.text,outline:"none",fontFamily:"inherit"}}
-                    onFocus={e=>e.target.style.border="1.5px solid #3B82F6"}
-                    onBlur={e=>e.target.style.border=`1.5px solid ${C.border}`}/>
-                  <button type="submit" disabled={nlState==="loading"} style={{padding:"11px 22px",borderRadius:24,fontSize:13,fontWeight:700,border:"none",cursor:"pointer",background:"linear-gradient(135deg,#1D4ED8,#1E40AF)",color:"#fff",opacity:nlState==="loading"?0.7:1}}>
-                    {nlState==="loading"?"…":"Subscribe →"}
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
 
       </div>{/* /content wrapper */}
 
@@ -689,21 +619,59 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       </div>
 
       {/* ── FOOTER ────────────────────────────────────────────────── */}
-      <div style={{borderTop:`1px solid ${C.border}`,background:C.card,padding:"32px",textAlign:"center",fontSize:12,color:C.light}}>
-        <div style={{marginBottom:12,display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap"}}>
-          {["Business::/business","Fleet Audit::/fleet-audit","API & HA::/api-docs","EV Charging::/ev-charging-belgium"].map(l=>{
-            const[label,href]=l.split("::");
-            return <a key={label} href={href} style={{color:C.muted,textDecoration:"none",fontWeight:600,fontSize:13}}>{label}</a>;
-          })}
-          <a href="mailto:info@smartprice.be" style={{color:C.muted,textDecoration:"none",fontWeight:600,fontSize:13}}>info@smartprice.be</a>
-        </div>
-        <div style={{marginBottom:12}}>Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · Updated every 15 min
-          <span onClick={()=>window.dispatchEvent(new CustomEvent("showPrivacy"))} style={{marginLeft:10,cursor:"pointer",textDecoration:"underline"}}>Privacy Policy</span>
-        </div>
-        <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-          {[{label:"WhatsApp",icon:"💬",color:"#25D366",href:`https://wa.me/?text=${encodeURIComponent("⚡ SmartPrice.be — live EPEX prices + cheapest EV charging window for Belgium. Free. https://smartprice.be")}`},{label:"LinkedIn",icon:"in",color:"#0A66C2",href:`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://smartprice.be")}`}].map(s=>(
-            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{width:32,height:32,borderRadius:8,background:`${s.color}12`,border:`1px solid ${s.color}25`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:s.color,textDecoration:"none"}}>{s.icon}</a>
-          ))}
+      <div style={{background:isDark?"#0A1220":"#0F172A",borderTop:`1px solid rgba(255,255,255,0.07)`,padding:"56px 32px 32px"}}>
+        <div style={{maxWidth:1100,margin:"0 auto"}}>
+          {/* 4-column grid */}
+          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:48,marginBottom:48,flexWrap:"wrap"}}>
+            {/* Col 1 — brand */}
+            <div>
+              <div style={{fontSize:22,fontWeight:900,color:"#fff",letterSpacing:"-0.5px",marginBottom:10}}>SmartPrice<span style={{color:"#22C55E"}}>.be</span></div>
+              <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",lineHeight:1.75,marginBottom:24,maxWidth:240}}>Live EPEX Spot electricity prices for Belgium — free for households, EV drivers, and company fleets.</div>
+              <div style={{display:"flex",gap:10}}>
+                {[
+                  {label:"f",color:"#1877F2",href:"https://www.facebook.com/groups/smartpricebe"},
+                  {label:"in",color:"#0A66C2",href:"https://www.linkedin.com/company/smartpricebe"},
+                  {label:"💬",color:"#25D366",href:`https://wa.me/?text=${encodeURIComponent("⚡ SmartPrice.be — live EPEX prices + cheapest EV charging window for Belgium. Free. https://smartprice.be")}`},
+                ].map(s=>(
+                  <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                    style={{width:36,height:36,borderRadius:10,background:`${s.color}18`,border:`1px solid ${s.color}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,color:s.color,textDecoration:"none"}}>
+                    {s.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+            {/* Col 2 — Households */}
+            <div>
+              <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:2,marginBottom:16}}>Households</div>
+              {[["Live electricity prices","/"],["EV Charge Planner","/"],["Price alerts","/"],["Compare suppliers","/calculator/electricity"],["Home Assistant (HACS)","/api-docs"]].map(([l,h])=>(
+                <a key={l} href={h} style={{display:"block",color:"rgba(255,255,255,0.6)",textDecoration:"none",fontSize:13,fontWeight:500,marginBottom:10,lineHeight:1.4}}
+                  onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,0.6)"}>{l}</a>
+              ))}
+            </div>
+            {/* Col 3 — Business */}
+            <div>
+              <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:2,marginBottom:16}}>Business</div>
+              {[["Fleet Audit (free)","/business"],["Fleet Audit Tool","/fleet-audit"],["CIR 92 compliance","/business"],["EV Reimbursement","/business"],["Contact us","mailto:info@smartprice.be"]].map(([l,h])=>(
+                <a key={l} href={h} style={{display:"block",color:"rgba(255,255,255,0.6)",textDecoration:"none",fontSize:13,fontWeight:500,marginBottom:10,lineHeight:1.4}}
+                  onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,0.6)"}>{l}</a>
+              ))}
+            </div>
+            {/* Col 4 — Company */}
+            <div>
+              <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:2,marginBottom:16}}>Company</div>
+              {[["About SmartPrice.be","/"],["API for developers","/api-docs"],["EV charging Belgium","/ev-charging-belgium"],["Privacy Policy","#privacy"],["info@smartprice.be","mailto:info@smartprice.be"]].map(([l,h])=>(
+                <a key={l} href={h}
+                  onClick={l==="Privacy Policy"?e=>{e.preventDefault();window.dispatchEvent(new CustomEvent("showPrivacy"))}:undefined}
+                  style={{display:"block",color:"rgba(255,255,255,0.6)",textDecoration:"none",fontSize:13,fontWeight:500,marginBottom:10,lineHeight:1.4}}
+                  onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,0.6)"}>{l}</a>
+              ))}
+            </div>
+          </div>
+          {/* Bottom bar */}
+          <div style={{borderTop:"1px solid rgba(255,255,255,0.07)",paddingTop:24,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12}}>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>© 2026 SmartPrice.be · Data: Energy-Charts.info · Elia Open Data (CC BY 4.0) · Updated every 15 min</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>🇧🇪 Built for Belgium</div>
+          </div>
         </div>
       </div>
 
