@@ -16,7 +16,7 @@
 | Securex | Fleet & Mobility | fleet@securex.be | nl |
 | Liantis | HR team | info@liantis.be | nl |
 | Partena Professional | Mobility team | info@partena.be | fr |
-| Group S | HR team | info@groups.be | fr |
+| Group S | HR team | info@group-s.be | fr |
 | Xerius | Fleet team | info@xerius.be | nl |
 | UCM | HR team | info@ucm.be | fr |
 
@@ -30,8 +30,8 @@
 |---|---|---|---|
 | DKV Mobility Belgium | Fleet team | be@dkv-mobility.com | nl |
 | UTA Belgium | Fleet team | belgium@uta.com | nl |
-| Velocity (Fleetcor) | Fleet team | info@velocity.be | nl |
-| Enroute Belgium | EV card team | info@enroute.be | nl |
+| Velocity / Wex Europe | Fleet team | fleet.belgium@wexeurope.com | nl |
+| ~~Enroute Belgium~~ | ~~no confirmed domain~~ | ~~skip~~ | — |
 
 ---
 
@@ -48,7 +48,7 @@
 | SEAT/Cupra Belgium | Fleet team | fleet@seat.be | nl |
 | Polestar Belgium | Fleet team | fleet.be@polestar.com | en |
 | Nissan Belgium | Fleet team | fleet@nissan.be | en |
-| BYD Europe Belgium | Fleet team | fleet.belgium@byd.com | en ⚠️ |
+| BYD Europe Belgium | Fleet team | fleet@byd-europe.com | en |
 
 ---
 
@@ -58,8 +58,9 @@
 |---|---|---|---|
 | Belfius Lease | Fleet team | lease@belfius.be | nl |
 | ING Car Lease Belgium | Fleet team | info@ingcarlease.be | nl |
-| Free2Move Lease (Stellantis) | Fleet team | contact@free2move-lease.be | fr ⚠️ |
-| Nordex Lease | Fleet team | info@nordexlease.be | nl ⚠️ |
+| Free2Move Lease (Stellantis) | Fleet team | fleet@free2move.com | fr |
+| ~~Nordex Lease~~ | ~~domain dead~~ | ~~skip~~ | — |
+| ~~ING Car Lease~~ | ~~exited Belgian leasing~~ | ~~skip~~ | — |
 
 ---
 

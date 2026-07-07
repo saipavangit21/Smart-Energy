@@ -367,8 +367,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           <span style={{color:"#FCD34D"}}>{L.heroNew||"Is now a good time to charge your EV?"}</span>
         </h1>
 
+        {/* Tagline */}
+        <div className="sp-animate sp-delay-2" style={{fontSize:"clamp(18px,2.2vw,26px)",fontWeight:800,color:"rgba(255,255,255,0.95)",marginBottom:16,letterSpacing:"-0.5px"}}>
+          {L.heroTagline||"Charge smart. Pay less."}
+        </div>
+
         {/* Subtitle */}
-        <p className="sp-animate sp-delay-2" style={{fontSize:"clamp(16px,2vw,20px)",color:"rgba(255,255,255,0.85)",maxWidth:540,margin:"0 auto 40px",lineHeight:1.7,fontWeight:400}}>
+        <p className="sp-animate sp-delay-2" style={{fontSize:"clamp(16px,2vw,20px)",color:"rgba(255,255,255,0.75)",maxWidth:540,margin:"0 auto 40px",lineHeight:1.7,fontWeight:400}}>
           {L.heroSubNew||"Live EPEX Spot Belgium — see today's cheapest charging window, compare 7 suppliers, and get daily alerts. Free forever."}
         </p>
 

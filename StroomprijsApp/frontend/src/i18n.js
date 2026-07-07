@@ -275,6 +275,7 @@ export const translations = {
       urgencyLater: "Today's cheapest: {time} · €{price}/MWh",
       // v9 enterprise hero
       heroNew: "See the cheapest hour to use electricity.",
+      heroTagline: "Charge smart. Pay less.",
       heroSubNew: "Save on EV charging, heat pumps, and appliances using live Belgian EPEX prices.",
       ctaPersonal: "See Today's Cheapest Hours →",
       ctaCorporate: "Start Free →",
@@ -538,6 +539,7 @@ export const translations = {
       urgencySoon: "⚡ Goedkoopste venster begint over {x} — maak je klaar",
       urgencyLater: "Goedkoopste vandaag: {time} · €{price}/MWh",
       heroNew: "Zie het goedkoopste uur voor elektriciteit.",
+      heroTagline: "Slim opladen. Minder betalen.",
       heroSubNew: "Bespaar op EV-opladen, warmtepompen en apparaten met live Belgische EPEX-prijzen.",
       ctaPersonal: "Zie vandaag de goedkoopste uren →",
       ctaCorporate: "Gratis starten →",
@@ -766,6 +768,7 @@ export const translations = {
       urgencySoon: "⚡ La fenêtre la moins chère commence dans {x} — préparez-vous",
       urgencyLater: "La moins chère aujourd'hui : {time} · €{price}/MWh",
       heroNew: "Trouvez l'heure la moins chère pour l'électricité.",
+      heroTagline: "Chargez malin. Payez moins.",
       heroSubNew: "Économisez sur la recharge VE, les pompes à chaleur et les appareils grâce aux prix EPEX belges en direct.",
       ctaPersonal: "Voir les heures les moins chères →",
       ctaCorporate: "Commencer gratuitement →",
