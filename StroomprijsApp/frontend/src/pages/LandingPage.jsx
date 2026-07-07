@@ -863,11 +863,11 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
               {L.ctaStripSub||"See Belgium's cheapest electricity hour — free, no account needed."}
             </div>
           </div>
-          <button onClick={()=>toolsRef.current?.scrollIntoView({behavior:"smooth"})} style={{flexShrink:0,border:"none",cursor:"pointer",background:"linear-gradient(135deg,#15803D,#16A34A)",color:"#fff",padding:"14px 32px",borderRadius:40,fontWeight:800,fontSize:15,boxShadow:"0 6px 24px rgba(22,163,74,0.35)",whiteSpace:"nowrap",transition:"transform 0.15s,box-shadow 0.15s"}}
-            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 10px 32px rgba(22,163,74,0.45)";}}
-            onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="0 6px 24px rgba(22,163,74,0.35)";}}>
-            {L.ctaStripBtn||"See today's prices →"}
-          </button>
+          <a href="/business" style={{flexShrink:0,display:"inline-block",textDecoration:"none",background:"linear-gradient(135deg,#1E40AF,#2563EB)",color:"#fff",padding:"14px 32px",borderRadius:40,fontWeight:800,fontSize:15,boxShadow:"0 6px 24px rgba(37,99,235,0.35)",whiteSpace:"nowrap",transition:"transform 0.15s,box-shadow 0.15s"}}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 10px 32px rgba(37,99,235,0.45)";}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="0 6px 24px rgba(37,99,235,0.35)";}}>
+            {L.ctaStripBtn||"Free Fleet Audit →"}
+          </a>
         </div>
       </div>
 
