@@ -367,6 +367,66 @@ export default function BusinessPage({ onNavigate }) {
       {/* Dark-to-light gradient bridge */}
       <div style={{ height: 60, background: "linear-gradient(180deg, #0F172A 0%, #F8FAFC 100%)" }} />
 
+      {/* ── PRODUCT PICKER ────────────────────────────────────────── */}
+      <div style={{ background: "#F0F7FF", borderBottom: "1px solid rgba(0,0,0,0.07)", padding: "64px 32px 72px" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 52 }}>
+            <h2 style={{ fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 900, color: C.text, letterSpacing: "-0.6px", lineHeight: 1.2 }}>
+              Choose the tool that <span style={{ color: "#2563EB" }}>fits your needs</span>
+            </h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 28 }}>
+            {[
+              {
+                iconBg: "linear-gradient(135deg,#0D7490,#06B6D4)",
+                icon: "⚡",
+                color: "#0891B2",
+                title: "Session Calculator",
+                desc: "Calculate the real EPEX cost per charging session. See exactly what each driver spent vs. the flat CREG rate — per session, per month.",
+                cta: "Try calculator →",
+                href: "/session-calc",
+                onClick: null,
+              },
+              {
+                iconBg: "linear-gradient(135deg,#15803D,#22C55E)",
+                icon: "🔍",
+                color: "#16A34A",
+                title: "Free Fleet Audit",
+                desc: "Enter your fleet size and usage. Get a CIR 92-compliant audit in 2 minutes showing exactly how much your company overpays — no signup needed.",
+                cta: "Get free audit →",
+                href: "/fleet-audit",
+                onClick: null,
+              },
+              {
+                iconBg: "linear-gradient(135deg,#B45309,#F59E0B)",
+                icon: "📋",
+                color: "#D97706",
+                title: "Request Full Audit",
+                desc: "Need a complete session-by-session breakdown ready for your social secretariat? Our team handles it end-to-end with your actual charging data.",
+                cta: "Request audit →",
+                href: null,
+                onClick: () => setShowModal(true),
+              },
+            ].map((p, i) => (
+              <div key={i}
+                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 24, padding: "36px 28px", display: "flex", flexDirection: "column", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", cursor: "pointer", transition: "transform 0.15s,box-shadow 0.15s" }}
+                onClick={p.href ? () => window.location.href = p.href : p.onClick}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 36px rgba(0,0,0,0.11)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.06)"; }}>
+                <div style={{ width: 68, height: 68, borderRadius: "50%", background: p.iconBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, marginBottom: 22, boxShadow: `0 8px 20px ${p.color}30` }}>
+                  {p.icon}
+                </div>
+                <div style={{ fontSize: 19, fontWeight: 900, color: C.text, marginBottom: 12, letterSpacing: "-0.3px" }}>{p.title}</div>
+                <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.8, flex: 1, marginBottom: 22 }}>{p.desc}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: p.color, display: "flex", alignItems: "center", gap: 4 }}>
+                  {p.cta} <span style={{ fontSize: 16 }}>›</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "8px 32px 80px" }}>
 
         {/* ── GLOSSARY — plain-language anchor ──────────────────────── */}
