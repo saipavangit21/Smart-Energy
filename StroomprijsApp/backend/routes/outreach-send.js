@@ -43,6 +43,40 @@ const PRESET_CONTACTS = [
   { to: "steven.schurmann@astara.com",               name: "Steven",       company: "Hyundai Belgium / Astara",      lang: "en" },
 ];
 
+// ── Social Secretariats + Fleet Software — API integration pitch ──────────
+const SECRETARIAT_CONTACTS = [
+  { to: "mobility@sdworx.be",          name: "Mobility Team",    company: "SD Worx",                        lang: "nl", type: "secretariat" },
+  { to: "info@acerta.be",              name: "Solutions Team",   company: "Acerta",                         lang: "nl", type: "secretariat" },
+  { to: "fleet@securex.be",            name: "Fleet Team",       company: "Securex",                        lang: "nl", type: "secretariat" },
+  { to: "info@liantis.be",             name: "HR Team",          company: "Liantis",                        lang: "nl", type: "secretariat" },
+  { to: "info@partena.be",             name: "Mobility Team",    company: "Partena Professional",           lang: "fr", type: "secretariat" },
+  { to: "info@group-s.be",             name: "HR Team",          company: "Group S",                        lang: "fr", type: "secretariat" },
+  { to: "info@xerius.be",              name: "Fleet Team",       company: "Xerius",                         lang: "nl", type: "secretariat" },
+  { to: "info@ucm.be",                 name: "HR Team",          company: "UCM",                            lang: "fr", type: "secretariat" },
+  // Fleet management software — same API integration pitch
+  { to: "info@sofico.com",             name: "Partnerships Team",company: "Sofico",                         lang: "nl", type: "secretariat" },
+  { to: "info.be@webfleet.com",        name: "Fleet Team",       company: "Webfleet Solutions Belgium",     lang: "en", type: "secretariat" },
+  { to: "belgium@geotab.com",          name: "Fleet Team",       company: "Geotab Belgium",                 lang: "en", type: "secretariat" },
+];
+
+// ── Expanded fleet — new OEMs + leasing + fleet card (CIR 92 audit pitch) ─
+const EXPANDED_FLEET_CONTACTS = [
+  { to: "fleet.belgium@ford.com",       name: "Fleet Team", company: "Ford Belgium",          lang: "nl", type: "expanded_fleet" },
+  { to: "fleet@peugeot.be",             name: "Fleet Team", company: "Peugeot Belgium",       lang: "fr", type: "expanded_fleet" },
+  { to: "fleet@citroen.be",             name: "Fleet Team", company: "Citroën Belgium",       lang: "fr", type: "expanded_fleet" },
+  { to: "fleet@opel.be",                name: "Fleet Team", company: "Opel Belgium",          lang: "nl", type: "expanded_fleet" },
+  { to: "fleet@skoda.be",               name: "Fleet Team", company: "Skoda Belgium",         lang: "nl", type: "expanded_fleet" },
+  { to: "fleet@seat.be",                name: "Fleet Team", company: "SEAT/Cupra Belgium",    lang: "nl", type: "expanded_fleet" },
+  { to: "fleet.be@polestar.com",        name: "Fleet Team", company: "Polestar Belgium",      lang: "en", type: "expanded_fleet" },
+  { to: "fleet@nissan.be",              name: "Fleet Team", company: "Nissan Belgium",        lang: "en", type: "expanded_fleet" },
+  { to: "fleet@byd-europe.com",         name: "Fleet Team", company: "BYD Europe Belgium",    lang: "en", type: "expanded_fleet" },
+  { to: "lease@belfius.be",             name: "Fleet Team", company: "Belfius Lease",         lang: "nl", type: "expanded_fleet" },
+  { to: "fleet@free2move.com",          name: "Fleet Team", company: "Free2Move Lease",       lang: "fr", type: "expanded_fleet" },
+  { to: "be@dkv-mobility.com",          name: "Fleet Team", company: "DKV Mobility Belgium",  lang: "nl", type: "expanded_fleet" },
+  { to: "belgium@uta.com",              name: "Fleet Team", company: "UTA Belgium",           lang: "nl", type: "expanded_fleet" },
+  { to: "fleet.belgium@wexeurope.com",  name: "Fleet Team", company: "WEX Europe Belgium",    lang: "nl", type: "expanded_fleet" },
+];
+
 function buildHtml(name, company, lang) {
   const content = {
     nl: {
@@ -268,6 +302,112 @@ function buildFollowUpHtml(name, company, lang) {
 </body></html>`;
 }
 
+// ── Social Secretariat / API integration email (NL · FR · EN) ───────────────
+function buildSecretariatHtml(name, company, lang) {
+  const t = {
+    nl: {
+      greeting: `Dag ${name}`,
+      intro: `Ik ben de oprichter van SmartPrice.be — een gratis Belgisch platform dat live EPEX Spot-prijzen beschikbaar maakt voor gezinnen, EV-rijders en bedrijfsvloten.`,
+      intro2: `Ik contacteer ${company} omdat u voor duizenden Belgische werkgevers de CIR 92-vergoeding voor thuisladen verwerkt — en we denken dat we dat proces samen nauwkeuriger en auditproof kunnen maken.`,
+      problemTitle: "Het probleem van uw klanten vandaag",
+      problem: `Bedrijven die thuisladen vergoeden op basis van het vaste CREG-kwartaaltarief voldoen strikt genomen niet aan CIR 92. De wet vereist de <strong>werkelijke energiekost op het moment van laden</strong>. Een vast tarief is een benadering — maar geen aantoonbaar correcte berekening, en het levert geen auditspoor op voor de belastingdienst.`,
+      solutionTitle: "Wat SmartPrice.be kan toevoegen",
+      solution: `Onze gratis publieke API levert elke 15 minuten de werkelijke EPEX Spot-prijs per kWh voor België — waardoor het voor het eerst technisch mogelijk wordt om elke laadsessie te koppelen aan de exacte marktprijs: <strong>volledig CIR 92-conform en controleerbaar</strong>.`,
+      collab: "Mogelijke samenwerking:",
+      b1: "Uw klanten sturen laadsessiedata (datum, uur, kWh) → wij leveren de EPEX-prijs → u berekent de exacte vergoeding",
+      b2: "White-label of API-integratie in uw verloningstool of klantportaal",
+      b3: "Gezamenlijke communicatie naar uw klantenbase over CIR 92-compliance",
+      ctaDesc: "De API is gratis, gedocumenteerd en al live.",
+      ctaBtn: "API-documentatie bekijken →",
+      ps: "Ik plan graag een gesprek van 20 minuten met iemand van uw product- of partnerteam.",
+      closing: "Met vriendelijke groet",
+      unsubscribe: "Antwoord op deze e-mail om u af te melden.",
+    },
+    fr: {
+      greeting: `Bonjour ${name}`,
+      intro: `Je suis le fondateur de SmartPrice.be — une plateforme belge gratuite qui rend les prix EPEX Spot en direct accessibles aux ménages, conducteurs VE et flottes d'entreprise.`,
+      intro2: `Je contacte ${company} parce que vous traitez le remboursement CIR 92 de la recharge à domicile pour des milliers d'employeurs belges — et nous pensons pouvoir rendre ce processus plus précis et auditable ensemble.`,
+      problemTitle: "Le problème que vivent vos clients aujourd'hui",
+      problem: `Les entreprises remboursant la recharge à domicile au tarif fixe CREG ne respectent pas strictement le CIR 92. La loi exige le <strong>coût énergétique réel au moment de la recharge</strong>. Un tarif fixe est une approximation — pas un calcul démontrablement correct, et il ne laisse aucune piste d'audit pour l'administration fiscale.`,
+      solutionTitle: "Ce que SmartPrice.be peut apporter",
+      solution: `Notre API publique gratuite fournit le prix EPEX Spot réel par kWh pour la Belgique toutes les 15 minutes — rendant possible, pour la première fois, de lier chaque session au prix exact du marché : <strong>entièrement conforme CIR 92 et vérifiable</strong>.`,
+      collab: "Collaboration envisageable :",
+      b1: "Vos clients envoient les données de session (date, heure, kWh) → nous fournissons le prix EPEX → vous calculez le remboursement exact",
+      b2: "Intégration API ou white-label dans votre outil de paie ou portail client",
+      b3: "Communication conjointe à votre clientèle sur la conformité CIR 92",
+      ctaDesc: "L'API est gratuite, documentée et déjà en production.",
+      ctaBtn: "Voir la documentation API →",
+      ps: "Je serais ravi d'échanger 20 minutes avec votre équipe produit ou partenariats.",
+      closing: "Cordialement",
+      unsubscribe: "Répondez à cet e-mail pour vous désabonner.",
+    },
+    en: {
+      greeting: `Hi ${name}`,
+      intro: `I'm the founder of SmartPrice.be — a free Belgian platform delivering live EPEX Spot electricity prices to households, EV drivers, and company fleets.`,
+      intro2: `I'm reaching out to ${company} because you process CIR 92 home-charging reimbursements for thousands of Belgian employers — and we think we can make that process more accurate and audit-ready together.`,
+      problemTitle: "The problem your clients have today",
+      problem: `Companies reimbursing home charging at the fixed quarterly CREG rate are, strictly speaking, not fully compliant with CIR 92. The law requires the <strong>actual energy cost at the moment of charging</strong>. A fixed rate is an approximation — not a demonstrably correct calculation, and it leaves no audit trail for the tax authority.`,
+      solutionTitle: "What SmartPrice.be can add",
+      solution: `Our free public API delivers the actual EPEX Spot price per kWh for Belgium every 15 minutes — making it possible for the first time to link each charging session to the exact market price at that moment: <strong>fully CIR 92-compliant and verifiable</strong>.`,
+      collab: "Possible collaboration:",
+      b1: "Your clients send session data (date, hour, kWh) → we supply the EPEX price → you calculate the exact reimbursement",
+      b2: "API or white-label integration into your payroll tool or client portal",
+      b3: "Joint communication to your client base about CIR 92 compliance",
+      ctaDesc: "The API is free, documented, and already live.",
+      ctaBtn: "View API documentation →",
+      ps: "I'd love 20 minutes with someone from your product or partnerships team.",
+      closing: "Best regards",
+      unsubscribe: "Reply to this email to unsubscribe.",
+    },
+  };
+  const c = t[lang] || t.en;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:'Segoe UI',Arial,sans-serif;">
+<div style="max-width:580px;margin:0 auto;padding:32px 16px;">
+  <div style="text-align:center;margin-bottom:28px;">
+    <div style="display:inline-flex;align-items:center;gap:10px;background:#EFF6FF;border:1px solid rgba(30,64,175,0.15);border-radius:30px;padding:8px 20px;">
+      <span style="font-size:20px;">🇧🇪</span>
+      <span style="font-weight:900;font-size:18px;color:#1E3A8A;letter-spacing:-0.5px;">SmartPrice</span>
+      <span style="font-size:11px;font-weight:700;color:#0891B2;background:#ECFEFF;border-radius:20px;padding:2px 10px;">API · Partnerships</span>
+    </div>
+  </div>
+  <div style="background:#fff;border-radius:20px;border:1px solid rgba(0,0,0,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.06);padding:36px;">
+    <p style="font-size:16px;font-weight:700;color:#0F172A;margin:0 0 12px;">${c.greeting},</p>
+    <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 6px;">${c.intro}</p>
+    <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 24px;">${c.intro2}</p>
+    <div style="background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.15);border-radius:14px;padding:20px 24px;margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">❌ ${c.problemTitle}</div>
+      <p style="font-size:13px;color:#475569;line-height:1.8;margin:0;">${c.problem}</p>
+    </div>
+    <div style="background:rgba(8,145,178,0.05);border:1px solid rgba(8,145,178,0.2);border-radius:14px;padding:20px 24px;margin-bottom:24px;">
+      <div style="font-size:11px;font-weight:800;color:#0891B2;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">📡 ${c.solutionTitle}</div>
+      <p style="font-size:13px;color:#475569;line-height:1.8;margin:0 0 12px;">${c.solution}</p>
+      <div style="font-size:12px;font-weight:700;color:#0F172A;margin-bottom:8px;">${c.collab}</div>
+      <ul style="font-size:12px;color:#475569;line-height:1.9;margin:0;padding-left:16px;">
+        <li>${c.b1}</li><li>${c.b2}</li><li>${c.b3}</li>
+      </ul>
+    </div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <p style="font-size:13px;color:#475569;margin:0 0 16px;">${c.ctaDesc}</p>
+      <a href="https://smartprice.be/api-docs" style="display:inline-block;background:linear-gradient(135deg,#0D7490,#06B6D4);color:#fff;text-decoration:none;padding:14px 36px;border-radius:30px;font-weight:800;font-size:15px;box-shadow:0 6px 20px rgba(8,145,178,0.3);">${c.ctaBtn}</a>
+    </div>
+    <p style="font-size:13px;color:#94A3B8;line-height:1.7;margin:0 0 20px;">${c.ps}</p>
+    <p style="font-size:14px;color:#475569;margin:0;">${c.closing},<br><strong style="color:#0F172A;">SmartPrice</strong><br><span style="color:#94A3B8;font-size:13px;">info@smartprice.be · smartprice.be/api-docs</span></p>
+  </div>
+  <div style="text-align:center;color:#94A3B8;font-size:11px;margin-top:24px;line-height:1.8;">
+    <div>SmartPrice.be · Belgium · GDPR Compliant · EU Hosted</div>
+    <div style="margin-top:6px;">${c.unsubscribe}</div>
+  </div>
+</div>
+</body></html>`;
+}
+
+function subjectSecretariat(company, lang) {
+  if (lang === "nl") return `CIR 92 thuisladen: live EPEX-data rechtstreeks in uw verloning — SmartPrice.be`;
+  if (lang === "fr") return `CIR 92 recharge domicile : données EPEX en direct dans votre traitement salarial`;
+  return `CIR 92 home charging: live EPEX data for your payroll processing — SmartPrice.be`;
+}
+
 // ── Fluvius waitlist update email (NL) ───────────────────────────────────────
 const FLUVIUS_WAITLIST_CONTACTS = [
   { to: "danny.maesen@telenet.be",        name: "Danny"   },
@@ -352,14 +492,18 @@ async function sendFluviusUpdate({ to, name }) {
   return { to, name, status: "sent" };
 }
 
-async function sendOne({ to, name, company, lang, followUp = false, finalTouch = false }) {
-  const html = finalTouch ? buildFinalTouchHtml(name, company, lang)
-             : followUp   ? buildFollowUpHtml(name, company, lang)
-             :               buildHtml(name, company, lang);
-  const sub  = subject(company, lang, followUp, finalTouch);
-  const tag  = finalTouch ? "fleet_finaltouch_jun2026"
-             : followUp   ? "fleet_followup_jun2026"
-             :               "fleet_outreach_jun2026";
+async function sendOne({ to, name, company, lang, followUp = false, finalTouch = false, type = "fleet" }) {
+  const html = type === "secretariat" ? buildSecretariatHtml(name, company, lang)
+             : finalTouch             ? buildFinalTouchHtml(name, company, lang)
+             : followUp               ? buildFollowUpHtml(name, company, lang)
+             :                          buildHtml(name, company, lang);
+  const sub  = type === "secretariat" ? subjectSecretariat(company, lang)
+             :                          subject(company, lang, followUp, finalTouch);
+  const tag  = type === "secretariat"   ? "secretariat_outreach_jul2026"
+             : type === "expanded_fleet" ? "fleet_expanded_jul2026"
+             : finalTouch               ? "fleet_finaltouch_jun2026"
+             : followUp                 ? "fleet_followup_jun2026"
+             :                            "fleet_outreach_jun2026";
   await axiosHttp.post("https://api.resend.com/emails", {
     from: FROM, to, subject: sub, html,
     reply_to: "info@smartprice.be",
@@ -407,7 +551,11 @@ router.post("/", async (req, res) => {
     return res.json({ success: true, total: list.length, sent: sent.length, failed: failed.length, results: { sent, failed } });
   }
 
-  const list = contacts || (preset === "all" ? PRESET_CONTACTS : []);
+  const list = contacts
+    || (preset === "all"            ? PRESET_CONTACTS          : null)
+    || (preset === "secretariat"    ? SECRETARIAT_CONTACTS     : null)
+    || (preset === "expanded_fleet" ? EXPANDED_FLEET_CONTACTS  : null)
+    || [];
 
   if (!list.length) {
     return res.status(400).json({ success: false, error: "No contacts. Pass contacts[] or preset:'all'|'fluvius_waitlist'" });
