@@ -366,7 +366,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
         {/* Headline */}
         <h1 className="sp-animate sp-delay-1" style={{fontSize:"clamp(36px,6vw,78px)",fontWeight:900,lineHeight:1.08,margin:"0 auto 24px",maxWidth:860,letterSpacing:"-2.5px",color:"#fff",textShadow:"0 2px 40px rgba(0,0,0,0.15)"}}>
-          <span style={{color:"#FCD34D"}}>{L.heroNew||"Belgian electricity is 10× cheaper at night than at peak."}</span>
+          <span style={{color:"#FCD34D"}}>{L.heroNew||"Belgian electricity prices swing up to 10× within the same day."}</span>
         </h1>
 
         {/* Tagline */}
