@@ -77,109 +77,62 @@ const EXPANDED_FLEET_CONTACTS = [
 ];
 
 function buildHtml(name, company, lang) {
-  const content = {
+  const t = {
     nl: {
-      greeting: `Dag ${name}`,
-      intro: `Ik ben de oprichter van SmartPrice.be. Ik contacteer u omdat de meeste Belgische bedrijven — waarschijnlijk ook ${company} — te veel betalen voor de thuislaadvergoeding van hun EV-rijders, zonder het te weten.`,
-      problemTitle: "Het probleem",
-      problem: `De meeste bedrijven vergoeden thuisladen op basis van het vaste CREG-kwartaaltarief. Dat klinkt eerlijk, maar de wet (CIR 92) vereist dat de vergoeding de <strong>werkelijke kosten op het moment van laden</strong> weerspiegelt. Een vast gemiddeld tarief voldoet daar niet aan — en levert geen controleerbaar auditspoor op voor het sociaal secretariaat.`,
-      solutionTitle: "Wat SmartPrice doet",
-      solution: `Wij koppelen live EPEX Spot-prijzen aan de laadsessies van de medewerkers van uw klanten. Elke vergoeding is berekend op de werkelijke marktprijs — CIR 92-conform, exporteerbaar naar SD Worx, Securex, Partena of Acerta.`,
-      ctaText: "Gratis vlootaudit",
-      ctaDesc: "In minder dan 2 minuten berekenen wij hoeveel een wagenpark overbetaalt op het huidige CREG-tarief.",
-      closing: "Met vriendelijke groet",
-      unsubscribe: "Antwoord op deze e-mail om u af te melden.",
+      p1: `Ik ben Sai, oprichter van SmartPrice.be. Korte vraag voor u.`,
+      p2: `De meeste Belgische bedrijven vergoeden thuisladen op basis van het vaste CREG-kwartaaltarief — momenteel rond €0,24/kWh. Dat klinkt eerlijk, maar de Belgische elektriciteitsprijs schommelt van €0,04 tot €0,48/kWh binnen dezelfde dag. Sommige medewerkers ontvangen daardoor meer terug dan ze betaald hebben, anderen minder.`,
+      p3: `Fiscaal-juridisch vereist CIR 92 dat de vergoeding de werkelijke kost op het laadmoment weerspiegelt. Een vast gemiddelde voldoet daar niet aan — en het fiscale risico ligt bij de werkgever.`,
+      p4: `Wij bouwden een gratis vlootaudit op <a href="https://smartprice.be/fleet-audit" style="color:#15803D;">smartprice.be/fleet-audit</a> die in 2 minuten toont hoeveel het wagenpark van ${company} waarschijnlijk overbetaalt. Geen account nodig.`,
+      ask: `Is dat het bekijken waard?`,
+      sig: `Sai`,
+      unsub: `Antwoord op deze e-mail om u af te melden.`,
     },
     fr: {
-      greeting: `Bonjour ${name}`,
-      intro: `Je suis le fondateur de SmartPrice.be. Je vous contacte parce que la plupart des entreprises belges — probablement aussi ${company} — sur-paient le remboursement de recharge à domicile de leurs conducteurs VE, sans en être conscientes.`,
-      problemTitle: "Le problème",
-      problem: `La plupart des entreprises remboursent la recharge à domicile sur la base du tarif trimestriel fixe CREG. Cela paraît équitable, mais la loi belge (CIR 92) exige que le remboursement reflète le <strong>coût réel au moment de la recharge</strong>. Un tarif moyen fixe ne satisfait pas cette exigence — et ne fournit pas de piste d'audit vérifiable pour le secrétariat social.`,
-      solutionTitle: "Ce que fait SmartPrice",
-      solution: `Nous relions les prix EPEX Spot en direct aux sessions de recharge des employés de vos clients. Chaque remboursement est calculé au prix de marché réel — conforme CIR 92, exportable vers SD Worx, Securex, Partena ou Acerta.`,
-      ctaText: "Audit flotte gratuit",
-      ctaDesc: "En moins de 2 minutes, nous calculons combien une flotte sur-paie sur le tarif CREG actuel.",
-      closing: "Cordialement",
-      unsubscribe: "Répondez à cet e-mail pour vous désabonner.",
+      p1: `Je suis Sai, fondateur de SmartPrice.be. Une courte question pour vous.`,
+      p2: `La plupart des entreprises belges remboursent la recharge à domicile sur la base du tarif trimestriel CREG fixe — actuellement environ €0,24/kWh. Cela paraît équitable, mais le prix de l'électricité en Belgique varie de €0,04 à €0,48/kWh dans la même journée. Certains employés reçoivent donc plus que ce qu'ils ont réellement payé, d'autres moins.`,
+      p3: `Sur le plan fiscal, la loi belge (CIR 92) exige que le remboursement reflète le coût réel au moment de la recharge. Un tarif moyen fixe ne satisfait pas cette exigence — et le risque fiscal repose sur l'employeur.`,
+      p4: `Nous avons créé un audit gratuit sur <a href="https://smartprice.be/fleet-audit" style="color:#15803D;">smartprice.be/fleet-audit</a> qui montre en 2 minutes combien la flotte de ${company} sur-paie probablement. Sans inscription.`,
+      ask: `Cela vaut-il le coup d'œil ?`,
+      sig: `Sai`,
+      unsub: `Répondez à cet e-mail pour vous désabonner.`,
     },
     en: {
-      greeting: `Hi ${name}`,
-      intro: `I'm the founder of SmartPrice.be. I'm reaching out because most Belgian companies — likely ${company} too — are unknowingly overpaying for employee EV home-charging reimbursements.`,
-      problemTitle: "The problem",
-      problem: `Belgian companies typically reimburse home charging using the fixed quarterly CREG reference rate. It sounds fair, but Belgian tax law (CIR 92) requires reimbursements to reflect the <strong>actual cost at the moment of charging</strong>. A fixed average doesn't satisfy that requirement — and leaves no verifiable audit trail for social secretariaten.`,
-      solutionTitle: "What SmartPrice does",
-      solution: `We connect live EPEX Spot market prices to each employee charging session. Every reimbursement is calculated at the real market rate — CIR 92-compliant and exportable to SD Worx, Securex, Partena, or Acerta.`,
-      ctaText: "Free fleet audit",
-      ctaDesc: "In under 2 minutes, we calculate exactly how much a fleet is overpaying versus real EPEX market costs.",
-      closing: "Best regards",
-      unsubscribe: "Reply to this email to unsubscribe.",
+      p1: `I'm Sai, founder of SmartPrice.be. One quick question for you.`,
+      p2: `Most Belgian companies reimburse employee EV home-charging using the fixed CREG quarterly rate — currently around €0.24/kWh. That sounds fair, but Belgium's actual electricity price swings from €0.04 to €0.48/kWh within the same day. That means some employees get reimbursed more than they paid, others less.`,
+      p3: `Belgian tax law (CIR 92) requires reimbursements to reflect the actual cost at the moment of charging. A fixed average doesn't satisfy that — and the fiscal risk sits with the employer.`,
+      p4: `We built a free fleet audit at <a href="https://smartprice.be/fleet-audit" style="color:#15803D;">smartprice.be/fleet-audit</a> that shows in 2 minutes how much ${company}'s fleet is likely overpaying. No account needed.`,
+      ask: `Worth a look?`,
+      sig: `Sai`,
+      unsub: `Reply to unsubscribe.`,
     },
   };
 
-  const t = content[lang] || content.en;
+  const c = t[lang] || t.en;
+  const greeting = lang === "nl" ? `Dag ${name}` : lang === "fr" ? `Bonjour ${name}` : `Hi ${name}`;
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F8FAFC;font-family:'Segoe UI',Arial,sans-serif;">
-<div style="max-width:580px;margin:0 auto;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#ffffff;font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;">
+<div style="max-width:560px;margin:0 auto;padding:40px 28px;">
 
-  <!-- Header -->
-  <div style="text-align:center;margin-bottom:28px;">
-    <div style="display:inline-flex;align-items:center;gap:10px;background:#EFF6FF;border:1px solid rgba(30,64,175,0.15);border-radius:30px;padding:8px 20px;">
-      <span style="font-size:20px;">🇧🇪</span>
-      <span style="font-weight:900;font-size:18px;color:#1E3A8A;letter-spacing:-0.5px;">SmartPrice</span>
-      <span style="font-size:11px;font-weight:700;color:#1E40AF;background:#DBEAFE;border-radius:20px;padding:2px 10px;">Business</span>
-    </div>
-  </div>
+  <p style="font-size:15px;line-height:1.7;margin:0 0 22px;">${greeting},</p>
 
-  <!-- Card -->
-  <div style="background:#fff;border-radius:20px;border:1px solid rgba(0,0,0,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.06);padding:36px;">
+  <p style="font-size:15px;line-height:1.7;margin:0 0 18px;">${c.p1}</p>
 
-    <p style="font-size:16px;font-weight:700;color:#0F172A;margin:0 0 16px;">${t.greeting},</p>
-    <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 24px;">${t.intro}</p>
+  <p style="font-size:15px;line-height:1.7;margin:0 0 18px;">${c.p2}</p>
 
-    <!-- Problem box -->
-    <div style="background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.15);border-radius:14px;padding:20px 24px;margin-bottom:20px;">
-      <div style="font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">❌ ${t.problemTitle}</div>
-      <p style="font-size:13px;color:#475569;line-height:1.8;margin:0;">${t.problem}</p>
-    </div>
+  <p style="font-size:15px;line-height:1.7;margin:0 0 18px;">${c.p3}</p>
 
-    <!-- Solution box -->
-    <div style="background:rgba(22,163,74,0.04);border:1px solid rgba(22,163,74,0.18);border-radius:14px;padding:20px 24px;margin-bottom:24px;">
-      <div style="font-size:11px;font-weight:800;color:#16A34A;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">✅ ${t.solutionTitle}</div>
-      <p style="font-size:13px;color:#475569;line-height:1.8;margin:0;">${t.solution}</p>
-    </div>
+  <p style="font-size:15px;line-height:1.7;margin:0 0 22px;">${c.p4}</p>
 
-    <!-- Stats row -->
-    <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:120px;background:#F0FDF4;border:1px solid rgba(22,163,74,0.2);border-radius:12px;padding:14px;text-align:center;">
-        <div style="font-size:22px;font-weight:900;color:#16A34A;">€300–500</div>
-        <div style="font-size:11px;color:#475569;margin-top:4px;">overpayment per EV/year on CREG</div>
-      </div>
-      <div style="flex:1;min-width:120px;background:#FFFBEB;border:1px solid rgba(217,119,6,0.2);border-radius:12px;padding:14px;text-align:center;">
-        <div style="font-size:22px;font-weight:900;color:#D97706;">CIR 92</div>
-        <div style="font-size:11px;color:#475569;margin-top:4px;">Belgian tax law compliance</div>
-      </div>
-      <div style="flex:1;min-width:120px;background:#EFF6FF;border:1px solid rgba(30,64,175,0.15);border-radius:12px;padding:14px;text-align:center;">
-        <div style="font-size:22px;font-weight:900;color:#1E40AF;">Free</div>
-        <div style="font-size:11px;color:#475569;margin-top:4px;">fleet audit · no signup needed</div>
-      </div>
-    </div>
+  <p style="font-size:15px;line-height:1.7;margin:0 0 32px;">${c.ask}</p>
 
-    <!-- CTA -->
-    <div style="text-align:center;margin-bottom:8px;">
-      <p style="font-size:13px;color:#475569;margin:0 0 16px;">${t.ctaText} — ${t.ctaDesc}</p>
-      <a href="https://smartprice.be/fleet-audit" style="display:inline-block;background:linear-gradient(135deg,#15803D,#16A34A);color:#fff;text-decoration:none;padding:14px 36px;border-radius:30px;font-weight:800;font-size:15px;box-shadow:0 6px 20px rgba(22,163,74,0.3);">
-        smartprice.be/fleet-audit →
-      </a>
-    </div>
+  <p style="font-size:15px;line-height:1.8;margin:0 0 40px;">${c.sig}<br>
+  <span style="color:#555;">SmartPrice.be</span><br>
+  <a href="mailto:info@smartprice.be" style="color:#555;text-decoration:none;">info@smartprice.be</a>
+  </p>
 
-  </div>
-
-  <!-- Footer -->
-  <div style="text-align:center;color:#94A3B8;font-size:11px;margin-top:24px;line-height:1.8;">
-    <div>SmartPrice.be · Belgium · GDPR Compliant · EU Hosted</div>
-    <div style="margin-top:6px;">${t.unsubscribe}</div>
-  </div>
+  <hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 16px;">
+  <p style="font-size:11px;color:#aaa;margin:0;">${c.unsub}</p>
 
 </div>
 </body></html>`;

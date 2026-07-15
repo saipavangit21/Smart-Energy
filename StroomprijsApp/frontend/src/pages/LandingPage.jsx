@@ -361,22 +361,22 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
         {/* Badge */}
         <div className="sp-animate" style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.3)",borderRadius:30,padding:"6px 20px",marginBottom:28,fontSize:13,fontWeight:700,color:"#fff",backdropFilter:"blur(8px)"}}>
-          {L.heroBadgeLive||"🇧🇪 Belgium · EPEX Spot · Live now"}
+          {L.heroBadgeLive||"🇧🇪 Belgium · Live electricity prices · updated every hour"}
         </div>
 
         {/* Headline */}
-        <h1 className="sp-animate sp-delay-1" style={{fontSize:"clamp(38px,6.5vw,84px)",fontWeight:900,lineHeight:1.05,margin:"0 auto 24px",maxWidth:860,letterSpacing:"-3px",color:"#fff",textShadow:"0 2px 40px rgba(0,0,0,0.15)"}}>
-          <span style={{color:"#FCD34D"}}>{L.heroNew||"Is now a good time to charge your EV?"}</span>
+        <h1 className="sp-animate sp-delay-1" style={{fontSize:"clamp(36px,6vw,78px)",fontWeight:900,lineHeight:1.08,margin:"0 auto 24px",maxWidth:860,letterSpacing:"-2.5px",color:"#fff",textShadow:"0 2px 40px rgba(0,0,0,0.15)"}}>
+          <span style={{color:"#FCD34D"}}>{L.heroNew||"Belgian electricity is 10× cheaper at night than at peak."}</span>
         </h1>
 
         {/* Tagline */}
-        <div className="sp-animate sp-delay-2" style={{fontSize:"clamp(18px,2.2vw,26px)",fontWeight:800,color:"rgba(255,255,255,0.95)",marginBottom:16,letterSpacing:"-0.5px"}}>
-          {L.heroTagline||"Charge smart. Pay less."}
+        <div className="sp-animate sp-delay-2" style={{fontSize:"clamp(17px,2.1vw,24px)",fontWeight:700,color:"rgba(255,255,255,0.95)",marginBottom:16,letterSpacing:"-0.3px"}}>
+          {L.heroTagline||"SmartPrice shows you the cheapest hour to charge, run your dishwasher, or heat your home."}
         </div>
 
         {/* Subtitle */}
-        <p className="sp-animate sp-delay-2" style={{fontSize:"clamp(16px,2vw,20px)",color:"rgba(255,255,255,0.75)",maxWidth:540,margin:"0 auto 40px",lineHeight:1.7,fontWeight:400}}>
-          {L.heroSubNew||"Live Belgian EPEX prices — free for households, fleet managers, and EV platforms."}
+        <p className="sp-animate sp-delay-2" style={{fontSize:"clamp(14px,1.7vw,17px)",color:"rgba(255,255,255,0.65)",maxWidth:500,margin:"0 auto 40px",lineHeight:1.75,fontWeight:400}}>
+          {L.heroSubNew||"Free for households, EV drivers, and fleet managers. No account needed."}
         </p>
 
         {/* Live price display */}
@@ -384,11 +384,12 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           <div className="sp-animate sp-delay-3 sp-glass" style={{display:"inline-flex",alignItems:"center",gap:24,borderRadius:20,padding:"20px 32px",marginBottom:40,flexWrap:"wrap",justifyContent:"center"}}>
             <div style={{textAlign:"center"}}>
               <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",fontWeight:700,textTransform:"uppercase",letterSpacing:"2px",marginBottom:4}}>{L.liveNowLabel||"Right now"}</div>
-              <div style={{display:"flex",alignItems:"baseline",gap:8}}>
-                <span style={{fontSize:"clamp(40px,6vw,64px)",fontWeight:900,fontFamily:"monospace",color:currentCol,letterSpacing:"-3px",lineHeight:1}}>{Math.round(currentMwh)}</span>
-                <span style={{fontSize:16,color:"rgba(255,255,255,0.5)",fontWeight:600}}>€/MWh</span>
+              <div style={{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap",justifyContent:"center"}}>
+                <span style={{fontSize:"clamp(40px,6vw,64px)",fontWeight:900,fontFamily:"monospace",color:currentCol,letterSpacing:"-3px",lineHeight:1}}>{fmtKwh(currentMwh)}</span>
+                <span style={{fontSize:16,color:"rgba(255,255,255,0.7)",fontWeight:700}}>€/kWh</span>
                 {currentLbl && <span style={{fontSize:10,fontWeight:800,color:currentCol,background:`${currentCol}25`,border:`1px solid ${currentCol}50`,borderRadius:20,padding:"3px 10px",textTransform:"uppercase",letterSpacing:"1px"}}>{currentLbl}</span>}
               </div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:3}}>{Math.round(currentMwh)} €/MWh wholesale</div>
             </div>
             {cheapHour!=null && (
               <>
@@ -423,8 +424,9 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
       <div id="sp-products" style={{background:isDark?"#0A1525":"#F0F7FF",borderTop:`1px solid ${isDark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.07)"}`,padding:"64px 32px 72px"}}>
         <div style={{maxWidth:1100,margin:"0 auto"}}>
           <div className="sp-animate" style={{textAlign:"center",marginBottom:56}}>
-            <h2 style={{fontSize:"clamp(26px,4vw,42px)",fontWeight:900,color:C.text,letterSpacing:"-0.8px",lineHeight:1.2}}>
-              {L.pickerTitle||<>Choose the solution that <span style={{color:C.primary}}>fits your needs</span></>}
+            <div style={{fontSize:11,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:3,marginBottom:14}}>{L.pickerEyebrow||"What are you looking for?"}</div>
+            <h2 style={{fontSize:"clamp(24px,3.5vw,38px)",fontWeight:900,color:C.text,letterSpacing:"-0.8px",lineHeight:1.2,margin:0}}>
+              {L.pickerTitle||<>SmartPrice is free for everyone — <span style={{color:C.primary}}>pick your use case</span></>}
             </h2>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:32}}>
