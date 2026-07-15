@@ -8,7 +8,7 @@ const express   = require("express");
 const axiosHttp = require("axios");
 const router    = express.Router();
 
-const RESEND_API_KEY   = process.env.RESEND_API_KEY;
+const { sendMail }     = require("../mailer");
 const ADMIN_SECRET     = process.env.ADMIN_SECRET;
 const TELEGRAM_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -153,10 +153,6 @@ router.post("/", async (req, res) => {
   if (!ADMIN_SECRET || secret !== ADMIN_SECRET) {
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }
-  if (!RESEND_API_KEY) {
-    return res.status(500).json({ success: false, error: "RESEND_API_KEY not configured" });
-  }
-
   try {
     // Fetch current price + cheapest hours from our own endpoints
     const [curRes, cheapRes] = await Promise.all([
@@ -181,15 +177,11 @@ router.post("/", async (req, res) => {
 
     const { nlPost, enPost, html } = buildEmail(current, cheapest, dateStr);
 
-    // Send email via Resend
-    await axiosHttp.post("https://api.resend.com/emails", {
-      from: "SmartPrice Posts <info@smartprice.be>",
-      to:   "info@smartprice.be",
+    await sendMail({
+      from:    "SmartPrice Posts <info@smartprice.be>",
+      to:      "info@smartprice.be",
       subject: `📋 Daily posts ready — ${dateStr}`,
       html,
-      tags: [{ name: "type", value: "daily_social_posts" }],
-    }, {
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     });
 
     // Send Telegram notification with ready-to-paste NL post

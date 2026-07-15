@@ -2,10 +2,10 @@
  * uptime-monitor.js — Ping smartprice.be every 5 min, alert on failure
  */
 
-const axios = require("axios");
+const axios          = require("axios");
+const { sendMail }   = require("./mailer");
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const ADMIN_EMAIL    = process.env.ALERT_ADMIN_EMAIL || "hello@smartprice.be";
+const ADMIN_EMAIL    = process.env.ALERT_ADMIN_EMAIL || "info@smartprice.be";
 const FRONTEND_URL   = process.env.FRONTEND_URL_PROD || "https://smartprice.be";
 const CHECK_INTERVAL = 5 * 60 * 1000;   // 5 minutes
 const ALERT_COOLDOWN = 60 * 60 * 1000;  // 1 alert per hour max
@@ -14,15 +14,14 @@ let lastAlertSent = 0;
 let consecutiveFails = 0;
 
 async function sendDownAlert(reason) {
-  if (!RESEND_API_KEY) return;
   const now = Date.now();
-  if (now - lastAlertSent < ALERT_COOLDOWN) return; // cooldown
+  if (now - lastAlertSent < ALERT_COOLDOWN) return;
   lastAlertSent = now;
 
   const time = new Date().toLocaleString("en-GB", { timeZone: "Europe/Brussels" });
   try {
-    await axios.post("https://api.resend.com/emails", {
-      from:    "SmartPrice.be <hello@smartprice.be>",
+    await sendMail({
+      from:    "SmartPrice.be <info@smartprice.be>",
       to:      ADMIN_EMAIL,
       subject: "🚨 SmartPrice.be is DOWN",
       html: `
@@ -34,9 +33,6 @@ async function sendDownAlert(reason) {
           <p style="color:#888;font-size:13px;">Consecutive failures: ${consecutiveFails}<br>
           Next alert cooldown: 1 hour</p>
         </div>`,
-    }, {
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      timeout: 8000,
     });
     console.warn(`[Uptime] 🚨 Down alert sent to ${ADMIN_EMAIL} — ${reason}`);
   } catch (e) {
@@ -45,11 +41,10 @@ async function sendDownAlert(reason) {
 }
 
 async function sendRecoveryAlert() {
-  if (!RESEND_API_KEY) return;
   const time = new Date().toLocaleString("en-GB", { timeZone: "Europe/Brussels" });
   try {
-    await axios.post("https://api.resend.com/emails", {
-      from:    "SmartPrice.be <hello@smartprice.be>",
+    await sendMail({
+      from:    "SmartPrice.be <info@smartprice.be>",
       to:      ADMIN_EMAIL,
       subject: "✅ SmartPrice.be is back UP",
       html: `
@@ -58,9 +53,6 @@ async function sendRecoveryAlert() {
           <p><strong>Recovered at:</strong> ${time} (Brussels)</p>
           <p>${FRONTEND_URL} is responding normally again.</p>
         </div>`,
-    }, {
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      timeout: 8000,
     });
     console.log(`[Uptime] ✅ Recovery alert sent`);
   } catch (e) {

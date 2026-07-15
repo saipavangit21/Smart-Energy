@@ -1,14 +1,13 @@
 /**
- * outreach-send.js — Admin endpoint to send B2B outreach emails via Resend
+ * outreach-send.js — Admin endpoint to send B2B outreach emails via SMTP
  * POST /api/admin/send-outreach
  * Header: x-admin-secret: <ADMIN_SECRET>
  */
 
-const express   = require("express");
-const axiosHttp = require("axios");
-const router    = express.Router();
+const express        = require("express");
+const router         = express.Router();
+const { sendMail }   = require("../mailer");
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM           = "SmartPrice Business <info@smartprice.be>";
 const ADMIN_SECRET   = process.env.ADMIN_SECRET;
 
@@ -479,15 +478,12 @@ function buildFluviusUpdateHtml(name) {
 }
 
 async function sendFluviusUpdate({ to, name }) {
-  await axiosHttp.post("https://api.resend.com/emails", {
+  await sendMail({
     from: FROM,
     to,
     subject: `SmartPrice — update over uw Fluvius-registratie`,
     html: buildFluviusUpdateHtml(name),
-    reply_to: "info@smartprice.be",
-    tags: [{ name: "campaign", value: "fluvius_waitlist_update_jun2026" }],
-  }, {
-    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    replyTo: "info@smartprice.be",
   });
   return { to, name, status: "sent" };
 }
@@ -504,13 +500,7 @@ async function sendOne({ to, name, company, lang, followUp = false, finalTouch =
              : finalTouch               ? "fleet_finaltouch_jun2026"
              : followUp                 ? "fleet_followup_jun2026"
              :                            "fleet_outreach_jun2026";
-  await axiosHttp.post("https://api.resend.com/emails", {
-    from: FROM, to, subject: sub, html,
-    reply_to: "info@smartprice.be",
-    tags: [{ name: "campaign", value: tag }],
-  }, {
-    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-  });
+  await sendMail({ from: FROM, to, subject: sub, html, replyTo: "info@smartprice.be" });
   return { to, company, status: "sent" };
 }
 
@@ -523,9 +513,7 @@ router.post("/", async (req, res) => {
   if (!ADMIN_SECRET || secret !== ADMIN_SECRET) {
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }
-  if (!RESEND_API_KEY) {
-    return res.status(500).json({ success: false, error: "RESEND_API_KEY not configured" });
-  }
+
 
   const { contacts, preset, dryRun = false, followUp = false, finalTouch = false } = req.body || {};
 

@@ -2,9 +2,9 @@
  * email-alerts.js — Hourly price alert checker
  */
 
-const axios = require("axios");
+const axios          = require("axios");
+const { sendMail }   = require("./mailer");
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL     = process.env.FROM_EMAIL || "alerts@smartprice.be";
 const APP_URL        = process.env.FRONTEND_URL || "https://smartprice.be";
 // Self-URL for internal API calls: prefer Railway domain to avoid going through Vercel rewrite
@@ -84,13 +84,11 @@ async function sendAlertEmail({ to, name, currentPrice, threshold, supplier }) {
 </div>
 </body></html>`;
 
-  await axios.post("https://api.resend.com/emails", {
+  await sendMail({
     from: FROM_EMAIL,
     to,
     subject: `⚡ Price Alert: €${currentPrice.toFixed(0)}/MWh — below your €${threshold} threshold`,
     html,
-  }, {
-    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
   });
 }
 
@@ -174,11 +172,11 @@ async function sendGasAlertEmail({ to, name, currentPrice, threshold }) {
 </div>
 </body></html>`;
 
-  await axios.post("https://api.resend.com/emails", {
+  await sendMail({
     from: FROM_EMAIL, to,
     subject: `🔥 Gas Alert: TTF €${currentPrice.toFixed(0)}/MWh — below your €${threshold} threshold`,
     html,
-  }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" } });
+  });
 }
 
 async function checkAndSendGasAlerts(pool) {
@@ -232,9 +230,9 @@ module.exports = { checkAndSendAlerts, checkAndSendGasAlerts };
 
 // ── Welcome email ─────────────────────────────────────────────
 async function sendWelcomeEmail(email, name) {
-  if (!RESEND_API_KEY || !email) return;
+  if (!email) return;
   try {
-    await axios.post("https://api.resend.com/emails", {
+    await sendMail({
       from: "SmartPrice.be <info@smartprice.be>",
       to: email,
       subject: "🎉 Welcome to SmartPrice.be!",
@@ -336,7 +334,7 @@ async function sendWelcomeEmail(email, name) {
         </body>
         </html>
       `,
-    }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" } });
+    });
     console.log(`[welcome] Email sent to ${email}`);
   } catch (e) {
     console.error("[welcome] Failed:", e.message);
@@ -348,12 +346,11 @@ module.exports.sendWelcomeEmail = sendWelcomeEmail;
 // ── Admin notification: new user registered ────────────────────
 async function sendAdminNewUserNotification(name, email, totalUsers) {
   const adminEmail = process.env.ALERT_ADMIN_EMAIL || "info@smartprice.be";
-  if (!RESEND_API_KEY) return;
   const now = new Intl.DateTimeFormat("en-GB", {
     timeZone: TZ, dateStyle: "medium", timeStyle: "short",
   }).format(new Date());
   try {
-    await axios.post("https://api.resend.com/emails", {
+    await sendMail({
       from: "SmartPrice.be <info@smartprice.be>",
       to: adminEmail,
       subject: `🎉 New user registered — ${name}`,
@@ -371,7 +368,7 @@ async function sendAdminNewUserNotification(name, email, totalUsers) {
           </div>
         </div>
       `,
-    }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" } });
+    });
     console.log(`[admin-notify] New user notification sent for ${name}`);
   } catch (e) {
     console.error("[admin-notify] Failed:", e.message);
@@ -383,7 +380,6 @@ module.exports.sendAdminNewUserNotification = sendAdminNewUserNotification;
 let _lastDigestDate = null; // in-memory guard — prevents duplicate sends on same day
 
 async function sendWeeklyDigest(pool, force = false) {
-  if (!RESEND_API_KEY) return;
 
   // Prevent sending more than once per calendar day (Brussels timezone)
   const todayBrussels = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date());
@@ -480,7 +476,7 @@ async function sendWeeklyDigest(pool, force = false) {
         : `${APP_URL}/api/user/unsubscribe-digest?email=${Buffer.from(user.email).toString("base64")}`;
 
       try {
-        await axios.post("https://api.resend.com/emails", {
+        await sendMail({
           from: "SmartPrice.be <info@smartprice.be>",
           to: user.email,
           subject: `⚡ SmartPrice Wekelijks — Belgische stroomprijzen (${weekLabel})`,
@@ -610,7 +606,7 @@ async function sendWeeklyDigest(pool, force = false) {
               </div>
             </body></html>
           `,
-        }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" } });
+        });
         sent++;
         // Small delay between sends to avoid rate limiting
         await new Promise(r => setTimeout(r, 200));

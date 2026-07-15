@@ -3,6 +3,7 @@ const cookieParser = require("cookie-parser");
 const cors      = require("cors");
 const NodeCache = require("node-cache");
 const axios     = require("axios");
+const { sendMail } = require("./mailer");
 require("dotenv").config();
 
 const required = ["JWT_SECRET", "JWT_REFRESH_SECRET", "DATABASE_URL"];
@@ -330,65 +331,57 @@ app.post("/api/leads", async (req, res) => {
       )).catch(e => console.warn("[leads] b2b upsert failed:", e.message));
     }
 
-    if (process.env.RESEND_API_KEY) {
-      const firstName = name ? name.split(" ")[0] : null;
-      if (isB2B) {
-        // B2B audit confirmation email
-        axios.post("https://api.resend.com/emails", {
-          from: "SmartPrice.be <info@smartprice.be>",
-          to: email,
-          subject: "⚡ SmartPrice — Audit request received",
-          html: `
-            <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F7FEF9;color:#0F1A0F;border-radius:16px;border:1px solid #DCFCE7">
-              <div style="font-size:28px;margin-bottom:8px">✅</div>
-              <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#16A34A">Audit request received${firstName ? `, ${firstName}` : ""}.</h1>
-              <p style="color:#52635A;font-size:15px;line-height:1.7;margin:0 0 20px">
-                We're preparing your personalised fleet cost report for <strong>${company || "your company"}</strong>.<br>
-                We'll be in touch within <strong>one business day</strong> with a PDF ready to share with your CFO or HR team.
-              </p>
-              <a href="https://smartprice.be/business" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
-                View SmartPrice for Business →
-              </a>
-              <p style="margin-top:28px;font-size:11px;color:#9DB3A3">
-                SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#9DB3A3">Privacy</a> · GDPR compliant · EU hosted
-              </p>
-            </div>
-          `,
-        }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" }, timeout: 8000 })
-        .catch(e => console.warn("[leads] B2B Resend failed:", e.message));
-        // Admin notification
-        axios.post("https://api.resend.com/emails", {
-          from: "SmartPrice.be <info@smartprice.be>",
-          to: "info@smartprice.be",
-          subject: `🏢 New business audit request — ${company || email}`,
-          html: `<p><b>Email:</b> ${email}</p><p><b>Company:</b> ${company||"—"}</p><p><b>Name:</b> ${name||"—"}</p><p><b>Phone:</b> ${phone||"—"}</p><p><b>Fleet size:</b> ${fleet_size||"—"}</p><p><b>Payroll:</b> ${payroll_provider||"—"}</p><p><b>Reimbursement:</b> ${reimb_method||"—"}</p>${metadata?.annual_saving_estimate?`<p><b>Est. saving:</b> €${Number(metadata.annual_saving_estimate).toLocaleString()}/yr</p>`:""}`,
-        }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } })
-        .catch(() => {});
-      } else if (isNew) {
-        // Consumer welcome email
-        axios.post("https://api.resend.com/emails", {
-          from: process.env.FROM_EMAIL || "alerts@smartprice.be",
-          to: email,
-          subject: "⚡ SmartPrice — you're on the list",
-          html: `
-            <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#060B14;color:#E8EDF5;border-radius:16px">
-              <div style="font-size:28px;margin-bottom:8px">⚡</div>
-              <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#10B981">You're in.</h1>
-              <p style="color:#6B8099;font-size:15px;line-height:1.7;margin:0 0 20px">
-                Every day at <strong style="color:#E8EDF5">13:00 CET</strong> we publish tomorrow's prices.<br>
-                We'll alert you when the <strong style="color:#10B981">cheapest energy window</strong> opens for Belgium — EV charging, heat pumps &amp; appliances.
-              </p>
-              <a href="https://smartprice.be" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#10B981,#0D9488);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
-                View live prices →
-              </a>
-              <p style="margin-top:28px;font-size:11px;color:#334455">
-                SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#334455">Privacy</a> · You can unsubscribe anytime by replying "unsubscribe"
-              </p>
-            </div>
-          `,
-        }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" }, timeout: 8000 })
-        .catch(e => console.warn("[leads] Resend failed:", e.message));
-      }
+    const firstName = name ? name.split(" ")[0] : null;
+    if (isB2B) {
+      sendMail({
+        from: "SmartPrice.be <info@smartprice.be>",
+        to: email,
+        subject: "⚡ SmartPrice — Audit request received",
+        html: `
+          <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F7FEF9;color:#0F1A0F;border-radius:16px;border:1px solid #DCFCE7">
+            <div style="font-size:28px;margin-bottom:8px">✅</div>
+            <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#16A34A">Audit request received${firstName ? `, ${firstName}` : ""}.</h1>
+            <p style="color:#52635A;font-size:15px;line-height:1.7;margin:0 0 20px">
+              We're preparing your personalised fleet cost report for <strong>${company || "your company"}</strong>.<br>
+              We'll be in touch within <strong>one business day</strong> with a PDF ready to share with your CFO or HR team.
+            </p>
+            <a href="https://smartprice.be/business" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
+              View SmartPrice for Business →
+            </a>
+            <p style="margin-top:28px;font-size:11px;color:#9DB3A3">
+              SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#9DB3A3">Privacy</a> · GDPR compliant · EU hosted
+            </p>
+          </div>
+        `,
+      }).catch(e => console.warn("[leads] B2B email failed:", e.message));
+      sendMail({
+        from: "SmartPrice.be <info@smartprice.be>",
+        to: "info@smartprice.be",
+        subject: `🏢 New business audit request — ${company || email}`,
+        html: `<p><b>Email:</b> ${email}</p><p><b>Company:</b> ${company||"—"}</p><p><b>Name:</b> ${name||"—"}</p><p><b>Phone:</b> ${phone||"—"}</p><p><b>Fleet size:</b> ${fleet_size||"—"}</p><p><b>Payroll:</b> ${payroll_provider||"—"}</p><p><b>Reimbursement:</b> ${reimb_method||"—"}</p>${metadata?.annual_saving_estimate?`<p><b>Est. saving:</b> €${Number(metadata.annual_saving_estimate).toLocaleString()}/yr</p>`:""}`,
+      }).catch(() => {});
+    } else if (isNew) {
+      sendMail({
+        from: process.env.FROM_EMAIL || "alerts@smartprice.be",
+        to: email,
+        subject: "⚡ SmartPrice — you're on the list",
+        html: `
+          <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#060B14;color:#E8EDF5;border-radius:16px">
+            <div style="font-size:28px;margin-bottom:8px">⚡</div>
+            <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#10B981">You're in.</h1>
+            <p style="color:#6B8099;font-size:15px;line-height:1.7;margin:0 0 20px">
+              Every day at <strong style="color:#E8EDF5">13:00 CET</strong> we publish tomorrow's prices.<br>
+              We'll alert you when the <strong style="color:#10B981">cheapest energy window</strong> opens for Belgium — EV charging, heat pumps &amp; appliances.
+            </p>
+            <a href="https://smartprice.be" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#10B981,#0D9488);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
+              View live prices →
+            </a>
+            <p style="margin-top:28px;font-size:11px;color:#334455">
+              SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#334455">Privacy</a> · You can unsubscribe anytime by replying "unsubscribe"
+            </p>
+          </div>
+        `,
+      }).catch(e => console.warn("[leads] welcome email failed:", e.message));
     }
     res.json({ success: true, is_new: isNew });
   } catch (e) {
@@ -433,18 +426,39 @@ function scheduleCron() {
   setTimeout(() => { checkAndSendAlerts(pool); checkAndSendGasAlerts(pool); setInterval(() => { checkAndSendAlerts(pool); checkAndSendGasAlerts(pool); }, 60 * 60 * 1000); }, msUntilNextHour);
   console.log(`   Alerts: ⏰ Next check in ${Math.round(msUntilNextHour/60000)} min`);
 }
-if (process.env.RESEND_API_KEY) {
+if (process.env.SMTP_USER) {
   scheduleCron();
 } else {
-  console.log("   Alerts: ⚠ RESEND_API_KEY not set — email alerts disabled");
+  console.log("   Alerts: ⚠ SMTP_USER not set — email alerts disabled");
 }
 
 // Weekly tariff scrape — runs at startup then every 7 days
 runWeeklyScrape().catch(e => console.warn("[startup] Initial scrape failed:", e.message));
 setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape failed:", e.message)); }, 7 * 24 * 3600 * 1000);
 
+// Daily social posts + Facebook auto-post — every day at 08:00 Brussels time
+(function scheduleDailyPosts() {
+  const now = new Date();
+  const brussels = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Brussels" }));
+  const msUntil8am = (() => {
+    const next = new Date(brussels);
+    next.setHours(8, 0, 0, 0);
+    if (brussels.getHours() >= 8) next.setDate(next.getDate() + 1);
+    return next - brussels;
+  })();
+  setTimeout(async function tick() {
+    try {
+      await axiosHttp.post(`http://localhost:${PORT}/api/admin/daily-posts`, {},
+        { headers: { "x-admin-secret": process.env.ADMIN_SECRET }, timeout: 30000 });
+      console.log("[daily-posts] ✅ Auto-posted at 08:00 Brussels");
+    } catch (e) { console.warn("[daily-posts] Auto-post failed:", e.message); }
+    setInterval(tick, 24 * 60 * 60 * 1000);
+  }, msUntil8am);
+  console.log(`   Daily posts: ⏰ Next auto-post in ${Math.round(msUntil8am / 60000)} min`);
+})();
+
 // Weekly digest email — every Monday at 08:00 Brussels time
-if (process.env.RESEND_API_KEY) {
+if (process.env.SMTP_USER) {
   function scheduleWeeklyDigest() {
     const now = new Date();
     const brussels = new Intl.DateTimeFormat("en-GB", {
@@ -515,26 +529,10 @@ app.post("/api/admin/send-template", async (req, res) => {
   if (!to) {
     return res.status(400).json({ success: false, error: "to is required" });
   }
-  if (!process.env.RESEND_API_KEY) {
-    return res.status(500).json({ success: false, error: "RESEND_API_KEY not configured" });
-  }
-
-  const payload = { from: "SmartPrice.be <hello@smartprice.be>", to };
-  if (template_id) {
-    payload.template_id = template_id;
-    payload.data = data;
-  } else {
-    payload.subject = subject || "SmartPrice.be";
-    payload.html    = html;
-  }
-
   try {
-    const { data: result } = await axios.post("https://api.resend.com/emails", payload, {
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-      timeout: 10000,
-    });
-    console.log(`[Admin] Email sent to ${to} — id: ${result?.id}`);
-    res.json({ success: true, id: result?.id });
+    await sendMail({ from: "SmartPrice.be <info@smartprice.be>", to, subject: subject || "SmartPrice.be", html });
+    console.log(`[Admin] Email sent to ${to}`);
+    res.json({ success: true });
   } catch (e) {
     const msg = e.response?.data?.message || e.message;
     console.error(`[Admin] send-template failed:`, msg);
@@ -610,12 +608,11 @@ app.post("/api/newsletter/subscribe", async (req, res) => {
     );
     const savedToken = rows[0].unsubscribe_token;
     const unsubUrl   = `${APP_URL}/api/newsletter/unsubscribe?token=${savedToken}`;
-    if (process.env.RESEND_API_KEY) {
-      axios.post("https://api.resend.com/emails", {
-        from: "SmartPrice.be <info@smartprice.be>",
-        to: email,
-        subject: "⚡ Weekly EPEX digest confirmed — SmartPrice.be",
-        html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+    sendMail({
+      from: "SmartPrice.be <info@smartprice.be>",
+      to: email,
+      subject: "⚡ Weekly EPEX digest confirmed — SmartPrice.be",
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#060B14;font-family:'Helvetica Neue',Arial,sans-serif;">
 <div style="max-width:520px;margin:0 auto;padding:40px 24px;">
   <div style="text-align:center;margin-bottom:28px;">
@@ -636,9 +633,7 @@ app.post("/api/newsletter/subscribe", async (req, res) => {
     SmartPrice.be · <a href="${unsubUrl}" style="color:#475569;">Unsubscribe</a>
   </div>
 </div></body></html>`,
-      }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } })
-      .catch(e => console.warn("[newsletter] welcome email failed:", e.message));
-    }
+    }).catch(e => console.warn("[newsletter] welcome email failed:", e.message));
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
@@ -844,7 +839,6 @@ app.post("/api/admin/broadcast", async (req, res) => {
   if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }
-  if (!process.env.RESEND_API_KEY) return res.status(500).json({ success: false, error: "RESEND_API_KEY not set" });
   res.json({ success: true, message: "Broadcasting in background…" });
   (async () => {
     try {
@@ -852,12 +846,12 @@ app.post("/api/admin/broadcast", async (req, res) => {
       let sent = 0;
       for (const u of users) {
         try {
-          await axios.post("https://api.resend.com/emails", {
+          await sendMail({
             from: "SmartPrice.be <info@smartprice.be>",
             to: u.email,
             subject,
             html: html.replace(/\{\{name\}\}/g, u.name || "there"),
-          }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } });
+          });
           sent++;
           await new Promise(r => setTimeout(r, 200));
         } catch (e) { console.error(`[broadcast] Failed to ${u.email}:`, e.message); }
@@ -881,14 +875,12 @@ app.post("/api/fleet-audit-lead", async (req, res) => {
     console.log(`[fleet-audit] New B2B lead: ${email} — fleet ${audit?.fleetSize} cars, overpayment €${audit?.overpayment?.toFixed(0)}`);
 
     // Notify admin
-    if (process.env.RESEND_API_KEY) {
-      axios.post("https://api.resend.com/emails", {
-        from: "SmartPrice.be <info@smartprice.be>",
-        to: "info@smartprice.be",
-        subject: `🚗 New B2B fleet audit lead — ${company || email}`,
-        html: `<p><strong>Email:</strong> ${email}</p><p><strong>Company:</strong> ${company || "—"}</p><p><strong>Fleet size:</strong> ${audit?.fleetSize} EVs</p><p><strong>Est. overpayment:</strong> €${audit?.overpayment?.toFixed(0)}/year</p>`,
-      }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } }).catch(() => {});
-    }
+    sendMail({
+      from: "SmartPrice.be <info@smartprice.be>",
+      to: "info@smartprice.be",
+      subject: `🚗 New B2B fleet audit lead — ${company || email}`,
+      html: `<p><strong>Email:</strong> ${email}</p><p><strong>Company:</strong> ${company || "—"}</p><p><strong>Fleet size:</strong> ${audit?.fleetSize} EVs</p><p><strong>Est. overpayment:</strong> €${audit?.overpayment?.toFixed(0)}/year</p>`,
+    }).catch(() => {});
     res.json({ success: true });
   } catch (e) {
     // If table doesn't exist yet, create it and retry
@@ -948,50 +940,45 @@ app.post("/api/business-leads", async (req, res) => {
     );
     console.log(`[business-leads] New B2B audit request: ${email} — ${company || "no company"}, fleet ${fleet_size}`);
 
-    if (process.env.RESEND_API_KEY) {
-      // Confirmation email to the prospect
-      axios.post("https://api.resend.com/emails", {
-        from: "SmartPrice.be <info@smartprice.be>",
-        to: email,
-        subject: "⚡ SmartPrice — Audit request received",
-        html: `
-          <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F7FEF9;color:#0F1A0F;border-radius:16px;border:1px solid #DCFCE7">
-            <div style="font-size:28px;margin-bottom:8px">✅</div>
-            <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#16A34A">Audit request received${name ? `, ${name.split(" ")[0]}` : ""}.</h1>
-            <p style="color:#52635A;font-size:15px;line-height:1.7;margin:0 0 20px">
-              We're preparing your personalised fleet cost report for <strong>${company || "your company"}</strong>.<br>
-              We'll be in touch within <strong>one business day</strong> with a PDF ready to share with your CFO or HR team.
-            </p>
-            <p style="color:#52635A;font-size:13px;line-height:1.7;margin:0 0 24px">
-              In the meantime, explore the live EPEX Spot data and fleet tools at SmartPrice.be.
-            </p>
-            <a href="https://smartprice.be/business" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
-              View SmartPrice for Business →
-            </a>
-            <p style="margin-top:28px;font-size:11px;color:#9DB3A3">
-              SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#9DB3A3">Privacy</a> · GDPR compliant · EU hosted
-            </p>
-          </div>
-        `,
-      }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } }).catch(e => console.warn("[business-leads] Resend prospect email failed:", e.message));
-
-      // Internal notification to SmartPrice team
-      axios.post("https://api.resend.com/emails", {
-        from: "SmartPrice.be <info@smartprice.be>",
-        to: "info@smartprice.be",
-        subject: `🏢 New business audit request — ${company || email}`,
-        html: `
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Company:</strong> ${company || "—"}</p>
-          <p><strong>Name:</strong> ${name || "—"}</p>
-          <p><strong>Phone:</strong> ${phone || "—"}</p>
-          <p><strong>Fleet size:</strong> ${fleet_size || "—"}</p>
-          <p><strong>Payroll provider:</strong> ${payroll_provider || "—"}</p>
-          <p><strong>Reimbursement method:</strong> ${reimb_method || "—"}</p>
-          ${metadata?.annual_saving_estimate ? `<p><strong>Est. annual saving:</strong> €${metadata.annual_saving_estimate.toLocaleString()}</p>` : ""}
-        `,
-      }, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" } }).catch(e => console.warn("[business-leads] Resend admin email failed:", e.message));
-    }
+    sendMail({
+      from: "SmartPrice.be <info@smartprice.be>",
+      to: email,
+      subject: "⚡ SmartPrice — Audit request received",
+      html: `
+        <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F7FEF9;color:#0F1A0F;border-radius:16px;border:1px solid #DCFCE7">
+          <div style="font-size:28px;margin-bottom:8px">✅</div>
+          <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#16A34A">Audit request received${name ? `, ${name.split(" ")[0]}` : ""}.</h1>
+          <p style="color:#52635A;font-size:15px;line-height:1.7;margin:0 0 20px">
+            We're preparing your personalised fleet cost report for <strong>${company || "your company"}</strong>.<br>
+            We'll be in touch within <strong>one business day</strong> with a PDF ready to share with your CFO or HR team.
+          </p>
+          <p style="color:#52635A;font-size:13px;line-height:1.7;margin:0 0 24px">
+            In the meantime, explore the live EPEX Spot data and fleet tools at SmartPrice.be.
+          </p>
+          <a href="https://smartprice.be/business" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
+            View SmartPrice for Business →
+          </a>
+          <p style="margin-top:28px;font-size:11px;color:#9DB3A3">
+            SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#9DB3A3">Privacy</a> · GDPR compliant · EU hosted
+          </p>
+        </div>
+      `,
+    }).catch(e => console.warn("[business-leads] prospect email failed:", e.message));
+    sendMail({
+      from: "SmartPrice.be <info@smartprice.be>",
+      to: "info@smartprice.be",
+      subject: `🏢 New business audit request — ${company || email}`,
+      html: `
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Company:</strong> ${company || "—"}</p>
+        <p><strong>Name:</strong> ${name || "—"}</p>
+        <p><strong>Phone:</strong> ${phone || "—"}</p>
+        <p><strong>Fleet size:</strong> ${fleet_size || "—"}</p>
+        <p><strong>Payroll provider:</strong> ${payroll_provider || "—"}</p>
+        <p><strong>Reimbursement method:</strong> ${reimb_method || "—"}</p>
+        ${metadata?.annual_saving_estimate ? `<p><strong>Est. annual saving:</strong> €${metadata.annual_saving_estimate.toLocaleString()}</p>` : ""}
+      `,
+    }).catch(e => console.warn("[business-leads] admin email failed:", e.message));
     res.json({ success: true });
   } catch (e) {
     console.error("[business-leads]", e.message);
