@@ -5,7 +5,7 @@
 const axios          = require("axios");
 const { sendMail }   = require("./mailer");
 
-const FROM_EMAIL     = process.env.FROM_EMAIL || "alerts@smartprice.be";
+const FROM_EMAIL     = process.env.FROM_EMAIL || "info@smartprice.be";
 const APP_URL        = process.env.FRONTEND_URL || "https://smartprice.be";
 // Self-URL for internal API calls: prefer Railway domain to avoid going through Vercel rewrite
 const SELF_URL = process.env.RAILWAY_PUBLIC_DOMAIN

@@ -426,10 +426,10 @@ function scheduleCron() {
   setTimeout(() => { checkAndSendAlerts(pool); checkAndSendGasAlerts(pool); setInterval(() => { checkAndSendAlerts(pool); checkAndSendGasAlerts(pool); }, 60 * 60 * 1000); }, msUntilNextHour);
   console.log(`   Alerts: ⏰ Next check in ${Math.round(msUntilNextHour/60000)} min`);
 }
-if (process.env.SMTP_USER) {
+if (process.env.RESEND_API_KEY) {
   scheduleCron();
 } else {
-  console.log("   Alerts: ⚠ SMTP_USER not set — email alerts disabled");
+  console.log("   Alerts: ⚠ RESEND_API_KEY not set — email alerts disabled");
 }
 
 // Weekly tariff scrape — runs at startup then every 7 days
@@ -468,7 +468,7 @@ setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape f
 })();
 
 // Weekly digest email — every Monday at 08:00 Brussels time
-if (process.env.SMTP_USER) {
+if (process.env.RESEND_API_KEY) {
   function scheduleWeeklyDigest() {
     const now = new Date();
     const brussels = new Intl.DateTimeFormat("en-GB", {
