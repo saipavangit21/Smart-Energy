@@ -438,22 +438,32 @@ setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape f
 
 // Daily social posts + Facebook auto-post — every day at 08:00 Brussels time
 (function scheduleDailyPosts() {
-  const now = new Date();
-  const brussels = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Brussels" }));
-  const msUntil8am = (() => {
-    const next = new Date(brussels);
-    next.setHours(8, 0, 0, 0);
-    if (brussels.getHours() >= 8) next.setDate(next.getDate() + 1);
-    return next - brussels;
-  })();
-  setTimeout(async function tick() {
+  async function fire() {
     try {
       await axiosHttp.post(`http://localhost:${PORT}/api/admin/daily-posts`, {},
         { headers: { "x-admin-secret": process.env.ADMIN_SECRET }, timeout: 30000 });
       console.log("[daily-posts] ✅ Auto-posted at 08:00 Brussels");
-    } catch (e) { console.warn("[daily-posts] Auto-post failed:", e.message); }
-    setInterval(tick, 24 * 60 * 60 * 1000);
-  }, msUntil8am);
+    } catch (e) {
+      console.warn("[daily-posts] Auto-post failed:", e.message);
+    }
+    setTimeout(fire, 24 * 60 * 60 * 1000);
+  }
+
+  const brussels = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Brussels" }));
+  const h = brussels.getHours();
+
+  // If server restarts during the 08:xx window, catch up immediately
+  if (h === 8) {
+    console.log("[daily-posts] 🔄 Catch-up: server started during 08:xx — posting now");
+    setTimeout(fire, 5000);
+    return;
+  }
+
+  const next = new Date(brussels);
+  next.setHours(8, 0, 0, 0);
+  if (h >= 9) next.setDate(next.getDate() + 1);
+  const msUntil8am = next - brussels;
+  setTimeout(fire, msUntil8am);
   console.log(`   Daily posts: ⏰ Next auto-post in ${Math.round(msUntil8am / 60000)} min`);
 })();
 
