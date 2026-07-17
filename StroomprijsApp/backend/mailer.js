@@ -8,10 +8,9 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-  pool:           true,
-  maxConnections: 3,
-  rateLimit:      2,   // max 2 messages/second
-  rateDelta:      1000,
+  connectionTimeout: 15000,
+  greetingTimeout:   10000,
+  socketTimeout:     20000,
 });
 
 async function sendMail({ from, to, subject, html, replyTo }) {
