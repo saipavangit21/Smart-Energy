@@ -126,8 +126,7 @@ function buildHtml(name, company, lang) {
 
   <p style="font-size:15px;line-height:1.7;margin:0 0 32px;">${c.ask}</p>
 
-  <p style="font-size:15px;line-height:1.8;margin:0 0 40px;">${c.sig}<br>
-  <span style="color:#555;">SmartPrice.be</span><br>
+  <p style="font-size:15px;line-height:1.8;margin:0 0 40px;">SmartPrice.be<br>
   <a href="mailto:info@smartprice.be" style="color:#555;text-decoration:none;">info@smartprice.be</a>
   </p>
 

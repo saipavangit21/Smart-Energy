@@ -1,20 +1,18 @@
-const nodemailer = require("nodemailer");
+const axios = require("axios");
 
-const transporter = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST || "avas.cloudemail.be",
-  port:   parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_PORT === "465",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 15000,
-  greetingTimeout:   10000,
-  socketTimeout:     20000,
-});
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 async function sendMail({ from, to, subject, html, replyTo }) {
-  return transporter.sendMail({ from, to, subject, html, replyTo });
+  if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not set");
+  const { data } = await axios.post(
+    "https://api.resend.com/emails",
+    { from, to, subject, html, reply_to: replyTo },
+    {
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      timeout: 15000,
+    }
+  );
+  return data;
 }
 
-module.exports = { sendMail, transporter };
+module.exports = { sendMail };
