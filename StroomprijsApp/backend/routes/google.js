@@ -69,10 +69,11 @@ router.get("/callback", async (req, res) => {
 
     // Send welcome email + admin notification for new Google OAuth users
     if (isNewUser && email) {
-      sendWelcomeEmail(email, name).catch(() => {});
-      userStore.count().then(total => {
-        sendAdminNewUserNotification(name, email, total).catch(() => {});
-      }).catch(() => {});
+      sendWelcomeEmail(email, name)
+        .catch(e => console.error("[new-user] welcome email failed:", e.message));
+      userStore.count()
+        .then(total => sendAdminNewUserNotification(name, email, total))
+        .catch(e => console.error("[new-user] admin notification failed:", e.message));
     }
 
     const tokens = generateTokens(user.id);

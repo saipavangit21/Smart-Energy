@@ -96,12 +96,13 @@ router.post("/register", registerLimiter, async (req, res) => {
 
     // Send welcome email to the new user
     if (email) {
-      sendWelcomeEmail(email, name).catch(() => {});
+      sendWelcomeEmail(email, name)
+        .catch(e => console.error("[new-user] welcome email failed:", e.message));
     }
     // Notify admin about new registration
-    userStore.count().then(total => {
-      sendAdminNewUserNotification(name, email, total).catch(() => {});
-    }).catch(() => {});
+    userStore.count()
+      .then(total => sendAdminNewUserNotification(name, email, total))
+      .catch(e => console.error("[new-user] admin notification failed:", e.message));
 
     res.status(201).json({ success: true, user: userStore.safeUser(user) });
   } catch (err) {
