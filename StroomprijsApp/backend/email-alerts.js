@@ -377,15 +377,34 @@ async function sendAdminNewUserNotification(name, email, totalUsers) {
 module.exports.sendAdminNewUserNotification = sendAdminNewUserNotification;
 
 // ── Weekly digest email to all users ──────────────────────────
-let _lastDigestDate = null; // in-memory guard — prevents duplicate sends on same day
+let _lastDigestDate = null; // in-memory fallback guard, used only if the DB check below fails
 
 async function sendWeeklyDigest(pool, force = false) {
 
-  // Prevent sending more than once per calendar day (Brussels timezone)
+  // Prevent sending more than once per calendar day (Brussels timezone).
+  // Persisted in the DB — an in-memory-only flag resets on every redeploy, which previously
+  // caused the Monday send to be silently skipped for a full week if a deploy landed after 08:00.
   const todayBrussels = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date());
-  if (!force && _lastDigestDate === todayBrussels) {
-    console.log(`[weekly-digest] Already sent today (${todayBrussels}) — skipping. Use force=true to override.`);
-    return;
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS app_state (key TEXT PRIMARY KEY, value TEXT)`);
+    if (!force) {
+      const { rows } = await pool.query(`SELECT value FROM app_state WHERE key = 'weekly_digest_last_sent'`);
+      if (rows[0]?.value === todayBrussels) {
+        console.log(`[weekly-digest] Already sent today (${todayBrussels}) — skipping. Use force=true to override.`);
+        return;
+      }
+    }
+    await pool.query(
+      `INSERT INTO app_state (key, value) VALUES ('weekly_digest_last_sent', $1)
+       ON CONFLICT (key) DO UPDATE SET value = $1`,
+      [todayBrussels]
+    );
+  } catch (e) {
+    console.warn("[weekly-digest] Persisted guard check failed, using in-memory fallback:", e.message);
+    if (!force && _lastDigestDate === todayBrussels) {
+      console.log(`[weekly-digest] Already sent today (${todayBrussels}) — skipping (in-memory fallback).`);
+      return;
+    }
   }
   _lastDigestDate = todayBrussels;
 

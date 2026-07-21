@@ -467,24 +467,22 @@ setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape f
   console.log(`   Daily posts: ⏰ Next auto-post in ${Math.round(msUntil8am / 60000)} min`);
 })();
 
-// Weekly digest email — every Monday at 08:00 Brussels time
+// Weekly digest email — checked hourly, sends once the DB guard allows it on
+// Monday at/after 08:00 Brussels time. Hourly self-check (rather than a single
+// setTimeout aimed at the exact next Monday 8am) means a redeploy can never
+// push the schedule a full week out — worst case it's caught within the hour.
 if (process.env.RESEND_API_KEY) {
-  function scheduleWeeklyDigest() {
-    const now = new Date();
+  function checkWeeklyDigest() {
     const brussels = new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Europe/Brussels", weekday: "short", hour: "numeric", minute: "numeric", hour12: false,
-    }).formatToParts(now).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
-    const dayNum = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(brussels.weekday);
-    const daysUntilMon = dayNum === 1 ? (parseInt(brussels.hour) < 8 ? 0 : 7) : (8 - dayNum) % 7 || 7;
-    const hoursUntil8am = daysUntilMon === 0 ? (8 - parseInt(brussels.hour)) : (daysUntilMon * 24 + 8 - parseInt(brussels.hour));
-    const msUntil = (hoursUntil8am * 60 - parseInt(brussels.minute)) * 60 * 1000;
-    setTimeout(() => {
+      timeZone: "Europe/Brussels", weekday: "short", hour: "numeric", hour12: false,
+    }).formatToParts(new Date()).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+    if (brussels.weekday === "Mon" && parseInt(brussels.hour) >= 8) {
       sendWeeklyDigest(pool).catch(e => console.error("[weekly-digest] Error:", e.message));
-      setInterval(() => sendWeeklyDigest(pool).catch(e => console.error("[weekly-digest] Error:", e.message)), 7 * 24 * 3600 * 1000);
-    }, msUntil);
-    console.log(`   Weekly digest: ⏰ Next send in ~${Math.round(msUntil/3600000)}h (Monday 08:00 Brussels)`);
+    }
   }
-  scheduleWeeklyDigest();
+  checkWeeklyDigest();
+  setInterval(checkWeeklyDigest, 60 * 60 * 1000);
+  console.log("   Weekly digest: ⏰ Hourly check — sends Monday 08:00+ Brussels (DB dedup guard)");
 }
 
 
