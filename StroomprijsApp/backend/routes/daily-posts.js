@@ -153,6 +153,13 @@ router.post("/", async (req, res) => {
   if (!ADMIN_SECRET || secret !== ADMIN_SECRET) {
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }
+
+  // Custom one-off post (e.g. a holiday greeting) — bypasses the price-data post
+  if (req.body?.message) {
+    const fbResult = await postToFacebook(req.body.message);
+    return res.json({ success: true, custom: true, facebook: fbResult });
+  }
+
   try {
     // Fetch current price + cheapest hours from our own endpoints
     const [curRes, cheapRes] = await Promise.all([
