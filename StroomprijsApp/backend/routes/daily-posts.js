@@ -44,6 +44,22 @@ async function postToFacebook(message) {
   }
 }
 
+async function deleteFacebookPost(postId) {
+  if (!FB_PAGE_TOKEN) return { skipped: true };
+  try {
+    const r = await axiosHttp.delete(
+      `https://graph.facebook.com/${postId}`,
+      { params: { access_token: FB_PAGE_TOKEN }, timeout: 12000 }
+    );
+    console.log("[daily-posts] Facebook post deleted:", postId, r.data);
+    return { ok: true, post_id: postId, deleted: true };
+  } catch (e) {
+    const msg = e.response?.data?.error?.message || e.message;
+    console.error("[daily-posts] Facebook delete failed:", msg);
+    return { ok: false, error: msg };
+  }
+}
+
 async function editFacebookPost(postId, message) {
   if (!FB_PAGE_TOKEN) return { skipped: true };
   try {
@@ -169,6 +185,12 @@ router.post("/", async (req, res) => {
   const secret = req.headers["x-admin-secret"];
   if (!ADMIN_SECRET || secret !== ADMIN_SECRET) {
     return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
+
+  // Delete a specific post
+  if (req.body?.deletePostId) {
+    const fbResult = await deleteFacebookPost(req.body.deletePostId);
+    return res.json({ success: true, custom: true, facebook: fbResult });
   }
 
   // Custom one-off post (e.g. a holiday greeting) — bypasses the price-data post
