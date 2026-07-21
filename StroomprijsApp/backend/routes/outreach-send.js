@@ -79,30 +79,33 @@ const EXPANDED_FLEET_CONTACTS = [
 function buildHtml(name, company, lang) {
   const t = {
     nl: {
-      p1: `Ik ben Sai, oprichter van SmartPrice.be. Korte vraag voor u.`,
+      nd: `Fijne Nationale Feestdag! Op 21 juli herdenken we de eedaflegging van koning Leopold I in 1831 — een mooie dag om ook even stil te staan bij een Belgisch initiatief. 🇧🇪`,
+      p1: `Ik ben Monika, oprichter van SmartPrice.be. Korte vraag voor u.`,
       p2: `De meeste Belgische bedrijven vergoeden thuisladen op basis van het vaste CREG-kwartaaltarief — momenteel rond €0,24/kWh. Dat klinkt eerlijk, maar de Belgische elektriciteitsprijs schommelt van €0,04 tot €0,48/kWh binnen dezelfde dag. Sommige medewerkers ontvangen daardoor meer terug dan ze betaald hebben, anderen minder.`,
       p3: `Fiscaal-juridisch vereist CIR 92 dat de vergoeding de werkelijke kost op het laadmoment weerspiegelt. Een vast gemiddelde voldoet daar niet aan — en het fiscale risico ligt bij de werkgever.`,
       p4: `Wij bouwden een gratis vlootaudit op <a href="https://smartprice.be/fleet-audit" style="color:#15803D;">smartprice.be/fleet-audit</a> die in 2 minuten toont hoeveel het wagenpark van ${company} waarschijnlijk overbetaalt. Geen account nodig.`,
       ask: `Is dat het bekijken waard?`,
-      sig: `Sai`,
+      sig: `Monika`,
       unsub: `Antwoord op deze e-mail om u af te melden.`,
     },
     fr: {
-      p1: `Je suis Sai, fondateur de SmartPrice.be. Une courte question pour vous.`,
+      nd: `Bonne Fête nationale ! Le 21 juillet, nous célébrons la prestation de serment du roi Léopold Ier en 1831 — une belle occasion de vous parler aussi d'une initiative belge. 🇧🇪`,
+      p1: `Je suis Monika, fondatrice de SmartPrice.be. Une courte question pour vous.`,
       p2: `La plupart des entreprises belges remboursent la recharge à domicile sur la base du tarif trimestriel CREG fixe — actuellement environ €0,24/kWh. Cela paraît équitable, mais le prix de l'électricité en Belgique varie de €0,04 à €0,48/kWh dans la même journée. Certains employés reçoivent donc plus que ce qu'ils ont réellement payé, d'autres moins.`,
       p3: `Sur le plan fiscal, la loi belge (CIR 92) exige que le remboursement reflète le coût réel au moment de la recharge. Un tarif moyen fixe ne satisfait pas cette exigence — et le risque fiscal repose sur l'employeur.`,
       p4: `Nous avons créé un audit gratuit sur <a href="https://smartprice.be/fleet-audit" style="color:#15803D;">smartprice.be/fleet-audit</a> qui montre en 2 minutes combien la flotte de ${company} sur-paie probablement. Sans inscription.`,
       ask: `Cela vaut-il le coup d'œil ?`,
-      sig: `Sai`,
+      sig: `Monika`,
       unsub: `Répondez à cet e-mail pour vous désabonner.`,
     },
     en: {
-      p1: `I'm Sai, founder of SmartPrice.be. One quick question for you.`,
+      nd: `Happy Belgian National Day! July 21 marks King Leopold I's 1831 oath of office — a fitting day to also share a Belgian initiative with you. 🇧🇪`,
+      p1: `I'm Monika, founder of SmartPrice.be. One quick question for you.`,
       p2: `Most Belgian companies reimburse employee EV home-charging using the fixed CREG quarterly rate — currently around €0.24/kWh. That sounds fair, but Belgium's actual electricity price swings from €0.04 to €0.48/kWh within the same day. That means some employees get reimbursed more than they paid, others less.`,
       p3: `Belgian tax law (CIR 92) requires reimbursements to reflect the actual cost at the moment of charging. A fixed average doesn't satisfy that — and the fiscal risk sits with the employer.`,
       p4: `We built a free fleet audit at <a href="https://smartprice.be/fleet-audit" style="color:#15803D;">smartprice.be/fleet-audit</a> that shows in 2 minutes how much ${company}'s fleet is likely overpaying. No account needed.`,
       ask: `Worth a look?`,
-      sig: `Sai`,
+      sig: `Monika`,
       unsub: `Reply to unsubscribe.`,
     },
   };
@@ -115,6 +118,8 @@ function buildHtml(name, company, lang) {
 <div style="max-width:560px;margin:0 auto;padding:40px 28px;">
 
   <p style="font-size:15px;line-height:1.7;margin:0 0 22px;">${greeting},</p>
+
+  <p style="font-size:15px;line-height:1.7;margin:0 0 18px;">${c.nd}</p>
 
   <p style="font-size:15px;line-height:1.7;margin:0 0 18px;">${c.p1}</p>
 
