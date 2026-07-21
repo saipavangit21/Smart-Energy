@@ -44,6 +44,23 @@ async function postToFacebook(message) {
   }
 }
 
+async function editFacebookPost(postId, message) {
+  if (!FB_PAGE_TOKEN) return { skipped: true };
+  try {
+    const r = await axiosHttp.post(
+      `https://graph.facebook.com/${postId}`,
+      { message, access_token: FB_PAGE_TOKEN },
+      { timeout: 12000 }
+    );
+    console.log("[daily-posts] Facebook post edited:", postId, r.data);
+    return { ok: true, post_id: postId };
+  } catch (e) {
+    const msg = e.response?.data?.error?.message || e.message;
+    console.error("[daily-posts] Facebook edit failed:", msg);
+    return { ok: false, error: msg };
+  }
+}
+
 function fmt(mwh) {
   return (mwh / 1000).toFixed(4); // MWh → kWh
 }
@@ -156,7 +173,9 @@ router.post("/", async (req, res) => {
 
   // Custom one-off post (e.g. a holiday greeting) — bypasses the price-data post
   if (req.body?.message) {
-    const fbResult = await postToFacebook(req.body.message);
+    const fbResult = req.body.editPostId
+      ? await editFacebookPost(req.body.editPostId, req.body.message)
+      : await postToFacebook(req.body.message);
     return res.json({ success: true, custom: true, facebook: fbResult });
   }
 
