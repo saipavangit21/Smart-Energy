@@ -436,35 +436,25 @@ if (process.env.RESEND_API_KEY) {
 runWeeklyScrape().catch(e => console.warn("[startup] Initial scrape failed:", e.message));
 setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape failed:", e.message)); }, 7 * 24 * 3600 * 1000);
 
-// Daily social posts + Facebook auto-post — every day at 08:00 Brussels time
+// Daily social posts + Facebook auto-post — checked hourly, sends once the DB
+// guard allows it at/after 08:00 Brussels time. Hourly self-check (rather than a
+// single setTimeout aimed at exactly 08:00) means a redeploy landing anytime
+// later in the day still gets caught, instead of silently skipping to tomorrow.
 (function scheduleDailyPosts() {
-  async function fire() {
+  async function checkDailyPosts() {
+    const brussels = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Brussels" }));
+    if (brussels.getHours() < 8) return;
     try {
-      await axiosHttp.post(`http://localhost:${PORT}/api/admin/daily-posts`, {},
+      const r = await axiosHttp.post(`http://localhost:${PORT}/api/admin/daily-posts`, {},
         { headers: { "x-admin-secret": process.env.ADMIN_SECRET }, timeout: 30000 });
-      console.log("[daily-posts] ✅ Auto-posted at 08:00 Brussels");
+      if (!r.data?.skipped) console.log("[daily-posts] ✅ Auto-posted");
     } catch (e) {
       console.warn("[daily-posts] Auto-post failed:", e.message);
     }
-    setTimeout(fire, 24 * 60 * 60 * 1000);
   }
-
-  const brussels = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Brussels" }));
-  const h = brussels.getHours();
-
-  // If server restarts during the 08:xx window, catch up immediately
-  if (h === 8) {
-    console.log("[daily-posts] 🔄 Catch-up: server started during 08:xx — posting now");
-    setTimeout(fire, 5000);
-    return;
-  }
-
-  const next = new Date(brussels);
-  next.setHours(8, 0, 0, 0);
-  if (h >= 9) next.setDate(next.getDate() + 1);
-  const msUntil8am = next - brussels;
-  setTimeout(fire, msUntil8am);
-  console.log(`   Daily posts: ⏰ Next auto-post in ${Math.round(msUntil8am / 60000)} min`);
+  checkDailyPosts();
+  setInterval(checkDailyPosts, 60 * 60 * 1000);
+  console.log("   Daily posts: ⏰ Hourly check — sends 08:00+ Brussels (DB dedup guard)");
 })();
 
 // Weekly digest email — checked hourly, sends once the DB guard allows it on

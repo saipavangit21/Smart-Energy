@@ -9,6 +9,7 @@ const axiosHttp = require("axios");
 const router    = express.Router();
 
 const { sendMail }     = require("../mailer");
+const pool              = require("../db").pool;
 const ADMIN_SECRET     = process.env.ADMIN_SECRET;
 const TELEGRAM_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -199,6 +200,27 @@ router.post("/", async (req, res) => {
       ? await editFacebookPost(req.body.editPostId, req.body.message)
       : await postToFacebook(req.body.message);
     return res.json({ success: true, custom: true, facebook: fbResult });
+  }
+
+  // Prevent re-posting the same day (Brussels calendar day), persisted in the DB
+  // so it survives redeploys — an in-memory flag alone resets on every restart.
+  const todayBrussels = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Brussels" }).format(new Date());
+  if (!req.body?.force) {
+    try {
+      await pool.query(`CREATE TABLE IF NOT EXISTS app_state (key TEXT PRIMARY KEY, value TEXT)`);
+      const { rows } = await pool.query(`SELECT value FROM app_state WHERE key = 'daily_post_last_sent'`);
+      if (rows[0]?.value === todayBrussels) {
+        console.log(`[daily-posts] Already posted today (${todayBrussels}) — skipping. Use force:true to override.`);
+        return res.json({ success: true, skipped: true, reason: "already_sent_today" });
+      }
+      await pool.query(
+        `INSERT INTO app_state (key, value) VALUES ('daily_post_last_sent', $1)
+         ON CONFLICT (key) DO UPDATE SET value = $1`,
+        [todayBrussels]
+      );
+    } catch (e) {
+      console.warn("[daily-posts] Dedup guard check failed, continuing anyway:", e.message);
+    }
   }
 
   try {
