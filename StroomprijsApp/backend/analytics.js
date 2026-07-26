@@ -45,6 +45,12 @@ function shouldTrackOnce(sessionId, event) {
   return true;
 }
 
+// Cache for /api/admin/analytics — the underlying queries scan most/all of a
+// multi-million-row table for large day ranges (12-30s+), so short-lived
+// caching keyed by `days` avoids re-running that on every dashboard refresh.
+const _analyticsCache = new Map(); // key: days -> { data, ts }
+const ANALYTICS_CACHE_TTL_MS = 5 * 60 * 1000;
+
 async function track(pool, { event, method = null, userId = null, sessionId, path, ip, dedup = false }) {
   if (dedup && !shouldTrackOnce(sessionId, event)) return;
   try {
@@ -189,6 +195,11 @@ module.exports = function attachAnalytics(app, pool) {
 
     const days = Math.min(parseInt(req.query.days || 7), 365);
 
+    const cached = _analyticsCache.get(days);
+    if (cached && Date.now() - cached.ts < ANALYTICS_CACHE_TTL_MS) {
+      return res.json(cached.data);
+    }
+
     // For 1 day: use calendar day from midnight Brussels time
     // For 7d+: use rolling window
     const dateFilter = days === 1
@@ -249,7 +260,7 @@ module.exports = function attachAnalytics(app, pool) {
         `),
       ]);
 
-      res.json({
+      const payload = {
         success: true,
         period_days: days,
         generated_at: new Date().toISOString(),
@@ -259,7 +270,9 @@ module.exports = function attachAnalytics(app, pool) {
         guest_vs_loggedin: guestRatio.rows,
         calculator_funnel: funnel.rows,
         daily_breakdown: daily.rows,
-      });
+      };
+      _analyticsCache.set(days, { data: payload, ts: Date.now() });
+      res.json(payload);
 
     } catch (e) {
       console.error("[analytics] admin query failed:", e.message);

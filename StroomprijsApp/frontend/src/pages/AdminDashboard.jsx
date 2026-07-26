@@ -59,11 +59,11 @@ function headers() {
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, color }) {
+function StatCard({ label, value, sub, color, loading }) {
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px", flex: 1, minWidth: 130 }}>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 20px", flex: 1, minWidth: 130, opacity: loading ? 0.45 : 1, transition: "opacity 0.15s ease" }}>
       <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, color: color || C.text }}>{fmt(value)}</div>
+      <div style={{ fontSize: 28, fontWeight: 800, color: color || C.text }}>{loading ? "…" : fmt(value)}</div>
       {sub && <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{sub}</div>}
     </div>
   );
@@ -278,14 +278,14 @@ export default function AdminDashboard() {
         {/* Stat cards */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
           <StatCard label="Registered Users" value={totalUsers} sub={`${fmt(analytics?.total_registered_users?.google_users)} Google · ${fmt(analytics?.total_registered_users?.email_users)} email`} color={C.teal} />
-          <StatCard label="New Users" value={newToday} sub={`today · +${newInPeriod} last ${period === 1 ? "day" : `${period}d`}`} color={C.cyan} />
-          <StatCard label="Calculator Runs" value={Number(calcRuns) + Number(calcGasRuns)} sub={`⚡ ${fmt(calcRuns)} elec · 🔥 ${fmt(calcGasRuns)} gas`} color={C.yellow} />
-          <StatCard label="Page Views" value={pageViews} sub={period === 1 ? "today (since midnight)" : `last ${period} days`} color={C.blue} />
+          <StatCard label="New Users" value={newToday} sub={`today · +${newInPeriod} last ${period === 1 ? "day" : `${period}d`}`} color={C.cyan} loading={loading} />
+          <StatCard label="Calculator Runs" value={Number(calcRuns) + Number(calcGasRuns)} sub={`⚡ ${fmt(calcRuns)} elec · 🔥 ${fmt(calcGasRuns)} gas`} color={C.yellow} loading={loading} />
+          <StatCard label="Page Views" value={pageViews} sub={period === 1 ? "today (since midnight)" : `last ${period} days`} color={C.blue} loading={loading} />
           <StatCard label="Users with Email" value={(users || []).filter(u => u.email).length} sub="can receive alerts" color={C.green} />
           <StatCard label="Tesla Connected" value={(users || []).filter(u => u.tesla_connected).length} sub={`of ${totalUsers} registered users`} color="#00E5FF" />
-          <StatCard label="EV Page Views" value={evPageViews} sub={period === 1 ? "today" : `last ${period}d`} color={C.teal} />
-          <StatCard label="SEO Page Views" value={seoPageViews} sub={period === 1 ? "today" : `last ${period}d`} color={C.blue} />
-          <StatCard label="Business Page Views" value={bizPageViews} sub={period === 1 ? "today" : `last ${period}d`} color="#7C3AED" />
+          <StatCard label="EV Page Views" value={evPageViews} sub={period === 1 ? "today" : `last ${period}d`} color={C.teal} loading={loading} />
+          <StatCard label="SEO Page Views" value={seoPageViews} sub={period === 1 ? "today" : `last ${period}d`} color={C.blue} loading={loading} />
+          <StatCard label="Business Page Views" value={bizPageViews} sub={period === 1 ? "today" : `last ${period}d`} color="#7C3AED" loading={loading} />
           <StatCard label="Newsletter Subs" value={nlStats?.active ?? "—"} sub={`${nlStats?.total ?? 0} total · weekly digest`} color="#3B82F6" />
           <StatCard label="HACS Integrations" value={haStats?.active_7d ?? "—"} sub={`${haStats?.active_today ?? 0} today · ${haStats?.total_ever ?? 0} all-time`} color="#41BDF5" />
         </div>
