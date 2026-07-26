@@ -187,7 +187,7 @@ module.exports = function attachAnalytics(app, pool) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
-    const days = Math.min(parseInt(req.query.days || 7), 90);
+    const days = Math.min(parseInt(req.query.days || 7), 365);
 
     // For 1 day: use calendar day from midnight Brussels time
     // For 7d+: use rolling window
@@ -196,56 +196,58 @@ module.exports = function attachAnalytics(app, pool) {
       : `created_at >= NOW() - INTERVAL '${days} days'`;
 
     try {
-      const summary = await pool.query(`
-        SELECT event, COUNT(*) AS total,
-          COUNT(DISTINCT session_id) AS unique_sessions,
-          COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL) AS logged_in_users
-        FROM analytics_events
-        WHERE ${dateFilter}
-        GROUP BY event ORDER BY total DESC
-      `);
+      const [summary, daily, authMethods, guestRatio, funnel, userCount] = await Promise.all([
+        pool.query(`
+          SELECT event, COUNT(*) AS total,
+            COUNT(DISTINCT session_id) AS unique_sessions,
+            COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL) AS logged_in_users
+          FROM analytics_events
+          WHERE ${dateFilter}
+          GROUP BY event ORDER BY total DESC
+        `),
 
-      const daily = await pool.query(`
-        SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
-          event, COUNT(*) AS count
-        FROM analytics_events
-        WHERE ${dateFilter}
-        GROUP BY day, event ORDER BY day DESC, count DESC
-      `);
+        pool.query(`
+          SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
+            event, COUNT(*) AS count
+          FROM analytics_events
+          WHERE ${dateFilter}
+          GROUP BY day, event ORDER BY day DESC, count DESC
+        `),
 
-      const authMethods = await pool.query(`
-        SELECT method, COUNT(*) AS attempts, COUNT(DISTINCT session_id) AS unique_users
-        FROM analytics_events
-        WHERE event IN ('login_attempt_email','login_attempt_google','register_email')
-          AND ${dateFilter}
-        GROUP BY method ORDER BY attempts DESC
-      `);
+        pool.query(`
+          SELECT method, COUNT(*) AS attempts, COUNT(DISTINCT session_id) AS unique_users
+          FROM analytics_events
+          WHERE event IN ('login_attempt_email','login_attempt_google','register_email')
+            AND ${dateFilter}
+          GROUP BY method ORDER BY attempts DESC
+        `),
 
-      const guestRatio = await pool.query(`
-        SELECT method, COUNT(DISTINCT session_id) AS sessions
-        FROM analytics_events
-        WHERE event IN ('guest_session','page_view','ev_page_view','seo_page_view')
-          AND ${dateFilter}
-        GROUP BY method
-      `);
+        pool.query(`
+          SELECT method, COUNT(DISTINCT session_id) AS sessions
+          FROM analytics_events
+          WHERE event IN ('guest_session','page_view','ev_page_view','seo_page_view')
+            AND ${dateFilter}
+          GROUP BY method
+        `),
 
-      const funnel = await pool.query(`
-        SELECT event, COUNT(*) AS total, COUNT(DISTINCT session_id) AS unique_sessions
-        FROM analytics_events
-        WHERE event IN ('calculator_start','calculator_start_gas','login_attempt_email','login_attempt_google','register_email','ev_page_view','seo_page_view')
-          AND ${dateFilter}
-        GROUP BY event ORDER BY total DESC
-      `);
+        pool.query(`
+          SELECT event, COUNT(*) AS total, COUNT(DISTINCT session_id) AS unique_sessions
+          FROM analytics_events
+          WHERE event IN ('calculator_start','calculator_start_gas','login_attempt_email','login_attempt_google','register_email','ev_page_view','seo_page_view')
+            AND ${dateFilter}
+          GROUP BY event ORDER BY total DESC
+        `),
 
-      const userCount = await pool.query(`
-        SELECT COUNT(*) AS total,
-          COUNT(*) FILTER (WHERE providers->>'google' = 'true') AS google_users,
-          COUNT(*) FILTER (WHERE password_hash IS NOT NULL)     AS email_users,
-          COUNT(*) FILTER (WHERE created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Europe/Brussels') AT TIME ZONE 'Europe/Brussels') AS new_today,
-          COUNT(*) FILTER (WHERE ${dateFilter}) AS new_in_period,
-          COUNT(*) FILTER (WHERE preferences->>'tesla_access_token' IS NOT NULL) AS tesla_connected
-        FROM users
-      `);
+        pool.query(`
+          SELECT COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE providers->>'google' = 'true') AS google_users,
+            COUNT(*) FILTER (WHERE password_hash IS NOT NULL)     AS email_users,
+            COUNT(*) FILTER (WHERE created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Europe/Brussels') AT TIME ZONE 'Europe/Brussels') AS new_today,
+            COUNT(*) FILTER (WHERE ${dateFilter}) AS new_in_period,
+            COUNT(*) FILTER (WHERE preferences->>'tesla_access_token' IS NOT NULL) AS tesla_connected
+          FROM users
+        `),
+      ]);
 
       res.json({
         success: true,
