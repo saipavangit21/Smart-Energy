@@ -558,6 +558,21 @@ app.get("/api/stats", async (req, res) => {
   }
 });
 
+// POST /api/track — generic frontend event tracker (A/B tests, button clicks, etc.)
+app.post("/api/track", async (req, res) => {
+  const { event, properties } = req.body || {};
+  if (!event) return res.status(400).json({ success: false });
+  try {
+    await pool.query(`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS properties JSONB`);
+    await pool.query(
+      `INSERT INTO analytics_events (event, session_id, path, ip, properties)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [event, req._sessionId, "/", req._ip, properties ? JSON.stringify(properties) : null]
+    );
+  } catch (_) {}
+  res.json({ success: true });
+});
+
 // GET /api/referral-source?source=facebook&email=... — tracks how users found SmartPrice
 app.get("/api/referral-source", async (req, res) => {
   const { source, email } = req.query;

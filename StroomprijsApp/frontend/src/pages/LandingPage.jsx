@@ -160,6 +160,20 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
     if (desc) desc.setAttribute("content", "Track live EPEX Spot electricity prices in Belgium, compare all suppliers, find the cheapest hours for EV charging, heat pumps & household appliances, and set price alerts. 100% free.");
   }, []);
 
+  useEffect(() => {
+    let v = localStorage.getItem("sp_ab_hero");
+    if (!v) {
+      v = Math.random() < 0.5 ? "A" : "B";
+      localStorage.setItem("sp_ab_hero", v);
+    }
+    setHeroVariant(v);
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "ab_hero_view", properties: { variant: v } }),
+    }).catch(() => {});
+  }, []);
+
   /* state */
   const [prices,       setPrices]       = useState([]);
   const [scrolled,     setScrolled]     = useState(false);
@@ -177,6 +191,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
   const [fluviusState, setFluviusState] = useState("idle");
   const [copiedCmd,    setCopiedCmd]    = useState(false);
   const [barTooltip,   setBarTooltip]   = useState(null);
+  const [heroVariant,  setHeroVariant]  = useState("A");
   const [fetchedAt,    setFetchedAt]    = useState(null);
   const [siteStats,    setSiteStats]    = useState(null);
   const [gasCurrent,   setGasCurrent]   = useState(null);
@@ -364,14 +379,20 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           {L.heroBadgeLive||"🇧🇪 Belgium · Live electricity prices · updated every hour"}
         </div>
 
-        {/* Headline */}
+        {/* Headline — A/B test: A = market-stat, B = user-pain */}
         <h1 className="sp-animate sp-delay-1" style={{fontSize:"clamp(36px,6vw,78px)",fontWeight:900,lineHeight:1.08,margin:"0 auto 24px",maxWidth:860,letterSpacing:"-2.5px",color:"#fff",textShadow:"0 2px 40px rgba(0,0,0,0.15)"}}>
-          <span style={{color:"#FCD34D"}}>{L.heroNew||"Belgian electricity prices swing up to 10× within the same day."}</span>
+          <span style={{color:"#FCD34D"}}>
+            {heroVariant === "B"
+              ? "You could be paying 4× less for electricity. SmartPrice shows you when."
+              : (L.heroNew || "Belgian electricity prices swing up to 10× within the same day.")}
+          </span>
         </h1>
 
         {/* Tagline */}
         <div className="sp-animate sp-delay-2" style={{fontSize:"clamp(17px,2.1vw,24px)",fontWeight:700,color:"rgba(255,255,255,0.95)",marginBottom:16,letterSpacing:"-0.3px"}}>
-          {L.heroTagline||"SmartPrice shows you the cheapest hour to charge, run your dishwasher, or heat your home."}
+          {heroVariant === "B"
+            ? "Free for households, EV drivers & fleet managers. No account needed."
+            : (L.heroTagline || "SmartPrice shows you the cheapest hour to charge, run your dishwasher, or heat your home.")}
         </div>
 
         {/* Subtitle */}
