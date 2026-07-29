@@ -182,6 +182,91 @@ No account needed. Updates every 15 min.`;
   return { nlPost, enPost, html };
 }
 
+// Generates the daily posts, emails/telegrams them, and auto-posts to the FB
+// Page. Callable directly (in-process, e.g. from the hourly scheduler in
+// server.js) or via the HTTP route below — kept as a plain function so the
+// scheduler doesn't have to round-trip an HTTP request to itself to run it.
+async function runDailyPost(pool, { force = false } = {}) {
+  // Prevent re-posting the same day (Brussels calendar day), persisted in the DB
+  // so it survives redeploys — an in-memory flag alone resets on every restart.
+  const todayBrussels = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Brussels" }).format(new Date());
+  if (!force) {
+    try {
+      await pool.query(`CREATE TABLE IF NOT EXISTS app_state (key TEXT PRIMARY KEY, value TEXT)`);
+      const { rows } = await pool.query(`SELECT value FROM app_state WHERE key = 'daily_post_last_sent'`);
+      if (rows[0]?.value === todayBrussels) {
+        console.log(`[daily-posts] Already posted today (${todayBrussels}) — skipping. Use force:true to override.`);
+        return { success: true, skipped: true, reason: "already_sent_today" };
+      }
+      await pool.query(
+        `INSERT INTO app_state (key, value) VALUES ('daily_post_last_sent', $1)
+         ON CONFLICT (key) DO UPDATE SET value = $1`,
+        [todayBrussels]
+      );
+    } catch (e) {
+      console.warn("[daily-posts] Dedup guard check failed, continuing anyway:", e.message);
+    }
+  }
+
+  // Fetch current price + cheapest hours from our own endpoints
+  const [curRes, cheapRes] = await Promise.all([
+    axiosHttp.get(`${SELF_URL}/api/current`, { timeout: 10000 }).catch(() => null),
+    axiosHttp.get(`${SELF_URL}/api/cheapest?hours=8`, { timeout: 10000 }).catch(() => null),
+  ]);
+
+  const current  = curRes?.data?.current  || null;
+  const rawCheapest = cheapRes?.data?.cheapest_hours || cheapRes?.data?.cheapest || [];
+  // Deduplicate to one entry per hour (cheapest slot wins)
+  const seen = new Set();
+  const cheapest = rawCheapest.filter(h => {
+    if (seen.has(h.hour)) return false;
+    seen.add(h.hour);
+    return true;
+  });
+
+  const now     = new Date();
+  const dateStr = new Intl.DateTimeFormat("nl-BE", {
+    timeZone: "Europe/Brussels", day: "numeric", month: "long", year: "numeric",
+  }).format(now);
+
+  const { nlPost, enPost, html } = buildEmail(current, cheapest, dateStr);
+
+  await sendMail({
+    from:    "SmartPrice Posts <info@smartprice.be>",
+    to:      "info@smartprice.be",
+    subject: `📋 Daily posts ready — ${dateStr}`,
+    html,
+  });
+
+  // Send Telegram notification with ready-to-paste NL post
+  const top5 = cheapest.slice(0, 5);
+  const cheapLines = top5.map(h =>
+    `${String(h.hour).padStart(2,"0")}:00 → €${Math.round(h.price_eur_mwh)}/MWh`
+  ).join("\n");
+  const curHour = current?.hour ?? new Date().getHours();
+  const curPrice = current?.price_eur_mwh ?? 0;
+  const tgMsg = [
+    `⚡ <b>SmartPrice — posts klaar voor ${dateStr}</b>`,
+    ``,
+    `Nu (${String(curHour).padStart(2,"0")}:00): <b>€${Math.round(curPrice)}/MWh</b>${curPrice < 0 ? " 🟣 NEGATIEF!" : ""}`,
+    ``,
+    `Goedkoopste uren vandaag:`,
+    cheapLines,
+    ``,
+    `📋 <b>Kopieer &amp; plak NL post:</b>`,
+    `<code>${nlPost.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</code>`,
+    ``,
+    `🔗 <a href="https://www.facebook.com">Facebook</a> · <a href="https://www.reddit.com/r/belgium">Reddit r/belgium</a> · <a href="https://www.linkedin.com">LinkedIn</a>`,
+  ].join("\n");
+
+  await sendTelegram(tgMsg);
+
+  // Auto-post Dutch content to Facebook Page
+  const fbResult = await postToFacebook(nlPost);
+
+  return { success: true, date: dateStr, nlPost, enPost, telegram: !!TELEGRAM_TOKEN, facebook: fbResult };
+}
+
 router.post("/", async (req, res) => {
   const secret = req.headers["x-admin-secret"];
   if (!ADMIN_SECRET || secret !== ADMIN_SECRET) {
@@ -202,86 +287,9 @@ router.post("/", async (req, res) => {
     return res.json({ success: true, custom: true, facebook: fbResult });
   }
 
-  // Prevent re-posting the same day (Brussels calendar day), persisted in the DB
-  // so it survives redeploys — an in-memory flag alone resets on every restart.
-  const todayBrussels = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Brussels" }).format(new Date());
-  if (!req.body?.force) {
-    try {
-      await pool.query(`CREATE TABLE IF NOT EXISTS app_state (key TEXT PRIMARY KEY, value TEXT)`);
-      const { rows } = await pool.query(`SELECT value FROM app_state WHERE key = 'daily_post_last_sent'`);
-      if (rows[0]?.value === todayBrussels) {
-        console.log(`[daily-posts] Already posted today (${todayBrussels}) — skipping. Use force:true to override.`);
-        return res.json({ success: true, skipped: true, reason: "already_sent_today" });
-      }
-      await pool.query(
-        `INSERT INTO app_state (key, value) VALUES ('daily_post_last_sent', $1)
-         ON CONFLICT (key) DO UPDATE SET value = $1`,
-        [todayBrussels]
-      );
-    } catch (e) {
-      console.warn("[daily-posts] Dedup guard check failed, continuing anyway:", e.message);
-    }
-  }
-
   try {
-    // Fetch current price + cheapest hours from our own endpoints
-    const [curRes, cheapRes] = await Promise.all([
-      axiosHttp.get(`${SELF_URL}/api/current`, { timeout: 10000 }).catch(() => null),
-      axiosHttp.get(`${SELF_URL}/api/cheapest?hours=8`, { timeout: 10000 }).catch(() => null),
-    ]);
-
-    const current  = curRes?.data?.current  || null;
-    const rawCheapest = cheapRes?.data?.cheapest_hours || cheapRes?.data?.cheapest || [];
-    // Deduplicate to one entry per hour (cheapest slot wins)
-    const seen = new Set();
-    const cheapest = rawCheapest.filter(h => {
-      if (seen.has(h.hour)) return false;
-      seen.add(h.hour);
-      return true;
-    });
-
-    const now     = new Date();
-    const dateStr = new Intl.DateTimeFormat("nl-BE", {
-      timeZone: "Europe/Brussels", day: "numeric", month: "long", year: "numeric",
-    }).format(now);
-
-    const { nlPost, enPost, html } = buildEmail(current, cheapest, dateStr);
-
-    await sendMail({
-      from:    "SmartPrice Posts <info@smartprice.be>",
-      to:      "info@smartprice.be",
-      subject: `📋 Daily posts ready — ${dateStr}`,
-      html,
-    });
-
-    // Send Telegram notification with ready-to-paste NL post
-    const top5 = cheapest.slice(0, 5);
-    const cheapLines = top5.map(h =>
-      `${String(h.hour).padStart(2,"0")}:00 → €${Math.round(h.price_eur_mwh)}/MWh`
-    ).join("\n");
-    const curHour = current?.hour ?? new Date().getHours();
-    const curPrice = current?.price_eur_mwh ?? 0;
-    const tgMsg = [
-      `⚡ <b>SmartPrice — posts klaar voor ${dateStr}</b>`,
-      ``,
-      `Nu (${String(curHour).padStart(2,"0")}:00): <b>€${Math.round(curPrice)}/MWh</b>${curPrice < 0 ? " 🟣 NEGATIEF!" : ""}`,
-      ``,
-      `Goedkoopste uren vandaag:`,
-      cheapLines,
-      ``,
-      `📋 <b>Kopieer &amp; plak NL post:</b>`,
-      `<code>${nlPost.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</code>`,
-      ``,
-      `🔗 <a href="https://www.facebook.com">Facebook</a> · <a href="https://www.reddit.com/r/belgium">Reddit r/belgium</a> · <a href="https://www.linkedin.com">LinkedIn</a>`,
-    ].join("\n");
-
-    await sendTelegram(tgMsg);
-
-    // Auto-post Dutch content to Facebook Page
-    const fbResult = await postToFacebook(nlPost);
-
-    res.json({ success: true, date: dateStr, nlPost, enPost, telegram: !!TELEGRAM_TOKEN, facebook: fbResult });
-
+    const result = await runDailyPost(pool, { force: !!req.body?.force });
+    res.json(result);
   } catch (e) {
     console.error("[daily-posts] error:", e.message);
     res.status(500).json({ success: false, error: e.message });
@@ -289,3 +297,4 @@ router.post("/", async (req, res) => {
 });
 
 module.exports = router;
+module.exports.runDailyPost = runDailyPost;

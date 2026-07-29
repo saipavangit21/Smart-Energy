@@ -440,14 +440,15 @@ setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape f
 // guard allows it at/after 08:00 Brussels time. Hourly self-check (rather than a
 // single setTimeout aimed at exactly 08:00) means a redeploy landing anytime
 // later in the day still gets caught, instead of silently skipping to tomorrow.
+// Calls runDailyPost() directly in-process — an earlier version looped back
+// through an HTTP self-call (localhost:$PORT), which silently never completed.
 (function scheduleDailyPosts() {
   async function checkDailyPosts() {
     const brussels = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Brussels" }));
     if (brussels.getHours() < 8) return;
     try {
-      const r = await axiosHttp.post(`http://localhost:${PORT}/api/admin/daily-posts`, {},
-        { headers: { "x-admin-secret": process.env.ADMIN_SECRET }, timeout: 30000 });
-      if (!r.data?.skipped) console.log("[daily-posts] ✅ Auto-posted");
+      const r = await dailyPostsRoutes.runDailyPost(pool);
+      if (!r?.skipped) console.log("[daily-posts] ✅ Auto-posted");
     } catch (e) {
       console.warn("[daily-posts] Auto-post failed:", e.message);
     }
