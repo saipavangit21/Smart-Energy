@@ -7,6 +7,7 @@
 const express        = require("express");
 const router         = express.Router();
 const { sendMail }   = require("../mailer");
+const pool           = require("../db").pool;
 
 const FROM           = "SmartPrice Business <info@smartprice.be>";
 const ADMIN_SECRET   = process.env.ADMIN_SECRET;
@@ -75,6 +76,67 @@ const EXPANDED_FLEET_CONTACTS = [
   { to: "belgium@uta.com",              name: "Fleet Team", company: "UTA Belgium",           lang: "nl", type: "expanded_fleet" },
   { to: "fleet.belgium@wexeurope.com",  name: "Fleet Team", company: "WEX Europe Belgium",    lang: "nl", type: "expanded_fleet" },
 ];
+
+// ── Partnership outreach — EV charging networks & energy group-purchase
+// platforms. Generic mailboxes (no named contact found), so the pitch is
+// audience/API-partnership framed rather than a personal cold-open.
+const PARTNERSHIP_CONTACTS = [
+  { to: "info@groepsaankoop.be",              name: "Team", company: "Groepsaankoop.be",                    lang: "nl", type: "partnership" },
+  { to: "info@energiegroepsaankoop.be",       name: "Team", company: "Energiegroepsaankoop.be (Zero Emission Solutions)", lang: "nl", type: "partnership" },
+  { to: "sales@chargingbelgium.com",          name: "Team", company: "TotalEnergies Charging Services Belgium", lang: "en", type: "partnership" },
+];
+
+function buildPartnershipHtml(name, company, lang) {
+  const t = {
+    nl: {
+      greeting: `Dag ${name}`,
+      p1: `Ik ben Monika, oprichter van SmartPrice.be — een gratis platform met live EPEX-stroomprijzen voor Belgische gezinnen, EV-rijders en bedrijven.`,
+      p2: `Ik zag dat ${company} met net dezelfde mensen bezig is — die actief op hun energiekost letten — en dacht: misschien de moeite om even kennis te maken.`,
+      p3: `We hebben een gratis publieke API die elke 15 minuten de actuele EPEX-prijs per kWh doorgeeft (<a href="https://smartprice.be/api-docs" style="color:#15803D;">smartprice.be/api-docs</a>). Zou eventueel iets zijn om te koppelen, of gewoon om elkaars publiek te bereiken.`,
+      ask: `Zin om er eens kort over te bellen of mailen?`,
+      sig: `Monika`,
+      unsub: `Antwoord op deze e-mail om u af te melden.`,
+    },
+    en: {
+      greeting: `Hi ${name}`,
+      p1: `I'm Monika, founder of SmartPrice.be — a free platform showing live EPEX electricity prices for Belgian households, EV drivers, and businesses.`,
+      p2: `I noticed ${company} serves pretty much the same people — folks who actively watch their energy costs — so thought it might be worth saying hello.`,
+      p3: `We have a free public API that delivers the actual EPEX price per kWh every 15 minutes (<a href="https://smartprice.be/api-docs" style="color:#15803D;">smartprice.be/api-docs</a>). Could be something to hook into, or just a way to reach each other's audience.`,
+      ask: `Worth a short call or a reply?`,
+      sig: `Monika`,
+      unsub: `Reply to this email to unsubscribe.`,
+    },
+  };
+  const c = t[lang] || t.en;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#ffffff;font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;">
+<div style="max-width:560px;margin:0 auto;padding:40px 28px;">
+
+  <p style="font-size:15px;line-height:1.7;margin:0 0 22px;">${c.greeting},</p>
+
+  <p style="font-size:15px;line-height:1.7;margin:0 0 18px;">${c.p1}</p>
+
+  <p style="font-size:15px;line-height:1.7;margin:0 0 18px;">${c.p2}</p>
+
+  <p style="font-size:15px;line-height:1.7;margin:0 0 22px;">${c.p3}</p>
+
+  <p style="font-size:15px;line-height:1.7;margin:0 0 32px;">${c.ask}</p>
+
+  <p style="font-size:15px;line-height:1.8;margin:0 0 40px;">${c.sig}<br>
+  <a href="mailto:info@smartprice.be" style="color:#555;text-decoration:none;">info@smartprice.be</a>
+  </p>
+
+  <hr style="border:none;border-top:1px solid #e5e5e5;margin:0 0 16px;">
+  <p style="font-size:11px;color:#aaa;margin:0;">${c.unsub}</p>
+
+</div>
+</body></html>`;
+}
+
+function subjectPartnership(company, lang) {
+  if (lang === "nl") return `Samenwerking SmartPrice x ${company}? Live EPEX-data voor uw publiek`;
+  return `SmartPrice x ${company} partnership? Live EPEX data for your audience`;
+}
 
 function buildHtml(name, company, lang) {
   const t = {
@@ -446,13 +508,16 @@ async function sendFluviusUpdate({ to, name }) {
 }
 
 async function sendOne({ to, name, company, lang, followUp = false, finalTouch = false, type = "fleet" }) {
-  const html = type === "secretariat" ? buildSecretariatHtml(name, company, lang)
-             : finalTouch             ? buildFinalTouchHtml(name, company, lang)
-             : followUp               ? buildFollowUpHtml(name, company, lang)
-             :                          buildHtml(name, company, lang);
-  const sub  = type === "secretariat" ? subjectSecretariat(company, lang)
+  const html = type === "partnership"  ? buildPartnershipHtml(name, company, lang)
+             : type === "secretariat"  ? buildSecretariatHtml(name, company, lang)
+             : finalTouch              ? buildFinalTouchHtml(name, company, lang)
+             : followUp                ? buildFollowUpHtml(name, company, lang)
+             :                           buildHtml(name, company, lang);
+  const sub  = type === "partnership" ? subjectPartnership(company, lang)
+             : type === "secretariat" ? subjectSecretariat(company, lang)
              :                          subject(company, lang, followUp, finalTouch);
-  const tag  = type === "secretariat"   ? "secretariat_outreach_jul2026"
+  const tag  = type === "partnership"    ? "partnership_outreach_jul2026"
+             : type === "secretariat"   ? "secretariat_outreach_jul2026"
              : type === "expanded_fleet" ? "fleet_expanded_jul2026"
              : finalTouch               ? "fleet_finaltouch_jun2026"
              : followUp                 ? "fleet_followup_jun2026"
@@ -500,6 +565,7 @@ router.post("/", async (req, res) => {
     || (preset === "all"            ? PRESET_CONTACTS          : null)
     || (preset === "secretariat"    ? SECRETARIAT_CONTACTS     : null)
     || (preset === "expanded_fleet" ? EXPANDED_FLEET_CONTACTS  : null)
+    || (preset === "partnership"    ? PARTNERSHIP_CONTACTS     : null)
     || [];
 
   if (!list.length) {
@@ -527,4 +593,66 @@ router.post("/", async (req, res) => {
   res.json({ success: true, total: list.length, sent: sent.length, failed: failed.length, results: { sent, failed } });
 });
 
+// ── Weekly outreach backlog — sends ONE batch per week from a fixed, known
+// list of not-yet-contacted segments, then stops once exhausted. Does not
+// invent new targets on its own; new segments only get added deliberately
+// (see PARTNERSHIP_CONTACTS etc. above). Progress persisted in app_state so
+// it survives redeploys, same pattern as the daily-post / weekly-digest guards.
+const BACKLOG_SEGMENTS = [
+  { key: "partnership",    list: PARTNERSHIP_CONTACTS,    preset: "partnership" },
+  { key: "secretariat",    list: SECRETARIAT_CONTACTS,    preset: "secretariat" },
+  { key: "expanded_fleet", list: EXPANDED_FLEET_CONTACTS, preset: "expanded_fleet" },
+];
+
+async function runWeeklyOutreachBacklog(pool) {
+  await pool.query(`CREATE TABLE IF NOT EXISTS app_state (key TEXT PRIMARY KEY, value TEXT)`);
+
+  const { rows } = await pool.query(
+    `SELECT key, value FROM app_state WHERE key IN ('outreach_backlog_index', 'outreach_backlog_last_sent')`
+  );
+  const state = Object.fromEntries(rows.map(r => [r.key, r.value]));
+  const index = parseInt(state.outreach_backlog_index || "0", 10);
+
+  if (index >= BACKLOG_SEGMENTS.length) {
+    return { success: true, skipped: true, reason: "backlog_exhausted" };
+  }
+
+  const todayBrussels = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Brussels" }).format(new Date());
+  if (state.outreach_backlog_last_sent) {
+    const daysSince = (new Date(todayBrussels) - new Date(state.outreach_backlog_last_sent)) / (1000 * 60 * 60 * 24);
+    if (daysSince < 7) {
+      return { success: true, skipped: true, reason: "not_due_yet", days_since_last: daysSince };
+    }
+  }
+
+  const segment = BACKLOG_SEGMENTS[index];
+  const sent = [], failed = [];
+  for (const contact of segment.list) {
+    try {
+      const result = await sendOne({ ...contact });
+      sent.push(result);
+      console.log(`[weekly-outreach] ✓ sent → ${contact.to}`);
+    } catch (e) {
+      const msg = e.response?.data?.message || e.message;
+      failed.push({ to: contact.to, company: contact.company, error: msg });
+      console.error(`[weekly-outreach] ✗ failed → ${contact.to}: ${msg}`);
+    }
+    await sleep(600);
+  }
+
+  await pool.query(
+    `INSERT INTO app_state (key, value) VALUES ('outreach_backlog_index', $1)
+     ON CONFLICT (key) DO UPDATE SET value = $1`,
+    [String(index + 1)]
+  );
+  await pool.query(
+    `INSERT INTO app_state (key, value) VALUES ('outreach_backlog_last_sent', $1)
+     ON CONFLICT (key) DO UPDATE SET value = $1`,
+    [todayBrussels]
+  );
+
+  return { success: true, segment: segment.key, total: segment.list.length, sent: sent.length, failed: failed.length };
+}
+
 module.exports = router;
+module.exports.runWeeklyOutreachBacklog = runWeeklyOutreachBacklog;

@@ -476,6 +476,27 @@ if (process.env.RESEND_API_KEY) {
   console.log("   Weekly digest: ⏰ Hourly check — sends Monday 08:00+ Brussels (DB dedup guard)");
 }
 
+// Weekly B2B outreach backlog — same hourly-check + Monday 08:00 pattern as the
+// weekly digest. Sends one batch from a fixed, known backlog of not-yet-
+// contacted segments (partnership / secretariat / expanded fleet) per week,
+// then stops on its own once that backlog is exhausted — it never invents new
+// targets to email.
+(function scheduleWeeklyOutreach() {
+  function checkWeeklyOutreach() {
+    const brussels = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Brussels", weekday: "short", hour: "numeric", hour12: false,
+    }).formatToParts(new Date()).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+    if (brussels.weekday === "Mon" && parseInt(brussels.hour) >= 8) {
+      outreachRoutes.runWeeklyOutreachBacklog(pool)
+        .then(r => { if (!r?.skipped) console.log(`[weekly-outreach] ✅ Sent segment: ${r.segment} (${r.sent}/${r.total})`); })
+        .catch(e => console.error("[weekly-outreach] Error:", e.message));
+    }
+  }
+  checkWeeklyOutreach();
+  setInterval(checkWeeklyOutreach, 60 * 60 * 1000);
+  console.log("   Weekly outreach: ⏰ Hourly check — sends Monday 08:00+ Brussels (backlog: partnership → secretariat → expanded fleet)");
+})();
+
 
 // ── SmartPrice AI Agent proxy ─────────────────────────────────
 app.post("/api/agent/chat", async (req, res) => {

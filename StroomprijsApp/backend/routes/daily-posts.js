@@ -166,6 +166,28 @@ No account needed. Updates every 15 min.`;
     <pre style="font-size:13px;color:#C8D8E8;line-height:1.8;white-space:pre-wrap;margin:0;font-family:'Segoe UI',sans-serif;">${enPost}</pre>
   </div>
 
+  <!-- Where to post today -->
+  <div style="background:#0D1626;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px 20px;margin-bottom:20px;">
+    <div style="color:#94A3B8;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">📍 Where to post today (pick 2-3, rotate daily)</div>
+    <div style="font-size:12px;color:#94A3B8;font-weight:700;margin-bottom:6px;">🇳🇱 Dutch — post here</div>
+    <div style="font-size:13px;line-height:2;margin-bottom:12px;">
+      <a href="https://www.facebook.com/evrijders/" style="color:#00C896;text-decoration:none;">VER - EV / evrijders</a><br>
+      <a href="https://www.facebook.com/groups/350838672426615/" style="color:#00C896;text-decoration:none;">Zonnepanelen Forum Belgie</a><br>
+      <a href="https://www.facebook.com/groups/1463894423872949/" style="color:#00C896;text-decoration:none;">Alles over zonnepanelen, advies en bijhouden opbrengst</a><br>
+      <a href="https://www.facebook.com/groups/HomeAssistantNL/" style="color:#00C896;text-decoration:none;">Home Assistant [DUTCH]</a><br>
+      <a href="https://www.facebook.com/groups/TeslaOwnersBelgium/" style="color:#00C896;text-decoration:none;">Tesla Owners Group Belgium</a>
+    </div>
+    <div style="font-size:12px;color:#94A3B8;font-weight:700;margin-bottom:6px;">🇬🇧 English — post here</div>
+    <div style="font-size:13px;line-height:2;">
+      <a href="https://www.reddit.com/r/belgium" style="color:#3B82F6;text-decoration:none;">r/belgium</a> ·
+      <a href="https://www.reddit.com/r/electricvehicles" style="color:#3B82F6;text-decoration:none;">r/electricvehicles</a> ·
+      <a href="https://www.reddit.com/r/homeassistant" style="color:#3B82F6;text-decoration:none;">r/homeassistant</a><br>
+      <a href="https://www.facebook.com/TeslaClubBE/" style="color:#3B82F6;text-decoration:none;">Tesla Owners Club Belgium</a><br>
+      <a href="https://www.facebook.com/groups/expatsbelgium/" style="color:#3B82F6;text-decoration:none;">Expats in Belgium (XiB)</a><br>
+      <a href="https://www.facebook.com/groups/816340168475335/" style="color:#3B82F6;text-decoration:none;">Expats in Belgium</a>
+    </div>
+  </div>
+
   <!-- Tip -->
   <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:16px;text-align:center;">
     <div style="color:#334;font-size:12px;line-height:1.8;">
