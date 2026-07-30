@@ -121,7 +121,7 @@ Heeft u een EV, warmtepomp of vaatwasser? Plan uw verbruik tijdens deze uren en 
 
 ➡️ Live prijzen + gratis laadplanner: smartprice.be
 
-#elektriciteit #energiebesparing #EVrijden #België #EPEX #goedkoopstroom #warmtepomp`;
+#elektriciteit #energiebesparing #EVrijden #België #EPEX #goedkoopstroom #warmtepomp #zonnepanelen #TeslaBelgie #HomeAssistant #dynamischcontract`;
 
   // ── English Reddit / EV groups post ──────────────────────────────────
   const enLines = top5.map(h =>
@@ -138,7 +138,9 @@ Prices swing up to 8× within the same day. If you have a dynamic tariff (Bolt, 
 
 Free live tracker + smart charge planner → smartprice.be
 
-No account needed. Updates every 15 min.`;
+No account needed. Updates every 15 min.
+
+#Belgium #EVcharging #SolarEnergy #HomeAssistant #DynamicPricing #ExpatsBelgium`;
 
   // ── Email HTML ────────────────────────────────────────────────────────
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
