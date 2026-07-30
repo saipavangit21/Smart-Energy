@@ -189,6 +189,10 @@ No account needed. Updates every 15 min.`;
 async function runDailyPost(pool, { force = false } = {}) {
   // Prevent re-posting the same day (Brussels calendar day), persisted in the DB
   // so it survives redeploys — an in-memory flag alone resets on every restart.
+  // Only WRITTEN once the run actually completes (see bottom of function) — if
+  // it were written up front, a transient failure partway through (e.g. a mail
+  // send blip) would mark today as "sent" with nothing actually posted, and
+  // silently block every retry for the rest of the day.
   const todayBrussels = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Brussels" }).format(new Date());
   if (!force) {
     try {
@@ -198,11 +202,6 @@ async function runDailyPost(pool, { force = false } = {}) {
         console.log(`[daily-posts] Already posted today (${todayBrussels}) — skipping. Use force:true to override.`);
         return { success: true, skipped: true, reason: "already_sent_today" };
       }
-      await pool.query(
-        `INSERT INTO app_state (key, value) VALUES ('daily_post_last_sent', $1)
-         ON CONFLICT (key) DO UPDATE SET value = $1`,
-        [todayBrussels]
-      );
     } catch (e) {
       console.warn("[daily-posts] Dedup guard check failed, continuing anyway:", e.message);
     }
@@ -236,7 +235,7 @@ async function runDailyPost(pool, { force = false } = {}) {
     to:      "info@smartprice.be",
     subject: `📋 Daily posts ready — ${dateStr}`,
     html,
-  });
+  }).catch(e => console.warn("[daily-posts] Email send failed:", e.message));
 
   // Send Telegram notification with ready-to-paste NL post
   const top5 = cheapest.slice(0, 5);
@@ -263,6 +262,18 @@ async function runDailyPost(pool, { force = false } = {}) {
 
   // Auto-post Dutch content to Facebook Page
   const fbResult = await postToFacebook(nlPost);
+
+  if (!force) {
+    try {
+      await pool.query(
+        `INSERT INTO app_state (key, value) VALUES ('daily_post_last_sent', $1)
+         ON CONFLICT (key) DO UPDATE SET value = $1`,
+        [todayBrussels]
+      );
+    } catch (e) {
+      console.warn("[daily-posts] Dedup guard write failed:", e.message);
+    }
+  }
 
   return { success: true, date: dateStr, nlPost, enPost, telegram: !!TELEGRAM_TOKEN, facebook: fbResult };
 }
