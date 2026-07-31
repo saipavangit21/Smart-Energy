@@ -287,7 +287,13 @@ async function runDailyPost(pool, { force = false } = {}) {
   // Auto-post Dutch content to Facebook Page
   const fbResult = await postToFacebook(nlPost);
 
-  if (!force) {
+  // Only mark today as "done" if the Facebook post actually succeeded.
+  // postToFacebook() never throws — a transient Graph API failure (rate
+  // limit, brief outage) returns {ok:false} without raising an error, which
+  // previously still wrote the guard and silently ate the failure for the
+  // rest of the day. Leaving the guard unwritten on failure lets the next
+  // hourly check retry instead.
+  if (!force && fbResult?.ok) {
     try {
       await pool.query(
         `INSERT INTO app_state (key, value) VALUES ('daily_post_last_sent', $1)
