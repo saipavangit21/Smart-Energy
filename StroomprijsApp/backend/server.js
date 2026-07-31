@@ -498,6 +498,25 @@ if (process.env.RESEND_API_KEY) {
   console.log("   Weekly outreach: ⏰ Hourly check — sends Tuesday 08:00+ Brussels (backlog: partnership → secretariat → expanded fleet)");
 })();
 
+// One-off mobility-partnership outreach (Mbrella, Skipr, Traxio, EVBox) —
+// fires once on the next Wednesday 08:00+ Brussels, then never again
+// (permanent app_state flag, unlike the recurring Tuesday backlog above).
+(function scheduleMobilityPartnershipOutreach() {
+  function checkMobilityPartnershipOutreach() {
+    const brussels = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Brussels", weekday: "short", hour: "numeric", hour12: false,
+    }).formatToParts(new Date()).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+    if (brussels.weekday === "Wed" && parseInt(brussels.hour) >= 8) {
+      outreachRoutes.runMobilityPartnershipOutreach(pool)
+        .then(r => { if (!r?.skipped) console.log(`[mobility-partnership] ✅ Sent (${r.sent}/${r.total})`); })
+        .catch(e => console.error("[mobility-partnership] Error:", e.message));
+    }
+  }
+  checkMobilityPartnershipOutreach();
+  setInterval(checkMobilityPartnershipOutreach, 60 * 60 * 1000);
+  console.log("   Mobility partnership outreach: ⏰ Hourly check — sends once, next Wednesday 08:00+ Brussels");
+})();
+
 
 // ── SmartPrice AI Agent proxy ─────────────────────────────────
 app.post("/api/agent/chat", async (req, res) => {

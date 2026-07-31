@@ -86,6 +86,17 @@ const PARTNERSHIP_CONTACTS = [
   { to: "sales@chargingbelgium.com",          name: "Team", company: "TotalEnergies Charging Services Belgium", lang: "en", type: "partnership" },
 ];
 
+// ── Mobility-budget platforms + EV charging hardware + mobility federation —
+// one-off send (not a recurring segment). Mbrella/Skipr are especially on-
+// topic: mobility-budget platforms are exactly where EV home-charging
+// reimbursement calculations happen, same angle as the CIR 92 fleet pitch.
+const MOBILITY_PARTNERSHIP_CONTACTS = [
+  { to: "amaury@mbrella.eu",   name: "Amaury", company: "Mbrella",                lang: "nl", type: "partnership" },
+  { to: "hello@skipr.co",      name: "Team",   company: "Skipr",                  lang: "nl", type: "partnership" },
+  { to: "mail@traxio.be",      name: "Team",   company: "Traxio",                 lang: "nl", type: "partnership" },
+  { to: "support@evbox.com",   name: "Team",   company: "EVBox",                  lang: "en", type: "partnership" },
+];
+
 function buildPartnershipHtml(name, company, lang) {
   const t = {
     nl: {
@@ -562,10 +573,11 @@ router.post("/", async (req, res) => {
   }
 
   const list = contacts
-    || (preset === "all"            ? PRESET_CONTACTS          : null)
-    || (preset === "secretariat"    ? SECRETARIAT_CONTACTS     : null)
-    || (preset === "expanded_fleet" ? EXPANDED_FLEET_CONTACTS  : null)
-    || (preset === "partnership"    ? PARTNERSHIP_CONTACTS     : null)
+    || (preset === "all"                  ? PRESET_CONTACTS               : null)
+    || (preset === "secretariat"          ? SECRETARIAT_CONTACTS          : null)
+    || (preset === "expanded_fleet"       ? EXPANDED_FLEET_CONTACTS       : null)
+    || (preset === "partnership"          ? PARTNERSHIP_CONTACTS          : null)
+    || (preset === "mobility_partnership" ? MOBILITY_PARTNERSHIP_CONTACTS : null)
     || [];
 
   if (!list.length) {
@@ -654,5 +666,38 @@ async function runWeeklyOutreachBacklog(pool) {
   return { success: true, segment: segment.key, total: segment.list.length, sent: sent.length, failed: failed.length };
 }
 
+// ── One-off mobility-partnership send — fires once on the next Wednesday
+// 08:00+ Brussels, then never again (guarded by a permanent app_state flag,
+// unlike the recurring weekly backlog above).
+async function runMobilityPartnershipOutreach(pool) {
+  await pool.query(`CREATE TABLE IF NOT EXISTS app_state (key TEXT PRIMARY KEY, value TEXT)`);
+  const { rows } = await pool.query(`SELECT value FROM app_state WHERE key = 'mobility_partnership_sent'`);
+  if (rows[0]?.value === "true") {
+    return { success: true, skipped: true, reason: "already_sent" };
+  }
+
+  const sent = [], failed = [];
+  for (const contact of MOBILITY_PARTNERSHIP_CONTACTS) {
+    try {
+      const result = await sendOne({ ...contact });
+      sent.push(result);
+      console.log(`[mobility-partnership] ✓ sent → ${contact.to}`);
+    } catch (e) {
+      const msg = e.response?.data?.message || e.message;
+      failed.push({ to: contact.to, company: contact.company, error: msg });
+      console.error(`[mobility-partnership] ✗ failed → ${contact.to}: ${msg}`);
+    }
+    await sleep(600);
+  }
+
+  await pool.query(
+    `INSERT INTO app_state (key, value) VALUES ('mobility_partnership_sent', 'true')
+     ON CONFLICT (key) DO UPDATE SET value = 'true'`
+  );
+
+  return { success: true, total: MOBILITY_PARTNERSHIP_CONTACTS.length, sent: sent.length, failed: failed.length };
+}
+
 module.exports = router;
+module.exports.runMobilityPartnershipOutreach = runMobilityPartnershipOutreach;
 module.exports.runWeeklyOutreachBacklog = runWeeklyOutreachBacklog;
