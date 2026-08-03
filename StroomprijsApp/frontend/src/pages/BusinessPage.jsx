@@ -427,7 +427,7 @@ export default function BusinessPage({ onNavigate }) {
         </div>
       </div>
 
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "8px 32px 80px" }}>
+      <div className="sp-desktop-extra" style={{ maxWidth: 960, margin: "0 auto", padding: "8px 32px 80px" }}>
 
         {/* ── GLOSSARY — plain-language anchor ──────────────────────── */}
         <div style={{ background: "#F0F9FF", border: "1px solid rgba(14,165,233,0.22)", borderRadius: 18, padding: "22px 28px", marginBottom: 48 }}>
@@ -721,6 +721,12 @@ export default function BusinessPage({ onNavigate }) {
         </div>
         <div>🛡️ GDPR Compliant · 🇪🇺 EU Hosted · 🔒 OAuth 2.0 · CIR 92 Compliant</div>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .sp-desktop-extra { display: none; }
+        }
+      `}</style>
     </div>
   );
 }

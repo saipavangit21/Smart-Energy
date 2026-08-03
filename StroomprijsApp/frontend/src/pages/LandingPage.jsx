@@ -360,7 +360,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         <div className="sp-blob sp-blob-3" />
 
         {/* Badge */}
-        <div className="sp-animate" style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.3)",borderRadius:30,padding:"6px 20px",marginBottom:28,fontSize:13,fontWeight:700,color:"#fff",backdropFilter:"blur(8px)"}}>
+        <div className="sp-animate sp-hero-badge" style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.3)",borderRadius:30,padding:"6px 20px",marginBottom:28,fontSize:13,fontWeight:700,color:"#fff",backdropFilter:"blur(8px)"}}>
           {L.heroBadgeLive||"🇧🇪 Belgium · Live electricity prices · updated every hour"}
         </div>
 
@@ -370,12 +370,12 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </h1>
 
         {/* Tagline */}
-        <div className="sp-animate sp-delay-2" style={{fontSize:"clamp(17px,2.1vw,24px)",fontWeight:700,color:"rgba(255,255,255,0.95)",marginBottom:16,letterSpacing:"-0.3px"}}>
+        <div className="sp-animate sp-delay-2 sp-hero-tagline" style={{fontSize:"clamp(17px,2.1vw,24px)",fontWeight:700,color:"rgba(255,255,255,0.95)",marginBottom:16,letterSpacing:"-0.3px"}}>
           {L.heroTagline||"SmartPrice shows you the cheapest hour to charge, run your dishwasher, or heat your home."}
         </div>
 
         {/* Subtitle */}
-        <p className="sp-animate sp-delay-2" style={{fontSize:"clamp(14px,1.7vw,17px)",color:"rgba(255,255,255,0.65)",maxWidth:500,margin:"0 auto 40px",lineHeight:1.75,fontWeight:400}}>
+        <p className="sp-animate sp-delay-2 sp-hero-subtitle" style={{fontSize:"clamp(14px,1.7vw,17px)",color:"rgba(255,255,255,0.65)",maxWidth:500,margin:"0 auto 40px",lineHeight:1.75,fontWeight:400}}>
           {L.heroSubNew||"Free for households, EV drivers, and fleet managers. No account needed."}
         </p>
 
@@ -409,7 +409,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
         {/* Urgency */}
         {(cheapNow||cheapSoon) && (
-          <div className="sp-animate sp-delay-3" style={{display:"inline-block",background:"rgba(34,197,94,0.2)",border:"1px solid rgba(34,197,94,0.5)",borderRadius:12,padding:"8px 22px",fontSize:14,fontWeight:700,color:"#4ADE80",marginBottom:32}}>
+          <div className="sp-animate sp-delay-3 sp-hero-urgency" style={{display:"inline-block",background:"rgba(34,197,94,0.2)",border:"1px solid rgba(34,197,94,0.5)",borderRadius:12,padding:"8px 22px",fontSize:14,fontWeight:700,color:"#4ADE80",marginBottom:32}}>
             {cheapNow ? (L.cheapestNowBadge||"⚡ Cheapest window RIGHT NOW — plug in") : (L.cheapestSoonBadge||"⚡ Cheapest window in {x}").replace("{x}", minsUntilCheap<60?`${minsUntilCheap} min`:`${Math.floor(minsUntilCheap/60)}h ${minsUntilCheap%60}m`)}
           </div>
         )}
@@ -437,7 +437,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                 title: L.pickerHHTitle||"Households",
                 desc: L.pickerHHDesc||"Live EPEX prices, cheapest EV charging window, supplier comparison, and daily alerts. No account needed. Free forever.",
                 cta: L.pickerHHCta||"Explore →",
-                onClick: ()=>toolsRef.current?.scrollIntoView({behavior:"smooth"}),
+                onClick: onGetStarted,
                 href: null,
               },
               {
@@ -477,6 +477,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
       </div>
 
+
+      <div className="sp-desktop-extra">
       {/* ── ECO STRIP ────────────────────────────────────────────── */}
       <div style={{background:isDark?"linear-gradient(135deg,rgba(16,185,129,0.18) 0%,rgba(5,150,105,0.12) 100%)":"linear-gradient(135deg,rgba(16,185,129,0.12) 0%,rgba(5,150,105,0.07) 100%)",borderTop:"1px solid rgba(16,185,129,0.25)",borderBottom:"1px solid rgba(16,185,129,0.25)",padding:"28px 32px"}}>
         <div style={{maxWidth:720,margin:"0 auto",textAlign:"center"}}>
@@ -706,6 +708,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
             {L.ctaStripBtn||"Free Fleet Audit →"}
           </a>
         </div>
+      </div>
+
       </div>
 
       {/* ── FOOTER ────────────────────────────────────────────────── */}
@@ -1031,6 +1035,18 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         /* Prevent horizontal scroll from any fixed-width child */
         @media (max-width: 768px) {
           .sp-card-enterprise { overflow-x: hidden; }
+        }
+
+        /* Mobile hero — trim to headline + price, drop the redundant
+           decorative badge and urgency callout (already implied by the
+           "Cheapest — now" / "Best window" label in the price card) */
+        @media (max-width: 640px) {
+          .sp-hero { padding: 88px 20px 48px; }
+          .sp-hero-badge { display: none; }
+          .sp-hero-tagline { font-size: 16px; margin-bottom: 10px; }
+          .sp-hero-subtitle { margin-bottom: 24px; }
+          .sp-hero-urgency { display: none; }
+          .sp-desktop-extra { display: none; }
         }
       `}</style>
     </div>
