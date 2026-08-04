@@ -60,9 +60,9 @@ export default function SmartAgent() {
   // Fetch live price context once
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/api/current`).then(r => r.json()).catch(() => null),
-      fetch(`${API}/api/prices/today`).then(r => r.json()).catch(() => null),
-      fetch(`${API}/api/cheapest?hours=5`).then(r => r.json()).catch(() => null),
+      fetch(`${API}/api/current`, { credentials: "include" }).then(r => r.json()).catch(() => null),
+      fetch(`${API}/api/prices/today`, { credentials: "include" }).then(r => r.json()).catch(() => null),
+      fetch(`${API}/api/cheapest?hours=5`, { credentials: "include" }).then(r => r.json()).catch(() => null),
     ]).then(([cur, today, cheap]) => {
       setContext({
         currentPrice: cur?.current?.price_eur_mwh,

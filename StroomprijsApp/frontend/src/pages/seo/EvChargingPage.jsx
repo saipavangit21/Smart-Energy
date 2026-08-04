@@ -205,9 +205,9 @@ export default function EvChargingPage({ onGetStarted, onOpenCalculator }) {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/api/current`).then(r => r.json()),
-      fetch(`${API}/api/cheapest?hours=8`).then(r => r.json()),
-      fetch(`${API}/api/prices/today`).then(r => r.json()),
+      fetch(`${API}/api/current`, { credentials: "include" }).then(r => r.json()),
+      fetch(`${API}/api/cheapest?hours=8`, { credentials: "include" }).then(r => r.json()),
+      fetch(`${API}/api/prices/today`, { credentials: "include" }).then(r => r.json()),
     ]).then(([cur, cheap, prices]) => {
       if (cur.success)    setCurrent(cur.current);
       if (cheap.success)  setCheapest(cheap.cheapest_hours || []);

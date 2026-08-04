@@ -239,10 +239,10 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
 
   // Load EPEX price + cheapest upcoming hours
   useEffect(() => {
-    fetch(`${API}/api/current`).then(r => r.json())
+    fetch(`${API}/api/current`, { credentials: "include" }).then(r => r.json())
       .then(d => { if (d.success) setCurrent(d.current); })
       .catch(() => {});
-    fetch(`${API}/api/cheapest?hours=5`).then(r => r.json())
+    fetch(`${API}/api/cheapest?hours=5`, { credentials: "include" }).then(r => r.json())
       .then(d => { if (d.cheapest_hours?.length) setCheapHours(d.cheapest_hours.slice(0, 3)); })
       .catch(() => {});
   }, []);

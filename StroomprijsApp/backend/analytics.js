@@ -9,14 +9,16 @@ function hashIp(ip) {
   return crypto.createHash("sha256").update(ip + (process.env.JWT_SECRET || "salt")).digest("hex").slice(0, 16);
 }
 
+const IS_PROD = process.env.NODE_ENV === "production";
+
 function getSession(req, res) {
   let sid = req.cookies?.sp_session;
   if (!sid) {
     sid = crypto.randomBytes(16).toString("hex");
     res.cookie("sp_session", sid, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: IS_PROD,
+      sameSite: IS_PROD ? "none" : "lax", // "none" needed for cross-origin Railway calls (SEO pages etc.), same fix as auth.js
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
   }
