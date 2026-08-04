@@ -47,6 +47,8 @@ app.use(cors({
     if (origin.endsWith(".vercel.app")) return cb(null, true);
     // Allow all Netlify deployments — migrating off Vercel Pro to Netlify's free tier
     if (origin.endsWith(".netlify.app")) return cb(null, true);
+    // Allow all Cloudflare Pages deployments — evaluating migration off Netlify's credit-based plan
+    if (origin.endsWith(".pages.dev")) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error(`CORS blocked: ${origin}`));
   },
