@@ -7,7 +7,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const AuthContext = createContext(null);
-const API = "/auth";
+const API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/auth` : "https://smart-energy-production-aef3.up.railway.app/auth";
 
 async function safeJson(res) {
   try {

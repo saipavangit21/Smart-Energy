@@ -5,7 +5,7 @@
  */
 import { useEffect, useRef } from "react";
 
-const API = import.meta.env.VITE_API_URL || "";
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
 
 export default function AuthCallback() {
   const done = useRef(false);

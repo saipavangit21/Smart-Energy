@@ -8,6 +8,8 @@ import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher from "../components/LangSwitcher";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 // ─── Design tokens ────────────────────────────────────────────
 const C = {
   bg:     "#060B14",
@@ -255,8 +257,8 @@ function Step2({ data, onChange, onNext, onBack }) {
   // Fetch appliance lists once
   useEffect(() => {
     const p = [];
-    if (hasElec) p.push(fetch("/api/suppliers/appliances").then(r => r.json()).then(d => { if (d.success) setElecList(d.appliances); }));
-    if (hasGas)  p.push(fetch("/api/suppliers/gas-appliances").then(r => r.json()).then(d => { if (d.success) setGasList(d.appliances); }));
+    if (hasElec) p.push(fetch(`${API}/api/suppliers/appliances`, { credentials: "include" }).then(r => r.json()).then(d => { if (d.success) setElecList(d.appliances); }));
+    if (hasGas)  p.push(fetch(`${API}/api/suppliers/gas-appliances`, { credentials: "include" }).then(r => r.json()).then(d => { if (d.success) setGasList(d.appliances); }));
     Promise.all(p).finally(() => setLoading(false));
   }, []);
 
@@ -957,7 +959,7 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
       const typeFilter = data.contractPref === "cheapest" ? "all" : (data.contractPref || "all");
 
       const [elecRes, gasRes] = await Promise.all([
-        hasElec ? fetch("/api/suppliers/calculate", {
+        hasElec ? fetch(`${API}/api/suppliers/calculate`, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             appliances: Object.entries(data.elecSel || {})
@@ -968,7 +970,7 @@ export default function CalculatorPage({ isGuest, onBack, onSignIn }) {
             green_only: data.greenOnly || false,
           }),
         }).then(r => r.json()) : null,
-        hasGas ? fetch("/api/suppliers/calculate-gas", {
+        hasGas ? fetch(`${API}/api/suppliers/calculate-gas`, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             appliances: Object.entries(data.gasSel || {})

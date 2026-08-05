@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import LangSwitcher from "../../components/LangSwitcher";
 
-const API = import.meta.env.VITE_API_URL || "";
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
 
 export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavigate }) {
   // All consts kept inside component to prevent Vite/Rollup TDZ bundle errors
@@ -212,7 +212,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
         setLocating(false);
         setNearMe(true);
         // Re-fetch stations near user
-        fetch(`/api/suppliers/ev-stations?maxresults=100&lat=${lat}&lng=${lng}&distance=20`)
+        fetch(`${API}/api/suppliers/ev-stations?maxresults=100&lat=${lat}&lng=${lng}&distance=20`, { credentials: "include" })
           .then(r => r.json())
           .then(data => {
             if (data.stations?.length > 0) {
@@ -277,7 +277,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
 
   // Load stations from Open Charge Map
   useEffect(() => {
-    fetch(`${API}/api/suppliers/ev-stations?maxresults=200`)
+    fetch(`${API}/api/suppliers/ev-stations?maxresults=200`, { credentials: "include" })
       .then(r => r.json())
       .then(data => {
         const list = data.stations || [];
@@ -503,7 +503,7 @@ export default function EvStationsPage({ onGetStarted, onOpenCalculator, onNavig
                 if (!alertEmail || alertState === "loading") return;
                 setAlertState("loading");
                 try {
-                  const r = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: alertEmail, source: "ev-stations" }) });
+                  const r = await fetch(`${API}/api/leads`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: alertEmail, source: "ev-stations" }) });
                   setAlertState(r.ok ? "done" : "error");
                 } catch { setAlertState("error"); }
               }} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>

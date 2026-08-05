@@ -18,6 +18,8 @@ import { usePrices, useCheapestHours } from "../hooks/usePrices";
 import { SUPPLIERS, getSupplierPrice, getPriceColor, getPriceLabel } from "../utils/priceUtils";
 import GasTab from "./GasTab";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 function PriceTooltip({ active, payload, label, supplier }) {
   const { tSection } = useLanguage();
   const PL = tSection("priceLabels");
@@ -361,7 +363,7 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
   useEffect(() => {
     if (!user || user.isGuest) return;
     const fetchFluvius = () => {
-      fetch("/api/fluvius/latest", { credentials: "include" })
+      fetch(`${API}/api/fluvius/latest`, { credentials: "include" })
         .then(r => r.ok ? r.json() : null)
         .then(d => { if (d?.success) setFluvius(d); })
         .catch(() => {});
@@ -392,7 +394,7 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
 
   const fetchTesla = () => {
     setTeslaLoading(true);
-    fetch("/api/tesla/vehicle", { credentials: "include" })
+    fetch(`${API}/api/tesla/vehicle`, { credentials: "include" })
       .then(r => r.json())
       .then(d => { setTesla(d); setTeslaLoading(false); })
       .catch(() => setTeslaLoading(false));
@@ -400,7 +402,7 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
 
   const connectTesla = () => { window.location.href = "/auth/tesla"; };
   const disconnectTesla = () => {
-    fetch("/api/tesla/disconnect", { method: "DELETE", credentials: "include" })
+    fetch(`${API}/api/tesla/disconnect`, { method: "DELETE", credentials: "include" })
       .then(() => setTesla({ success: true, connected: false }));
   };
 
@@ -863,7 +865,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
     if (tab !== "history") return;
     if (history.length > 0) return;
     setHistoryLoading(true);
-    fetch("/api/prices/history?days=7").then(r => r.json()).then(d => { if (d.success) setHistory(d.days); }).catch(() => {}).finally(() => setHistoryLoading(false));
+    fetch(`${API}/api/prices/history?days=7`, { credentials: "include" }).then(r => r.json()).then(d => { if (d.success) setHistory(d.days); }).catch(() => {}).finally(() => setHistoryLoading(false));
   }, [tab]);
 
   useEffect(() => {

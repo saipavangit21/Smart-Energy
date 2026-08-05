@@ -7,6 +7,8 @@ import { useLanguage } from "../context/LanguageContext";
 import { SUPPLIERS } from "../utils/priceUtils";
 import EnergyMixSection from "../components/EnergyMixSection";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 const C = {
   navy: "#0D1B3E", teal: "#0D9488", white: "#FFFFFF",
   green: "#059669", red: "#DC2626", amber: "#F59E0B",
@@ -170,7 +172,7 @@ export default function ProfilePage({ onBack, onGoAlerts }) {
             if (!window.confirm(P.deleteConfirm || "Are you sure? This will permanently delete your account and all data.")) return;
             try {
               const token = localStorage.getItem("access_token");
-              const res = await fetch("/auth/delete-account", { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+              const res = await fetch(`${API}/auth/delete-account`, { method: "DELETE", credentials: "include", headers: { Authorization: `Bearer ${token}` } });
               if (res.ok) { localStorage.clear(); window.location.replace("/"); }
               else alert(P.deleteError || "Failed to delete account. Please try again.");
             } catch { alert(P.deleteError || "Failed to delete account. Please try again."); }

@@ -10,6 +10,8 @@ import {
 } from "recharts";
 import { useAuth } from "../context/AuthContext";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 const C = {
   orange: "#F97316", teal: "#0D9488", navy: "#060B14", dark: "#0D1626",
   card: "#0A1628", border: "#1E3A5F", muted: "#64748B", light: "#E2E8F0",
@@ -183,7 +185,7 @@ function WeekTab() {
 
   useEffect(() => {
     setHistory(null);
-    fetch(`/api/gas/history?days=${days}`).then(r => r.json()).then(d => {
+    fetch(`${API}/api/gas/history?days=${days}`, { credentials: "include" }).then(r => r.json()).then(d => {
       if (d.success) {
         const prices = (d.history || []).map(h => h.price).filter(p => p != null && !isNaN(p));
         if (prices.length > 0 && (d.stats?.avg == null || d.stats?.min == null)) {
@@ -364,7 +366,7 @@ function GasApplianceCalc({ ttfPrice }) {
 
   useEffect(() => {
     setFetching(true);
-    fetch("/api/suppliers/gas-appliances")
+    fetch(`${API}/api/suppliers/gas-appliances`, { credentials: "include" })
       .then(r => r.json())
       .then(d => {
         if (d.success) {
@@ -381,7 +383,7 @@ function GasApplianceCalc({ ttfPrice }) {
     setLoading(true);
     try {
       const inputs = Object.entries(selections).filter(([,v])=>v.selected).map(([id,v])=>({ id, uses_per_week: v.uses }));
-      const res = await fetch("/api/suppliers/calculate-gas", {
+      const res = await fetch(`${API}/api/suppliers/calculate-gas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ appliances: inputs, region, ttf_avg: ttfPrice || 35 }),
@@ -514,7 +516,7 @@ function GasManualCompare({ ttfPrice }) {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/suppliers/gas?consumption=${consumption}&region=${region}&ttf=${ttfPrice || 35}`)
+    fetch(`${API}/api/suppliers/gas?consumption=${consumption}&region=${region}&ttf=${ttfPrice || 35}`, { credentials: "include" })
       .then(r => r.json())
       .then(d => { if (d.success) setResults(d.results); })
       .finally(() => setLoading(false));
@@ -746,8 +748,8 @@ export default function GasTab({ user, isGuest, onSignIn, isMobile, mobileTab, s
   const setTab = (t) => { setDesktopTab(t); if (isMobile) setMobileTab?.(t); };
 
   useEffect(() => {
-    fetch("/api/gas/current").then(r => r.json()).then(d => { if (d.success) setCurrent(d); }).catch(() => {});
-    fetch("/api/gas/history?days=30").then(r => r.json()).then(d => {
+    fetch(`${API}/api/gas/current`, { credentials: "include" }).then(r => r.json()).then(d => { if (d.success) setCurrent(d); }).catch(() => {});
+    fetch(`${API}/api/gas/history?days=30`, { credentials: "include" }).then(r => r.json()).then(d => {
       if (d.success) {
         // Compute stats client-side if backend returned nulls (fallback mode)
         const prices = (d.history || []).map(h => h.price).filter(p => p != null && !isNaN(p));

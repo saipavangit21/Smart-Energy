@@ -33,6 +33,8 @@ import BusinessPage      from "./pages/BusinessPage";
 import EvCompaniesPage   from "./pages/EvCompaniesPage";
 import SessionCalcPage   from "./pages/SessionCalcPage";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
 function getFullPath() { return window.location.pathname + window.location.search; }
 
@@ -50,7 +52,7 @@ export default function App() {
   const [statusBanner, setStatusBanner] = useState(null);
 
   useEffect(() => {
-    fetch("/api/status-banner")
+    fetch(`${API}/api/status-banner`, { credentials: "include" })
       .then(r => r.json())
       .then(d => { if (d.active) setStatusBanner(d); })
       .catch(() => {});

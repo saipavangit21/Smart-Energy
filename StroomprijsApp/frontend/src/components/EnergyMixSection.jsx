@@ -8,6 +8,8 @@ import {
   CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
 } from "recharts";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 const GEN_SOURCES = [
   { key: "Nuclear",       color: "#A78BFA", label: "Nuclear" },
   { key: "Wind Onshore",  color: "#10B981", label: "Wind ↑" },
@@ -43,8 +45,8 @@ export default function EnergyMixSection({ isMobile }) {
   const load = () => {
     setLoading(true); setError(null);
     Promise.all([
-      fetch("/api/generation/today").then(r => r.json()),
-      fetch("/api/flows/today").then(r => r.json()),
+      fetch(`${API}/api/generation/today`, { credentials: "include" }).then(r => r.json()),
+      fetch(`${API}/api/flows/today`, { credentials: "include" }).then(r => r.json()),
     ]).then(([gen, flows]) => {
       if (gen.success) setGenData(gen.data || []);
       else { console.error("[EnergyMix] generation error:", gen.error); setError(gen.error || "Failed to load generation data"); }

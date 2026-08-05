@@ -8,6 +8,8 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher  from "../components/LangSwitcher";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 const C = {
   bg:        "#F8FAFC",
   card:      "#FFFFFF",
@@ -159,7 +161,7 @@ export default function BusinessPage({ onNavigate }) {
     setMeta("og:type",        "website", true);
     setMeta("twitter:card",   "summary_large_image");
     setMeta("twitter:title",  "SmartPrice for Business — EV Fleet Energy Optimization");
-    fetch("/api/business-ping").catch(() => {});
+    fetch(`${API}/api/business-ping`, { credentials: "include" }).catch(() => {});
   }, []);
 
   /* Ensure page always loads at top */
@@ -180,7 +182,7 @@ export default function BusinessPage({ onNavigate }) {
     if (!leadEmail || leadState !== "idle") return;
     setLeadState("loading");
     try {
-      const r = await fetch("/api/leads", {
+      const r = await fetch(`${API}/api/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

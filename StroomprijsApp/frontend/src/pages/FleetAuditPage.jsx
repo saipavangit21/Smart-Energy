@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher  from "../components/LangSwitcher";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 // CREG official Belgian electricity reference rate (updated quarterly)
 const CREG_RATE_KWH         = 0.2833; // €/kWh — CREG Q2 2026 reference tariff
 const DYNAMIC_RATE_FALLBACK = 0.1920; // €/kWh fallback if API unavailable
@@ -52,7 +54,7 @@ export default function FleetAuditPage({ onNavigate }) {
 
   // Fetch live EPEX average from SmartPrice API
   useEffect(() => {
-    fetch("/api/prices/history?days=30")
+    fetch(`${API}/api/prices/history?days=30`, { credentials: "include" })
       .then(r => r.json())
       .then(d => {
         const days = d?.days || [];
@@ -114,7 +116,7 @@ export default function FleetAuditPage({ onNavigate }) {
     setEmailError("");
     setSubmitting(true);
     try {
-      await fetch("/api/fleet-audit-lead", {
+      await fetch(`${API}/api/fleet-audit-lead`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, company, audit }),

@@ -9,6 +9,8 @@ import { useColors, useTheme } from "../context/ThemeContext";
 import LangSwitcher  from "../components/LangSwitcher";
 import ThemeSwitcher from "../components/ThemeSwitcher";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 /* ── helpers ─────────────────────────────────────────────────── */
 const retailKwh = mwh => (mwh / 1000) + 0.173;
 const fmtHour   = h   => `${String(h).padStart(2,"0")}:00`;
@@ -195,14 +197,14 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
   /* data fetching */
   useEffect(() => {
-    fetch("/api/prices/today").then(r => r.json())
+    fetch(`${API}/api/prices/today`, { credentials: "include" }).then(r => r.json())
       .then(d => { if (d.data?.length) { setPrices(d.data); setFetchedAt(d.fetched_at || new Date().toISOString()); }}).catch(()=>{});
   }, []);
   useEffect(() => {
-    fetch("/api/gas/current").then(r=>r.json()).then(d=>{ if(d.success&&d.ttf) setGasCurrent({price:d.ttf.price,ttf_cEkWh:d.ttf_cEkWh}); }).catch(()=>{});
+    fetch(`${API}/api/gas/current`, { credentials: "include" }).then(r=>r.json()).then(d=>{ if(d.success&&d.ttf) setGasCurrent({price:d.ttf.price,ttf_cEkWh:d.ttf_cEkWh}); }).catch(()=>{});
   }, []);
   useEffect(() => {
-    fetch("/api/stats").then(r=>r.json()).then(d=>{ if(d.success) setSiteStats(d); }).catch(()=>{});
+    fetch(`${API}/api/stats`, { credentials: "include" }).then(r=>r.json()).then(d=>{ if(d.success) setSiteStats(d); }).catch(()=>{});
   }, []);
 
   /* planner */
@@ -273,7 +275,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
     if (!nlEmail || nlState !== "idle") return;
     setNlState("loading");
     try {
-      const r = await fetch("/api/newsletter/subscribe", {
+      const r = await fetch(`${API}/api/newsletter/subscribe`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: nlEmail, language: lang }),
       });
@@ -285,13 +287,13 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
     e.preventDefault();
     if (!leadEmail||leadState!=="idle") return;
     setLeadState("loading");
-    try { const r=await fetch("/api/leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:leadEmail,source:"landing"})}); setLeadState(r.ok?"done":"error"); } catch { setLeadState("error"); }
+    try { const r=await fetch(`${API}/api/leads`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:leadEmail,source:"landing"})}); setLeadState(r.ok?"done":"error"); } catch { setLeadState("error"); }
   }
   async function submitFluvius(e) {
     e.preventDefault();
     if (!fluviusEmail||fluviusState!=="idle") return;
     setFluviusState("loading");
-    try { const r=await fetch("/api/leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:fluviusEmail,source:"fluvius_waitlist"})}); setFluviusState(r.ok?"done":"error"); } catch { setFluviusState("error"); }
+    try { const r=await fetch(`${API}/api/leads`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:fluviusEmail,source:"fluvius_waitlist"})}); setFluviusState(r.ok?"done":"error"); } catch { setFluviusState("error"); }
   }
 
   const SUPPLIERS = [

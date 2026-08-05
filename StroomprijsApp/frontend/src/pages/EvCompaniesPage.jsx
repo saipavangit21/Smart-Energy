@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher from "../components/LangSwitcher";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 const C = {
   bg: "#F8FAFC", card: "#FFFFFF", border: "rgba(0,0,0,0.08)",
   shadow: "0 4px 24px rgba(0,0,0,0.07)", text: "#0F172A",
@@ -25,7 +27,7 @@ export default function EvCompaniesPage({ onNavigate }) {
     e.preventDefault();
     setFormState("loading");
     try {
-      await fetch("/api/contact", {
+      await fetch(`${API}/api/contact`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, source: "ev-companies" }),
       });

@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://smart-energy-production-aef3.up.railway.app/api'
 const REFRESH_INTERVAL = 15 * 60 * 1000 // 15 minutes
 
 export function usePrices() {
@@ -18,7 +18,7 @@ export function usePrices() {
   const fetchPrices = useCallback(async () => {
     try {
       setError(null)
-      const res = await fetch(`${API_BASE}/prices/today`)
+      const res = await fetch(`${API_BASE}/prices/today`, { credentials: 'include' })
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
       const json = await res.json()
       if (!json.success) throw new Error(json.error || 'Unknown error from API')
@@ -50,7 +50,7 @@ export function useCurrentPrice() {
 
   const fetchCurrent = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/current`)
+      const res = await fetch(`${API_BASE}/current`, { credentials: 'include' })
       const json = await res.json()
       if (json.success) setCurrent(json.current)
     } catch (err) {
@@ -74,7 +74,7 @@ export function useCheapestHours(n = 5) {
   const [cheapest, setCheapest] = useState([])
 
   useEffect(() => {
-    fetch(`${API_BASE}/cheapest?hours=${n}`)
+    fetch(`${API_BASE}/cheapest?hours=${n}`, { credentials: 'include' })
       .then(r => r.json())
       .then(json => { if (json.success) setCheapest(json.cheapest_hours) })
       .catch(console.error)

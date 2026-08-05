@@ -7,6 +7,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 const C = {
   bg:     "#060B14",
   card:   "#0A1628",
@@ -66,7 +68,7 @@ function CalculatorTab({ onConsumptionChange, region, setRegion, currentMwh }) {
   const [step,       setStep]         = useState("appliances"); // appliances | results
 
   useEffect(() => {
-    fetch("/api/suppliers/appliances")
+    fetch(`${API}/api/suppliers/appliances`, { credentials: "include" })
       .then(r => r.json())
       .then(d => {
         if (d.success) {
@@ -86,7 +88,7 @@ function CalculatorTab({ onConsumptionChange, region, setRegion, currentMwh }) {
         .filter(([, v]) => v.selected)
         .map(([id, v]) => ({ id, uses_per_week: v.uses }));
 
-      const res = await fetch("/api/suppliers/calculate", {
+      const res = await fetch(`${API}/api/suppliers/calculate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -394,13 +396,13 @@ function CompareTab({ currentMwh }) {
   const [meta,        setMeta]        = useState(null);
 
   useEffect(() => {
-    fetch("/api/suppliers/meta").then(r => r.json()).then(d => { if (d.success) setMeta(d.meta); });
+    fetch(`${API}/api/suppliers/meta`, { credentials: "include" }).then(r => r.json()).then(d => { if (d.success) setMeta(d.meta); });
   }, []);
 
   useEffect(() => {
     if (!consumption || !region) return;
     setLoading(true);
-    fetch(`/api/suppliers/electricity?consumption=${consumption}&region=${region}&green=${greenOnly}&epex=${currentMwh || 100}`)
+    fetch(`${API}/api/suppliers/electricity?consumption=${consumption}&region=${region}&green=${greenOnly}&epex=${currentMwh || 100}`, { credentials: "include" })
       .then(r => r.json())
       .then(d => { if (d.success) setResults(d.results); })
       .finally(() => setLoading(false));

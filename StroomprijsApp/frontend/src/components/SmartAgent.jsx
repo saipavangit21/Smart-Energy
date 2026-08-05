@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 
-const API = "";
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
 
 const SUGGESTED = {
   en: [
@@ -114,7 +114,7 @@ export default function SmartAgent() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/agent/chat", {
+      const response = await fetch(`${API}/api/agent/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
