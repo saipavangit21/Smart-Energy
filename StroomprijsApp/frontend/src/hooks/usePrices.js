@@ -62,8 +62,9 @@ export function useCurrentPrice() {
 
   useEffect(() => {
     fetchCurrent()
-    // Refresh current price every 60 seconds for the live ticker
-    const interval = setInterval(fetchCurrent, 60000)
+    // Price only changes on the hour, so 60s was 60x more frequent than needed —
+    // 5 min still feels live and catches the hourly change with low latency
+    const interval = setInterval(fetchCurrent, 5 * 60 * 1000)
     return () => clearInterval(interval)
   }, [fetchCurrent])
 
