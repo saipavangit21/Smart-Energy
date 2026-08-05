@@ -9,6 +9,11 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 const AuthContext = createContext(null);
 const API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/auth` : "https://smart-energy-production-aef3.up.railway.app/auth";
 
+// Marks that a session cookie was issued at some point. Lets us skip the
+// /auth/me restore check for anonymous visitors (the vast majority of
+// traffic) instead of firing a request that's guaranteed to 401.
+const SESSION_FLAG = "sp_hasSession";
+
 async function safeJson(res) {
   try {
     const text = await res.text();
@@ -59,7 +64,12 @@ export function AuthProvider({ children }) {
       });
       if (!res.ok) return false;
       const json = await res.json();
-      if (json.success && json.user) setUser(json.user);
+      if (json.success && json.user) {
+        setUser(json.user);
+        localStorage.setItem(SESSION_FLAG, "1");
+      } else {
+        localStorage.removeItem(SESSION_FLAG);
+      }
       return json.success;
     } catch {
       return false;
@@ -69,6 +79,11 @@ export function AuthProvider({ children }) {
   // ── Restore session on page load ────────────────────────────
   useEffect(() => {
     const restore = async () => {
+      // No prior session on this browser — skip the doomed /me call
+      if (!localStorage.getItem(SESSION_FLAG)) {
+        setLoading(false);
+        return;
+      }
       try {
         const res  = await fetch(`${API}/me`, {
           credentials: "include",
@@ -79,7 +94,8 @@ export function AuthProvider({ children }) {
           setUser(json.user);
         } else {
           // Try refresh if /me fails
-          await tryRefresh();
+          const refreshed = await tryRefresh();
+          if (!refreshed) localStorage.removeItem(SESSION_FLAG);
         }
       } catch {
         // No session — that's fine
@@ -107,6 +123,7 @@ export function AuthProvider({ children }) {
     if (!json) throw new Error(`Server error (${res.status})`);
     if (!json.success) throw new Error(json.error || "Registration failed");
     setUser(json.user);
+    localStorage.setItem(SESSION_FLAG, "1");
     return json.user;
   };
 
@@ -127,6 +144,7 @@ export function AuthProvider({ children }) {
     if (!json) throw new Error(`Server error (${res.status})`);
     if (!json.success) throw new Error(json.error || "Login failed");
     setUser(json.user);
+    localStorage.setItem(SESSION_FLAG, "1");
     return json.user;
   };
 
@@ -138,8 +156,10 @@ export function AuthProvider({ children }) {
       headers: { "Content-Type": "application/json" },
     });
     const data = await safeJson(res);
-    if (data?.success) setUser(data.user);
-    else throw new Error("Failed to get user after OAuth");
+    if (data?.success) {
+      setUser(data.user);
+      localStorage.setItem(SESSION_FLAG, "1");
+    } else throw new Error("Failed to get user after OAuth");
   };
 
   // ── Logout ──────────────────────────────────────────────────
@@ -152,6 +172,7 @@ export function AuthProvider({ children }) {
       });
     } catch {}
     setUser(null);
+    localStorage.removeItem(SESSION_FLAG);
   };
 
   // ── Update preferences ──────────────────────────────────────

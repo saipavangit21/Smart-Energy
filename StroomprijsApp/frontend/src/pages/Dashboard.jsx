@@ -847,7 +847,8 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
   }, []);
 
   useEffect(() => {
-    authFetch("/auth/me").then(r => r.json()).then(d => {
+    if (!user || user.isGuest) return;
+    authFetch(`${API}/auth/me`).then(r => r.json()).then(d => {
       if (d.success) {
         const p = d.user.preferences || {};
         if (p.supplier)                    setSupplier(p.supplier);
@@ -855,7 +856,7 @@ export default function Dashboard({ onGoProfile, initialTab, onTabConsumed, isGu
         if (p.alertEnabled   !== undefined) setAlertActive(p.alertEnabled);
       }
     }).catch(() => {});
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (initialTab) { setTab(initialTab); onTabConsumed?.(); }

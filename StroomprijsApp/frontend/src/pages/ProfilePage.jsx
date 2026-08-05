@@ -37,7 +37,7 @@ export default function ProfilePage({ onBack, onGoAlerts }) {
   const [livePrefs, setLivePrefs] = useState(user?.preferences || {});
 
   useEffect(() => {
-    authFetch("/auth/me")
+    authFetch(`${API}/auth/me`)
       .then(r => r.json())
       .then(d => {
         if (d.success) {

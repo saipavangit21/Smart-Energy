@@ -32,6 +32,7 @@ export default function AuthCallback() {
         .then(r => r.json())
         .then(data => {
           if (data.success) {
+            localStorage.setItem("sp_hasSession", "1");
             window.location.href = "/";
           } else {
             console.error("Exchange failed:", data.error);
