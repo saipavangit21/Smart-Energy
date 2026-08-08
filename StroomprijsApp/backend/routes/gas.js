@@ -9,7 +9,7 @@ const axios     = require("axios");
 const NodeCache = require("node-cache");
 
 const router   = express.Router();
-const cache    = new NodeCache({ stdTTL: 3600 }); // 1hr cache for gas (daily prices)
+const cache    = new NodeCache({ stdTTL: 86400 }); // 24hr cache — oilpriceapi.com free tier is capped at 200 requests total
 
 const OIL_API_KEY  = process.env.OIL_PRICE_API_KEY;
 const OIL_API_BASE = "https://api.oilpriceapi.com/v1";
@@ -218,7 +218,7 @@ async function fetchTTFHistory(days = 30) {
 
   if (!OIL_API_KEY) {
     const history = generateMockHistory(days);
-    cache.set(key, history, 3600);
+    cache.set(key, history, 86400);
     return history;
   }
 
@@ -245,10 +245,10 @@ async function fetchTTFHistory(days = 30) {
     if (history.length === 0) {
       console.warn("[Gas] API returned empty — using mock");
       const mock = generateMockHistory(days);
-      cache.set(key, mock, 3600);
+      cache.set(key, mock, 86400);
       return mock;
     }
-    cache.set(key, history, 3600);
+    cache.set(key, history, 86400);
     return history;
   } catch (err) {
     console.warn("[Gas] History fetch unavailable, using mock data:", err.message);
