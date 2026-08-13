@@ -7,7 +7,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const AuthContext = createContext(null);
-const API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/auth` : "https://smart-energy-production-aef3.up.railway.app/auth";
+const API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/auth` : "https://api.smartprice.be/auth";
 
 // Marks that a session cookie was issued at some point. Lets us skip the
 // /auth/me restore check for anonymous visitors (the vast majority of

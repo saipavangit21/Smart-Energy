@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher from "../components/LangSwitcher";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 // ─── Design tokens ────────────────────────────────────────────
 const C = {

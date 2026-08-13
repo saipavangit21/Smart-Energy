@@ -35,7 +35,7 @@ import BusinessPage      from "./pages/BusinessPage";
 import EvCompaniesPage   from "./pages/EvCompaniesPage";
 import SessionCalcPage   from "./pages/SessionCalcPage";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 function getPath() { return window.location.pathname.replace(/\/$/, "") || "/"; }
 function getFullPath() { return window.location.pathname + window.location.search; }

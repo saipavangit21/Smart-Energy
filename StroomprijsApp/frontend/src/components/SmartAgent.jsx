@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 const SUGGESTED = {
   en: [

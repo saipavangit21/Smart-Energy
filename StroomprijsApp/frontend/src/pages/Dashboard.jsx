@@ -18,7 +18,7 @@ import { usePrices, useCheapestHours } from "../hooks/usePrices";
 import { SUPPLIERS, getSupplierPrice, getPriceColor, getPriceLabel } from "../utils/priceUtils";
 import GasTab from "./GasTab";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 function PriceTooltip({ active, payload, label, supplier }) {
   const { tSection } = useLanguage();

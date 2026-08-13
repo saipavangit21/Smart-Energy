@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 const C = {
   bg:     "#060B14",

@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { useColors, useTheme } from "../context/ThemeContext";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 export default function ResetPasswordPage({ onDone }) {
   const C       = useColors();

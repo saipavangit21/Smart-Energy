@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import LangSwitcher from "../../components/LangSwitcher";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 const C = {
   bg: "#060B14", card: "#0D1626", border: "rgba(255,255,255,0.08)",

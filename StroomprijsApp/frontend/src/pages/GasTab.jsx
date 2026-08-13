@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { useAuth } from "../context/AuthContext";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 const C = {
   orange: "#F97316", teal: "#0D9488", navy: "#060B14", dark: "#0D1626",

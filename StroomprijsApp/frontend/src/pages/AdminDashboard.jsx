@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from "react";
 
-const API   = import.meta.env.VITE_API_URL  || "https://smart-energy-production-aef3.up.railway.app";
+const API   = import.meta.env.VITE_API_URL  || "https://api.smartprice.be";
 const SECRET = import.meta.env.VITE_ADMIN_SECRET || "";
 
 const C = {

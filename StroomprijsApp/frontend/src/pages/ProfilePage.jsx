@@ -7,7 +7,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { SUPPLIERS } from "../utils/priceUtils";
 import EnergyMixSection from "../components/EnergyMixSection";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 const C = {
   navy: "#0D1B3E", teal: "#0D9488", white: "#FFFFFF",

@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher from "../components/LangSwitcher";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 const GRID_COST = 0.13;  // Belgian distribution + taxes €/kWh (approximation)
 const VAT       = 1.21;  // 21% VAT on Belgian electricity

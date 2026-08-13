@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import LangSwitcher  from "../components/LangSwitcher";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 // CREG official Belgian electricity reference rate (updated quarterly)
 const CREG_RATE_KWH         = 0.2833; // €/kWh — CREG Q2 2026 reference tariff

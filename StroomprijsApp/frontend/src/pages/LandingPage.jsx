@@ -9,7 +9,7 @@ import { useColors, useTheme } from "../context/ThemeContext";
 import LangSwitcher  from "../components/LangSwitcher";
 import ThemeSwitcher from "../components/ThemeSwitcher";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 /* ── helpers ─────────────────────────────────────────────────── */
 const retailKwh = mwh => (mwh / 1000) + 0.173;

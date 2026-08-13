@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://smart-energy-production-aef3.up.railway.app/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api.smartprice.be/api'
 const REFRESH_INTERVAL = 15 * 60 * 1000 // 15 minutes
 
 export function usePrices() {

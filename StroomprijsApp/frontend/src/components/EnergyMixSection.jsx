@@ -8,7 +8,7 @@ import {
   CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
 } from "recharts";
 
-const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://api.smartprice.be";
 
 const GEN_SOURCES = [
   { key: "Nuclear",       color: "#A78BFA", label: "Nuclear" },
