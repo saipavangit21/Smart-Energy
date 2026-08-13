@@ -11,11 +11,15 @@ const rateLimit  = require("express-rate-limit");
 const userStore  = require("../db");
 const { requireAuth } = require("../middleware/auth");
 const { sendWelcomeEmail, sendAdminNewUserNotification } = require("../email-alerts");
+const { sendMail } = require("../mailer");
 
 const router = express.Router();
 
 const loginLimiter    = rateLimit({ windowMs: 15*60*1000, max: 20, message: { success: false, error: "Too many attempts. Try in 15 minutes." } });
 const registerLimiter = rateLimit({ windowMs: 60*60*1000, max: 10, message: { success: false, error: "Too many registrations." } });
+const forgotPasswordLimiter = rateLimit({ windowMs: 15*60*1000, max: 5, message: { success: false, error: "Too many attempts. Try in 15 minutes." } });
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://smartprice.be";
 
 // ── Token generation ──────────────────────────────────────────
 function generateTokens(userId) {
@@ -158,6 +162,79 @@ router.post("/refresh", async (req, res) => {
     res.json({ success: true, user: userStore.safeUser(user) });
   } catch (err) {
     res.status(401).json({ success: false, error: "Invalid or expired refresh token" });
+  }
+});
+
+// ── POST /auth/forgot-password ──────────────────────────────────
+// Always responds success (no user enumeration) — only actually
+// sends an email when the address matches an account with a password.
+router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
+  const { email } = req.body || {};
+  const generic = { success: true, message: "If that email is registered, a reset link has been sent." };
+  if (!email || !isValidEmail(email)) return res.json(generic);
+
+  try {
+    const user = await userStore.findByEmail(email);
+    if (user && user.password_hash) {
+      const rawToken = await userStore.createPasswordResetToken(user.id);
+      const resetUrl = `${FRONTEND_URL}/reset-password?token=${rawToken}`;
+      sendMail({
+        from: "SmartPrice.be <info@smartprice.be>",
+        to: user.email,
+        subject: "⚡ SmartPrice — wachtwoord opnieuw instellen",
+        html: `
+          <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#060B14;color:#E8EDF5;border-radius:16px">
+            <div style="font-size:28px;margin-bottom:8px">⚡</div>
+            <h1 style="font-size:20px;font-weight:900;margin:0 0 12px;color:#10B981">Wachtwoord opnieuw instellen</h1>
+            <p style="color:#6B8099;font-size:14px;line-height:1.7;margin:0 0 20px">
+              Klik op de knop hieronder om een nieuw wachtwoord in te stellen voor je SmartPrice-account. Deze link is <strong style="color:#E8EDF5">1 uur geldig</strong>.
+            </p>
+            <a href="${resetUrl}" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#10B981,#0D9488);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
+              Nieuw wachtwoord instellen →
+            </a>
+            <p style="margin-top:24px;font-size:12px;color:#334455">
+              Heb je dit niet aangevraagd? Dan kan je deze e-mail gewoon negeren — je wachtwoord blijft ongewijzigd.
+            </p>
+          </div>
+        `,
+      }).catch(e => console.warn("[forgot-password] email failed:", e.message));
+    } else if (user && !user.password_hash) {
+      // Account exists but was created via Google — no password to reset
+      sendMail({
+        from: "SmartPrice.be <info@smartprice.be>",
+        to: user.email,
+        subject: "SmartPrice — inloggen via Google",
+        html: `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#060B14;color:#E8EDF5;border-radius:16px">
+          <p style="color:#6B8099;font-size:14px;line-height:1.7">Dit account is aangemaakt via Google — er is geen wachtwoord om te resetten. Log in met de knop "Continue with Google" op SmartPrice.be.</p>
+        </div>`,
+      }).catch(e => console.warn("[forgot-password] google-account email failed:", e.message));
+    }
+  } catch (err) {
+    console.error("Forgot-password error:", err);
+  }
+  res.json(generic);
+});
+
+// ── POST /auth/reset-password ───────────────────────────────────
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body || {};
+    if (!token) return res.status(400).json({ success: false, error: "Reset token required" });
+    if (!newPassword || newPassword.length < 8)
+      return res.status(400).json({ success: false, error: "Password must be at least 8 characters" });
+
+    const userId = await userStore.consumePasswordResetToken(token);
+    if (!userId) return res.status(400).json({ success: false, error: "This reset link is invalid or has expired" });
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await userStore.update(userId, { passwordHash });
+    // Force re-login everywhere — a password reset should end all other sessions
+    await userStore.deleteAllRefreshTokensForUser(userId);
+
+    res.json({ success: true, message: "Password reset successfully" });
+  } catch (err) {
+    console.error("Reset-password error:", err);
+    res.status(500).json({ success: false, error: "Failed to reset password" });
   }
 });
 

@@ -2,7 +2,8 @@
  * db.js — PostgreSQL Database Layer (Supabase)
  */
 
-const { Pool } = require("pg");
+const { Pool }   = require("pg");
+const crypto     = require("crypto");
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -133,6 +134,45 @@ const userStore = {
 
   async deleteRefreshToken(token) {
     await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [token]);
+  },
+
+  async deleteAllRefreshTokensForUser(userId) {
+    await pool.query("DELETE FROM refresh_tokens WHERE user_id = $1", [userId]);
+  },
+
+  // ── Password reset tokens ─────────────────────────────────────
+  // Raw token is emailed to the user; only its SHA-256 hash is stored,
+  // so a DB leak alone can't be used to reset anyone's password.
+  async createPasswordResetToken(userId) {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        token_hash TEXT NOT NULL PRIMARY KEY,
+        user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT now()
+      )
+    `);
+    // Invalidate any earlier outstanding reset links for this user
+    await pool.query("DELETE FROM password_reset_tokens WHERE user_id = $1", [userId]);
+
+    const rawToken  = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await pool.query(
+      "INSERT INTO password_reset_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
+      [tokenHash, userId, expiresAt]
+    );
+    return rawToken;
+  },
+
+  // Validates + single-use consumes a reset token, returning the user_id (or null)
+  async consumePasswordResetToken(rawToken) {
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const { rows } = await pool.query(
+      "DELETE FROM password_reset_tokens WHERE token_hash = $1 AND expires_at > NOW() RETURNING user_id",
+      [tokenHash]
+    );
+    return rows[0]?.user_id || null;
   },
 
   // ── Safe user (never expose password_hash) ───────────────────

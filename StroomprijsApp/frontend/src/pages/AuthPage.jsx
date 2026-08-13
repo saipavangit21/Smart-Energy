@@ -9,6 +9,8 @@ import { useLanguage }  from "../context/LanguageContext";
 import { useColors, useTheme } from "../context/ThemeContext";
 import LangSwitcher     from "../components/LangSwitcher";
 
+const API = import.meta.env.VITE_API_URL || "https://smart-energy-production-aef3.up.railway.app";
+
 function Input({ label, type = "text", value, onChange, placeholder, autoComplete, hint, C }) {
   return (
     <div style={{ marginBottom: 16 }}>
@@ -47,13 +49,34 @@ export default function AuthPage({ onBack, reason }) {
   const [confirm,  setConfirm]  = useState("");
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const reset = () => setError("");
 
   const isValidEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
+  const handleForgotPassword = async () => {
+    reset();
+    if (!email.trim())        { setError(A.errEmail || "Please enter your email"); return; }
+    if (!isValidEmail(email)) { setError(A.errInvalidEmail || "Enter a valid email address"); return; }
+    setLoading(true);
+    try {
+      await fetch(`${API}/auth/forgot-password`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      setForgotSent(true);
+    } catch {
+      setError(A.errGeneric || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     reset();
+    if (mode === "forgot") return handleForgotPassword();
     if (mode === "register") {
       if (!name.trim())         { setError(A.errName || "Please enter your name"); return; }
       if (!email.trim())        { setError(A.errEmail || "Please enter your email"); return; }
@@ -80,7 +103,7 @@ export default function AuthPage({ onBack, reason }) {
     }
   };
 
-  const switchMode = m => { setMode(m); reset(); setName(""); setEmail(""); setPassword(""); setConfirm(""); };
+  const switchMode = m => { setMode(m); reset(); setName(""); setEmail(""); setPassword(""); setConfirm(""); setForgotSent(false); };
 
   const bg = isDark
     ? "radial-gradient(ellipse at 20% 10%, #0F1E38 0%, #060B14 55%, #0B0F1A 100%)"
@@ -155,19 +178,32 @@ export default function AuthPage({ onBack, reason }) {
         <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 22, padding: "32px 36px", boxShadow: cardShadow }}>
 
           {/* Tab switcher */}
-          <div style={{ display: "flex", background: isDark ? "rgba(0,0,0,0.3)" : C.bg, borderRadius: 12, padding: 4, marginBottom: 26, border: `1px solid ${C.border}` }}>
-            {["login", "register"].map(m => (
-              <button key={m} onClick={() => switchMode(m)} style={{
-                flex: 1, padding: "9px 0", borderRadius: 9, fontSize: 13, fontWeight: 700,
-                border: "none", cursor: "pointer", transition: "all 0.2s",
-                background: mode === m ? (isDark ? "rgba(16,185,129,0.15)" : C.card) : "transparent",
-                color: mode === m ? C.green : C.muted,
-                boxShadow: mode === m ? (isDark ? "0 2px 8px rgba(0,0,0,0.3)" : "0 1px 4px rgba(0,0,0,0.08)") : "none",
-              }}>
-                {m === "login" ? (A.signInTab || "Sign In") : (A.registerTab || "Create Account")}
-              </button>
-            ))}
-          </div>
+          {mode !== "forgot" && (
+            <div style={{ display: "flex", background: isDark ? "rgba(0,0,0,0.3)" : C.bg, borderRadius: 12, padding: 4, marginBottom: 26, border: `1px solid ${C.border}` }}>
+              {["login", "register"].map(m => (
+                <button key={m} onClick={() => switchMode(m)} style={{
+                  flex: 1, padding: "9px 0", borderRadius: 9, fontSize: 13, fontWeight: 700,
+                  border: "none", cursor: "pointer", transition: "all 0.2s",
+                  background: mode === m ? (isDark ? "rgba(16,185,129,0.15)" : C.card) : "transparent",
+                  color: mode === m ? C.green : C.muted,
+                  boxShadow: mode === m ? (isDark ? "0 2px 8px rgba(0,0,0,0.3)" : "0 1px 4px rgba(0,0,0,0.08)") : "none",
+                }}>
+                  {m === "login" ? (A.signInTab || "Sign In") : (A.registerTab || "Create Account")}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {mode === "forgot" && (
+            <div style={{ marginBottom: 22 }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 4 }}>
+                {A.forgotTitle || "Reset your password"}
+              </div>
+              <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                {A.forgotSubtitle || "Enter your email and we'll send you a reset link."}
+              </div>
+            </div>
+          )}
 
           {/* Error */}
           {error && (
@@ -175,6 +211,21 @@ export default function AuthPage({ onBack, reason }) {
               <span style={{ flexShrink: 0 }}>⚠️</span> {error}
             </div>
           )}
+
+          {mode === "forgot" && forgotSent ? (
+            <>
+              <div style={{ background: isDark ? "rgba(16,185,129,0.1)" : "rgba(5,150,105,0.07)", border: `1px solid ${isDark ? "rgba(16,185,129,0.28)" : "rgba(5,150,105,0.2)"}`, borderRadius: 12, padding: "14px 16px", marginBottom: 18, fontSize: 13, color: C.text, lineHeight: 1.6, display: "flex", gap: 10 }}>
+                <span style={{ flexShrink: 0 }}>✅</span>
+                {A.forgotSentText || "If that email is registered, a reset link is on its way — check your inbox."}
+              </div>
+              <button
+                onClick={() => switchMode("login")}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, fontSize: 14, fontWeight: 700, border: `1.5px solid ${C.border}`, background: isDark ? "rgba(255,255,255,0.04)" : C.bg, color: C.text, cursor: "pointer" }}
+              >
+                {A.backToSignIn || "← Back to sign in"}
+              </button>
+            </>
+          ) : (<>
 
           {/* REGISTER */}
           {mode === "register" && (<>
@@ -195,7 +246,18 @@ export default function AuthPage({ onBack, reason }) {
               placeholder={A.emailPlaceholder || "jan@example.be"} autoComplete="email" />
             <Input C={C} label={A.password || "Password"} type="password" value={password} onChange={setPassword}
               placeholder={A.passwordLoginHint || "Your password"} autoComplete="current-password" />
+            <div style={{ textAlign: "right", marginTop: -10, marginBottom: 16 }}>
+              <button onClick={() => switchMode("forgot")} style={{ background: "none", border: "none", padding: 0, fontSize: 12, fontWeight: 600, color: C.green, cursor: "pointer" }}>
+                {A.forgotLink || "Forgot password?"}
+              </button>
+            </div>
           </>)}
+
+          {/* FORGOT PASSWORD */}
+          {mode === "forgot" && (
+            <Input C={C} label={A.emailLabel || "Email"} type="email" value={email} onChange={setEmail}
+              placeholder={A.emailPlaceholder || "jan@example.be"} autoComplete="email" />
+          )}
 
           {/* Submit */}
           <button
@@ -218,9 +280,21 @@ export default function AuthPage({ onBack, reason }) {
               ? (A.pleaseWait || "Please wait…")
               : mode === "login"
                 ? (A.signInBtn || "Sign In →")
-                : (A.registerBtn || "Create Account →")}
+                : mode === "forgot"
+                  ? (A.forgotSubmit || "Send reset link →")
+                  : (A.registerBtn || "Create Account →")}
           </button>
 
+          {mode === "forgot" && (
+            <button
+              onClick={() => switchMode("login")}
+              style={{ width: "100%", padding: "10px 0", marginTop: 10, borderRadius: 12, fontSize: 13, fontWeight: 600, border: "none", background: "none", color: C.muted, cursor: "pointer" }}
+            >
+              {A.backToSignIn || "← Back to sign in"}
+            </button>
+          )}
+
+          {mode !== "forgot" && (<>
           {/* Divider */}
           <div style={{ position: "relative", textAlign: "center", margin: "20px 0 16px" }}>
             <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 1, background: C.border }} />
@@ -250,10 +324,12 @@ export default function AuthPage({ onBack, reason }) {
             </svg>
             {A.continueGoogle || "Continue with Google"}
           </button>
+          </>)}
 
           <div style={{ fontSize: 11, color: C.muted, textAlign: "center", marginTop: 16 }}>
             {A.gdprText || "🔒 GDPR compliant · Data stays in Belgium"}
           </div>
+          </>)}
         </div>
       </div>
     </div>

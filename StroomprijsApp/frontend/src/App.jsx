@@ -6,6 +6,7 @@
  *   /calculator/electricity              → CalculatorPage
  *   /calculator/gas                      → CalculatorPage
  *   /oauth/callback                      → AuthCallback
+ *   /reset-password                      → ResetPasswordPage
  *   /privacy                             → PrivacyPolicy
  *   /admin                               → AdminDashboard
  *   /epex-price-belgium                  → EpexBelgiumPage (SEO)
@@ -19,6 +20,7 @@ import AuthPage          from "./pages/AuthPage";
 import ProfilePage       from "./pages/ProfilePage";
 import Dashboard         from "./pages/Dashboard";
 import AuthCallback      from "./pages/AuthCallback";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PrivacyPolicy     from "./pages/PrivacyPolicy";
 import LandingPage       from "./pages/LandingPage";
 import CalculatorPage    from "./pages/CalculatorPage";
@@ -106,7 +108,8 @@ export default function App() {
   }, []);
 
   // ── Hard-coded path matches ──────────────────────────────────
-  if (path === "/oauth/callback") return <AuthCallback />;
+  if (path === "/oauth/callback")  return <AuthCallback />;
+  if (path === "/reset-password")  return <ResetPasswordPage />;
   if (path === "/privacy")        return <PrivacyPolicy onClose={() => navigate("/")} />;
   if (path === "/admin")          return <AdminDashboard />;
 
