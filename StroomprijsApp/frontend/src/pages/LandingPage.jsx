@@ -725,7 +725,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
               <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",lineHeight:1.75,marginBottom:24,maxWidth:240}}>Live EPEX Spot electricity prices for Belgium — free for households, EV drivers, and company fleets.</div>
               <div style={{display:"flex",gap:10}}>
                 {[
-                  {label:"f",color:"#1877F2",href:"https://www.facebook.com/groups/smartpricebe"},
+                  {label:"f",color:"#1877F2",href:"https://www.facebook.com/profile.php?id=61591589255351"},
                   {label:"in",color:"#0A66C2",href:"https://www.linkedin.com/company/smartpricebe"},
                   {label:"💬",color:"#25D366",href:`https://wa.me/?text=${encodeURIComponent("⚡ SmartPrice.be — live EPEX prices + cheapest EV charging window for Belgium. Free. https://smartprice.be")}`},
                 ].map(s=>(
