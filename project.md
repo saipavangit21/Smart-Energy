@@ -1,6 +1,6 @@
 # SmartPrice.be — Full Project Explainer
 ## For technical and non-technical audiences
-**Last updated: May 2026**
+**Last updated: August 2026**
 
 ---
 
@@ -28,12 +28,11 @@ If you have a "dynamic" electricity contract in Belgium (like Bolt, Engie Spot, 
 **Who it's for:**
 Belgian households, EV drivers, smart home users (Home Assistant), and dynamic electricity contract holders.
 
-**Current metrics (May 2026):**
-- 70+ registered users (growing ~2/day)
-- 300+ daily EV page views
-- 50+ email subscribers (weekly digest)
+**Current metrics:**
+- 162+ registered users (as of August 2026)
 - Tesla Fleet API registered and active
-- 6 leads captured via email capture strip
+- Password-reset (forgot-password) flow added August 2026
+- 300+ daily EV page views, 50+ email subscribers, 6 leads captured — these three are from the May 2026 baseline and haven't been re-measured since; treat as directional, not current
 
 ---
 
@@ -69,13 +68,15 @@ Your Browser / Phone
 ```
 ┌─────────────────────────────────────────────────────┐
 │  FRONTEND (what you see)                            │
-│  React + Vite · Hosted on Vercel (CDN)              │
-│  smartprice.be → Vercel servers (global CDN)        │
+│  React + Vite · Hosted on Cloudflare Pages (CDN)    │
+│  smartprice.be → Cloudflare Pages (global CDN)      │
 └─────────────────┬───────────────────────────────────┘
-                  │ HTTPS API calls (proxied)
+                  │ HTTPS API calls, direct (same-site)
 ┌─────────────────▼───────────────────────────────────┐
 │  BACKEND (the engine)                               │
 │  Node.js + Express · Hosted on Railway (EU West)    │
+│  Served at api.smartprice.be (custom domain —       │
+│  keeps auth cookies first-party for every browser)  │
 │  Handles: auth, prices, alerts, Tesla OAuth         │
 └──────┬──────────────────────────┬───────────────────┘
        │                          │
@@ -105,6 +106,8 @@ Your Browser / Phone
 
 ### Email + Password
 Registration requires email + password. Email is mandatory (login + price alerts). bcrypt cost 12. JWT access token (15min) + refresh token (7d) in httpOnly cookies.
+
+**Forgot password** (added August 2026): user requests a reset link via email; backend emails a random token (1hr expiry, single-use, stored as a SHA-256 hash so a database leak alone can't be used to reset anyone's password) rather than exposing whether the email is registered. Resetting the password also revokes all other active sessions for that account.
 
 ### Google OAuth
 Standard OAuth 2.0 flow via Google. On first sign-in, welcome email + admin notification are sent automatically.
@@ -154,7 +157,7 @@ All emails sent via Resend from `info@smartprice.be`.
 
 ## PART 7: SOCIAL & COMMUNITY
 
-- **Facebook group:** facebook.com/groups/819979377511277
+- **Facebook Page:** facebook.com/profile.php?id=61591589255351 (corrected 2026-08 — footer previously linked to an old/wrong Group)
 - **LinkedIn page:** linkedin.com/company/smartprice-be
 - **Reddit:** r/SmartPriceBE (created, low karma phase)
 - Footer links to Facebook + LinkedIn on landing page
@@ -209,7 +212,7 @@ Data stored in EU (Railway Amsterdam + Supabase Ireland).
 "I built a free app that tells you when electricity is cheapest in Belgium. If you have one of those contracts where the price changes every hour, this app tells you the best time to run your washing machine or charge your car — and if you have a Tesla, it connects directly to your car and shows you the exact cost."
 
 ### To a developer:
-"React + Vite frontend on Vercel, Node/Express backend on Railway EU, PostgreSQL on Supabase. EPEX Spot prices via Energy-Charts.info (15-min NodeCache), ENTSO-E fallback. Cookie-based auth with httpOnly JWT, bcrypt, refresh token rotation. Tesla Fleet API OAuth with partner registration (www.smartprice.be). Google OAuth. EV profile (30 cars) + Tesla live data. Weekly digest with referral tracking. Public REST API for Home Assistant. TTF gas via OilPriceAPI. Trilingual EN/NL/FR."
+"React + Vite frontend on Cloudflare Pages, Node/Express backend on Railway EU served at api.smartprice.be (a same-site custom domain, not the raw *.up.railway.app one — needed to keep auth cookies first-party across browsers), PostgreSQL on Supabase. EPEX Spot prices via Energy-Charts.info (15-min NodeCache), ENTSO-E fallback. Cookie-based auth with httpOnly JWT, bcrypt, refresh token rotation, plus a forgot/reset-password flow with SHA-256-hashed single-use tokens. Tesla Fleet API OAuth with partner registration (www.smartprice.be). Google OAuth. EV profile (30 cars) + Tesla live data. Weekly digest with referral tracking. Public REST API for Home Assistant. TTF gas via OilPriceAPI (24hr cache — free tier is capped at 200 requests total). Trilingual EN/NL/FR."
 
 ### To an investor:
 "SmartPrice.be is a free energy intelligence tool for Belgian dynamic contract holders — a market growing as more suppliers push spot-price contracts. We have 70+ users in 3 months with zero marketing spend, a live Tesla Fleet API integration (first in Belgium), and active B2B conversations with TotalEnergies, Engie, Luminus, and fleet companies (RENTA member network). Revenue model: €20–50/activation affiliate commissions from energy suppliers + B2B API access fees for fleet/mobility companies. The main Belgian comparison sites (Mijnenergie.be) don't cover dynamic pricing — that's our differentiation. Timeline: 2-year build to sustainable revenue."

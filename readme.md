@@ -90,8 +90,8 @@ Smart meter data ingestion via P1 port reader.
 
 | Layer | Technology | Host |
 |-------|-----------|------|
-| Frontend | React 18 + Vite | Vercel (CDN, auto-deploy from `main`) |
-| Backend | Node.js 20 + Express | Railway EU West (Amsterdam, auto-deploy from `main`) |
+| Frontend | React 18 + Vite | Cloudflare Pages (CDN, auto-deploy from `main`) |
+| Backend | Node.js 20 + Express | Railway EU West (Amsterdam, auto-deploy from `main`) — served at `api.smartprice.be` |
 | Database | PostgreSQL 15 | Supabase (Ireland) |
 | Email | Resend (info@smartprice.be) | Resend |
 | Auth | JWT access + refresh tokens + Google OAuth + Tesla Fleet API | Self-hosted on Railway |
@@ -99,6 +99,16 @@ Smart meter data ingestion via P1 port reader.
 | Electricity data | Energy-Charts.info (Fraunhofer ISE) / ENTSO-E | External API |
 | Gas data | OilPriceAPI (TTF) | External API |
 | EV stations | OpenStreetMap Overpass API | External API |
+
+---
+
+## Hosting & Domains
+
+**Frontend**: `smartprice.be` / `www.smartprice.be` — Cloudflare Pages, CNAME'd to `smart-energy.pages.dev`. Migrated Vercel → Netlify → Cloudflare Pages (2026-08); Vercel and Netlify projects have since been decommissioned.
+
+**Backend**: `api.smartprice.be` — Railway custom domain (CNAME + TXT records in Cloudflare, proxied). The frontend calls this domain directly for all `/api/*` and `/auth/*` requests. This matters for auth: `api.smartprice.be` shares its registrable domain with `smartprice.be`, so auth cookies (`sp_access`, `sp_refresh`, `sp_session`) are **first-party**, not third-party — required for login to work reliably in Safari, Firefox, and privacy-focused browsers (Brave, Perplexity Comet, etc.), which block or partition third-party cookies by default. Calling the raw `*.up.railway.app` domain directly (a different registrable domain) causes exactly this class of bug: login appears to succeed but the session doesn't persist, bouncing the user back to a logged-out state on the next request.
+
+A small set of Cloudflare Pages Functions (`frontend/functions/`) still exist for the Tesla `.well-known` path and as a fallback, but are not on the main request path — general API traffic goes directly to `api.smartprice.be`, not through a Pages Function proxy (that was tried and reverted due to the free tier's 100k-requests/day cap).
 
 ---
 
@@ -128,7 +138,8 @@ Smart Energy/
     │   │   │   ├── SessionCalcPage.jsx     # Per-session calculator — reimburse + fleet card invoice modes
     │   │   │   ├── CalculatorPage.jsx      # 4-step plan calculator
     │   │   │   ├── AdminDashboard.jsx      # Admin — analytics, users, B2B leads, newsletter stats
-    │   │   │   ├── AuthPage.jsx            # Login / register
+    │   │   │   ├── AuthPage.jsx            # Login / register / forgot-password
+    │   │   │   ├── ResetPasswordPage.jsx   # /reset-password?token=... — set new password
     │   │   │   ├── AuthCallback.jsx        # Google OAuth callback
     │   │   │   ├── ProfilePage.jsx         # User profile, alerts, energy mix, tools
     │   │   │   ├── GasTab.jsx              # Gas price dashboard
@@ -153,11 +164,11 @@ Smart Energy/
     │   │   │                               #   auth, alerts, calculator, business, priceLabels, profile…)
     │   │   ├── App.jsx                     # Route handler (no react-router — plain pathname matching)
     │   │   └── main.jsx                    # Entry point + providers
-    │   └── vercel.json                     # Proxy /api/* and /auth/* → Railway
+    │   └── functions/                      # Cloudflare Pages Functions — Tesla .well-known + fallback proxy only
     │
-    └── backend/                        # Node.js + Express API
+    └── backend/                        # Node.js + Express API — served at api.smartprice.be
         ├── server.js                   # Main Express app + all inline endpoints
-        ├── db.js                       # PostgreSQL pool (Supabase)
+        ├── db.js                       # PostgreSQL pool (Supabase) + password-reset token helpers
         ├── analytics.js                # Event tracking middleware + admin analytics endpoint
         ├── email-alerts.js             # Hourly price alert checker + weekly digest sender
         ├── uptime-monitor.js           # Pings smartprice.be every 5 min, alerts on down/recovery
@@ -205,7 +216,7 @@ Smart Energy/
 
 ## Backend API
 
-All endpoints accessible via `smartprice.be/api/*` (proxied by Vercel → Railway).
+All endpoints accessible directly via `api.smartprice.be/api/*` and `api.smartprice.be/auth/*` (same-site with `smartprice.be` — see [Hosting & Domains](#hosting--domains)).
 
 ### Electricity Prices
 
@@ -370,6 +381,8 @@ All admin endpoints require `x-admin-secret` header matching `ADMIN_SECRET` env 
 | POST | `/auth/register` | Email + password registration |
 | POST | `/auth/login` | Email login → access + refresh tokens |
 | POST | `/auth/refresh` | Refresh access token |
+| POST | `/auth/forgot-password` | Email a 1hr single-use reset link (rate-limited, no user enumeration) |
+| POST | `/auth/reset-password` | Consume reset token, set new password, revoke other sessions |
 | POST | `/auth/logout` | Invalidate refresh token |
 | GET | `/auth/me` | Current user (JWT) |
 | PUT | `/auth/preferences` | Update alert thresholds / supplier preferences |
@@ -412,6 +425,7 @@ Dedup: 1 event per session per hour for page views (prevents polling inflation).
 | `email_leads` | Pre-registration email capture (source: landing/fluvius_waitlist/business-audit-form) |
 | `b2b_leads` | Fleet audit form submissions — email, company, fleet size, billing method, audit data (JSONB) |
 | `newsletter_subscribers` | Active/unsubscribed newsletter list, unsubscribe token |
+| `password_reset_tokens` | SHA-256-hashed, single-use, 1hr-expiry forgot-password tokens (raw token never stored) |
 | `fleet_audit_reports` | PDF audit reports generated (email, company, fleet size, audit data, created_at) |
 | `fluvius_readings` | P1 smart meter data — power_w, solar_w, energy_kwh, gas_m3 per user (7-day rolling window) |
 
@@ -469,16 +483,18 @@ OIL_PRICE_API_KEY=...                   # OilPriceAPI for TTF gas (fallback: €
 TESLA_CLIENT_ID=...
 TESLA_CLIENT_SECRET=...
 ALERT_ADMIN_EMAIL=info@smartprice.be
-FACEBOOK_PAGE_ID=1278145935386175
+FACEBOOK_PAGE_ID=61591589255351
 FACEBOOK_PAGE_TOKEN=...                 # Permanent Page Access Token (Graph API, never expires)
 TELEGRAM_BOT_TOKEN=...                  # Optional — not active (Belgians don't use Telegram)
 TELEGRAM_CHAT_ID=...                    # Optional — not active
 ```
 
-### Vercel (Frontend)
+Also requires a custom domain `api.smartprice.be` added under the service's **Networking → Custom Domain** — see [Hosting & Domains](#hosting--domains). Note the "Target Port" field there must match the port the app actually listens on internally (`PORT` env var, defaults to 3001 in code but Railway may inject a different value) — a wrong port here causes a persistent `502` even when DNS is fully correct.
+
+### Cloudflare Pages (Frontend)
 
 ```env
-VITE_API_URL=https://smart-energy-production-aef3.up.railway.app
+VITE_API_URL=https://api.smartprice.be
 VITE_ADMIN_SECRET=...
 VITE_GOOGLE_CLIENT_ID=...
 ```
@@ -493,6 +509,9 @@ SPF records must be **single merged records** per subdomain (RFC 7208).
 |------|------|---------|
 | `smartprice.be` | TXT | `v=spf1 a mx include:spf.cloudemail.be include:_spf.mx.cloudflare.net -all` |
 | `send` | TXT | `v=spf1 include:amazonses.com ~all` |
+| `smartprice.be` / `www` | CNAME | `smart-energy.pages.dev` (proxied) |
+| `api` | CNAME | Railway-provided target, e.g. `xxxxx.up.railway.app` (proxied) — added via Railway's Networking panel, whose "Authorize" flow can add this automatically |
+| `_railway-verify.api` | TXT | Railway-provided verification token — **required alongside the CNAME**, domain won't verify without it |
 
 ---
 
@@ -517,25 +536,18 @@ npm run dev
 
 ## Deployment
 
-Push to `main` — both Vercel and Railway auto-deploy.
+Push to `main` — both Cloudflare Pages and Railway auto-deploy.
 
 ```bash
 git add <files>
 git commit -m "feat: ..."
 git push origin main
-# Frontend live in ~2 min, backend live in ~3 min
+# Frontend live in ~1-2 min, backend live in ~2-3 min
 ```
 
-**Vercel proxy** (`frontend/vercel.json`):
-```json
-{
-  "rewrites": [
-    { "source": "/api/:path*",  "destination": "https://smart-energy-production-aef3.up.railway.app/api/:path*" },
-    { "source": "/auth/:path*", "destination": "https://smart-energy-production-aef3.up.railway.app/auth/:path*" },
-    { "source": "/(.*)",        "destination": "/index.html" }
-  ]
-}
-```
+Note: `frontend/dist/` is committed to the repo alongside source — run `npm run build` inside `frontend/` and commit the resulting `dist/` changes together with any source edit that affects the frontend, so the built output stays in sync.
+
+The frontend calls `api.smartprice.be` directly (see [Hosting & Domains](#hosting--domains)) — no build-time proxy config needed for API calls. A few legacy Cloudflare Pages Functions remain under `frontend/functions/` for the Tesla `.well-known` path only.
 
 ---
 
@@ -543,7 +555,7 @@ git push origin main
 
 `uptime-monitor.js` pings `https://smartprice.be` every 5 min. Requires 2 consecutive failures before alerting. Sends email on down + recovery. 1-hour cooldown between alerts.
 
-For the Railway backend itself, set up an external check at [UptimeRobot](https://uptimerobot.com) → `https://smart-energy-production-aef3.up.railway.app/api/health`
+For the Railway backend itself, set up an external check at [UptimeRobot](https://uptimerobot.com) → `https://api.smartprice.be/api/health`
 
 ---
 
@@ -552,27 +564,26 @@ For the Railway backend itself, set up an external check at [UptimeRobot](https:
 | Issue | Status |
 |-------|--------|
 | VREG tariff scraper | Disabled — API requires auth (401). Falls back to seed data in `tariffs.json`. |
-| OilPriceAPI TTF | Requires paid plan for live data. Fallback: €34.50/MWh on free tier. |
+| OilPriceAPI TTF | Free tier capped at 200 requests total. Cache extended 1hr → 24hr (2026-08) to keep real usage low (~5/day); requires a paid plan for guaranteed live data. Fallback: €34.50/MWh if the API call fails. |
 | ENTSO-E generation data | ~1 hour delay. Error state shows retry button in UI. |
 | AI assistant | Returns 503 if `ANTHROPIC_API_KEY` not set; 402 if credits depleted. |
 | CREG rate | Must be updated manually each quarter (`FleetAuditPage.jsx` + `SessionCalcPage.jsx`). Q2 2026 = €0.2833/kWh. |
 | Fluvius P1 frontend | Backend endpoint live; dashboard tile not yet built. |
 | Weekly digest schedule | Railway restarts after 08:00 Monday skip that week — last-sent date not persisted in Postgres. |
 | 16 users with NULL email | Password-signup accounts where email wasn't stored at registration. Bug not yet fixed. |
-| Facebook Page Token | Permanent token generated 2026-06. If it expires, follow 3-step refresh: short-lived user token → long-lived → Page token via `/me/accounts`. |
+| Facebook Page Token | Permanent token generated 2026-06. If it expires, follow 3-step refresh: short-lived user token → long-lived → Page token via `/me/accounts`. `FACEBOOK_PAGE_ID` corrected 2026-08 to `61591589255351` — double check the Railway env var actually matches (was found stale in docs). |
+| No user-agent tracking | `analytics_events` never captured browser/device — makes bug reports like "works in Chrome, not Firefox" hard to diagnose from data alone. Worth adding if this recurs. |
 
 ---
 
 ## Facebook Automation
 
 Daily posts flow (active since July 2026):
-1. Cloud agent (CCR) fires daily at **06:00 UTC** → `POST https://smartprice.be/api/admin/daily-posts` with `x-admin-secret` header
+1. Cloud agent (CCR) fires daily at **06:00 UTC** → `POST https://api.smartprice.be/api/admin/daily-posts` with `x-admin-secret` header
 2. Backend fetches live EPEX from `/api/current` + `/api/cheapest?hours=8`, deduplicates to one entry per hour
 3. Builds Dutch post with top 5 cheapest hours + current price label
-4. Posts to **Facebook Page ID `1278145935386175`** via Graph API (`/{page-id}/feed`)
+4. Posts to **Facebook Page ID `61591589255351`** via Graph API (`/{page-id}/feed`)
 5. Emails both NL + EN posts to `info@smartprice.be` via Resend with copy-paste formatting
-
-**Cloud agent must route via Vercel proxy** (`smartprice.be/api/...`) — Railway's direct URL is blocked by network policy for external callers.
 
 ---
 
