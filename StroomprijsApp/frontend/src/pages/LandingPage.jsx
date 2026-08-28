@@ -103,8 +103,8 @@ function JourneyStrip({ C, L }) {
       stat: L.journey3Stat||"€200+", statSub: L.journey3StatSub||"saved per year" },
   ];
   return (
-    <div ref={ref} style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 32px" }}>
-      <div style={{ textAlign: "center", marginBottom: 48 }}>
+    <div ref={ref} className="sp-journey" style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 32px" }}>
+      <div className="sp-journey-head" style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 3, marginBottom: 12 }}>{L.journeyLabel||"Why EPEX matters"}</div>
         <h2 style={{ fontSize: "clamp(20px,3vw,32px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", margin: "0 0 10px" }}>{L.journeyTitle||"From €3.60 to €0.30 — same charge, smarter hour"}</h2>
         <p style={{ fontSize: 14, color: C.muted, margin: 0 }}>{L.journeySub||"Real EPEX data. Real money saved. No subscription needed."}</p>
@@ -112,17 +112,17 @@ function JourneyStrip({ C, L }) {
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
         {steps.flatMap((s, i) => {
           const card = (
-            <div key={`c${i}`} style={{ flex: "1 1 220px", maxWidth: 300, background: s.bg, border: `1px solid ${s.border}`, borderRadius: 20, padding: "28px 22px", opacity: vis ? 1 : 0, transform: vis ? "translateY(0px)" : "translateY(44px)", transition: "opacity 0.65s ease, transform 0.65s ease", transitionDelay: `${i * 0.42}s` }}>
-              <div style={{ fontSize: 42, marginBottom: 14 }}>{s.emoji}</div>
+            <div key={`c${i}`} className="sp-journey-card" style={{ flex: "1 1 220px", maxWidth: 300, background: s.bg, border: `1px solid ${s.border}`, borderRadius: 20, padding: "28px 22px", opacity: vis ? 1 : 0, transform: vis ? "translateY(0px)" : "translateY(44px)", transition: "opacity 0.65s ease, transform 0.65s ease", transitionDelay: `${i * 0.42}s` }}>
+              <div className="sp-journey-emoji" style={{ fontSize: 42, marginBottom: 14 }}>{s.emoji}</div>
               <div style={{ fontSize: 10, fontWeight: 800, color: s.color, textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>{s.tag}</div>
               <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 10, lineHeight: 1.35 }}>{s.title}</div>
-              <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.8, marginBottom: 20 }}>{s.body}</div>
+              <div className="sp-journey-body" style={{ fontSize: 13, color: C.muted, lineHeight: 1.8, marginBottom: 20 }}>{s.body}</div>
               <div style={{ fontSize: 30, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.stat}</div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 5, fontWeight: 600 }}>{s.statSub}</div>
             </div>
           );
           const arrow = i < steps.length - 1 ? (
-            <div key={`a${i}`} style={{ fontSize: 26, color: C.muted, padding: "0 10px", flexShrink: 0, opacity: vis ? 1 : 0, transition: "opacity 0.4s ease", transitionDelay: `${i * 0.42 + 0.22}s` }}>→</div>
+            <div key={`a${i}`} className="sp-journey-arrow" style={{ fontSize: 26, color: C.muted, padding: "0 10px", flexShrink: 0, opacity: vis ? 1 : 0, transition: "opacity 0.4s ease", transitionDelay: `${i * 0.42 + 0.22}s` }}>→</div>
           ) : null;
           return arrow ? [card, arrow] : [card];
         })}
@@ -481,8 +481,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
 
 
       <div className="sp-desktop-extra">
-      {/* ── ECO STRIP ────────────────────────────────────────────── */}
-      <div style={{background:isDark?"linear-gradient(135deg,rgba(16,185,129,0.18) 0%,rgba(5,150,105,0.12) 100%)":"linear-gradient(135deg,rgba(16,185,129,0.12) 0%,rgba(5,150,105,0.07) 100%)",borderTop:"1px solid rgba(16,185,129,0.25)",borderBottom:"1px solid rgba(16,185,129,0.25)",padding:"28px 32px"}}>
+      {/* ── ECO STRIP — hidden on mobile, secondary/educational content ── */}
+      <div className="sp-eco-strip" style={{background:isDark?"linear-gradient(135deg,rgba(16,185,129,0.18) 0%,rgba(5,150,105,0.12) 100%)":"linear-gradient(135deg,rgba(16,185,129,0.12) 0%,rgba(5,150,105,0.07) 100%)",borderTop:"1px solid rgba(16,185,129,0.25)",borderBottom:"1px solid rgba(16,185,129,0.25)",padding:"28px 32px"}}>
         <div style={{maxWidth:720,margin:"0 auto",textAlign:"center"}}>
           <div style={{fontSize:10,fontWeight:800,color:C.primary,textTransform:"uppercase",letterSpacing:2.5,marginBottom:12}}>{L.ecoLabel||"Grid impact"}</div>
           <p style={{fontSize:14,color:isDark?"rgba(255,255,255,0.72)":"C.muted",lineHeight:1.8,margin:"0 0 18px"}}>{L.ecoLine||"EPEX prices fall when wind and solar flood the Belgian grid. Cheap hours = peak renewables. Negative prices = surplus clean energy going to waste — SmartPrice tells you exactly when to use it."}</p>
@@ -572,8 +572,8 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
         </div>
 
 
-        {/* ── EV API SECTION ───────────────────────────────────────── */}
-        <div ref={evApiRef} style={{background:isDark?"rgba(10,18,40,0.7)":"rgba(239,246,255,0.8)",borderTop:`1px solid ${C.border}`,borderBottom:`1px solid ${C.border}`,padding:"72px 32px 64px"}}>
+        {/* ── EV API SECTION — hidden on mobile, niche developer/B2B pitch not relevant to most household visitors ── */}
+        <div ref={evApiRef} className="sp-ev-api-section" style={{background:isDark?"rgba(10,18,40,0.7)":"rgba(239,246,255,0.8)",borderTop:`1px solid ${C.border}`,borderBottom:`1px solid ${C.border}`,padding:"72px 32px 64px"}}>
           <div style={{maxWidth:960,margin:"0 auto"}}>
             <div className="sp-animate" style={{textAlign:"center",marginBottom:52}}>
               <div style={{fontSize:10,fontWeight:800,color:"#3B82F6",textTransform:"uppercase",letterSpacing:2.5,marginBottom:14}}>{L.evApiLabel||"For charging apps · EV platforms · Fleet software"}</div>
@@ -1049,6 +1049,19 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
           .sp-hero-subtitle { margin-bottom: 24px; }
           .sp-hero-urgency { display: none; }
           .sp-desktop-extra { display: none; }
+
+          /* Trim page density on mobile — "too much on one screen" feedback.
+             Desktop layout is untouched; these only hide/compress secondary
+             content, not the core price/tool sections. */
+          .sp-eco-strip { display: none; }
+          .sp-ev-api-section { display: none; }
+
+          .sp-journey { padding: 40px 20px; }
+          .sp-journey-head { margin-bottom: 28px; }
+          .sp-journey-card { padding: 20px 18px; }
+          .sp-journey-emoji { font-size: 32px; margin-bottom: 8px; }
+          .sp-journey-body { -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 14px; }
+          .sp-journey-arrow { display: none; }
         }
       `}</style>
     </div>
