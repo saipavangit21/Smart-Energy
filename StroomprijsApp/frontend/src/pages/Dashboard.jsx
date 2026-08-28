@@ -750,22 +750,6 @@ function EvTab({ mwh, cheapest, prices, isMobile, stats, user, updatePreferences
             <div style={{ fontSize: 11, color: C.muted }}>Find cheapest supplier for your EV</div>
           </div>
         </button>
-        <button onClick={() => window.location.href = "/ev-charging-belgium"} style={{ flex: "1 1 140px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.3)", color: "#E2E8F0" }}>
-          <span style={{ fontSize: 24 }}>📊</span>
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: C.green }}>Full EV Guide</div>
-            <div style={{ fontSize: 11, color: C.muted }}>Tips, savings, Belgium data</div>
-          </div>
-        </button>
-        {!user?.isGuest && !fluviusReading && (
-          <button onClick={() => window.location.href = "/api-docs#fluvius"} style={{ flex: "1 1 140px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.25)", color: "#E2E8F0" }}>
-            <span style={{ fontSize: 24 }}>📡</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#818CF8" }}>P1 Smart Meter</div>
-              <div style={{ fontSize: 11, color: C.muted }}>Connect Fluvius meter for live signal</div>
-            </div>
-          </button>
-        )}
         <button onClick={() => window.location.href = "/fleet-audit"} style={{ flex: "1 1 140px", display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderRadius: 14, cursor: "pointer", background: "rgba(22,163,74,0.07)", border: "1px solid rgba(22,163,74,0.25)", color: "#E2E8F0" }}>
           <span style={{ fontSize: 24 }}>🚛</span>
           <div style={{ textAlign: "left" }}>
