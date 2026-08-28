@@ -755,7 +755,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
             {/* Col 4 — Company */}
             <div>
               <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:2,marginBottom:16}}>Company</div>
-              {[["About SmartPrice.be","/"],["API for developers","/api-docs"],["EV charging Belgium","/ev-charging-belgium"],["Privacy Policy","#privacy"],["info@smartprice.be","mailto:info@smartprice.be"]].map(([l,h])=>(
+              {[["About SmartPrice.be","/"],["API for developers","/api-docs"],["EV charging Belgium","/ev-charging-belgium"],["P1 Smart Meter setup","/api-docs#fluvius"],["Privacy Policy","#privacy"],["info@smartprice.be","mailto:info@smartprice.be"]].map(([l,h])=>(
                 <a key={l} href={h}
                   onClick={l==="Privacy Policy"?e=>{e.preventDefault();window.dispatchEvent(new CustomEvent("showPrivacy"))}:undefined}
                   style={{display:"block",color:"rgba(255,255,255,0.6)",textDecoration:"none",fontSize:13,fontWeight:500,marginBottom:10,lineHeight:1.4}}
