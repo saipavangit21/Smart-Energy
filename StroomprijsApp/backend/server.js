@@ -124,14 +124,39 @@ async function fetchENTSOE(s,e) {
 }
 
 function enrich(prices) { const now=new Date(),ts=toISODate(now); return prices.map(p=>{ const d=new Date(p.timestamp); const localDate=toLocalISODate(d); const localHour=getLocalHour(d); const nowHour=getLocalHour(now); const it=localDate===ts; return{...p,day:it?"today":"tomorrow",hour:localHour,hour_label:`${String(localHour).padStart(2,"0")}:00`,is_current:it&&localHour===nowHour,is_negative:p.price_eur_mwh<0,price_category:getPriceCategory(p.price_eur_mwh)}; }); }
+// EPEX/Belpex day-ahead auction results publish ~13:00 CET, but Energy-Charts
+// (a third-party aggregator, not the primary source) occasionally lags behind
+// that by hours on its own ingestion. Past this cutoff, treat "tomorrow still
+// missing" as incomplete and try to fill it in from ENTSO-E rather than
+// silently serving a today-only response as if it were final.
+const DAY_AHEAD_CUTOFF_HOUR = 13;
+function hasDay(prices, dateStr) { return prices.some(p => toLocalISODate(new Date(p.timestamp)) === dateStr); }
+
 async function getPrices(s,e) {
-  try{return{prices:await fetchEC(s,e),source:"Energy-Charts"};}catch(e1){
+  let ec;
+  try {
+    ec = await fetchEC(s,e);
+  } catch (e1) {
     console.warn("[prices] Energy-Charts failed:",e1.message);
     try{return{prices:await fetchENTSOE(s,e),source:"ENTSO-E"};}catch(e2){
       console.warn("[prices] ENTSO-E failed:",e2.message);
       throw new Error("Price data temporarily unavailable. Energy-Charts is down"+(process.env.ENTSOE_API_KEY?"":" — add ENTSOE_API_KEY env var for a reliable fallback")+". Please retry in a few minutes.");
     }
   }
+
+  if (getLocalHour(new Date()) >= DAY_AHEAD_CUTOFF_HOUR && !hasDay(ec, e)) {
+    try {
+      const entsoe = await fetchENTSOE(s, e);
+      if (hasDay(entsoe, e)) {
+        const merged = [...ec.filter(p => toLocalISODate(new Date(p.timestamp)) !== e), ...entsoe.filter(p => toLocalISODate(new Date(p.timestamp)) === e)];
+        return { prices: merged, source: "Energy-Charts + ENTSO-E" };
+      }
+    } catch (e2) {
+      console.warn("[prices] ENTSO-E fill-in for missing day-ahead data failed:", e2.message);
+    }
+  }
+
+  return { prices: ec, source: "Energy-Charts" };
 }
 
 // ── Generation mix + Cross-border flows (ENTSO-E) ──────────
