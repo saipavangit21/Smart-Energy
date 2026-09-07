@@ -221,7 +221,7 @@ export default function BusinessPage({ onNavigate }) {
                 <div style={{ fontSize: 11, fontWeight: 800, color: C.primary, textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>Smart Audit</div>
                 <h3 style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 6 }}>{L.modalTitle||"Get your Detailed Cost Audit"}</h3>
                 <p style={{ fontSize: 13, color: C.muted, marginBottom: 28, lineHeight: 1.7 }}>
-                  We'll calculate your fleet's exact CREG overpayment and send a PDF ready to share with your CFO or HR director.
+                  We'll estimate your fleet's overpayment vs. the CREG rate and send a PDF ready to share with your CFO or HR director.
                 </p>
                 {/* Pre-filled from ROI calculator — only shown if user interacted with sliders */}
                 {calculatorUsed && (
@@ -295,7 +295,7 @@ export default function BusinessPage({ onNavigate }) {
                   <button type="submit" disabled={leadState === "loading"} style={{ marginTop: 8, padding: "14px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg, ${C.primary}, ${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: `0 6px 24px rgba(22,163,74,0.3)`, opacity: leadState === "loading" ? 0.7 : 1 }}>
                     {leadState === "loading" ? "…" : leadState === "error" ? "Error — try again" : (L.modalSubmit||"Send my Cost Audit request →")}
                   </button>
-                  <div style={{ fontSize: 11, color: C.light, textAlign: "center" }}>🛡️ GDPR compliant · EU hosted · No spam</div>
+                  <div style={{ fontSize: 11, color: C.light, textAlign: "center" }}>🛡️ EU hosted · GDPR-aligned data handling · No spam</div>
                 </form>
               </>
             )}
@@ -312,11 +312,10 @@ export default function BusinessPage({ onNavigate }) {
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <LangSwitcher />
-          <a href="/session-calc" style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "rgba(22,163,74,0.08)", border: `1px solid ${C.border2}`, color: C.primary, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>⚡ Session Calculator</a>
-          <a href="/fleet-audit" style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "#FEF3C7", border: "1px solid rgba(180,83,9,0.25)", color: "#B45309", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>{L.navFleetAudit||"Free Fleet Audit →"}</a>
-          <button onClick={() => setShowModal(true)} style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(22,163,74,0.3)", whiteSpace: "nowrap", flexShrink: 0 }}>
-            {L.navAudit||"Request audit"}
-          </button>
+          <a href="/session-calc" style={{ padding: "9px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700, color: "#0891B2", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>{L.navSessionCalc||"Session Calculator"}</a>
+          <a href="/fleet-audit" style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", textDecoration: "none", boxShadow: "0 4px 16px rgba(22,163,74,0.3)", whiteSpace: "nowrap", flexShrink: 0 }}>
+            {L.navFleetAudit||"Start free fleet audit →"}
+          </a>
         </div>
       </nav>
 
@@ -331,19 +330,19 @@ export default function BusinessPage({ onNavigate }) {
             🏢 SmartPrice for Business — Beta · Belgium
           </div>
 
-          {/* Updated hero headline per review */}
+          {/* Leads with the mechanism, not the headline claim — the savings number is now supporting proof under the CTA, not the first thing said */}
           <h1 style={{ fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 900, lineHeight: 1.08, margin: "0 auto 24px", maxWidth: 760, letterSpacing: "-2px", textShadow: "0 2px 24px rgba(0,0,0,0.15)" }}>
-            {L.heroTitle||"Stop overpaying €300–500 per EV per year."}
+            {L.heroTitle||"EV home-charging reimbursements, based on real electricity prices."}
           </h1>
-          <p style={{ fontSize: "clamp(15px,2vw,19px)", opacity: 0.88, maxWidth: 560, margin: "0 auto 40px", lineHeight: 1.75 }}>
-            {L.heroSub||"Get a CIR 92-ready fleet audit in 5 minutes — no signup, no consultant, no spreadsheet."}
+          <p style={{ fontSize: "clamp(15px,2vw,19px)", opacity: 0.88, maxWidth: 560, margin: "0 auto 24px", lineHeight: 1.75 }}>
+            {L.heroSub||"Calculate reimbursement amounts from real EPEX prices, export an audit trail, and estimate potential overpayment vs. the flat CREG rate — in 5 minutes, no signup."}
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/fleet-audit" style={{ padding: "15px 36px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FFFFFF", color: "#1E3A8A", textDecoration: "none", boxShadow: "0 6px 28px rgba(0,0,0,0.25)" }}>
-              {L.heroCta||"Get free fleet audit →"}
+              {L.heroCta||"See your estimated savings →"}
             </a>
             <button onClick={() => setShowModal(true)} style={{ padding: "15px 28px", borderRadius: 30, fontSize: 14, fontWeight: 700, background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.28)", cursor: "pointer", backdropFilter: "blur(8px)" }}>
-              {L.navAudit||"Talk to an expert"}
+              {L.navAudit||"Talk to us"}
             </button>
           </div>
         </div>
@@ -353,9 +352,9 @@ export default function BusinessPage({ onNavigate }) {
       <div style={{ background: "linear-gradient(180deg, #1A2F6E 0%, #0F172A 100%)", padding: "24px 32px" }}>
         <div style={{ maxWidth: 960, margin: "0 auto", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 24, textAlign: "center" }}>
           {[
-            { n: "€300–500", label: L.stat1Label||"overpayment per EV per year on CREG rate",              accent: "#22C55E" },
-            { n: "CIR 92",   label: L.stat2Label||"Belgian tax law compliance — accepted by all secretariaten", accent: "#FBBF24" },
-            { n: "40%",      label: L.stat3Label||"average corporate energy bill reduction",                 accent: "#34D399" },
+            { n: "€300–500", label: L.stat1Label||"estimated overpayment per EV/year — see the assumptions below", accent: "#22C55E" },
+            { n: "CIR 92",   label: L.stat2Label||"Belgian tax law — reimbursement audit trail designed to support it", accent: "#FBBF24" },
+            { n: "~30%",     label: L.stat3Label||"typical saving vs. flat CREG rate in our calculator model",   accent: "#34D399" },
             { n: L.stat4N||"Free", label: L.stat4Label||"instant fleet audit — no subscription required",   accent: "#38BDF8" },
           ].map(s => (
             <div key={s.label}>
@@ -369,62 +368,29 @@ export default function BusinessPage({ onNavigate }) {
       {/* Dark-to-light gradient bridge */}
       <div style={{ height: 60, background: "linear-gradient(180deg, #0F172A 0%, #F8FAFC 100%)" }} />
 
-      {/* ── PRODUCT PICKER ────────────────────────────────────────── */}
-      <div style={{ background: "#F0F7FF", borderBottom: "1px solid rgba(0,0,0,0.07)", padding: "64px 32px 72px" }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 52 }}>
-            <h2 style={{ fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 900, color: C.text, letterSpacing: "-0.6px", lineHeight: 1.2 }}>
-              Choose the tool that <span style={{ color: "#2563EB" }}>fits your needs</span>
-            </h2>
+      {/* ── PRIMARY ACTION — one clear path, not a 3-way choice before the
+           visitor understands why any of this matters ─────────────────── */}
+      <div style={{ background: "#F0F7FF", borderBottom: "1px solid rgba(0,0,0,0.07)", padding: "64px 32px 56px" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div
+            style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 24, padding: "40px 36px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", cursor: "pointer", transition: "transform 0.15s,box-shadow 0.15s" }}
+            onClick={() => window.location.href = "/fleet-audit"}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 36px rgba(0,0,0,0.11)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.06)"; }}>
+            <div style={{ width: 68, height: 68, borderRadius: "50%", background: "linear-gradient(135deg,#15803D,#22C55E)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, marginBottom: 20, boxShadow: "0 8px 20px rgba(22,163,74,0.3)" }}>🔍</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 10, letterSpacing: "-0.3px" }}>{L.primaryTitle||"Start your free fleet audit"}</div>
+            <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.8, maxWidth: 440, marginBottom: 20 }}>{L.primaryDesc||"Enter your fleet size and current reimbursement method — see your estimated overpayment vs. the flat CREG rate in 2 minutes. No signup needed."}</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: C.primary, display: "flex", alignItems: "center", gap: 4 }}>
+              {L.primaryCta||"Start free fleet audit"} <span style={{ fontSize: 17 }}>→</span>
+            </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 28 }}>
-            {[
-              {
-                iconBg: "linear-gradient(135deg,#0D7490,#06B6D4)",
-                icon: "⚡",
-                color: "#0891B2",
-                title: "Session Calculator",
-                desc: "Calculate the real EPEX cost per charging session. See exactly what each driver spent vs. the flat CREG rate — per session, per month.",
-                cta: "Try calculator →",
-                href: "/session-calc",
-                onClick: null,
-              },
-              {
-                iconBg: "linear-gradient(135deg,#15803D,#22C55E)",
-                icon: "🔍",
-                color: "#16A34A",
-                title: "Free Fleet Audit",
-                desc: "Enter your fleet size and usage. Get a CIR 92-compliant audit in 2 minutes showing exactly how much your company overpays — no signup needed.",
-                cta: "Get free audit →",
-                href: "/fleet-audit",
-                onClick: null,
-              },
-              {
-                iconBg: "linear-gradient(135deg,#B45309,#F59E0B)",
-                icon: "📋",
-                color: "#D97706",
-                title: "Request Full Audit",
-                desc: "Need a complete session-by-session breakdown ready for your social secretariat? Our team handles it end-to-end with your actual charging data.",
-                cta: "Request audit →",
-                href: null,
-                onClick: () => setShowModal(true),
-              },
-            ].map((p, i) => (
-              <div key={i}
-                style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 24, padding: "36px 28px", display: "flex", flexDirection: "column", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", cursor: "pointer", transition: "transform 0.15s,box-shadow 0.15s" }}
-                onClick={p.href ? () => window.location.href = p.href : p.onClick}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 36px rgba(0,0,0,0.11)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.06)"; }}>
-                <div style={{ width: 68, height: 68, borderRadius: "50%", background: p.iconBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, marginBottom: 22, boxShadow: `0 8px 20px ${p.color}30` }}>
-                  {p.icon}
-                </div>
-                <div style={{ fontSize: 19, fontWeight: 900, color: C.text, marginBottom: 12, letterSpacing: "-0.3px" }}>{p.title}</div>
-                <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.8, flex: 1, marginBottom: 22 }}>{p.desc}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: p.color, display: "flex", alignItems: "center", gap: 4 }}>
-                  {p.cta} <span style={{ fontSize: 16 }}>›</span>
-                </div>
-              </div>
-            ))}
+
+          {/* Secondary paths — same underlying idea, different entry points, deliberately lower emphasis */}
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.light, textTransform: "uppercase", letterSpacing: 1 }}>{L.alsoAvailableLabel||"Also available:"}</span>
+            <a href="/session-calc" style={{ fontSize: 13, fontWeight: 700, color: "#0891B2", textDecoration: "none" }}>{L.secondarySessionCalc||"Calculate one charging session →"}</a>
+            <span style={{ color: C.border }}>·</span>
+            <button onClick={() => setShowModal(true)} style={{ fontSize: 13, fontWeight: 700, color: "#D97706", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>{L.secondaryFullAudit||"Request a full session-by-session audit →"}</button>
           </div>
         </div>
       </div>
@@ -472,7 +438,7 @@ export default function BusinessPage({ onNavigate }) {
             <div style={{ fontSize: 26, marginBottom: 12 }}>✅</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: C.primary, marginBottom: 12 }}>{L.spTitle||"SmartPrice Business"}</div>
             <ul style={{ fontSize: 14, color: C.muted, lineHeight: 2.1, paddingLeft: 20, margin: 0 }}>
-              {(L.spItems||["Real EPEX Spot price at exact charge time","Updated every 15 minutes — always accurate","Tracks actual kWh per employee session","Fair and correct for both employer and employee","Full audit trail — CIR 92 compliant, accepted by all secretariaten"]).map((item,i) => <li key={i}>{item}</li>)}
+              {(L.spItems||["Real EPEX Spot price at exact charge time","Updated every 15 minutes","Tracks actual kWh per employee session","Fair and correct for both employer and employee","Full audit trail — designed to support CIR 92 documentation requirements"]).map((item,i) => <li key={i}>{item}</li>)}
             </ul>
           </div>
         </div>
@@ -483,7 +449,7 @@ export default function BusinessPage({ onNavigate }) {
           <div style={{ background: "linear-gradient(135deg,#15803D,#16A34A)", padding: "28px 36px" }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>{L.roiCalcLabel||"Smart Audit · ROI Calculator"}</div>
             <h3 style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, color: "#fff", marginBottom: 6, letterSpacing: "-0.5px" }}>{L.roiCalcTitle||"How much is your fleet overpaying — and is your audit trail CIR 92-ready?"}</h3>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.65 }}>{L.roiCalcDesc||`Based on CREG Q2 2026 (€${CREG_RATE}/kWh) vs. actual EPEX smart-charging average (€${EPEX_SMART}/kWh) · All figures exportable as a tax-authority audit report`}</p>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.65 }}>{L.roiCalcDesc||`Based on CREG Q2 2026 (€${CREG_RATE}/kWh) vs. an illustrative EPEX smart-charging average (€${EPEX_SMART}/kWh) — see methodology below · Exportable as a documentation report`}</p>
           </div>
 
           <div style={{ padding: "36px" }}>
@@ -536,9 +502,12 @@ export default function BusinessPage({ onNavigate }) {
               </div>
             </div>
 
+            <div style={{ fontSize: 11, color: C.light, lineHeight: 1.7, marginBottom: 24, maxWidth: 520 }}>
+              {L.roiMethodology||"Methodology: the EPEX smart-charging average assumes charging is shifted to the cheapest available hours each day (a typical off-peak pattern), based on recent EPEX Spot Belgium pricing — energy component only, before grid fees and taxes. Actual savings depend on your fleet's real charging times."}
+            </div>
             <div style={{ textAlign: "center" }}>
               <button onClick={() => setShowModal(true)} style={{ padding: "14px 40px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 6px 24px rgba(22,163,74,0.3)" }}>
-                {L.roiCtaBtn||"Get a Detailed Cost Audit →"}
+                {L.roiCtaBtn||"Start free fleet audit →"}
               </button>
               <div style={{ marginTop: 14 }}>
                 <a href={`mailto:?subject=Fleet EV reimbursement overpayment estimate — ${fleetSize} EVs&body=Based on ${fleetSize} EVs at ${monthlyKm} km/month, our fleet is estimated to overpay €${fmtInt(annualSaving)}/year on the current CREG rate versus real EPEX prices.%0A%0AEstimated saving per vehicle: €${fmtInt(perCarSaving)}/year.%0A%0AFull free audit (2 min, no signup): https://smartprice.be/fleet-audit`}
@@ -551,7 +520,7 @@ export default function BusinessPage({ onNavigate }) {
               <div style={{ marginTop: 20, display: "inline-flex", alignItems: "flex-start", gap: 10, background: C.highlight, border: `1px solid ${C.border2}`, borderRadius: 14, padding: "12px 18px", maxWidth: 480, textAlign: "left" }}>
                 <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
                 <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.65 }}>
-                  <strong style={{ color: C.text }}>Example:</strong>{" "}50 EVs · 1,500 km/month → <strong style={{ color: C.primary }}>€16,250/year saved</strong> vs. current CREG rate. CIR 92 audit-ready report generated in under 5 minutes.
+                  <strong style={{ color: C.text }}>Example:</strong>{" "}50 EVs · 1,500 km/month → <strong style={{ color: C.primary }}>€16,250/year estimated saving</strong> vs. current CREG rate. Documentation report generated in under 5 minutes.
                 </div>
               </div>
             </div>
@@ -569,9 +538,9 @@ export default function BusinessPage({ onNavigate }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 20, marginBottom: 52 }}>
           {[
             { icon: "📤", accent: C.primary,  title: L.tool1Title||"Fleet Card Invoice Checker",       badge: L.tool1Badge||"Free · Live",    badgeCol: C.primary, desc: L.tool1Desc||"Enter sessions from your Velocity, DKV, or UTA invoice. See the real EPEX market price at each exact hour vs. what you were charged.",      cta: L.tool1Cta||"Check your invoice →", href: "/session-calc?mode=fleet" },
-            { icon: "⚖️", accent: "#0EA5E9", title: L.tool2Title||"CREG vs. EPEX Intelligence",       badge: L.tool2Badge||"Live now",       badgeCol: C.primary, desc: L.tool2Desc||"Automatically detect whether an employee is on a dynamic or fixed-rate tariff. Ensure reimbursements are legally exact under CIR 92.",        cta: L.tool2Cta||"See how it works →", href: "/fleet-audit" },
-            { icon: "🚗", accent: C.amber,    title: L.tool4Title||"Smart Audit — Instant Report",     badge: L.tool4Badge||"Free",           badgeCol: C.bright,  desc: L.tool4Desc||"Enter your fleet size and charging method. Instantly see your annual overpayment versus live EPEX rates — with a downloadable PDF.",        cta: L.tool4Cta||"Start Smart Audit →", href: "/fleet-audit" },
-            { icon: "📊", accent: "#0EA5E9", title: L.tool6Title||"Per-Session Reimbursement Calculator", badge: L.tool6Badge||"Free · Live", badgeCol: C.primary, desc: L.tool6Desc||"Enter date, time and kWh for any charging session. SmartPrice looks up the exact EPEX price at that hour and calculates the CIR 92-compliant reimbursement.", cta: L.tool6Cta||"Calculate now →", href: "/session-calc?mode=reimburse" },
+            { icon: "⚖️", accent: "#0EA5E9", title: L.tool2Title||"CREG vs. EPEX Intelligence",       badge: L.tool2Badge||"Live now",       badgeCol: C.primary, desc: L.tool2Desc||"Automatically detect whether an employee is on a dynamic or fixed-rate tariff, and align reimbursements with CIR 92 principles.",        cta: L.tool2Cta||"See how it works →", href: "/fleet-audit" },
+            { icon: "🚗", accent: C.amber,    title: L.tool4Title||"Smart Audit — Instant Report",     badge: L.tool4Badge||"Free",           badgeCol: C.bright,  desc: L.tool4Desc||"Enter your fleet size and charging method. Instantly see your estimated annual overpayment versus live EPEX rates — with a downloadable PDF.",        cta: L.tool4Cta||"Start free fleet audit →", href: "/fleet-audit" },
+            { icon: "📊", accent: "#0EA5E9", title: L.tool6Title||"Per-Session Reimbursement Calculator", badge: L.tool6Badge||"Free · Live", badgeCol: C.primary, desc: L.tool6Desc||"Enter date, time and kWh for any charging session. SmartPrice looks up the EPEX price at that hour and calculates a CIR 92-aligned reimbursement estimate.", cta: L.tool6Cta||"Calculate one session →", href: "/session-calc?mode=reimburse" },
             { icon: "📡", accent: C.muted,    title: L.tool5Title||"Smart API — REST Integration",     badge: L.tool5Badge||"Free",           badgeCol: C.bright,  desc: L.tool5Desc||"Live EPEX Spot Belgium prices via public REST API. No API key required. Integrate into your fleet management platform or ERP.",              cta: L.tool5Cta||"View Smart API →", href: "/api-docs" },
             { icon: "🔌", accent: C.purple,   title: L.tool3Title||"Smart Connect — Fleet Throttling", badge: L.tool3Badge||"Coming 2026",    badgeCol: C.purple,  desc: L.tool3Desc||"Automatically shift employee home charging to off-peak EPEX hours via smart charger integration — cutting home charging costs by up to 60%. Also protects employees from the Flemish Capaciteitstarief (an extra grid charge triggered by high peak power draw).", cta: L.tool3Cta||"Register interest →", modal: true },
           ].map(p => (
@@ -635,7 +604,7 @@ export default function BusinessPage({ onNavigate }) {
           </div>
 
           <div style={{ fontSize: 12, color: C.light, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
-            ✅ {L.payrollNote||"SmartPrice integrates with fleet card providers and social secretariaten — CIR 92 compliant"}
+            ✅ {L.payrollNote||"Exports are designed for use with common Belgian payroll and fleet-card workflows"}
           </div>
         </div>
 
@@ -645,9 +614,9 @@ export default function BusinessPage({ onNavigate }) {
           <h2 style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, color: C.text, letterSpacing: "-0.5px", marginBottom: 28, textAlign: "center" }}>{L.faqTitle||"Common questions from fleet managers & HR teams"}</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {[
-              { q: L.faqQ1||"Is this accepted by SD Worx, Securex, Partena and other social secretariaten?", a: L.faqA1||"Yes. SmartPrice generates an exportable audit log — EPEX price, timestamp, kWh, employee ID — that satisfies the documentation requirements of all major Belgian social secretariaten for CIR 92 compliance." },
+              { q: L.faqQ1||"Will SD Worx, Securex, Partena or other social secretariaten accept this?", a: L.faqA1||"SmartPrice generates an exportable audit log — EPEX price, timestamp, kWh, employee ID — designed to align with common Belgian payroll documentation formats. We recommend confirming acceptance with your specific provider before relying on it for a filing." },
               { q: L.faqQ2||"Do my employees need to change their energy contract?", a: L.faqA2||"No. SmartPrice works regardless of the employee's energy supplier or tariff type. We use the public EPEX market price as the reference — no changes required on the employee side." },
-              { q: L.faqQ3||"How is employee data protected? Is this GDPR-compliant?", a: L.faqA3||"Fully. Employee charging data is isolated per employer account, stored on EU servers only (Frankfurt/Ireland), and never shared with third parties. Designed to GDPR Article 25 (privacy by design) standards." },
+              { q: L.faqQ3||"How is employee data protected? Is this GDPR-compliant?", a: L.faqA3||"Employee charging data is isolated per employer account, stored on EU servers only, and never shared with third parties. Designed to GDPR Article 25 (privacy by design) principles — see our privacy policy for full details." },
               { q: L.faqQ4||"Our payroll runs through Excel or our ERP. Can we export the data?", a: L.faqA4||"Yes — all audit reports export as CSV and printable PDF, ready to import into SD Worx, Securex, Partena, Acerta, Group S, or any payroll system. No vendor lock-in." },
               { q: L.faqQ5||"How long does the free audit take?", a: L.faqA5||"Under 5 minutes. Enter your fleet size and current reimbursement method — the tool immediately shows your estimated annual overpayment and generates a shareable PDF your CFO can review today." },
             ].map((item, i) => (
@@ -673,7 +642,7 @@ export default function BusinessPage({ onNavigate }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14 }}>
             {[
               { icon: "🛡️", accent: C.primary,  title: L.sec1Title||"GDPR Compliant by Design",          desc: L.sec1Desc||"Employee home location, private energy contracts, and personal charging schedules are fully isolated per employer account." },
-              { icon: "🇪🇺", accent: "#0EA5E9", title: L.sec2Title||"EU-Only Infrastructure",             desc: L.sec2Desc||"All cloud processing takes place exclusively on European nodes (Vercel EU West — Frankfurt, Ireland). No data ever leaves the EU." },
+              { icon: "🇪🇺", accent: "#0EA5E9", title: L.sec2Title||"EU-Only Infrastructure",             desc: L.sec2Desc||"All cloud processing takes place exclusively on European infrastructure (Amsterdam, Ireland). No data ever leaves the EU." },
               { icon: "🔑", accent: C.amber,     title: L.sec3Title||"Secure OAuth 2.0 Authentication",   desc: L.sec3Desc||"Direct secure token auth with all connected APIs — no raw passwords are ever stored or transmitted." },
               { icon: "📋", accent: C.purple,    title: L.sec4Title||"CIR 92 Audit Trail",                desc: L.sec4Desc||"Every reimbursement calculation is logged with a timestamp, EPEX price source, kWh amount, and employee ID." },
             ].map(t => (
@@ -687,7 +656,7 @@ export default function BusinessPage({ onNavigate }) {
 
           {/* Footer trust strip */}
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(22,163,74,0.15)", display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center" }}>
-            {["🛡️ GDPR Article 25 — Privacy by Design", "🇪🇺 EU GDPR & NIS2 Compliant", "🔒 OAuth 2.0 / OpenID Connect", "📋 CIR 92 Audit Ready"].map(b => (
+            {["🛡️ GDPR Article 25 — Privacy by Design", "🇪🇺 EU-Only Hosting", "🔒 OAuth 2.0 / OpenID Connect", "📋 CIR 92 Documentation Ready"].map(b => (
               <span key={b} style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>{b}</span>
             ))}
           </div>
@@ -698,15 +667,15 @@ export default function BusinessPage({ onNavigate }) {
           <div style={{ fontSize: 32, marginBottom: 14 }}>📩</div>
           <h3 style={{ fontSize: "clamp(20px,3vw,30px)", fontWeight: 900, marginBottom: 10, letterSpacing: "-0.5px" }}>{L.ctaTitle||"Ready to stop overpaying?"}</h3>
           <p style={{ fontSize: 15, opacity: 0.82, marginBottom: 32, maxWidth: 480, margin: "0 auto 32px", lineHeight: 1.75 }}>
-            {L.ctaBody||"We'll generate your CIR 92-ready fleet cost report — exact EPEX vs CREG delta, per employee, exportable to your payroll provider — and reach out within 1 business day."}
+            {L.ctaBody||"We'll generate your fleet cost report — EPEX vs CREG delta, per employee, exportable for your payroll provider — and reach out within 1 business day."}
           </p>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-            <button onClick={() => setShowModal(true)} style={{ padding: "14px 40px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FCD34D", color: "#15803D", border: "none", cursor: "pointer", boxShadow: "0 6px 24px rgba(0,0,0,0.2)" }}>
-              Generate my CIR 92 Audit Report →
-            </button>
-            <a href="/fleet-audit" style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.65)", textDecoration: "underline", textUnderlineOffset: 3 }}>
-              Try the free instant audit first →
+            <a href="/fleet-audit" style={{ padding: "14px 40px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FCD34D", color: "#15803D", textDecoration: "none", boxShadow: "0 6px 24px rgba(0,0,0,0.2)", display: "inline-block" }}>
+              {L.ctaFinalBtn||"Start free fleet audit →"}
             </a>
+            <button onClick={() => setShowModal(true)} style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, fontFamily: "inherit" }}>
+              {L.ctaFinalSecondary||"Or request a full session-by-session audit →"}
+            </button>
           </div>
         </div>
 
@@ -721,7 +690,7 @@ export default function BusinessPage({ onNavigate }) {
           <a href="/api-docs" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>API & HA</a>
           <a href="mailto:info@smartprice.be" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>info@smartprice.be</a>
         </div>
-        <div>🛡️ GDPR Compliant · 🇪🇺 EU Hosted · 🔒 OAuth 2.0 · CIR 92 Compliant</div>
+        <div>🛡️ GDPR-Aligned · 🇪🇺 EU Hosted · 🔒 OAuth 2.0 · CIR 92 Documentation Ready</div>
       </div>
 
       <style>{`
