@@ -17,7 +17,7 @@ Consumer electricity & gas dashboard for Belgian households.
 - **Eco strip** — factual grid-impact messaging: cheap hours = peak renewables, negative prices = surplus wind/solar going to waste
 - **EV API section** — targets charging app devs, in-car navigation teams, fleet software with "your app shows where, we show when" positioning
 - **Price alerts** — email when prices drop below your threshold
-- **Weekly digest** — every Monday 08:00 Brussels, EPEX stats + cheapest hours
+- **Weekly digest** — split across Monday/Tuesday 08:00 Brussels (half the recipients each day, stable per-email split — see Known Issues), EPEX stats + cheapest hours
 - **TTF gas prices** — real-time via ICE/TTF; compact tile on landing page
 - **Negative price banner** — pulsing alert when EPEX < €0/MWh
 - **Plan calculator** — compare all Belgian electricity/gas suppliers with personalised annual cost (grid fees + VAT)
@@ -569,7 +569,7 @@ For the Railway backend itself, set up an external check at [UptimeRobot](https:
 | AI assistant | Returns 503 if `ANTHROPIC_API_KEY` not set; 402 if credits depleted. |
 | CREG rate | Must be updated manually each quarter (`FleetAuditPage.jsx` + `SessionCalcPage.jsx`). Q2 2026 = €0.2833/kWh. |
 | Fluvius P1 frontend | Backend endpoint live; dashboard tile not yet built. |
-| Weekly digest schedule | Railway restarts after 08:00 Monday skip that week — last-sent date not persisted in Postgres. |
+| Resend daily cap | Free-tier plan caps sends at 200/day. The Monday digest alone (174 recipients) left almost no headroom for other same-day emails. Fixed 2026-09 by splitting the digest into two stable per-email halves sent Monday/Tuesday — revisit if recipient count grows enough to need a third day, or just upgrade the Resend plan. |
 | 16 users with NULL email | Password-signup accounts where email wasn't stored at registration. Bug not yet fixed. |
 | Facebook Page Token | Permanent token generated 2026-06. If it expires, follow 3-step refresh: short-lived user token → long-lived → Page token via `/me/accounts`. `FACEBOOK_PAGE_ID` corrected 2026-08 to `61591589255351` — double check the Railway env var actually matches (was found stale in docs). |
 | No user-agent tracking | `analytics_events` never captured browser/device — makes bug reports like "works in Chrome, not Firefox" hard to diagnose from data alone. Worth adding if this recurs. |
@@ -603,7 +603,6 @@ Bundle: Vite `manualChunks` splits vendor / page-admin / page-business / page-se
 ## Roadmap
 
 - [ ] Fluvius dashboard tile — live power + solar + charge signal on user dashboard
-- [ ] Weekly digest schedule fix — persist last-sent date in Postgres so Railway restarts don't skip the week
 - [ ] Fix 16 NULL-email users — registration bug where email wasn't stored for password-signup accounts
 - [ ] LinkedIn page — content plan exists in `outreach/linkedin_content.md`, page not yet fully set up
 - [ ] Fleet card API integration — auto-import Velocity/DKV/UTA invoice sessions

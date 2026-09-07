@@ -488,21 +488,26 @@ setInterval(() => { runWeeklyScrape().catch(e => console.warn("[weekly] Scrape f
 })();
 
 // Weekly digest email — checked hourly, sends once the DB guard allows it on
-// Monday at/after 08:00 Brussels time. Hourly self-check (rather than a single
-// setTimeout aimed at the exact next Monday 8am) means a redeploy can never
-// push the schedule a full week out — worst case it's caught within the hour.
+// Monday/Tuesday at/after 08:00 Brussels time. Hourly self-check (rather than a
+// single setTimeout aimed at the exact next Monday 8am) means a redeploy can
+// never push the schedule a full week out — worst case it's caught within the
+// hour. Split across two days (segment 0 = Monday half, 1 = Tuesday half) so
+// each day's send fits under Resend's daily cap as the recipient list grows.
 if (process.env.RESEND_API_KEY) {
   function checkWeeklyDigest() {
     const brussels = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Europe/Brussels", weekday: "short", hour: "numeric", hour12: false,
     }).formatToParts(new Date()).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
-    if (brussels.weekday === "Mon" && parseInt(brussels.hour) >= 8) {
-      sendWeeklyDigest(pool).catch(e => console.error("[weekly-digest] Error:", e.message));
+    const hour = parseInt(brussels.hour);
+    if (brussels.weekday === "Mon" && hour >= 8) {
+      sendWeeklyDigest(pool, false, 0).catch(e => console.error("[weekly-digest] Error:", e.message));
+    } else if (brussels.weekday === "Tue" && hour >= 8) {
+      sendWeeklyDigest(pool, false, 1).catch(e => console.error("[weekly-digest] Error:", e.message));
     }
   }
   checkWeeklyDigest();
   setInterval(checkWeeklyDigest, 60 * 60 * 1000);
-  console.log("   Weekly digest: ⏰ Hourly check — sends Monday 08:00+ Brussels (DB dedup guard)");
+  console.log("   Weekly digest: ⏰ Hourly check — sends split Mon/Tue 08:00+ Brussels, half each day (DB dedup guard)");
 }
 
 // Weekly B2B outreach backlog — same hourly-check pattern as the weekly

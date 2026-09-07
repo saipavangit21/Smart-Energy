@@ -379,7 +379,15 @@ module.exports.sendAdminNewUserNotification = sendAdminNewUserNotification;
 // ── Weekly digest email to all users ──────────────────────────
 let _lastDigestDate = null; // in-memory fallback guard, used only if the DB check below fails
 
-async function sendWeeklyDigest(pool, force = false) {
+// Stable 0/1 split by email — same user always lands in the same half every
+// week, so nobody gets skipped or double-sent as the recipient list grows.
+function emailHashBit(email) {
+  let h = 0;
+  for (let i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) >>> 0;
+  return h % 2;
+}
+
+async function sendWeeklyDigest(pool, force = false, segment = null) {
 
   // Prevent sending more than once per calendar day (Brussels timezone).
   // Persisted in the DB — an in-memory-only flag resets on every redeploy, which previously
@@ -425,9 +433,13 @@ async function sendWeeklyDigest(pool, force = false) {
     // Merge, dedup by email (registered user wins)
     const emailSeen = new Set(registeredUsers.map(u => u.email.toLowerCase()));
     const extraSubs = newsletterSubs.filter(s => !emailSeen.has(s.email.toLowerCase()));
-    const users = [...registeredUsers, ...extraSubs];
+    const allUsers = [...registeredUsers, ...extraSubs];
+    // Resend's plan caps daily sends — split the digest across Monday/Tuesday
+    // by a stable per-email hash so each half fits under that limit and the
+    // same recipients land on the same day every week.
+    const users = segment === null ? allUsers : allUsers.filter(u => emailHashBit(u.email.toLowerCase()) === segment);
     if (users.length === 0) { console.log("[weekly-digest] No recipients found"); return; }
-    console.log(`[weekly-digest] Recipients: ${registeredUsers.length} registered + ${extraSubs.length} newsletter subs = ${users.length} total`);
+    console.log(`[weekly-digest] Recipients: ${registeredUsers.length} registered + ${extraSubs.length} newsletter subs = ${allUsers.length} total${segment !== null ? `, segment ${segment}: ${users.length}` : ""}`);
 
     // Fetch last 7 days using SmartPrice's own history endpoint (has caching + fallbacks)
     let weekStats = null;
