@@ -42,6 +42,10 @@ function AnimatedNumber({ value, prefix = "", suffix = "", duration = 1800 }) {
   useEffect(() => {
     const target = parseFloat(String(value).replace(/[^0-9.]/g, ""));
     if (isNaN(target)) { setDisplay(value); return; }
+    // Allow re-animating when value changes — e.g. the real stat loads async
+    // and replaces an initial placeholder default, which should still animate
+    // in rather than being stuck at whatever value first triggered this.
+    animated.current = false;
     const observer = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting || animated.current) return;
       animated.current = true;
