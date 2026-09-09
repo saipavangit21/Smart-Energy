@@ -132,6 +132,32 @@ function enrich(prices) { const now=new Date(),ts=toISODate(now); return prices.
 const DAY_AHEAD_CUTOFF_HOUR = 13;
 function hasDay(prices, dateStr) { return prices.some(p => toLocalISODate(new Date(p.timestamp)) === dateStr); }
 
+// Guards against the fill-in attempt below turning into a retry storm: if
+// ENTSO-E itself is down/erroring, every concurrent request would otherwise
+// independently retry it and block for up to 15s each with no de-dup — which
+// is exactly what happened in production (hundreds of blocked requests/min
+// once ENTSO-E started failing). _entsoeFillInFlight coalesces concurrent
+// callers onto one shared attempt; a failure is cached for 10 minutes so we
+// don't hammer a struggling upstream on every single request.
+const _entsoeFillInFlight = new Map(); // "s-e" -> in-flight Promise
+function entsoeFillIn(s, e) {
+  const key = `${s}-${e}`;
+  if (_entsoeFillInFlight.has(key)) return _entsoeFillInFlight.get(key);
+  const failKey = `entsoe-fill-fail-${key}`;
+  if (cache.has(failKey)) return Promise.resolve(null);
+
+  const p = fetchENTSOE(s, e)
+    .then(entsoe => hasDay(entsoe, e) ? entsoe : null)
+    .catch(err => {
+      console.warn("[prices] ENTSO-E fill-in for missing day-ahead data failed:", err.message);
+      cache.set(failKey, true, 600);
+      return null;
+    })
+    .finally(() => _entsoeFillInFlight.delete(key));
+  _entsoeFillInFlight.set(key, p);
+  return p;
+}
+
 async function getPrices(s,e) {
   let ec;
   try {
@@ -145,14 +171,10 @@ async function getPrices(s,e) {
   }
 
   if (getLocalHour(new Date()) >= DAY_AHEAD_CUTOFF_HOUR && !hasDay(ec, e)) {
-    try {
-      const entsoe = await fetchENTSOE(s, e);
-      if (hasDay(entsoe, e)) {
-        const merged = [...ec.filter(p => toLocalISODate(new Date(p.timestamp)) !== e), ...entsoe.filter(p => toLocalISODate(new Date(p.timestamp)) === e)];
-        return { prices: merged, source: "Energy-Charts + ENTSO-E" };
-      }
-    } catch (e2) {
-      console.warn("[prices] ENTSO-E fill-in for missing day-ahead data failed:", e2.message);
+    const entsoe = await entsoeFillIn(s, e);
+    if (entsoe) {
+      const merged = [...ec.filter(p => toLocalISODate(new Date(p.timestamp)) !== e), ...entsoe.filter(p => toLocalISODate(new Date(p.timestamp)) === e)];
+      return { prices: merged, source: "Energy-Charts + ENTSO-E" };
     }
   }
 
