@@ -3,6 +3,7 @@
  */
 
 const crypto = require("crypto");
+const { sendMail } = require("./mailer");
 
 function hashIp(ip) {
   if (!ip) return null;
@@ -70,16 +71,53 @@ async function track(pool, { event, method = null, userId = null, sessionId, pat
 // A device/integration can send ?partner=name or X-Partner: name on requests
 // to see its own daily call count separately in /api/admin/analytics
 // (event: "partner_api_call", broken down by method = partner name).
+//
+// Fair-use monitoring, not enforcement: agreed usage patterns (e.g. ACIT SA's
+// ~12/day centralized-server polling) are never hard-blocked — a threshold
+// crossing just triggers one alert email per partner per day so we notice
+// and can follow up, rather than silently breaking someone's integration
+// over normal retry variance.
+const PARTNER_FAIR_USE_THRESHOLD = 30; // ~2.5x a typical agreed 12/day pattern
+const _partnerAlertedToday = new Map(); // partner -> "YYYY-MM-DD" already alerted
+
+async function checkPartnerSpike(pool, partner) {
+  const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Brussels" }).format(new Date());
+  if (_partnerAlertedToday.get(partner) === today) return;
+  try {
+    const { rows } = await pool.query(
+      `SELECT COUNT(*) AS c FROM analytics_events
+       WHERE event = 'partner_api_call' AND method = $1
+         AND created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Europe/Brussels') AT TIME ZONE 'Europe/Brussels'`,
+      [partner]
+    );
+    const count = parseInt(rows[0]?.c || 0, 10);
+    if (count > PARTNER_FAIR_USE_THRESHOLD) {
+      _partnerAlertedToday.set(partner, today);
+      console.warn(`[partner-usage] ${partner} exceeded fair-use threshold: ${count} calls today`);
+      sendMail({
+        from: "SmartPrice.be <info@smartprice.be>",
+        to: "info@smartprice.be",
+        subject: `⚠️ Partner API usage spike — ${partner}`,
+        html: `<p><strong>${partner}</strong> has made <strong>${count}</strong> calls today, above the expected fair-use pattern (~12/day, centralized-server polling). Worth checking in with them — their usage pattern may have changed (e.g. per-device calls instead of one central server).</p>`,
+      }).catch(e => console.warn("[partner-usage] alert email failed:", e.message));
+    }
+  } catch (e) {
+    console.warn("[partner-usage] spike check failed:", e.message);
+  }
+}
+
 function trackPartnerCall(pool, req) {
   const partner = req.headers["x-partner"] || req.query.partner;
   if (!partner) return;
+  const name = String(partner).slice(0, 40);
   track(pool, {
     event: "partner_api_call",
-    method: String(partner).slice(0, 40),
+    method: name,
     sessionId: req._sessionId,
     path: req.originalUrl,
     ip: req._ip,
   });
+  checkPartnerSpike(pool, name).catch(() => {});
 }
 
 module.exports = function attachAnalytics(app, pool) {
