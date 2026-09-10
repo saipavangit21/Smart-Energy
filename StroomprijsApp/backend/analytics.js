@@ -66,6 +66,22 @@ async function track(pool, { event, method = null, userId = null, sessionId, pat
   }
 }
 
+// Optional partner identification — no key required, purely for visibility.
+// A device/integration can send ?partner=name or X-Partner: name on requests
+// to see its own daily call count separately in /api/admin/analytics
+// (event: "partner_api_call", broken down by method = partner name).
+function trackPartnerCall(pool, req) {
+  const partner = req.headers["x-partner"] || req.query.partner;
+  if (!partner) return;
+  track(pool, {
+    event: "partner_api_call",
+    method: String(partner).slice(0, 40),
+    sessionId: req._sessionId,
+    path: req.originalUrl,
+    ip: req._ip,
+  });
+}
+
 module.exports = function attachAnalytics(app, pool) {
 
   // Session middleware
@@ -136,6 +152,7 @@ module.exports = function attachAnalytics(app, pool) {
         ip: req._ip,
         dedup: true,
       });
+      trackPartnerCall(pool, req);
     }
     next();
   });
@@ -153,6 +170,7 @@ module.exports = function attachAnalytics(app, pool) {
         ip: req._ip,
         dedup: true,
       });
+      trackPartnerCall(pool, req);
     }
     next();
   });
@@ -209,7 +227,7 @@ module.exports = function attachAnalytics(app, pool) {
       : `created_at >= NOW() - INTERVAL '${days} days'`;
 
     try {
-      const [summary, daily, authMethods, guestRatio, funnel, userCount] = await Promise.all([
+      const [summary, daily, authMethods, guestRatio, funnel, userCount, partnerBreakdown] = await Promise.all([
         pool.query(`
           SELECT event, COUNT(*) AS total,
             COUNT(DISTINCT session_id) AS unique_sessions,
@@ -260,6 +278,15 @@ module.exports = function attachAnalytics(app, pool) {
             COUNT(*) FILTER (WHERE preferences->>'tesla_access_token' IS NOT NULL) AS tesla_connected
           FROM users
         `),
+
+        pool.query(`
+          SELECT method AS partner,
+            DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
+            COUNT(*) AS calls
+          FROM analytics_events
+          WHERE event = 'partner_api_call' AND ${dateFilter}
+          GROUP BY partner, day ORDER BY day DESC, calls DESC
+        `),
       ]);
 
       const payload = {
@@ -268,6 +295,7 @@ module.exports = function attachAnalytics(app, pool) {
         generated_at: new Date().toISOString(),
         total_registered_users: userCount.rows[0],
         summary: summary.rows,
+        partner_api_calls: partnerBreakdown.rows,
         auth_methods: authMethods.rows,
         guest_vs_loggedin: guestRatio.rows,
         calculator_funnel: funnel.rows,
