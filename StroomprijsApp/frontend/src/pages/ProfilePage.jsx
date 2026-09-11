@@ -36,6 +36,42 @@ export default function ProfilePage({ onBack, onGoAlerts }) {
   // Live prefs fetched fresh from server
   const [livePrefs, setLivePrefs] = useState(user?.preferences || {});
 
+  // API token (Home Assistant / device integrations) — the raw value is only
+  // ever returned once, right after generating it; apiTokenInfo (from the
+  // server) never includes it, just whether one exists and when it was made.
+  const [apiTokenInfo, setApiTokenInfo] = useState(null);
+  const [generatedToken, setGeneratedToken] = useState(null);
+  const [tokenBusy, setTokenBusy] = useState(false);
+  const [tokenCopied, setTokenCopied] = useState(false);
+
+  const fetchApiTokenInfo = () => {
+    authFetch(`${API}/auth/api-token`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setApiTokenInfo(d.token); })
+      .catch(() => {});
+  };
+
+  const generateApiToken = async () => {
+    setTokenBusy(true);
+    try {
+      const res = await authFetch(`${API}/auth/api-token`, { method: "POST", body: JSON.stringify({ label: "Home Assistant" }) });
+      const json = await res.json();
+      if (json.success) { setGeneratedToken(json.token); fetchApiTokenInfo(); }
+    } catch (e) { console.error(e); }
+    finally { setTokenBusy(false); }
+  };
+
+  const revokeApiToken = async () => {
+    if (!window.confirm("Revoke this API token? Any device using it (e.g. Home Assistant) will stop working until you generate and configure a new one.")) return;
+    setTokenBusy(true);
+    try {
+      await authFetch(`${API}/auth/api-token`, { method: "DELETE" });
+      setApiTokenInfo(null);
+      setGeneratedToken(null);
+    } catch (e) { console.error(e); }
+    finally { setTokenBusy(false); }
+  };
+
   useEffect(() => {
     authFetch(`${API}/auth/me`)
       .then(r => r.json())
@@ -47,6 +83,7 @@ export default function ProfilePage({ onBack, onGoAlerts }) {
         }
       })
       .catch(() => {});
+    fetchApiTokenInfo();
   }, []);
 
   const save = async () => {
@@ -158,6 +195,52 @@ export default function ProfilePage({ onBack, onGoAlerts }) {
               </a>
             ))}
           </div>
+        </Section>
+
+        {/* API access — Home Assistant / device integrations */}
+        <Section title="🔑 API Access">
+          <div style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>
+            A dedicated token for connecting devices like Home Assistant — separate from your login, and revocable at any time. See the <a href="/api-docs" style={{ color: C.teal }}>API docs</a> for setup.
+          </div>
+
+          {generatedToken ? (
+            <div style={{ marginBottom: 4 }}>
+              <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: C.amber, marginBottom: 12 }}>
+                ⚠️ Copy this now — it won't be shown again.
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+                <code style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "#7DD3FC", overflowX: "auto", whiteSpace: "nowrap" }}>{generatedToken}</code>
+                <button onClick={() => { navigator.clipboard.writeText(generatedToken); setTokenCopied(true); setTimeout(() => setTokenCopied(false), 1500); }}
+                  style={{ padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", background: tokenCopied ? C.green : C.teal, color: "#fff", flexShrink: 0 }}>
+                  {tokenCopied ? "✓ Copied" : "Copy"}
+                </button>
+              </div>
+              <button onClick={() => setGeneratedToken(null)} style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)", color: C.gray, cursor: "pointer" }}>
+                Done, I've saved it
+              </button>
+            </div>
+          ) : apiTokenInfo ? (
+            <div>
+              <div style={{ fontSize: 13, marginBottom: 16 }}>
+                <span style={{ color: C.gray }}>Active token: </span>
+                <strong style={{ color: C.green }}>🟢 {apiTokenInfo.label || "API token"}</strong>
+                <span style={{ color: C.gray }}> · created {new Date(apiTokenInfo.created_at).toLocaleDateString()}</span>
+                {apiTokenInfo.last_used_at && <span style={{ color: C.gray }}> · last used {new Date(apiTokenInfo.last_used_at).toLocaleDateString()}</span>}
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button onClick={generateApiToken} disabled={tokenBusy} style={{ padding: "9px 20px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid rgba(13,148,136,0.3)", background: "rgba(13,148,136,0.08)", color: C.teal, cursor: tokenBusy ? "not-allowed" : "pointer" }}>
+                  Generate new (replaces this one)
+                </button>
+                <button onClick={revokeApiToken} disabled={tokenBusy} style={{ padding: "9px 20px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: C.red, cursor: tokenBusy ? "not-allowed" : "pointer" }}>
+                  Revoke
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={generateApiToken} disabled={tokenBusy} style={{ padding: "10px 24px", borderRadius: 10, fontSize: 14, fontWeight: 700, border: "none", cursor: tokenBusy ? "not-allowed" : "pointer", background: C.teal, color: "#fff" }}>
+              {tokenBusy ? "Generating…" : "🔑 Generate API token"}
+            </button>
+          )}
         </Section>
 
         {/* Energy Mix */}

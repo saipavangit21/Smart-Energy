@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react";
 import LangSwitcher from "../components/LangSwitcher";
 
-const API = "https://smartprice.be";
+const API = "https://api.smartprice.be";
 
 const C = {
   bg: "#060B14", card: "#0D1626", border: "rgba(255,255,255,0.08)",
@@ -254,7 +254,7 @@ export default function ApiPage({ onGetStarted }) {
         <Section title="⚡ Rate Limits & Usage">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12, marginBottom: 20 }}>
             {[
-              { label: "Rate limit", value: "60 req/min", icon: "🔄" },
+              { label: "Rate limit", value: "No hard limit — please be reasonable", icon: "🔄" },
               { label: "Authentication", value: "None required", icon: "🔓" },
               { label: "Price updates", value: "Every 15 min", icon: "🕐" },
               { label: "Data license", value: "CC BY 4.0", icon: "📄" },
@@ -302,7 +302,7 @@ if (price < 50) {
               Push real-time readings from your Fluvius digital meter (P1 port) to SmartPrice. Your dashboard will show live power consumption, solar export, and a <strong style={{ color: C.text }}>charge signal</strong> — "charge now" when the EPEX all-in price is below €0.12/kWh.
             </p>
             <div style={{ background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: C.muted, lineHeight: 1.7, marginBottom: 20 }}>
-              <strong style={{ color: C.text }}>Auth:</strong> Use your SmartPrice JWT token as <code style={{ color: "#818CF8" }}>x-api-key</code> header in HA — same token you get from logging in. Find it in your browser's localStorage under <code style={{ color: "#818CF8" }}>sp_access_token</code>.
+              <strong style={{ color: C.text }}>Auth:</strong> Generate a dedicated API token from your <a href="/" onClick={e => { e.preventDefault(); onGetStarted(); }} style={{ color: "#818CF8" }}>Profile page</a> (sign in first) — shown once, so copy it right away. Use it as the <code style={{ color: "#818CF8" }}>x-api-key</code> header below. This is a separate, revocable token — not your login password or session cookie.
             </div>
 
             <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>configuration.yaml — push P1 readings every 10 seconds</div>
@@ -311,7 +311,7 @@ if (price < 50) {
     url: ${API}/api/fluvius/push
     method: POST
     headers:
-      x-api-key: "YOUR_SMARTPRICE_JWT_TOKEN"
+      x-api-key: "YOUR_SMARTPRICE_API_TOKEN"
       Content-Type: application/json
     payload: >
       {

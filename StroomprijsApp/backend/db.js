@@ -175,6 +175,60 @@ const userStore = {
     return rows[0]?.user_id || null;
   },
 
+  // ── API tokens (Home Assistant / device integrations) ─────────
+  // Opaque token, not a JWT — so it can be individually revoked (JWTs signed
+  // with JWT_SECRET can't be un-issued short of rotating the whole secret,
+  // which would log out every user). Raw token is shown once at creation;
+  // only its SHA-256 hash is ever stored, same pattern as password resets.
+  // One active token per user — generating a new one replaces the old.
+  async createApiToken(userId, label = "API token") {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS api_tokens (
+        token_hash   TEXT NOT NULL PRIMARY KEY,
+        user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        label        TEXT,
+        created_at   TIMESTAMPTZ DEFAULT now(),
+        last_used_at TIMESTAMPTZ
+      )
+    `);
+    await pool.query("DELETE FROM api_tokens WHERE user_id = $1", [userId]);
+
+    const rawToken  = "sp_" + crypto.randomBytes(24).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    await pool.query(
+      "INSERT INTO api_tokens (token_hash, user_id, label) VALUES ($1, $2, $3)",
+      [tokenHash, userId, label]
+    );
+    return rawToken;
+  },
+
+  // Returns the user_id for a valid token (updates last_used_at), or null
+  async verifyApiToken(rawToken) {
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const { rows } = await pool.query(
+      "UPDATE api_tokens SET last_used_at = now() WHERE token_hash = $1 RETURNING user_id",
+      [tokenHash]
+    );
+    return rows[0]?.user_id || null;
+  },
+
+  // Metadata only — never the raw token, which can't be recovered once shown
+  async getApiTokenInfo(userId) {
+    try {
+      const { rows } = await pool.query(
+        "SELECT label, created_at, last_used_at FROM api_tokens WHERE user_id = $1",
+        [userId]
+      );
+      return rows[0] || null;
+    } catch {
+      return null; // table may not exist yet if no one has ever generated a token
+    }
+  },
+
+  async revokeApiToken(userId) {
+    await pool.query("DELETE FROM api_tokens WHERE user_id = $1", [userId]);
+  },
+
   // ── Safe user (never expose password_hash) ───────────────────
   safeUser(user) {
     if (!user) return null;

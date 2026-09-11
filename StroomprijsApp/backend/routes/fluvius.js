@@ -14,6 +14,7 @@
 const express      = require("express");
 const router       = express.Router();
 const { requireAuth } = require("../middleware/auth");
+const userStore    = require("../db");
 const pool         = require("../db").pool;
 const NodeCache    = require("node-cache");
 const epexCache    = new NodeCache({ stdTTL: 300 });
@@ -46,7 +47,7 @@ async function currentEpexAllIn() {
   const cached = epexCache.get("current");
   if (cached !== undefined) return cached;
   try {
-    const r = await fetch("https://smartprice.be/api/current");
+    const r = await fetch("https://api.smartprice.be/api/current");
     const d = await r.json();
     const mwh = d?.current?.price_eur_mwh;
     if (mwh == null) return null;
@@ -58,14 +59,26 @@ async function currentEpexAllIn() {
   }
 }
 
-// ── Auth middleware — accepts JWT OR x-api-key ───────────────────────────────
-// x-api-key is the user's JWT stored in HA configuration.yaml as a header.
-// This keeps the HA config identical to the normal auth flow.
+// ── Auth middleware — accepts session cookie OR x-api-key ───────────────────
+// x-api-key is a dedicated, revocable opaque token (see /auth/api-token),
+// generated once from the Profile page — for Home Assistant's
+// configuration.yaml, which has no cookie jar. Deliberately not the short
+// -lived session JWT: an opaque DB-backed token can be individually revoked
+// if it ever leaks from a device config, whereas a JWT can't be un-issued
+// short of rotating JWT_SECRET (which would log out every user).
 async function flexAuth(req, res, next) {
   const apiKey = req.headers["x-api-key"];
   if (apiKey) {
-    // Treat as Bearer token
-    req.headers.authorization = `Bearer ${apiKey}`;
+    try {
+      const userId = await userStore.verifyApiToken(apiKey);
+      if (!userId) return res.status(401).json({ success: false, error: "Invalid or revoked API token" });
+      const user = await userStore.findById(userId);
+      if (!user) return res.status(401).json({ success: false, error: "User not found" });
+      req.user = userStore.safeUser(user);
+      return next();
+    } catch (err) {
+      return res.status(500).json({ success: false, error: "API token check failed" });
+    }
   }
   return requireAuth(req, res, next);
 }
