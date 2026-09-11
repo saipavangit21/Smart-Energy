@@ -115,6 +115,23 @@ export default function ApiPage({ onGetStarted }) {
           <div style={{ fontSize: 12, color: C.muted }}>All endpoints return JSON. CORS enabled for all origins.</div>
         </div>
 
+        {/* Quick start — generic, for any language/integration, not just Home Assistant */}
+        <Section title="🚀 Quick Start — any language or platform">
+          <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 20 }}>
+            This is a plain REST API — the Home Assistant and Node-RED sections below are just two examples. Any application, backend, or device can call it directly. No SDK, no API key, no headers required for price data.
+          </p>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>curl</div>
+          <Code>{`curl ${API}/api/current`}</Code>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8, marginTop: 16 }}>JavaScript / Node.js</div>
+          <Code>{`const res = await fetch("${API}/api/current");
+const data = await res.json();
+console.log(data.current.price_eur_mwh); // e.g. 145.2`}</Code>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8, marginTop: 16 }}>Python</div>
+          <Code>{`import requests
+data = requests.get("${API}/api/current").json()
+print(data["current"]["price_eur_mwh"])`}</Code>
+        </Section>
+
         {/* Home Assistant section */}
         <Section title="🏠 Home Assistant Integration">
           <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 20 }}>
@@ -267,7 +284,7 @@ export default function ApiPage({ onGetStarted }) {
             ))}
           </div>
           <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.7 }}>
-            For high-volume use or commercial integrations, please contact <a href="mailto:hello@smartprice.be" style={{ color: C.teal }}>hello@smartprice.be</a>. Price data sourced from <a href="https://energy-charts.info" target="_blank" rel="noopener noreferrer" style={{ color: C.teal }}>Energy-Charts.info</a> (Fraunhofer ISE) and Elia Open Data under CC BY 4.0.
+            For high-volume use or commercial integrations, please contact <a href="mailto:info@smartprice.be" style={{ color: C.teal }}>info@smartprice.be</a>. Price data sourced from <a href="https://energy-charts.info" target="_blank" rel="noopener noreferrer" style={{ color: C.teal }}>Energy-Charts.info</a> (Fraunhofer ISE) and Elia Open Data under CC BY 4.0.
           </p>
         </Section>
 
@@ -301,8 +318,13 @@ if (price < 50) {
             <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 16 }}>
               Push real-time readings from your Fluvius digital meter (P1 port) to SmartPrice. Your dashboard will show live power consumption, solar export, and a <strong style={{ color: C.text }}>charge signal</strong> — "charge now" when the EPEX all-in price is below €0.12/kWh.
             </p>
-            <div style={{ background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 12, padding: "14px 18px", fontSize: 13, color: C.muted, lineHeight: 1.7, marginBottom: 20 }}>
-              <strong style={{ color: C.text }}>Auth:</strong> Generate a dedicated API token from your <a href="/" onClick={e => { e.preventDefault(); onGetStarted(); }} style={{ color: "#818CF8" }}>Profile page</a> (sign in first) — shown once, so copy it right away. Use it as the <code style={{ color: "#818CF8" }}>x-api-key</code> header below. This is a separate, revocable token — not your login password or session cookie.
+            <div style={{ background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 12, padding: "16px 18px", fontSize: 13, color: C.muted, lineHeight: 1.7, marginBottom: 20 }}>
+              <strong style={{ color: C.text }}>Auth required — only for this endpoint.</strong> Price data above needs no key at all; pushing your own P1 meter data does, since it's tied to your account. Use it as the <code style={{ color: "#818CF8" }}>x-api-key</code> header below — a separate, revocable token, not your login password or session cookie.
+              <div style={{ marginTop: 12 }}>
+                <a href="/" onClick={e => { e.preventDefault(); onGetStarted(); }} style={{ display: "inline-block", padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.35)", color: "#A5B4FC", textDecoration: "none" }}>
+                  🔑 Sign in → Profile → Generate API token
+                </a>
+              </div>
             </div>
 
             <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>configuration.yaml — push P1 readings every 10 seconds</div>
@@ -371,7 +393,7 @@ sensor.p1_gas_delivered`}</Code>
         </div>
 
         <div style={{ textAlign: "center", fontSize: 12, color: C.muted, paddingTop: 24, borderTop: `1px solid ${C.border}` }}>
-          Questions? <a href="mailto:hello@smartprice.be" style={{ color: C.teal }}>hello@smartprice.be</a>
+          Questions? <a href="mailto:info@smartprice.be" style={{ color: C.teal }}>info@smartprice.be</a>
           {" · "}Data: Energy-Charts.info · Elia Open Data (CC BY 4.0)
           {" · "}<a href="/" style={{ color: C.teal }}>SmartPrice.be</a>
         </div>
