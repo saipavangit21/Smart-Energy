@@ -304,6 +304,40 @@ router.put("/profile", requireAuth, async (req, res) => {
   }
 });
 
+// ── API tokens — for Home Assistant / device integrations ──────
+// The dashboard itself never needs this (it uses the httpOnly session
+// cookie); this is specifically for server-to-server use cases like
+// pushing Fluvius P1 readings from Home Assistant, where there's no
+// browser to hold a cookie. Opaque + revocable, not a JWT.
+router.get("/api-token", requireAuth, async (req, res) => {
+  try {
+    const info = await userStore.getApiTokenInfo(req.user.id);
+    res.json({ success: true, token: info });
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Failed to check API token status" });
+  }
+});
+
+router.post("/api-token", requireAuth, async (req, res) => {
+  try {
+    const label = (req.body?.label || "API token").slice(0, 60);
+    const rawToken = await userStore.createApiToken(req.user.id, label);
+    // Only time the raw value is ever returned — not retrievable afterward
+    res.json({ success: true, token: rawToken, label });
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Failed to generate API token" });
+  }
+});
+
+router.delete("/api-token", requireAuth, async (req, res) => {
+  try {
+    await userStore.revokeApiToken(req.user.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Failed to revoke API token" });
+  }
+});
+
 // ── PUT /auth/change-password ─────────────────────────────────
 router.put("/change-password", requireAuth, async (req, res) => {
   try {
