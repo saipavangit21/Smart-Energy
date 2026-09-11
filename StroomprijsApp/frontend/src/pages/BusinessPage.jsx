@@ -154,7 +154,7 @@ export default function BusinessPage({ onNavigate }) {
       if (!el) { el = document.createElement("meta"); prop ? el.setAttribute("property", name) : el.setAttribute("name", name); document.head.appendChild(el); }
       el.setAttribute("content", val);
     };
-    setMeta("description", "Automate dynamic tariff EV home-charging reimbursements for Belgian corporate fleets. CIR 92 compliant. Works with SD Worx, Securex, Partena, Acerta, Group S.");
+    setMeta("description", "Automate dynamic tariff EV home-charging reimbursements for Belgian corporate fleets. Designed to align with CIR 92. Works with SD Worx, Securex, Partena, Acerta, Group S.");
     setMeta("og:title",       "SmartPrice for Business — EV Fleet Energy Optimization", true);
     setMeta("og:description", "Automate dynamic tariff charging reimbursements for Belgian corporate fleets. Stop overpaying on CREG flat rates.", true);
     setMeta("og:url",         "https://smartprice.be/business", true);

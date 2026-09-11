@@ -27,7 +27,7 @@ const POLICIES = {
       },
       {
         title: "4. Data Storage & Security",
-        content: "All personal data is stored in the European Union:\n• Database: Supabase (Ireland, EU) ✅\n• Backend: Railway (Netherlands, EU) ✅\n• Frontend: Vercel (EU region) ✅\n\nPasswords are hashed using bcrypt (industry standard). We use JWT tokens for secure authentication. We never store plain-text passwords.",
+        content: "All personal data is stored in the European Union:\n• Database: Supabase (Ireland, EU) ✅\n• Backend: Railway (Netherlands, EU) ✅\n• Frontend: Cloudflare (EU region) ✅\n\nPasswords are hashed using bcrypt (industry standard). We use JWT tokens for secure authentication. We never store plain-text passwords.",
       },
       {
         title: "5. Data Sharing",
@@ -81,7 +81,7 @@ const POLICIES = {
       },
       {
         title: "4. Gegevensopslag & Beveiliging",
-        content: "Alle persoonsgegevens worden opgeslagen in de Europese Unie:\n• Database: Supabase (Ierland, EU) ✅\n• Backend: Railway (Nederland, EU) ✅\n• Frontend: Vercel (EU-regio) ✅\n\nWachtwoorden worden gehasht met bcrypt (industriestandaard). We gebruiken JWT-tokens voor veilige authenticatie. We slaan nooit wachtwoorden in leesbare tekst op.",
+        content: "Alle persoonsgegevens worden opgeslagen in de Europese Unie:\n• Database: Supabase (Ierland, EU) ✅\n• Backend: Railway (Nederland, EU) ✅\n• Frontend: Cloudflare (EU-regio) ✅\n\nWachtwoorden worden gehasht met bcrypt (industriestandaard). We gebruiken JWT-tokens voor veilige authenticatie. We slaan nooit wachtwoorden in leesbare tekst op.",
       },
       {
         title: "5. Gegevensdeling",
@@ -135,7 +135,7 @@ const POLICIES = {
       },
       {
         title: "4. Stockage & Sécurité",
-        content: "Toutes les données personnelles sont stockées dans l'Union européenne :\n• Base de données : Supabase (Irlande, UE) ✅\n• Backend : Railway (Pays-Bas, UE) ✅\n• Frontend : Vercel (région UE) ✅\n\nLes mots de passe sont hachés avec bcrypt (standard industriel). Nous utilisons des tokens JWT pour l'authentification sécurisée. Nous ne stockons jamais de mots de passe en clair.",
+        content: "Toutes les données personnelles sont stockées dans l'Union européenne :\n• Base de données : Supabase (Irlande, UE) ✅\n• Backend : Railway (Pays-Bas, UE) ✅\n• Frontend : Cloudflare (région UE) ✅\n\nLes mots de passe sont hachés avec bcrypt (standard industriel). Nous utilisons des tokens JWT pour l'authentification sécurisée. Nous ne stockons jamais de mots de passe en clair.",
       },
       {
         title: "5. Partage de données",

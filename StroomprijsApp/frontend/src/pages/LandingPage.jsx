@@ -450,7 +450,7 @@ export default function LandingPage({ onGetStarted, onOpenCalculator, onNavigate
                 color:"#2563EB", bg:"rgba(37,99,235,0.10)", iconBg:"linear-gradient(135deg,#1E40AF,#3B82F6)",
                 icon:"💼",
                 title: L.pickerBizTitle||"Business & Fleets",
-                desc: L.pickerBizDesc||"CIR 92-compliant EV reimbursements. Free audit shows exactly what your company overpays on fixed CREG rates vs. real EPEX prices.",
+                desc: L.pickerBizDesc||"EV reimbursements designed to align with CIR 92. Free audit estimates what your company overpays on fixed CREG rates vs. real EPEX prices.",
                 cta: L.pickerBizCta||"Get free fleet audit →",
                 href: "/business",
               },

@@ -139,7 +139,7 @@ export default function SessionCalcPage({ onNavigate }) {
             {L.title || "EPEX Session Calculator"}
           </h1>
           <p style={{ fontSize:15, color:C.muted, maxWidth:560, margin:"0 auto", lineHeight:1.75 }}>
-            {L.subtitle || "Look up the real EPEX electricity price for any past charging session — calculate exact CIR 92-compliant reimbursements or audit your fleet card invoice vs. market rates."}
+            {L.subtitle || "Look up the real EPEX electricity price for any past charging session — calculate reimbursement estimates aligned with CIR 92 or audit your fleet card invoice vs. market rates."}
           </p>
         </div>
 
@@ -173,7 +173,7 @@ export default function SessionCalcPage({ onNavigate }) {
             borderRadius:12, padding:"12px 18px", marginBottom:20, fontSize:13, color:C.muted, lineHeight:1.65 }}>
             <strong style={{color:C.text}}>{L.howToUseLabel || "How to use:"}</strong>{" "}
             {mode === "reimburse"
-              ? (L.howToUseReimburse || "Enter the date, time, and kWh for a charging session. SmartPrice looks up the real EPEX Spot price at that exact hour and calculates the exact CIR 92-compliant reimbursement amount.")
+              ? (L.howToUseReimburse || "Enter the date, time, and kWh for a charging session. SmartPrice looks up the real EPEX Spot price at that exact hour and calculates an estimated reimbursement amount aligned with CIR 92.")
               : (L.howToUseFleet || "Take a session from your Velocity, DKV, or UTA invoice (date, time, kWh, amount charged). SmartPrice shows the EPEX market price at that hour so you can see exactly how much the network overcharged vs. real market rates.")
             }
           </div>
