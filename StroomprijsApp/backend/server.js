@@ -109,12 +109,17 @@ async function fetchENTSOE(s,e) {
     const per=pm[1];
     const sm=per.match(/<start>(.*?)<\/start>/); if(!sm) continue;
     const pStart=new Date(sm[1]);
+    // Resolution isn't always PT60M — ENTSO-E has moved BE day-ahead to PT15M
+    // (96 points/day). Hardcoding hourly spacing here silently stretched every
+    // ENTSO-E-sourced day 4x (position 2 stamped +1h instead of +15min, etc.).
+    const resM=per.match(/<resolution>PT(\d+)([MH])<\/resolution>/);
+    const stepMs=resM ? parseInt(resM[1])*(resM[2]==="H"?3600000:60000) : 3600000;
     const pointRe=/<Point>([\s\S]*?)<\/Point>/g; let pp;
     while((pp=pointRe.exec(per))!==null){
       const posM=pp[1].match(/<position>(\d+)<\/position>/);
       const prM=pp[1].match(/<price\.amount>([\d.]+)<\/price\.amount>/);
       if(!posM||!prM) continue;
-      const ts=new Date(pStart.getTime()+(parseInt(posM[1])-1)*3600000);
+      const ts=new Date(pStart.getTime()+(parseInt(posM[1])-1)*stepMs);
       const mwh=parseFloat(prM[1]);
       prices.push({timestamp:ts.toISOString(),price_eur_mwh:mwh,price_eur_kwh:+(mwh/1000).toFixed(6),source:"ENTSO-E"});
     }
