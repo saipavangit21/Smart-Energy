@@ -75,7 +75,26 @@ async function ensureRollupTable(pool) {
 // table, which is what actually controls storage growth long-term.
 const RAW_RETENTION_DAYS = 45;
 
+// Guards against two overlapping runs (e.g. the startup pass and a manual
+// /api/admin/run-analytics-cleanup call landing close together) both reading
+// the same not-yet-deleted rows and double-adding them into the rollup
+// table's `total` column — exactly what happened the first time this ran.
+let _rollupInProgress = false;
+
 async function rollupAndPruneAnalytics(pool, eventsDb) {
+  if (_rollupInProgress) {
+    console.log("[analytics-maintenance] Skipped — a run is already in progress");
+    return { rolled_up_groups: 0, deleted: 0, skipped: true };
+  }
+  _rollupInProgress = true;
+  try {
+    return await _doRollupAndPrune(pool, eventsDb);
+  } finally {
+    _rollupInProgress = false;
+  }
+}
+
+async function _doRollupAndPrune(pool, eventsDb) {
   const cutoff = new Date(Date.now() - RAW_RETENTION_DAYS * 24 * 3600 * 1000).toISOString();
   const { rows } = await eventsDb.query(
     `SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
@@ -522,6 +541,25 @@ module.exports = function attachAnalytics(app, pool) {
     try {
       const result = await rollupAndPruneAnalytics(pool, eventsDb);
       res.json({ success: true, ...result });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  // ONE-TIME fix: the very first rollup run (this deploy's startup pass) and
+  // a manual /run-analytics-cleanup call overlapped before a concurrency
+  // guard existed, so every row currently in analytics_daily_rollup got its
+  // `total` counted twice. unique_sessions/logged_in_users used GREATEST
+  // (not additive), so those are unaffected. Halves every existing row once;
+  // safe to call again (no-op) since it only ever touches current values.
+  app.post("/api/admin/fix-rollup-double-count", async (req, res) => {
+    const { secret } = req.body || {};
+    if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    try {
+      const result = await pool.query(`UPDATE analytics_daily_rollup SET total = total / 2`);
+      res.json({ success: true, rows_corrected: result.rowCount });
     } catch (e) {
       res.status(500).json({ success: false, error: e.message });
     }
