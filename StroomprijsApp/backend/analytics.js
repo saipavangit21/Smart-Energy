@@ -546,25 +546,6 @@ module.exports = function attachAnalytics(app, pool) {
     }
   });
 
-  // ONE-TIME fix: the very first rollup run (this deploy's startup pass) and
-  // a manual /run-analytics-cleanup call overlapped before a concurrency
-  // guard existed, so every row currently in analytics_daily_rollup got its
-  // `total` counted twice. unique_sessions/logged_in_users used GREATEST
-  // (not additive), so those are unaffected. Halves every existing row once;
-  // safe to call again (no-op) since it only ever touches current values.
-  app.post("/api/admin/fix-rollup-double-count", async (req, res) => {
-    const { secret } = req.body || {};
-    if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
-      return res.status(401).json({ success: false, error: "Unauthorized" });
-    }
-    try {
-      const result = await pool.query(`UPDATE analytics_daily_rollup SET total = total / 2`);
-      res.json({ success: true, rows_corrected: result.rowCount });
-    } catch (e) {
-      res.status(500).json({ success: false, error: e.message });
-    }
-  });
-
   // Row-count check for both stores — quick way to see storage impact
   // without needing direct DB access (e.g. Supabase/CockroachDB dashboards).
   app.get("/api/admin/analytics-storage", async (req, res) => {
