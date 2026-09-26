@@ -1,6 +1,6 @@
 # SmartPrice.be — Full Project Explainer
 ## For technical and non-technical audiences
-**Last updated: August 2026**
+**Last updated: September 2026**
 
 ---
 
@@ -29,9 +29,12 @@ If you have a "dynamic" electricity contract in Belgium (like Bolt, Engie Spot, 
 Belgian households, EV drivers, smart home users (Home Assistant), and dynamic electricity contract holders.
 
 **Current metrics:**
-- 162+ registered users (as of August 2026)
+- 218+ registered users (as of September 2026)
+- ~30,000 SEO page views/day, ~1,000–1,800 dashboard/EV page views/day — stable, trending up in late September
 - Tesla Fleet API registered and active
 - Password-reset (forgot-password) flow added August 2026
+- API tokens for device integrations (Home Assistant, etc.) added September 2026 — see Part 11
+- First live B2B API partner: ACIT SA (Belgian storage-heater manufacturer) — see Part 11
 - 300+ daily EV page views, 50+ email subscribers, 6 leads captured — these three are from the May 2026 baseline and haven't been re-measured since; treat as directional, not current
 
 ---
@@ -215,4 +218,23 @@ Data stored in EU (Railway Amsterdam + Supabase Ireland).
 "React + Vite frontend on Cloudflare Pages, Node/Express backend on Railway EU served at api.smartprice.be (a same-site custom domain, not the raw *.up.railway.app one — needed to keep auth cookies first-party across browsers), PostgreSQL on Supabase. EPEX Spot prices via Energy-Charts.info (15-min NodeCache), ENTSO-E fallback. Cookie-based auth with httpOnly JWT, bcrypt, refresh token rotation, plus a forgot/reset-password flow with SHA-256-hashed single-use tokens. Tesla Fleet API OAuth with partner registration (www.smartprice.be). Google OAuth. EV profile (30 cars) + Tesla live data. Weekly digest with referral tracking. Public REST API for Home Assistant. TTF gas via OilPriceAPI (24hr cache — free tier is capped at 200 requests total). Trilingual EN/NL/FR."
 
 ### To an investor:
-"SmartPrice.be is a free energy intelligence tool for Belgian dynamic contract holders — a market growing as more suppliers push spot-price contracts. We have 70+ users in 3 months with zero marketing spend, a live Tesla Fleet API integration (first in Belgium), and active B2B conversations with TotalEnergies, Engie, Luminus, and fleet companies (RENTA member network). Revenue model: €20–50/activation affiliate commissions from energy suppliers + B2B API access fees for fleet/mobility companies. The main Belgian comparison sites (Mijnenergie.be) don't cover dynamic pricing — that's our differentiation. Timeline: 2-year build to sustainable revenue."
+"SmartPrice.be is a free energy intelligence tool for Belgian dynamic contract holders — a market growing as more suppliers push spot-price contracts. We have 218+ users with zero marketing spend, ~30,000 SEO page views/day, a live Tesla Fleet API integration (first in Belgium), our first live B2B API partner (a storage-heater manufacturer polling our price API for their product line), and active B2B conversations with TotalEnergies, Engie, Luminus, and fleet companies (RENTA member network). Revenue model: €20–50/activation affiliate commissions from energy suppliers + B2B API access fees for fleet/mobility companies. The main Belgian comparison sites (Mijnenergie.be) don't cover dynamic pricing — that's our differentiation. Timeline: 2-year build to sustainable revenue."
+
+---
+
+## PART 11: RECENT TECHNICAL & BUSINESS UPDATES (September 2026)
+
+### API Access for device integrations
+Any user can now generate a revocable API token from their Profile (Profile → API Access) to connect Home Assistant or similar devices — separate from their login session, so it can be individually revoked if a device config leaks, without logging the user out everywhere. Replaced a previous setup flow that was actually broken (it told users to retrieve a login token from browser storage that never existed there).
+
+### First live B2B API partner: ACIT SA
+ACIT SA, a Belgian storage-heater manufacturer (ThermACEC product line), reached out to poll our public price API (~12 requests/day from one centralized server, redistributed to their devices via MQTT) to time their heaters' charging against real electricity prices. Approved for free use under our public "free forever" pricing, with CC BY 4.0 attribution to our upstream data sources (Energy-Charts.info/Fraunhofer ISE, ENTSO-E) — both of which already publish under that license. We built lightweight, non-blocking usage tracking (an optional `X-Partner` request header) so we can see a partner's daily call volume and get alerted if it spikes well above the agreed pattern, without ever hard-capping or breaking their integration. This is the first real-world validation of the "B2B API access" revenue line in Part 1/10 — currently unpaid (an early goodwill relationship with an unregistered young business), but the pattern (approve → track → monitor fair use) is now repeatable for future partners.
+
+### Data accuracy fix
+Found and fixed a real bug (reported by a user) where our ENTSO-E fallback — used when our primary price source lags on publishing tomorrow's day-ahead prices — mislabeled every price's hour after the first, because it assumed hourly data points when ENTSO-E has since moved to 15-minute granularity. Prices were correct; timestamps were scrambled by roughly 4x whenever the fallback fired. Fixed and verified against the raw feed.
+
+### Analytics infrastructure
+Our internal analytics tracking (page views, conversion funnel, business leads) had grown unbounded and pushed our database over its free storage tier. Fixed by adding automatic data retention (detailed logs kept 45 days, then permanently summarized into a tiny daily-trend table) and, optionally, routing high-volume raw tracking data to a separate free database so it can never compete with the storage our actual user accounts and auth need. No user-facing impact; purely a backend cost/reliability fix.
+
+### Business page rewrite (pending review)
+After detailed external feedback, rewrote `/business` to tighten several compliance claims that were stated too absolutely (e.g. "CIR 92 compliant" → "designed to support CIR 92"), remove an unfounded "NIS2 Compliant" badge, replace a 3-way product picker with one clear primary call-to-action, and fix a stale infrastructure claim (still referenced a decommissioned host). Live as a preview, not yet merged to production pending final review.

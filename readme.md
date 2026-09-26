@@ -26,7 +26,8 @@ Consumer electricity & gas dashboard for Belgian households.
 - **EV stations map** — all Belgian public charge points via OpenStreetMap/Overpass (24h cache)
 - **AI assistant** — Claude Haiku energy assistant
 - **Trilingual** — EN / NL / FR
-- **Public REST API** — free, no auth for price endpoints; used by Home Assistant, Node-RED
+- **Public REST API** — free, no auth for price endpoints; used by Home Assistant, Node-RED, and B2B integrations (see [Partner API Access](#partner-api-access--fair-use-monitoring))
+- **API Access tokens** — Profile → API Access: generate a revocable, opaque token (separate from your login session) for Home Assistant / device integrations that need the one authenticated Fluvius endpoint
 
 ### 2. SmartPrice Business (`/business`)
 B2B page targeting Belgian fleet managers.
@@ -80,7 +81,7 @@ Smart meter data ingestion via P1 port reader.
 - `GET /api/fluvius/latest` — latest reading + current EPEX price + charge signal
 - `GET /api/fluvius/history?hours=N` — bucketed 5-min readings (max 168h)
 - Charge signal: `charge_now` if all-in EPEX price ≤ €0.12/kWh, else `wait`
-- Auth: Bearer JWT or `x-api-key` header (for HA automations)
+- Auth: session cookie (dashboard) **or** `x-api-key` header — a dedicated, revocable API token generated from Profile → API Access (see [Auth](#auth)), not the login JWT. Opaque, SHA-256-hashed at rest, one active token per user; generating a new one revokes the old one.
 - Auto-prunes readings older than 7 days per user
 - Stores: `power_w`, `solar_w`, `energy_kwh`, `gas_m3`, `device_id`
 
@@ -93,6 +94,7 @@ Smart meter data ingestion via P1 port reader.
 | Frontend | React 18 + Vite | Cloudflare Pages (CDN, auto-deploy from `main`) |
 | Backend | Node.js 20 + Express | Railway EU West (Amsterdam, auto-deploy from `main`) — served at `api.smartprice.be` |
 | Database | PostgreSQL 15 | Supabase (Ireland) |
+| Analytics store | PostgreSQL (raw `analytics_events` only) | Neon (Frankfurt) — optional, see [Analytics Storage Split](#analytics-storage-split) |
 | Email | Resend (info@smartprice.be) | Resend |
 | Auth | JWT access + refresh tokens + Google OAuth + Tesla Fleet API | Self-hosted on Railway |
 | AI assistant | Claude Haiku (Anthropic API) | External API |
@@ -109,6 +111,18 @@ Smart meter data ingestion via P1 port reader.
 **Backend**: `api.smartprice.be` — Railway custom domain (CNAME + TXT records in Cloudflare, proxied). The frontend calls this domain directly for all `/api/*` and `/auth/*` requests. This matters for auth: `api.smartprice.be` shares its registrable domain with `smartprice.be`, so auth cookies (`sp_access`, `sp_refresh`, `sp_session`) are **first-party**, not third-party — required for login to work reliably in Safari, Firefox, and privacy-focused browsers (Brave, Perplexity Comet, etc.), which block or partition third-party cookies by default. Calling the raw `*.up.railway.app` domain directly (a different registrable domain) causes exactly this class of bug: login appears to succeed but the session doesn't persist, bouncing the user back to a logged-out state on the next request.
 
 A small set of Cloudflare Pages Functions (`frontend/functions/`) still exist for the Tesla `.well-known` path and as a fallback, but are not on the main request path — general API traffic goes directly to `api.smartprice.be`, not through a Pages Function proxy (that was tried and reverted due to the free tier's 100k-requests/day cap).
+
+---
+
+## Analytics Storage Split
+
+`analytics_events` (raw, one row per page view / login / API call) grew unbounded and pushed Supabase over its free-tier 0.5GB storage quota (2026-09). Fixed with three parts, all in `analytics.js`:
+
+1. **Retention + rollup** — an hourly job collapses raw rows older than `RAW_RETENTION_DAYS` (45) into `analytics_daily_rollup` (one row per event/day/method — a few thousand rows/year) and deletes them from the raw table. Rollup totals persist forever; raw row-level detail only survives 45 days. Guarded against overlapping runs (an in-process lock) after an early version double-counted totals when the startup pass and a manual trigger overlapped.
+2. **Optional dedicated store** — set `ANALYTICS_DATABASE_URL` (a separate Postgres instance, currently Neon) and all raw event reads/writes route there instead of the main DB, isolating high-volume analytics traffic from the low-volume app data (users, tokens, auth) that actually needs to stay reliable. Falls back to the main DB, unchanged, if the env var is unset.
+3. **Admin visibility** — `GET /api/admin/analytics-storage` (row counts + date ranges for both stores) and `POST /api/admin/run-analytics-cleanup` (manually trigger the rollup/prune job instead of waiting up to an hour) — both `x-admin-secret`/`secret`-protected like other admin routes.
+
+Why not CockroachDB Serverless or BigQuery instead: Cockroach's free "Serverless" tier has been folded into a paid "Standard" product (only a time/credit-limited trial remains); BigQuery is a columnar warehouse built for batch analysis, not one-row-at-a-time inserts from a web server. Neon was chosen because it's plain Postgres — zero query rewrites, same `pg` driver, just a second connection string.
 
 ---
 
@@ -168,8 +182,10 @@ Smart Energy/
     │
     └── backend/                        # Node.js + Express API — served at api.smartprice.be
         ├── server.js                   # Main Express app + all inline endpoints
-        ├── db.js                       # PostgreSQL pool (Supabase) + password-reset token helpers
-        ├── analytics.js                # Event tracking middleware + admin analytics endpoint
+        ├── db.js                       # PostgreSQL pool (Supabase) + password-reset & API token helpers
+        ├── analytics.js                # Event tracking, partner call tracking + fair-use alerts,
+        │                               #   raw/rollup storage split (optional ANALYTICS_DATABASE_URL),
+        │                               #   admin analytics endpoints
         ├── email-alerts.js             # Hourly price alert checker + weekly digest sender
         ├── uptime-monitor.js           # Pings smartprice.be every 5 min, alerts on down/recovery
         ├── middleware/
@@ -262,9 +278,11 @@ Math.max(0.04, (price_eur_mwh / 1000) * 1.21 + 0.13)
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/fluvius/push` | JWT or `x-api-key` | Push P1 reading (power_w, solar_w, energy_kwh, gas_m3) |
-| GET | `/api/fluvius/latest` | JWT or `x-api-key` | Latest reading + EPEX price + charge signal |
-| GET | `/api/fluvius/history?hours=N` | JWT or `x-api-key` | 5-min bucketed readings (max 168h) |
+| POST | `/api/fluvius/push` | Session cookie or `x-api-key` | Push P1 reading (power_w, solar_w, energy_kwh, gas_m3) |
+| GET | `/api/fluvius/latest` | Session cookie or `x-api-key` | Latest reading + EPEX price + charge signal |
+| GET | `/api/fluvius/history?hours=N` | Session cookie or `x-api-key` | 5-min bucketed readings (max 168h) |
+
+`x-api-key` is the opaque API token from Profile → API Access (see [Auth](#auth)) — **not** the login JWT, which is httpOnly-cookie-only and was never retrievable client-side (an earlier version of these docs incorrectly told users to find a JWT in `localStorage`, which never existed there).
 
 **Push body:**
 ```json
@@ -290,10 +308,10 @@ Math.max(0.04, (price_eur_mwh / 1000) * 1.21 + 0.13)
 # configuration.yaml
 rest_command:
   push_p1_to_smartprice:
-    url: https://smartprice.be/api/fluvius/push
+    url: https://api.smartprice.be/api/fluvius/push
     method: POST
     headers:
-      x-api-key: "YOUR_JWT_TOKEN"
+      x-api-key: "YOUR_SMARTPRICE_API_TOKEN"   # from Profile → API Access → Generate API token
       Content-Type: application/json
     payload: >
       {
@@ -311,6 +329,14 @@ automation:
     action:
       service: rest_command.push_p1_to_smartprice
 ```
+
+### Partner API Access & Fair-Use Monitoring
+
+The public price endpoints (`/api/prices/today`, `/api/cheapest`) accept an optional `X-Partner: <name>` header (or `?partner=` query param) — no key required, purely for visibility. It logs a `partner_api_call` analytics event tagged with that name, breaking a partner's traffic out separately in `GET /api/admin/analytics` (`partner_api_calls`).
+
+If a partner's daily call count exceeds `PARTNER_FAIR_USE_THRESHOLD` (30/day — roughly 2.5× a typical agreed 12/day centralized-server polling pattern), one alert email/day goes to `info@smartprice.be`. This is **alert-only, never blocking** — an agreed usage pattern (e.g. a manufacturer's server polling on behalf of many end devices) is never hard-capped or broken automatically; a spike just prompts a human follow-up.
+
+**Case study**: ACIT SA (Belgian storage-heater manufacturer, ThermACEC line) was approved for centralized-server polling (~12 calls/day) in exchange for CC BY 4.0 attribution crediting the upstream data sources (Energy-Charts.info/Fraunhofer ISE, ENTSO-E — both already publish under CC BY 4.0). They send `X-Partner: ACIT` on their requests.
 
 ### Leads & Newsletter
 
@@ -351,6 +377,8 @@ All admin endpoints require `x-admin-secret` header matching `ADMIN_SECRET` env 
 | GET | `/api/admin/users` | All registered users |
 | GET | `/api/admin/leads` | All email leads |
 | GET | `/api/admin/newsletter-stats` | Newsletter subscriber count + active/unsubscribed |
+| GET | `/api/admin/analytics-storage` | Row counts + date ranges for both the raw events store and the permanent rollup table |
+| POST | `/api/admin/run-analytics-cleanup` | Manually trigger the rollup+prune job (vs. waiting up to an hour for the scheduled pass) |
 | POST | `/api/admin/send-outreach` | Send B2B outreach or Fluvius waitlist emails |
 | POST | `/api/admin/daily-posts` | Generate EPEX posts, email to info@smartprice.be, auto-post to Facebook Page |
 
@@ -389,6 +417,9 @@ All admin endpoints require `x-admin-secret` header matching `ADMIN_SECRET` env 
 | PUT | `/auth/profile` | Update display name |
 | PUT | `/auth/change-password` | Change password |
 | DELETE | `/auth/delete-account` | Delete account |
+| GET | `/auth/api-token` | API token metadata (label, created_at, last_used_at) — never the raw token |
+| POST | `/auth/api-token` | Generate a new API token (replaces any existing one) — raw value returned once |
+| DELETE | `/auth/api-token` | Revoke the current API token |
 | GET | `/auth/google` | Google OAuth start |
 | GET | `/auth/google/callback` | Google OAuth callback |
 | GET | `/auth/tesla` | Tesla Fleet API OAuth start |
@@ -398,7 +429,7 @@ All admin endpoints require `x-admin-secret` header matching `ADMIN_SECRET` env 
 
 ## Analytics Events
 
-Tracked in `analytics_events` table. Available in admin dashboard.
+Tracked in `analytics_events` (raw, see [Analytics Storage Split](#analytics-storage-split) for where this actually lives). Available in admin dashboard.
 
 | Event | Trigger |
 |-------|---------|
@@ -411,8 +442,9 @@ Tracked in `analytics_events` table. Available in admin dashboard.
 | `login_attempt_email` | POST `/auth/login` |
 | `login_attempt_google` | GET `/auth/google` |
 | `register_email` | POST `/auth/register` |
+| `partner_api_call` | Any request to `/api/prices/today` or `/api/cheapest` carrying `X-Partner`/`?partner=` — see [Partner API Access](#partner-api-access--fair-use-monitoring) |
 
-Dedup: 1 event per session per hour for page views (prevents polling inflation). Session ID via `sp_session` cookie (30-day).
+Dedup: 1 event per session per hour for page views (prevents polling inflation). Session ID via `sp_session` cookie (30-day). Raw rows older than 45 days are collapsed into `analytics_daily_rollup` and deleted — see [Analytics Storage Split](#analytics-storage-split).
 
 ---
 
@@ -421,11 +453,13 @@ Dedup: 1 event per session per hour for page views (prevents polling inflation).
 | Table | Description |
 |-------|-------------|
 | `users` | Registered users — email, hashed password, JWT refresh token, Google/Tesla providers, preferences (JSONB) |
-| `analytics_events` | Page views, conversions, funnel events |
+| `analytics_events` | Raw page views, conversions, funnel events — lives on Neon if `ANALYTICS_DATABASE_URL` is set, else the main DB; rows older than 45 days are pruned (see [Analytics Storage Split](#analytics-storage-split)) |
+| `analytics_daily_rollup` | Permanent, tiny (day/event/method + total/unique_sessions/logged_in_users) — always on the main DB, survives raw-row pruning indefinitely |
 | `email_leads` | Pre-registration email capture (source: landing/fluvius_waitlist/business-audit-form) |
 | `b2b_leads` | Fleet audit form submissions — email, company, fleet size, billing method, audit data (JSONB) |
 | `newsletter_subscribers` | Active/unsubscribed newsletter list, unsubscribe token |
 | `password_reset_tokens` | SHA-256-hashed, single-use, 1hr-expiry forgot-password tokens (raw token never stored) |
+| `api_tokens` | SHA-256-hashed, revocable API tokens for device integrations (Home Assistant, etc.) — one active token per user; raw value shown once at creation, never stored |
 | `fleet_audit_reports` | PDF audit reports generated (email, company, fleet size, audit data, created_at) |
 | `fluvius_readings` | P1 smart meter data — power_w, solar_w, energy_kwh, gas_m3 per user (7-day rolling window) |
 
@@ -469,6 +503,7 @@ VAT       = 1.21               // Belgian VAT 21%
 
 ```env
 DATABASE_URL=postgresql://...           # Supabase connection string
+ANALYTICS_DATABASE_URL=postgresql://... # Optional — Neon, separates raw analytics_events from app DB
 JWT_SECRET=...
 JWT_REFRESH_SECRET=...
 GOOGLE_CLIENT_ID=...
@@ -573,6 +608,11 @@ For the Railway backend itself, set up an external check at [UptimeRobot](https:
 | 16 users with NULL email | Password-signup accounts where email wasn't stored at registration. Bug not yet fixed. |
 | Facebook Page Token | Permanent token generated 2026-06. If it expires, follow 3-step refresh: short-lived user token → long-lived → Page token via `/me/accounts`. `FACEBOOK_PAGE_ID` corrected 2026-08 to `61591589255351` — double check the Railway env var actually matches (was found stale in docs). |
 | No user-agent tracking | `analytics_events` never captured browser/device — makes bug reports like "works in Chrome, not Firefox" hard to diagnose from data alone. Worth adding if this recurs. |
+| ENTSO-E retry storm (fixed 2026-09-11) | A fallback added 2026-09-03 (Energy-Charts → ENTSO-E when day-ahead data lags) had no negative-caching or request coalescing — when ENTSO-E started erroring, every concurrent price request independently retried it, blocking up to 15s each. Fixed via an in-flight-request map (coalesces concurrent callers) + a 10-min failure cache. |
+| ENTSO-E fallback mislabeled hours (fixed 2026-09-19) | `fetchENTSOE()` hardcoded hourly (60-min) spacing between data points, but ENTSO-E now publishes Belgian day-ahead prices at 15-min resolution — whenever the fallback fired, hours after the first got stretched ~4x while prices stayed correct. A user (Erik) caught this from a live pull. Fixed by reading `<resolution>` from the XML instead of assuming hourly; verified against the raw feed. |
+| Supabase storage quota overage (fixed 2026-09-26) | `analytics_events` grew to ~3.28M rows with no retention policy, pushing Supabase over its free 0.5GB cap. Fixed via retention+rollup (raw rows >45 days collapsed into a permanent tiny summary table, then deleted) plus an optional split to a dedicated Neon instance — see [Analytics Storage Split](#analytics-storage-split). |
+| `hello@smartprice.be` still referenced | `PrivacyPolicy.jsx` and its `i18n.js` strings (all 3 languages) still show `hello@smartprice.be` in a few spots — the footer/API-docs email was corrected to `info@smartprice.be` in 2026-09, but this one wasn't caught in the same pass. `hello@` is a real, monitored inbox, so not urgent, but inconsistent. Not yet fixed. |
+| Business page revamp — unmerged | A full rewrite (tightened compliance claims, single primary CTA, fixed stale infra references) sits on the `business-page-revamp` branch, live as a Cloudflare Pages preview, awaiting review/approval before merging to `main`. |
 
 ---
 
@@ -602,8 +642,11 @@ Bundle: Vite `manualChunks` splits vendor / page-admin / page-business / page-se
 
 ## Roadmap
 
+- [ ] Merge `business-page-revamp` branch — awaiting review of the Cloudflare Pages preview
 - [ ] Fluvius dashboard tile — live power + solar + charge signal on user dashboard
 - [ ] Fix 16 NULL-email users — registration bug where email wasn't stored for password-signup accounts
+- [ ] Fix remaining `hello@smartprice.be` references in `PrivacyPolicy.jsx`/`i18n.js` → `info@smartprice.be`
+- [ ] Profile page visual pass — currently uniform flat cards with little visual hierarchy; discussed 2026-09, not yet designed/built
 - [ ] LinkedIn page — content plan exists in `outreach/linkedin_content.md`, page not yet fully set up
 - [ ] Fleet card API integration — auto-import Velocity/DKV/UTA invoice sessions
 - [ ] Smart Connect — fleet EV throttling based on EPEX peak hours (B2B)
