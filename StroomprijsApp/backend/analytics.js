@@ -3,7 +3,109 @@
  */
 
 const crypto = require("crypto");
+const { Pool } = require("pg");
 const { sendMail } = require("./mailer");
+
+// Raw analytics_events rows can live in a separate, higher-capacity database
+// (set ANALYTICS_DATABASE_URL) so high-volume event logging doesn't compete
+// with the main app's Supabase storage quota. Falls back to the main pool
+// (same DB) if unset, so this works unmodified until that env var is added.
+let _analyticsPool = null;
+function getAnalyticsPool(mainPool) {
+  if (_analyticsPool) return _analyticsPool;
+  if (process.env.ANALYTICS_DATABASE_URL) {
+    _analyticsPool = new Pool({
+      connectionString: process.env.ANALYTICS_DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+    });
+    _analyticsPool.on("error", (err) => console.error("❌ Analytics DB pool error:", err.message));
+    console.log("📊 Analytics events: routed to dedicated ANALYTICS_DATABASE_URL");
+  } else {
+    _analyticsPool = mainPool;
+    console.log("📊 Analytics events: sharing main database (set ANALYTICS_DATABASE_URL to split off)");
+  }
+  return _analyticsPool;
+}
+
+// No FK to users(id) here — the analytics store may be a separate database
+// (e.g. CockroachDB) that doesn't have a users table at all.
+async function ensureAnalyticsTable(db) {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id BIGSERIAL PRIMARY KEY,
+      event TEXT NOT NULL,
+      method TEXT,
+      user_id UUID,
+      session_id TEXT,
+      path TEXT,
+      ip TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      properties JSONB
+    )
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_analytics_event ON analytics_events (event)`);
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_analytics_created ON analytics_events (created_at)`);
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_analytics_session ON analytics_events (session_id)`);
+}
+
+// Permanent, tiny long-term store: one row per event-type per day (a few
+// thousand rows/year, vs. millions for raw events) so history survives raw
+// event pruning. Always lives on the main DB alongside `users` — it's small
+// enough to never threaten quota on its own.
+async function ensureRollupTable(pool) {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS analytics_daily_rollup (
+      day DATE NOT NULL,
+      event TEXT NOT NULL,
+      method TEXT NOT NULL DEFAULT '',
+      total INTEGER NOT NULL DEFAULT 0,
+      unique_sessions INTEGER NOT NULL DEFAULT 0,
+      logged_in_users INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (day, event, method)
+    )
+  `);
+}
+
+// Raw event detail is only useful for recent, granular debugging (see the
+// Erik/ACIT investigations this history was built for) — nothing has ever
+// needed row-level data older than a few weeks. Rows older than this get
+// collapsed into analytics_daily_rollup (permanent) and deleted from the raw
+// table, which is what actually controls storage growth long-term.
+const RAW_RETENTION_DAYS = 45;
+
+async function rollupAndPruneAnalytics(pool, eventsDb) {
+  const cutoff = new Date(Date.now() - RAW_RETENTION_DAYS * 24 * 3600 * 1000).toISOString();
+  const { rows } = await eventsDb.query(
+    `SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
+       event, COALESCE(method, '') AS method,
+       COUNT(*) AS total,
+       COUNT(DISTINCT session_id) AS unique_sessions,
+       COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL) AS logged_in_users
+     FROM analytics_events
+     WHERE created_at < $1
+     GROUP BY day, event, method`,
+    [cutoff]
+  );
+  if (!rows.length) return { rolled_up_groups: 0, deleted: 0 };
+
+  for (const r of rows) {
+    await pool.query(
+      `INSERT INTO analytics_daily_rollup (day, event, method, total, unique_sessions, logged_in_users)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (day, event, method) DO UPDATE SET
+         total = analytics_daily_rollup.total + EXCLUDED.total,
+         unique_sessions = GREATEST(analytics_daily_rollup.unique_sessions, EXCLUDED.unique_sessions),
+         logged_in_users = GREATEST(analytics_daily_rollup.logged_in_users, EXCLUDED.logged_in_users)`,
+      [r.day, r.event, r.method, r.total, r.unique_sessions, r.logged_in_users]
+    );
+  }
+
+  const del = await eventsDb.query(`DELETE FROM analytics_events WHERE created_at < $1`, [cutoff]);
+  console.log(`[analytics-maintenance] Rolled up ${rows.length} day/event groups, pruned ${del.rowCount} raw rows older than ${RAW_RETENTION_DAYS}d`);
+  return { rolled_up_groups: rows.length, deleted: del.rowCount };
+}
 
 function hashIp(ip) {
   if (!ip) return null;
@@ -121,6 +223,25 @@ function trackPartnerCall(pool, req) {
 }
 
 module.exports = function attachAnalytics(app, pool) {
+  const eventsDb = getAnalyticsPool(pool);
+
+  // Bootstrap both tables, then run an immediate cleanup pass — sequenced so
+  // a brand-new analytics store (e.g. first-time CockroachDB setup) has its
+  // table created before anything tries to query it. Runs at startup too, so
+  // a deploy doesn't wait up to an hour to start relieving a storage-quota
+  // situation.
+  (async () => {
+    try {
+      await ensureAnalyticsTable(eventsDb);
+      await ensureRollupTable(pool);
+      await rollupAndPruneAnalytics(pool, eventsDb);
+    } catch (e) {
+      console.error("[analytics] startup bootstrap/cleanup failed:", e.message);
+    }
+  })();
+  setInterval(() => {
+    rollupAndPruneAnalytics(pool, eventsDb).catch(e => console.warn("[analytics-maintenance] run failed:", e.message));
+  }, 60 * 60 * 1000);
 
   // Session middleware
   app.use((req, res, next) => {
@@ -135,7 +256,7 @@ module.exports = function attachAnalytics(app, pool) {
   app.use((req, res, next) => {
     if (req.method === "POST") {
       if (req.originalUrl.includes("/api/suppliers/calculate-gas")) {
-        track(pool, {
+        track(eventsDb, {
           event: "calculator_start_gas",
           userId: req.user?.id,
           sessionId: req._sessionId,
@@ -143,7 +264,7 @@ module.exports = function attachAnalytics(app, pool) {
           ip: req._ip,
         });
       } else if (req.originalUrl.includes("/api/suppliers/calculate")) {
-        track(pool, {
+        track(eventsDb, {
           event: "calculator_start",
           userId: req.user?.id,
           sessionId: req._sessionId,
@@ -158,21 +279,21 @@ module.exports = function attachAnalytics(app, pool) {
   // Auth events
   app.use("/auth/login", (req, res, next) => {
     if (req.method === "POST") {
-      track(pool, { event: "login_attempt_email", method: "email", sessionId: req._sessionId, path: req.originalUrl, ip: req._ip });
+      track(eventsDb, { event: "login_attempt_email", method: "email", sessionId: req._sessionId, path: req.originalUrl, ip: req._ip });
     }
     next();
   });
 
   app.use("/auth/register", (req, res, next) => {
     if (req.method === "POST") {
-      track(pool, { event: "register_email", method: "email", sessionId: req._sessionId, path: req.originalUrl, ip: req._ip });
+      track(eventsDb, { event: "register_email", method: "email", sessionId: req._sessionId, path: req.originalUrl, ip: req._ip });
     }
     next();
   });
 
   app.use("/auth/google", (req, res, next) => {
     if (req.method === "GET" && !req.path.includes("callback")) {
-      track(pool, { event: "login_attempt_google", method: "google", sessionId: req._sessionId, path: req.originalUrl, ip: req._ip });
+      track(eventsDb, { event: "login_attempt_google", method: "google", sessionId: req._sessionId, path: req.originalUrl, ip: req._ip });
     }
     next();
   });
@@ -181,7 +302,7 @@ module.exports = function attachAnalytics(app, pool) {
   app.use("/api/prices/today", (req, res, next) => {
     if (req.method === "GET") {
       const hasToken = !!(req.cookies?.access_token || req.headers.authorization);
-      track(pool, {
+      track(eventsDb, {
         event: "page_view",
         method: hasToken ? "logged_in" : "guest",
         userId: req.user?.id || null,
@@ -190,7 +311,7 @@ module.exports = function attachAnalytics(app, pool) {
         ip: req._ip,
         dedup: true,
       });
-      trackPartnerCall(pool, req);
+      trackPartnerCall(eventsDb, req);
     }
     next();
   });
@@ -199,7 +320,7 @@ module.exports = function attachAnalytics(app, pool) {
   // dedup:true → only count once per session per hour (endpoint is called by multiple components on mount)
   app.use("/api/cheapest", (req, res, next) => {
     if (req.method === "GET") {
-      track(pool, {
+      track(eventsDb, {
         event: "ev_page_view",
         method: "guest",
         userId: null,
@@ -208,7 +329,7 @@ module.exports = function attachAnalytics(app, pool) {
         ip: req._ip,
         dedup: true,
       });
-      trackPartnerCall(pool, req);
+      trackPartnerCall(eventsDb, req);
     }
     next();
   });
@@ -217,7 +338,7 @@ module.exports = function attachAnalytics(app, pool) {
   // dedup:true → only count once per session per hour (/api/current is polled every 60s for live price)
   app.use("/api/current", (req, res, next) => {
     if (req.method === "GET") {
-      track(pool, {
+      track(eventsDb, {
         event: "seo_page_view",
         method: "guest",
         userId: null,
@@ -232,7 +353,7 @@ module.exports = function attachAnalytics(app, pool) {
 
   // Business page views — lightweight ping called on mount by BusinessPage.jsx
   app.get("/api/business-ping", (req, res) => {
-    track(pool, {
+    track(eventsDb, {
       event: "business_page_view",
       method: "guest",
       userId: null,
@@ -266,7 +387,7 @@ module.exports = function attachAnalytics(app, pool) {
 
     try {
       const [summary, daily, authMethods, guestRatio, funnel, userCount, partnerBreakdown] = await Promise.all([
-        pool.query(`
+        eventsDb.query(`
           SELECT event, COUNT(*) AS total,
             COUNT(DISTINCT session_id) AS unique_sessions,
             COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL) AS logged_in_users
@@ -275,7 +396,7 @@ module.exports = function attachAnalytics(app, pool) {
           GROUP BY event ORDER BY total DESC
         `),
 
-        pool.query(`
+        eventsDb.query(`
           SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
             event, COUNT(*) AS count
           FROM analytics_events
@@ -283,7 +404,7 @@ module.exports = function attachAnalytics(app, pool) {
           GROUP BY day, event ORDER BY day DESC, count DESC
         `),
 
-        pool.query(`
+        eventsDb.query(`
           SELECT method, COUNT(*) AS attempts, COUNT(DISTINCT session_id) AS unique_users
           FROM analytics_events
           WHERE event IN ('login_attempt_email','login_attempt_google','register_email')
@@ -291,7 +412,7 @@ module.exports = function attachAnalytics(app, pool) {
           GROUP BY method ORDER BY attempts DESC
         `),
 
-        pool.query(`
+        eventsDb.query(`
           SELECT method, COUNT(DISTINCT session_id) AS sessions
           FROM analytics_events
           WHERE event IN ('guest_session','page_view','ev_page_view','seo_page_view')
@@ -299,7 +420,7 @@ module.exports = function attachAnalytics(app, pool) {
           GROUP BY method
         `),
 
-        pool.query(`
+        eventsDb.query(`
           SELECT event, COUNT(*) AS total, COUNT(DISTINCT session_id) AS unique_sessions
           FROM analytics_events
           WHERE event IN ('calculator_start','calculator_start_gas','login_attempt_email','login_attempt_google','register_email','ev_page_view','seo_page_view')
@@ -317,7 +438,7 @@ module.exports = function attachAnalytics(app, pool) {
           FROM users
         `),
 
-        pool.query(`
+        eventsDb.query(`
           SELECT method AS partner,
             DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
             COUNT(*) AS calls
@@ -385,6 +506,46 @@ module.exports = function attachAnalytics(app, pool) {
         ORDER BY created_at DESC
       `);
       res.json({ success: true, leads: result.rows, total: result.rows.length });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  // Manual trigger for the rollup+prune job — for urgent runs (e.g. a
+  // storage-quota crisis) rather than waiting up to an hour for the
+  // scheduled pass.
+  app.post("/api/admin/run-analytics-cleanup", async (req, res) => {
+    const { secret } = req.body || {};
+    if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    try {
+      const result = await rollupAndPruneAnalytics(pool, eventsDb);
+      res.json({ success: true, ...result });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  // Row-count check for both stores — quick way to see storage impact
+  // without needing direct DB access (e.g. Supabase/CockroachDB dashboards).
+  app.get("/api/admin/analytics-storage", async (req, res) => {
+    const secret = req.headers["x-admin-secret"];
+    if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    try {
+      const [raw, rollup] = await Promise.all([
+        eventsDb.query(`SELECT COUNT(*) AS c, MIN(created_at) AS oldest, MAX(created_at) AS newest FROM analytics_events`),
+        pool.query(`SELECT COUNT(*) AS c, MIN(day) AS oldest, MAX(day) AS newest FROM analytics_daily_rollup`),
+      ]);
+      res.json({
+        success: true,
+        split_active: eventsDb !== pool,
+        raw_events: raw.rows[0],
+        daily_rollup: rollup.rows[0],
+        raw_retention_days: RAW_RETENTION_DAYS,
+      });
     } catch (e) {
       res.status(500).json({ success: false, error: e.message });
     }
