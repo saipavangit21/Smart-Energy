@@ -139,7 +139,7 @@ async function _doRollupAndPrune(pool, eventsDb, cutoff) {
   return { rolled_up_groups: rows.length, deleted: del.rowCount };
 }
 
-const FUNNEL_EVENTS = ["calculator_start", "calculator_start_gas", "login_attempt_email", "login_attempt_google", "register_email", "ev_page_view", "seo_page_view"];
+const FUNNEL_EVENTS = ["calculator_start", "calculator_start_gas", "login_attempt_email", "login_attempt_google", "register_email", "ev_page_view", "seo_page_view", "auth_page_view", "register_success", "login_success"];
 const AUTH_EVENTS = ["login_attempt_email", "login_attempt_google", "register_email"];
 
 function mergeWithRollup(raw, rollupRows) {
@@ -365,9 +365,18 @@ module.exports = function attachAnalytics(app, pool) {
   });
 
   // Auth events
+  // Records an outcome event once the response is sent, only if it succeeded —
+  // this is what separates "tried to sign up" from "actually signed up".
+  const trackOnSuccess = (req, res, event, method) => {
+    res.on("finish", () => {
+      if (res.statusCode < 300) track(eventsDb, { event, method, sessionId: req._sessionId, path: req.originalUrl, ip: req._ip });
+    });
+  };
+
   app.use("/auth/login", (req, res, next) => {
     if (req.method === "POST") {
       track(eventsDb, { event: "login_attempt_email", method: "email", sessionId: req._sessionId, path: req.originalUrl, ip: req._ip });
+      trackOnSuccess(req, res, "login_success", "email");
     }
     next();
   });
@@ -375,8 +384,50 @@ module.exports = function attachAnalytics(app, pool) {
   app.use("/auth/register", (req, res, next) => {
     if (req.method === "POST") {
       track(eventsDb, { event: "register_email", method: "email", sessionId: req._sessionId, path: req.originalUrl, ip: req._ip });
+      trackOnSuccess(req, res, "register_success", "email");
     }
     next();
+  });
+
+  // Google flow completes when the frontend swaps its one-time tokens for cookies
+  app.use("/auth/exchange", (req, res, next) => {
+    if (req.method === "POST") trackOnSuccess(req, res, "login_success", "google");
+    next();
+  });
+
+  // Frontend funnel beacon: fires when the sign-in/sign-up screen is opened.
+  // `src` = the page the visitor was on (path only), i.e. which page's CTA led here.
+  app.get("/api/track-event", (req, res) => {
+    const name = String(req.query.e || "");
+    if (name !== "auth_page_view") return res.status(400).end();
+    const src = typeof req.query.src === "string" ? req.query.src.replace(/[^\w\-/]/g, "").slice(0, 80) : "";
+    track(eventsDb, { event: name, method: src || "unknown", sessionId: req._sessionId, path: src, ip: req._ip, dedup: true, properties: { ua: uaClass(req) } });
+    res.status(204).end();
+  });
+
+  // Sign-up funnel: distinct sessions per step, plus which pages send people to the auth screen
+  app.get("/api/admin/signup-funnel", async (req, res) => {
+    if (!process.env.ADMIN_SECRET || req.headers["x-admin-secret"] !== process.env.ADMIN_SECRET) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    const days = Math.min(parseInt(req.query.days || 7, 10) || 7, RAW_RETENTION_DAYS);
+    try {
+      const [steps, bySrc] = await Promise.all([
+        eventsDb.query(
+          `SELECT event, COUNT(DISTINCT session_id) AS sessions, COUNT(*) AS events
+           FROM analytics_events
+           WHERE event IN ('page_view','auth_page_view','login_attempt_google','register_email','register_success','login_success')
+             AND created_at >= NOW() - ($1 || ' days')::interval
+           GROUP BY event`, [String(days)]),
+        eventsDb.query(
+          `SELECT method AS from_page, COUNT(DISTINCT session_id) AS sessions
+           FROM analytics_events WHERE event = 'auth_page_view' AND created_at >= NOW() - ($1 || ' days')::interval
+           GROUP BY 1 ORDER BY 2 DESC LIMIT 20`, [String(days)]),
+      ]);
+      res.json({ success: true, days, steps: steps.rows, auth_screen_opened_from: bySrc.rows });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
   });
 
   app.use("/auth/google", (req, res, next) => {
@@ -569,7 +620,7 @@ module.exports = function attachAnalytics(app, pool) {
         eventsDb.query(`
           SELECT event, COUNT(*) AS total, COUNT(DISTINCT session_id) AS unique_sessions
           FROM analytics_events
-          WHERE event IN ('calculator_start','calculator_start_gas','login_attempt_email','login_attempt_google','register_email','ev_page_view','seo_page_view')
+          WHERE event IN ('calculator_start','calculator_start_gas','login_attempt_email','login_attempt_google','register_email','ev_page_view','seo_page_view','auth_page_view','register_success','login_success')
             AND ${dateFilter}
           GROUP BY event ORDER BY total DESC
         `),

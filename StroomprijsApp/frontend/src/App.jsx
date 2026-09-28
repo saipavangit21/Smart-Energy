@@ -14,7 +14,7 @@
  *   /cheapest-electricity-hours-belgium  → CheapestHoursPage (SEO)
  *   /api-docs                            → ApiPage (Home Assistant / developers)
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth }       from "./context/AuthContext";
 import AuthPage          from "./pages/AuthPage";
 import ProfilePage       from "./pages/ProfilePage";
@@ -48,6 +48,17 @@ export default function App() {
   const [page,        setPage]        = useState("dashboard");
   const [initialTab,  setInitialTab]  = useState("today");
   const [showAuth,    setShowAuth]    = useState(false);
+
+  // Sign-up funnel beacon: which page the visitor was on when the sign-in screen opened.
+  // (Many CTAs call setShowAuth(true) then navigate("/"), so remember the previous path.)
+  const pathHist = useRef({ prev: null, cur: null });
+  useEffect(() => { pathHist.current = { prev: pathHist.current.cur, cur: path }; }, [path]);
+  useEffect(() => {
+    if (!showAuth) return;
+    const { prev, cur } = pathHist.current;
+    const src = cur === "/" && prev ? prev : cur || "/";
+    fetch(`${API}/api/track-event?e=auth_page_view&src=${encodeURIComponent(src)}`, { credentials: "include", keepalive: true }).catch(() => {});
+  }, [showAuth]);
 
   // After sign-in, an optional callback lets CalculatorPage reveal pending results
   const [postSignInCb, setPostSignInCb] = useState(null);
