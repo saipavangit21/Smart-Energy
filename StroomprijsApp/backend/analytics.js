@@ -88,14 +88,27 @@ async function rollupAndPruneAnalytics(pool, eventsDb) {
   }
   _rollupInProgress = true;
   try {
-    return await _doRollupAndPrune(pool, eventsDb);
+    const cutoff = new Date(Date.now() - RAW_RETENTION_DAYS * 24 * 3600 * 1000).toISOString();
+    const result = await _doRollupAndPrune(pool, eventsDb, cutoff);
+    // Once raw events live on a separate store, whatever was left in the main
+    // DB's analytics_events table is legacy: nothing writes there anymore and
+    // the dashboard reads only the new store, so those rows were invisible
+    // and never pruned. Fold ALL of them into the rollup and delete them.
+    if (eventsDb !== pool) {
+      const legacy = await _doRollupAndPrune(pool, pool, new Date().toISOString()).catch(e => {
+        if (/relation "analytics_events" does not exist/.test(e.message)) return { rolled_up_groups: 0, deleted: 0 };
+        throw e;
+      });
+      result.legacy_rolled_up_groups = legacy.rolled_up_groups;
+      result.legacy_deleted = legacy.deleted;
+    }
+    return result;
   } finally {
     _rollupInProgress = false;
   }
 }
 
-async function _doRollupAndPrune(pool, eventsDb) {
-  const cutoff = new Date(Date.now() - RAW_RETENTION_DAYS * 24 * 3600 * 1000).toISOString();
+async function _doRollupAndPrune(pool, eventsDb, cutoff) {
   const { rows } = await eventsDb.query(
     `SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
        event, COALESCE(method, '') AS method,
@@ -124,6 +137,53 @@ async function _doRollupAndPrune(pool, eventsDb) {
   const del = await eventsDb.query(`DELETE FROM analytics_events WHERE created_at < $1`, [cutoff]);
   console.log(`[analytics-maintenance] Rolled up ${rows.length} day/event groups, pruned ${del.rowCount} raw rows older than ${RAW_RETENTION_DAYS}d`);
   return { rolled_up_groups: rows.length, deleted: del.rowCount };
+}
+
+const FUNNEL_EVENTS = ["calculator_start", "calculator_start_gas", "login_attempt_email", "login_attempt_google", "register_email", "ev_page_view", "seo_page_view"];
+const AUTH_EVENTS = ["login_attempt_email", "login_attempt_google", "register_email"];
+
+function mergeWithRollup(raw, rollupRows) {
+  const dayStr = d => new Date(d).toISOString().slice(0, 10);
+  const int = v => parseInt(v || 0, 10);
+
+  const sumBy = (rawRows, rollupSubset, keyFn, seed, addRaw, addRoll) => {
+    const m = new Map();
+    for (const r of rawRows) { const k = keyFn(r); m.set(k, addRaw(m.get(k) || seed(r), r)); }
+    for (const r of rollupSubset) { const k = keyFn(r); m.set(k, addRoll(m.get(k) || seed(r), r)); }
+    return [...m.values()];
+  };
+
+  const summary = sumBy(raw.summary, rollupRows, r => r.event,
+    r => ({ event: r.event, total: 0, unique_sessions: 0, logged_in_users: 0 }),
+    (a, r) => ({ ...a, total: a.total + int(r.total), unique_sessions: a.unique_sessions + int(r.unique_sessions), logged_in_users: a.logged_in_users + int(r.logged_in_users) }),
+    (a, r) => ({ ...a, total: a.total + int(r.total), unique_sessions: a.unique_sessions + int(r.unique_sessions), logged_in_users: a.logged_in_users + int(r.logged_in_users) })
+  ).sort((a, b) => b.total - a.total).map(r => ({ event: r.event, total: String(r.total), unique_sessions: String(r.unique_sessions), logged_in_users: String(r.logged_in_users) }));
+
+  const daily = sumBy(raw.daily, rollupRows, r => `${dayStr(r.day)}|${r.event}`,
+    r => ({ day: `${dayStr(r.day)}T00:00:00.000Z`, event: r.event, count: 0 }),
+    (a, r) => ({ ...a, count: a.count + int(r.count) }),
+    (a, r) => ({ ...a, count: a.count + int(r.total) })
+  ).sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : b.count - a.count)).map(r => ({ ...r, count: String(r.count) }));
+
+  const funnel = sumBy(raw.funnel, rollupRows.filter(r => FUNNEL_EVENTS.includes(r.event)), r => r.event,
+    r => ({ event: r.event, total: 0, unique_sessions: 0 }),
+    (a, r) => ({ ...a, total: a.total + int(r.total), unique_sessions: a.unique_sessions + int(r.unique_sessions) }),
+    (a, r) => ({ ...a, total: a.total + int(r.total), unique_sessions: a.unique_sessions + int(r.unique_sessions) })
+  ).sort((a, b) => b.total - a.total).map(r => ({ event: r.event, total: String(r.total), unique_sessions: String(r.unique_sessions) }));
+
+  const authMethods = sumBy(raw.authMethods, rollupRows.filter(r => AUTH_EVENTS.includes(r.event)), r => r.method,
+    r => ({ method: r.method, attempts: 0, unique_users: 0 }),
+    (a, r) => ({ ...a, attempts: a.attempts + int(r.attempts), unique_users: a.unique_users + int(r.unique_users) }),
+    (a, r) => ({ ...a, attempts: a.attempts + int(r.total), unique_users: a.unique_users + int(r.unique_sessions) })
+  ).sort((a, b) => b.attempts - a.attempts).map(r => ({ method: r.method, attempts: String(r.attempts), unique_users: String(r.unique_users) }));
+
+  const partner = sumBy(raw.partner, rollupRows.filter(r => r.event === "partner_api_call"), r => `${r.partner ?? r.method}|${dayStr(r.day)}`,
+    r => ({ partner: r.partner ?? r.method, day: `${dayStr(r.day)}T00:00:00.000Z`, calls: 0 }),
+    (a, r) => ({ ...a, calls: a.calls + int(r.calls) }),
+    (a, r) => ({ ...a, calls: a.calls + int(r.total) })
+  ).sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : b.calls - a.calls)).map(r => ({ ...r, calls: String(r.calls) }));
+
+  return { summary, daily, funnel, authMethods, partner };
 }
 
 function hashIp(ip) {
@@ -467,17 +527,33 @@ module.exports = function attachAnalytics(app, pool) {
         `),
       ]);
 
+      // Raw rows and rollup rows are disjoint (rollup only holds events already
+      // deleted from raw), so adding them is exact for totals. unique_sessions
+      // summed across days slightly overcounts sessions spanning several days.
+      const todayBrussels = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Brussels" }).format(new Date());
+      const startDay = new Date(todayBrussels + "T00:00:00Z");
+      startDay.setUTCDate(startDay.getUTCDate() - (days - 1));
+      const rollupRows = (await pool.query(
+        `SELECT day, event, method, total, unique_sessions, logged_in_users
+         FROM analytics_daily_rollup WHERE day >= $1`,
+        [startDay.toISOString().slice(0, 10)]
+      ).catch(() => ({ rows: [] }))).rows;
+      const merged = mergeWithRollup(
+        { summary: summary.rows, daily: daily.rows, authMethods: authMethods.rows, funnel: funnel.rows, partner: partnerBreakdown.rows },
+        rollupRows
+      );
+
       const payload = {
         success: true,
         period_days: days,
         generated_at: new Date().toISOString(),
         total_registered_users: userCount.rows[0],
-        summary: summary.rows,
-        partner_api_calls: partnerBreakdown.rows,
-        auth_methods: authMethods.rows,
+        summary: merged.summary,
+        partner_api_calls: merged.partner,
+        auth_methods: merged.authMethods,
         guest_vs_loggedin: guestRatio.rows,
-        calculator_funnel: funnel.rows,
-        daily_breakdown: daily.rows,
+        calculator_funnel: merged.funnel,
+        daily_breakdown: merged.daily,
       };
       _analyticsCache.set(days, { data: payload, ts: Date.now() });
       res.json(payload);
