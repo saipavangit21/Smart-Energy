@@ -8,7 +8,7 @@ import { useLanguage } from "../context/LanguageContext";
 const POLICIES = {
   en: {
     title: "Privacy Policy",
-    updated: "SmartPrice.be · Last updated: March 2026",
+    updated: "SmartPrice.be · Last updated: September 2026",
     close: "✕ Close",
     footer: "🇪🇺 SmartPrice.be is GDPR compliant · Data stored in the European Union · Belgium",
     questions: "Questions?",
@@ -19,7 +19,7 @@ const POLICIES = {
       },
       {
         title: "2. Data We Collect",
-        content: "We collect only the minimum data necessary to provide our service:\n• Email address (for account creation and price alerts)\n• Name (optional, for personalisation)\n• Electricity supplier preference\n• Price alert threshold setting\n• Login method (email/password or Google OAuth)\n\nWe do NOT collect payment information, precise location data, or browsing history.",
+        content: "We collect only the minimum data necessary to provide our service:\n• Email address (for account creation and price alerts)\n• Name (optional, for personalisation)\n• Electricity supplier preference\n• Price alert threshold setting\n• Login method (email/password or Google OAuth)\n\nWe do NOT collect payment information, precise location data, or browsing history.\n\nAnonymous usage statistics: when you visit, we record which page was requested, the website you came from (domain name only), a general device type (mobile/desktop/bot), and a one-way hashed form of your IP address that cannot be turned back into the original. This is not linked to your identity and is used only to understand overall traffic.",
       },
       {
         title: "3. How We Use Your Data",
@@ -43,11 +43,11 @@ const POLICIES = {
       },
       {
         title: "8. Data Retention",
-        content: "We retain your data for as long as your account is active. When you delete your account, all personal data is permanently removed from our systems within 30 days. Email logs may be retained for up to 90 days for security purposes.",
+        content: "We retain your data for as long as your account is active. When you delete your account, all personal data is permanently removed from our systems within 30 days. Email logs may be retained for up to 90 days for security purposes. Detailed anonymous usage statistics are kept for 45 days, after which only aggregated daily counts are retained.",
       },
       {
         title: "9. Cookies & Local Storage",
-        content: "SmartPrice.be uses only essential cookies and localStorage for:\n• Authentication (JWT tokens)\n• Language preference\n• Supplier and alert preferences\n\nWe do not use tracking cookies, advertising cookies, or third-party analytics cookies.",
+        content: "SmartPrice.be uses only essential cookies and localStorage for:\n• Authentication (JWT tokens)\n• Language preference\n• Supplier and alert preferences\n• An anonymous first-party session identifier, used only for our own usage statistics\n\nWe do not use tracking cookies, advertising cookies, or third-party analytics cookies.",
       },
       {
         title: "10. Price Data Sources",
@@ -62,7 +62,7 @@ const POLICIES = {
 
   nl: {
     title: "Privacybeleid",
-    updated: "SmartPrice.be · Laatste update: maart 2026",
+    updated: "SmartPrice.be · Laatste update: september 2026",
     close: "✕ Sluiten",
     footer: "🇪🇺 SmartPrice.be voldoet aan de AVG · Gegevens opgeslagen in de Europese Unie · België",
     questions: "Vragen?",
@@ -73,7 +73,7 @@ const POLICIES = {
       },
       {
         title: "2. Gegevens die wij verzamelen",
-        content: "Wij verzamelen alleen de minimaal noodzakelijke gegevens:\n• E-mailadres (voor accountaanmaak en prijsmeldingen)\n• Naam (optioneel, voor personalisatie)\n• Voorkeur voor elektriciteitsleverancier\n• Drempelwaarde voor prijsmelding\n• Inlogmethode (e-mail/wachtwoord of Google OAuth)\n\nWij verzamelen GEEN betalingsgegevens, nauwkeurige locatiegegevens of browsegeschiedenis.",
+        content: "Wij verzamelen alleen de minimaal noodzakelijke gegevens:\n• E-mailadres (voor accountaanmaak en prijsmeldingen)\n• Naam (optioneel, voor personalisatie)\n• Voorkeur voor elektriciteitsleverancier\n• Drempelwaarde voor prijsmelding\n• Inlogmethode (e-mail/wachtwoord of Google OAuth)\n\nWij verzamelen GEEN betalingsgegevens, nauwkeurige locatiegegevens of browsegeschiedenis.\n\nAnonieme gebruiksstatistieken: bij een bezoek registreren wij welke pagina is opgevraagd, van welke website u komt (alleen de domeinnaam), een algemeen apparaattype (mobiel/desktop/bot) en een eenrichtings-gehashte vorm van uw IP-adres die niet naar het origineel kan worden herleid. Dit is niet aan uw identiteit gekoppeld en wordt alleen gebruikt om het totale verkeer te begrijpen.",
       },
       {
         title: "3. Hoe wij uw gegevens gebruiken",
@@ -97,11 +97,11 @@ const POLICIES = {
       },
       {
         title: "8. Bewaartermijn",
-        content: "We bewaren uw gegevens zolang uw account actief is. Wanneer u uw account verwijdert, worden alle persoonsgegevens binnen 30 dagen permanent verwijderd. E-maillogboeken kunnen tot 90 dagen worden bewaard voor beveiligingsdoeleinden.",
+        content: "We bewaren uw gegevens zolang uw account actief is. Wanneer u uw account verwijdert, worden alle persoonsgegevens binnen 30 dagen permanent verwijderd. E-maillogboeken kunnen tot 90 dagen worden bewaard voor beveiligingsdoeleinden. Gedetailleerde anonieme gebruiksstatistieken worden 45 dagen bewaard, daarna blijven alleen geaggregeerde dagtotalen over.",
       },
       {
         title: "9. Cookies & Lokale opslag",
-        content: "SmartPrice.be gebruikt alleen essentiële cookies en localStorage voor:\n• Authenticatie (JWT-tokens)\n• Taalvoorkeur\n• Leveranciers- en meldingsvoorkeuren\n\nWij gebruiken geen tracking-cookies, advertentiecookies of cookies van derden voor analyses.",
+        content: "SmartPrice.be gebruikt alleen essentiële cookies en localStorage voor:\n• Authenticatie (JWT-tokens)\n• Taalvoorkeur\n• Leveranciers- en meldingsvoorkeuren\n• Een anonieme first-party sessie-identifier, uitsluitend voor onze eigen gebruiksstatistieken\n\nWij gebruiken geen tracking-cookies, advertentiecookies of cookies van derden voor analyses.",
       },
       {
         title: "10. Prijsdatabronnen",
@@ -116,7 +116,7 @@ const POLICIES = {
 
   fr: {
     title: "Politique de confidentialité",
-    updated: "SmartPrice.be · Dernière mise à jour : mars 2026",
+    updated: "SmartPrice.be · Dernière mise à jour : septembre 2026",
     close: "✕ Fermer",
     footer: "🇪🇺 SmartPrice.be est conforme au RGPD · Données stockées dans l'Union européenne · Belgique",
     questions: "Des questions ?",
@@ -127,7 +127,7 @@ const POLICIES = {
       },
       {
         title: "2. Données collectées",
-        content: "Nous ne collectons que les données strictement nécessaires :\n• Adresse e-mail (pour la création de compte et les alertes de prix)\n• Nom (optionnel, pour la personnalisation)\n• Préférence de fournisseur d'électricité\n• Seuil d'alerte de prix\n• Méthode de connexion (e-mail/mot de passe ou Google OAuth)\n\nNous ne collectons PAS de données de paiement, de localisation précise ou d'historique de navigation.",
+        content: "Nous ne collectons que les données strictement nécessaires :\n• Adresse e-mail (pour la création de compte et les alertes de prix)\n• Nom (optionnel, pour la personnalisation)\n• Préférence de fournisseur d'électricité\n• Seuil d'alerte de prix\n• Méthode de connexion (e-mail/mot de passe ou Google OAuth)\n\nNous ne collectons PAS de données de paiement, de localisation précise ou d'historique de navigation.\n\nStatistiques d'utilisation anonymes : lors d'une visite, nous enregistrons la page demandée, le site d'où vous venez (nom de domaine uniquement), un type d'appareil général (mobile/ordinateur/robot) et une forme hachée à sens unique de votre adresse IP, impossible à reconvertir en adresse d'origine. Ces données ne sont pas liées à votre identité et servent uniquement à comprendre le trafic global.",
       },
       {
         title: "3. Utilisation de vos données",
@@ -151,11 +151,11 @@ const POLICIES = {
       },
       {
         title: "8. Conservation des données",
-        content: "Nous conservons vos données aussi longtemps que votre compte est actif. Lorsque vous supprimez votre compte, toutes les données personnelles sont définitivement effacées de nos systèmes dans les 30 jours. Les journaux d'e-mails peuvent être conservés jusqu'à 90 jours à des fins de sécurité.",
+        content: "Nous conservons vos données aussi longtemps que votre compte est actif. Lorsque vous supprimez votre compte, toutes les données personnelles sont définitivement effacées de nos systèmes dans les 30 jours. Les journaux d'e-mails peuvent être conservés jusqu'à 90 jours à des fins de sécurité. Les statistiques d'utilisation anonymes détaillées sont conservées 45 jours, puis seuls des totaux quotidiens agrégés sont conservés.",
       },
       {
         title: "9. Cookies & Stockage local",
-        content: "SmartPrice.be utilise uniquement des cookies essentiels et le localStorage pour :\n• L'authentification (tokens JWT)\n• La préférence de langue\n• Les préférences de fournisseur et d'alerte\n\nNous n'utilisons pas de cookies de suivi, de publicité ou d'analyse tiers.",
+        content: "SmartPrice.be utilise uniquement des cookies essentiels et le localStorage pour :\n• L'authentification (tokens JWT)\n• La préférence de langue\n• Les préférences de fournisseur et d'alerte\n• Un identifiant de session anonyme first-party, utilisé uniquement pour nos propres statistiques d'utilisation\n\nNous n'utilisons pas de cookies de suivi, de publicité ou d'analyse tiers.",
       },
       {
         title: "10. Sources des données de prix",
