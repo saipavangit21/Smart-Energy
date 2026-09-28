@@ -611,7 +611,7 @@ For the Railway backend itself, set up an external check at [UptimeRobot](https:
 | ENTSO-E retry storm (fixed 2026-09-11) | A fallback added 2026-09-03 (Energy-Charts → ENTSO-E when day-ahead data lags) had no negative-caching or request coalescing — when ENTSO-E started erroring, every concurrent price request independently retried it, blocking up to 15s each. Fixed via an in-flight-request map (coalesces concurrent callers) + a 10-min failure cache. |
 | ENTSO-E fallback mislabeled hours (fixed 2026-09-19) | `fetchENTSOE()` hardcoded hourly (60-min) spacing between data points, but ENTSO-E now publishes Belgian day-ahead prices at 15-min resolution — whenever the fallback fired, hours after the first got stretched ~4x while prices stayed correct. A user (Erik) caught this from a live pull. Fixed by reading `<resolution>` from the XML instead of assuming hourly; verified against the raw feed. |
 | Supabase storage quota overage (fixed 2026-09-26) | `analytics_events` grew to ~3.28M rows with no retention policy, pushing Supabase over its free 0.5GB cap. Fixed via retention+rollup (raw rows >45 days collapsed into a permanent tiny summary table, then deleted) plus an optional split to a dedicated Neon instance — see [Analytics Storage Split](#analytics-storage-split). |
-| `hello@smartprice.be` still referenced | `PrivacyPolicy.jsx` and its `i18n.js` strings (all 3 languages) still show `hello@smartprice.be` in a few spots — the footer/API-docs email was corrected to `info@smartprice.be` in 2026-09, but this one wasn't caught in the same pass. `hello@` is a real, monitored inbox, so not urgent, but inconsistent. Not yet fixed. |
+| `hello@smartprice.be` references (fixed 2026-09-28) | All remaining mentions in `PrivacyPolicy.jsx` and `i18n.js` (EN/NL/FR) changed to `info@smartprice.be` to match the footer/API docs. `hello@` is still a real inbox — keep monitoring/forwarding it for old links and past emails. |
 | Business page revamp — unmerged | A full rewrite (tightened compliance claims, single primary CTA, fixed stale infra references) sits on the `business-page-revamp` branch, live as a Cloudflare Pages preview, awaiting review/approval before merging to `main`. |
 
 ---
@@ -645,7 +645,6 @@ Bundle: Vite `manualChunks` splits vendor / page-admin / page-business / page-se
 - [ ] Merge `business-page-revamp` branch — awaiting review of the Cloudflare Pages preview
 - [ ] Fluvius dashboard tile — live power + solar + charge signal on user dashboard
 - [ ] Fix 16 NULL-email users — registration bug where email wasn't stored for password-signup accounts
-- [ ] Fix remaining `hello@smartprice.be` references in `PrivacyPolicy.jsx`/`i18n.js` → `info@smartprice.be`
 - [ ] Profile page visual pass — currently uniform flat cards with little visual hierarchy; discussed 2026-09, not yet designed/built
 - [ ] LinkedIn page — content plan exists in `outreach/linkedin_content.md`, page not yet fully set up
 - [ ] Fleet card API integration — auto-import Velocity/DKV/UTA invoice sessions

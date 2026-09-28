@@ -39,7 +39,7 @@ const POLICIES = {
       },
       {
         title: "7. Your Rights (GDPR)",
-        content: "Under GDPR, you have the right to:\n• Access — request a copy of your personal data\n• Rectification — correct inaccurate data\n• Erasure — delete your account and all associated data\n• Portability — receive your data in a machine-readable format\n• Objection — object to processing of your data\n\nTo exercise these rights, use the 'Delete My Account' button in your profile, or email us at hello@smartprice.be",
+        content: "Under GDPR, you have the right to:\n• Access — request a copy of your personal data\n• Rectification — correct inaccurate data\n• Erasure — delete your account and all associated data\n• Portability — receive your data in a machine-readable format\n• Objection — object to processing of your data\n\nTo exercise these rights, use the 'Delete My Account' button in your profile, or email us at info@smartprice.be",
       },
       {
         title: "8. Data Retention",
@@ -55,7 +55,7 @@ const POLICIES = {
       },
       {
         title: "11. Contact",
-        content: "For privacy-related questions or data requests:\n📧 hello@smartprice.be\n\nWe aim to respond within 30 days as required by GDPR.",
+        content: "For privacy-related questions or data requests:\n📧 info@smartprice.be\n\nWe aim to respond within 30 days as required by GDPR.",
       },
     ],
   },
@@ -93,7 +93,7 @@ const POLICIES = {
       },
       {
         title: "7. Uw rechten (AVG)",
-        content: "Onder de AVG heeft u het recht op:\n• Inzage — een kopie van uw persoonsgegevens opvragen\n• Rectificatie — onjuiste gegevens corrigeren\n• Verwijdering — uw account en alle bijbehorende gegevens verwijderen\n• Overdraagbaarheid — uw gegevens ontvangen in een machine-leesbaar formaat\n• Bezwaar — bezwaar maken tegen de verwerking van uw gegevens\n\nGebruik de knop 'Mijn account verwijderen' in uw profiel, of stuur een e-mail naar hello@smartprice.be",
+        content: "Onder de AVG heeft u het recht op:\n• Inzage — een kopie van uw persoonsgegevens opvragen\n• Rectificatie — onjuiste gegevens corrigeren\n• Verwijdering — uw account en alle bijbehorende gegevens verwijderen\n• Overdraagbaarheid — uw gegevens ontvangen in een machine-leesbaar formaat\n• Bezwaar — bezwaar maken tegen de verwerking van uw gegevens\n\nGebruik de knop 'Mijn account verwijderen' in uw profiel, of stuur een e-mail naar info@smartprice.be",
       },
       {
         title: "8. Bewaartermijn",
@@ -109,7 +109,7 @@ const POLICIES = {
       },
       {
         title: "11. Contact",
-        content: "Voor privacy-gerelateerde vragen of gegevensverzoeken:\n📧 hello@smartprice.be\n\nWij streven ernaar binnen 30 dagen te reageren, zoals vereist door de AVG.",
+        content: "Voor privacy-gerelateerde vragen of gegevensverzoeken:\n📧 info@smartprice.be\n\nWij streven ernaar binnen 30 dagen te reageren, zoals vereist door de AVG.",
       },
     ],
   },
@@ -147,7 +147,7 @@ const POLICIES = {
       },
       {
         title: "7. Vos droits (RGPD)",
-        content: "Conformément au RGPD, vous avez le droit à :\n• L'accès — demander une copie de vos données personnelles\n• La rectification — corriger des données inexactes\n• L'effacement — supprimer votre compte et toutes les données associées\n• La portabilité — recevoir vos données dans un format lisible par machine\n• L'opposition — vous opposer au traitement de vos données\n\nUtilisez le bouton 'Supprimer mon compte' dans votre profil, ou écrivez-nous à hello@smartprice.be",
+        content: "Conformément au RGPD, vous avez le droit à :\n• L'accès — demander une copie de vos données personnelles\n• La rectification — corriger des données inexactes\n• L'effacement — supprimer votre compte et toutes les données associées\n• La portabilité — recevoir vos données dans un format lisible par machine\n• L'opposition — vous opposer au traitement de vos données\n\nUtilisez le bouton 'Supprimer mon compte' dans votre profil, ou écrivez-nous à info@smartprice.be",
       },
       {
         title: "8. Conservation des données",
@@ -163,7 +163,7 @@ const POLICIES = {
       },
       {
         title: "11. Contact",
-        content: "Pour toute question relative à la confidentialité ou demande de données :\n📧 hello@smartprice.be\n\nNous nous engageons à répondre dans les 30 jours, comme l'exige le RGPD.",
+        content: "Pour toute question relative à la confidentialité ou demande de données :\n📧 info@smartprice.be\n\nNous nous engageons à répondre dans les 30 jours, comme l'exige le RGPD.",
       },
     ],
   },
@@ -217,7 +217,7 @@ export default function PrivacyPolicy({ onClose }) {
           {P.footer}
         </div>
         <div style={{ marginTop: 12, textAlign: "center", fontSize: 12, color: "#445" }}>
-          {P.questions} <a href="mailto:hello@smartprice.be" style={{ color: "#0D9488" }}>hello@smartprice.be</a>
+          {P.questions} <a href="mailto:info@smartprice.be" style={{ color: "#0D9488" }}>info@smartprice.be</a>
         </div>
 
         <button onClick={onClose} style={{ width: "100%", marginTop: 20, padding: "12px 0", borderRadius: 12, background: "linear-gradient(135deg,#0D9488,#1A56A4)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
