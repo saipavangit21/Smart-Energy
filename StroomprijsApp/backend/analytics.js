@@ -235,13 +235,22 @@ function shouldTrackOnce(sessionId, event) {
 const _analyticsCache = new Map(); // key: days -> { data, ts }
 const ANALYTICS_CACHE_TTL_MS = 5 * 60 * 1000;
 
-async function track(pool, { event, method = null, userId = null, sessionId, path, ip, dedup = false }) {
+// Coarse, non-identifying traffic class from the User-Agent (never stored raw).
+function uaClass(req) {
+  const ua = req.headers["user-agent"] || "";
+  if (!ua) return "none";
+  if (/bot|crawl|spider|slurp|facebookexternalhit|preview|headless|python|curl|wget|axios|node-fetch|go-http|java\/|okhttp|homeassistant/i.test(ua)) return "bot";
+  if (/mobile|android|iphone|ipad/i.test(ua)) return "mobile";
+  return "desktop";
+}
+
+async function track(pool, { event, method = null, userId = null, sessionId, path, ip, dedup = false, properties = null }) {
   if (dedup && !shouldTrackOnce(sessionId, event)) return;
   try {
     await pool.query(
-      `INSERT INTO analytics_events (event, method, user_id, session_id, path, ip)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [event, method, userId || null, sessionId, path, hashIp(ip)]
+      `INSERT INTO analytics_events (event, method, user_id, session_id, path, ip, properties)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [event, method, userId || null, sessionId, path, hashIp(ip), properties ? JSON.stringify(properties) : null]
     );
   } catch (e) {
     console.warn("[analytics] track failed:", e.message);
@@ -389,6 +398,7 @@ module.exports = function attachAnalytics(app, pool) {
         path: req.originalUrl,
         ip: req._ip,
         dedup: true,
+        properties: { ua: uaClass(req) },
       });
       trackPartnerCall(eventsDb, req);
     }
@@ -407,6 +417,7 @@ module.exports = function attachAnalytics(app, pool) {
         path: req.originalUrl,
         ip: req._ip,
         dedup: true,
+        properties: { ua: uaClass(req) },
       });
       trackPartnerCall(eventsDb, req);
     }
@@ -425,9 +436,65 @@ module.exports = function attachAnalytics(app, pool) {
         path: req.originalUrl,
         ip: req._ip,
         dedup: true,
+        properties: { ua: uaClass(req) },
       });
     }
     next();
+  });
+
+  // Where visitors come from. Fired once per browser session by the frontend
+  // (main.jsx) with document.referrer + UTM params. Stores only the referrer
+  // HOSTNAME (no path/query), UTM labels, landing path and a coarse device
+  // class — no raw User-Agent, no full URLs.
+  app.get("/api/track-visit", (req, res) => {
+    const clean = (v, n) => (typeof v === "string" ? v.replace(/[^\w.\-:/ +@]/g, "").slice(0, n) : "");
+    let refHost = "";
+    try { refHost = new URL(String(req.query.ref || "")).hostname.replace(/^www\./, "").slice(0, 80); } catch {}
+    track(eventsDb, {
+      event: "visit",
+      method: refHost || "direct",
+      sessionId: req._sessionId,
+      path: clean(req.query.path, 100),
+      ip: req._ip,
+      dedup: true,
+      properties: {
+        ua: uaClass(req),
+        ref: refHost || null,
+        utm_source: clean(req.query.utm_source, 40) || null,
+        utm_medium: clean(req.query.utm_medium, 40) || null,
+        utm_campaign: clean(req.query.utm_campaign, 40) || null,
+      },
+    });
+    res.status(204).end();
+  });
+
+  // Traffic sources report (raw events only, so limited to the retention window)
+  app.get("/api/admin/traffic-sources", async (req, res) => {
+    if (!process.env.ADMIN_SECRET || req.headers["x-admin-secret"] !== process.env.ADMIN_SECRET) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    const days = Math.min(parseInt(req.query.days || 7, 10) || 7, RAW_RETENTION_DAYS);
+    try {
+      const [byRef, byUa, byDay] = await Promise.all([
+        eventsDb.query(
+          `SELECT method AS source, properties->>'utm_source' AS utm_source, properties->>'ua' AS device, COUNT(*) AS visits
+           FROM analytics_events WHERE event = 'visit' AND created_at >= NOW() - ($1 || ' days')::interval
+           GROUP BY 1, 2, 3 ORDER BY visits DESC LIMIT 60`, [String(days)]),
+        eventsDb.query(
+          `SELECT event, properties->>'ua' AS device, COUNT(*) AS events
+           FROM analytics_events WHERE event IN ('seo_page_view','page_view','ev_page_view')
+             AND created_at >= NOW() - ($1 || ' days')::interval
+           GROUP BY 1, 2 ORDER BY 1, events DESC`, [String(days)]),
+        eventsDb.query(
+          `SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
+             properties->>'ua' AS device, COUNT(*) AS page_views
+           FROM analytics_events WHERE event = 'page_view' AND created_at >= NOW() - ($1 || ' days')::interval
+           GROUP BY 1, 2 ORDER BY 1 DESC, 3 DESC`, [String(days)]),
+      ]);
+      res.json({ success: true, days, visits_by_source: byRef.rows, page_events_by_device: byUa.rows, dashboard_views_by_day_device: byDay.rows });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
   });
 
   // Business page views — lightweight ping called on mount by BusinessPage.jsx
