@@ -116,6 +116,10 @@ function SectionDivider({ label }) {
 }
 
 export default function BusinessPage({ onNavigate }) {
+  // Internal links use this instead of a bare <a href> so clicking them swaps
+  // content client-side (App.jsx's history.pushState router) instead of a
+  // full browser reload — the nav bar and page shell stay put.
+  const navTo = (path) => (e) => { e?.preventDefault?.(); onNavigate?.(path); };
   const { tSection, lang } = useLanguage();
   const L = tSection("business");
   const locale = lang === "fr" ? "fr-BE" : lang === "nl" ? "nl-BE" : "en-BE";
@@ -312,8 +316,8 @@ export default function BusinessPage({ onNavigate }) {
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <LangSwitcher />
-          <a href="/session-calc" style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "rgba(22,163,74,0.08)", border: `1px solid ${C.border2}`, color: C.primary, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>⚡ Session Calculator</a>
-          <a href="/fleet-audit" style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "#FEF3C7", border: "1px solid rgba(180,83,9,0.25)", color: "#B45309", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>{L.navFleetAudit||"Free Fleet Audit →"}</a>
+          <a href="/session-calc" onClick={navTo("/session-calc")} style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "rgba(22,163,74,0.08)", border: `1px solid ${C.border2}`, color: C.primary, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>⚡ Session Calculator</a>
+          <a href="/fleet-audit" onClick={navTo("/fleet-audit")} style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "#FEF3C7", border: "1px solid rgba(180,83,9,0.25)", color: "#B45309", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>{L.navFleetAudit||"Free Fleet Audit →"}</a>
           <button onClick={() => setShowModal(true)} style={{ padding: "9px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `linear-gradient(135deg,${C.primary},${C.bright})`, color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(22,163,74,0.3)", whiteSpace: "nowrap", flexShrink: 0 }}>
             {L.navAudit||"Request audit"}
           </button>
@@ -339,7 +343,7 @@ export default function BusinessPage({ onNavigate }) {
             {L.heroSub||"Get a CIR 92-ready fleet audit in 5 minutes — no signup, no consultant, no spreadsheet."}
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/fleet-audit" style={{ padding: "15px 36px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FFFFFF", color: "#1E3A8A", textDecoration: "none", boxShadow: "0 6px 28px rgba(0,0,0,0.25)" }}>
+            <a href="/fleet-audit" onClick={navTo("/fleet-audit")} style={{ padding: "15px 36px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FFFFFF", color: "#1E3A8A", textDecoration: "none", boxShadow: "0 6px 28px rgba(0,0,0,0.25)" }}>
               {L.heroCta||"Get free fleet audit →"}
             </a>
             <button onClick={() => setShowModal(true)} style={{ padding: "15px 28px", borderRadius: 30, fontSize: 14, fontWeight: 700, background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.28)", cursor: "pointer", backdropFilter: "blur(8px)" }}>
@@ -412,7 +416,7 @@ export default function BusinessPage({ onNavigate }) {
             ].map((p, i) => (
               <div key={i}
                 style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 24, padding: "36px 28px", display: "flex", flexDirection: "column", boxShadow: "0 4px 20px rgba(0,0,0,0.06)", cursor: "pointer", transition: "transform 0.15s,box-shadow 0.15s" }}
-                onClick={p.href ? () => window.location.href = p.href : p.onClick}
+                onClick={p.href ? () => onNavigate?.(p.href) : p.onClick}
                 onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 36px rgba(0,0,0,0.11)"; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.06)"; }}>
                 <div style={{ width: 68, height: 68, borderRadius: "50%", background: p.iconBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, marginBottom: 22, boxShadow: `0 8px 20px ${p.color}30` }}>
@@ -586,7 +590,7 @@ export default function BusinessPage({ onNavigate }) {
               <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.8, flex: 1, marginBottom: 18 }}>{p.desc}</div>
               {p.modal
                 ? <button onClick={() => setShowModal(true)} style={{ display: "inline-block", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `${p.accent}10`, border: `1px solid ${p.accent}28`, color: p.accent, cursor: "pointer", fontFamily: "inherit" }}>{p.cta}</button>
-                : <a href={p.href} style={{ display: "inline-block", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `${p.accent}10`, border: `1px solid ${p.accent}28`, color: p.accent, textDecoration: "none" }}>{p.cta}</a>
+                : <a href={p.href} onClick={navTo(p.href)} style={{ display: "inline-block", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: `${p.accent}10`, border: `1px solid ${p.accent}28`, color: p.accent, textDecoration: "none" }}>{p.cta}</a>
               }
             </div>
           ))}
@@ -704,7 +708,7 @@ export default function BusinessPage({ onNavigate }) {
             <button onClick={() => setShowModal(true)} style={{ padding: "14px 40px", borderRadius: 30, fontSize: 15, fontWeight: 800, background: "#FCD34D", color: "#15803D", border: "none", cursor: "pointer", boxShadow: "0 6px 24px rgba(0,0,0,0.2)" }}>
               Generate my CIR 92 Audit Report →
             </button>
-            <a href="/fleet-audit" style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.65)", textDecoration: "underline", textUnderlineOffset: 3 }}>
+            <a href="/fleet-audit" onClick={navTo("/fleet-audit")} style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.65)", textDecoration: "underline", textUnderlineOffset: 3 }}>
               Try the free instant audit first →
             </a>
           </div>
@@ -715,10 +719,10 @@ export default function BusinessPage({ onNavigate }) {
       {/* ── FOOTER ────────────────────────────────────────────────── */}
       <div style={{ borderTop: `1px solid ${C.border}`, background: C.card, padding: "28px 32px", textAlign: "center", fontSize: 12, color: C.light }}>
         <div style={{ marginBottom: 10, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>SmartPrice Personal</a>
-          <a href="/fleet-audit" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>Fleet Audit</a>
-          <a href="/session-calc" style={{ color: C.primary, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>⚡ Session Calculator</a>
-          <a href="/api-docs" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>API & HA</a>
+          <a href="/" onClick={navTo("/")} style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>SmartPrice Personal</a>
+          <a href="/fleet-audit" onClick={navTo("/fleet-audit")} style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>Fleet Audit</a>
+          <a href="/session-calc" onClick={navTo("/session-calc")} style={{ color: C.primary, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>⚡ Session Calculator</a>
+          <a href="/api-docs" onClick={navTo("/api-docs")} style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>API & HA</a>
           <a href="mailto:info@smartprice.be" style={{ color: C.muted, textDecoration: "none", fontWeight: 600, fontSize: 13 }}>info@smartprice.be</a>
         </div>
         <div>🛡️ GDPR Compliant · 🇪🇺 EU Hosted · 🔒 OAuth 2.0 · CIR 92 Compliant</div>
