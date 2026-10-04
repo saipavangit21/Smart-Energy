@@ -1102,6 +1102,83 @@ app.post("/api/business-leads", async (req, res) => {
   }
 });
 
+// POST /api/bulk-fleet-audit-lead — saves a B2B lead from the bulk session-upload
+// audit tool. Only the computed summary numbers are stored, never raw session
+// rows — the uploaded file is parsed entirely client-side and never reaches us.
+app.post("/api/bulk-fleet-audit-lead", async (req, res) => {
+  const { email, company, audit } = req.body || {};
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, error: "Valid email required" });
+  }
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS b2b_leads (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        company TEXT,
+        audit_data JSONB,
+        source TEXT DEFAULT 'bulk-audit',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(
+      `INSERT INTO b2b_leads (email, company, audit_data, source, created_at)
+       VALUES ($1, $2, $3::jsonb, 'bulk-audit', NOW())
+       ON CONFLICT (email) DO UPDATE
+         SET company    = COALESCE($2, b2b_leads.company),
+             audit_data = b2b_leads.audit_data || $3::jsonb,
+             updated_at = NOW()`,
+      [email.toLowerCase().trim(), company || null, JSON.stringify(audit || {})]
+    );
+    console.log(`[bulk-fleet-audit] New B2B lead: ${email} — ${audit?.sessionCount || 0} sessions, overpayment €${audit?.overpayment?.toFixed?.(0) ?? "?"}`);
+
+    sendMail({
+      from: "SmartPrice.be <info@smartprice.be>",
+      to: email,
+      subject: "⚡ SmartPrice — your real charging data audit",
+      html: `
+        <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F7FEF9;color:#0F1A0F;border-radius:16px;border:1px solid #DCFCE7">
+          <div style="font-size:28px;margin-bottom:8px">✅</div>
+          <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;color:#16A34A">Report saved${company ? ` for ${company}` : ""}.</h1>
+          <p style="color:#52635A;font-size:15px;line-height:1.7;margin:0 0 20px">
+            Based on ${audit?.pricedCount ?? "your"} priced charging sessions, the measured difference vs. real EPEX pricing was
+            <strong>€${Math.abs(audit?.overpayment ?? 0).toFixed(2)}</strong> (${Math.abs(audit?.overpaymentPct ?? 0)}% of actual spend).
+          </p>
+          <p style="color:#52635A;font-size:13px;line-height:1.7;margin:0 0 24px">
+            We'll follow up within one business day to discuss setting up ongoing automated reporting.
+          </p>
+          <a href="https://smartprice.be/business" style="display:inline-block;padding:12px 28px;border-radius:50px;background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;font-weight:800;font-size:14px;text-decoration:none">
+            View SmartPrice for Business →
+          </a>
+          <p style="margin-top:28px;font-size:11px;color:#9DB3A3">
+            SmartPrice.be · <a href="https://smartprice.be/privacy" style="color:#9DB3A3">Privacy</a> · GDPR compliant · EU hosted
+          </p>
+        </div>
+      `,
+    }).catch(e => console.warn("[bulk-fleet-audit] prospect email failed:", e.message));
+    sendMail({
+      from: "SmartPrice.be <info@smartprice.be>",
+      to: "info@smartprice.be",
+      subject: `🏢 New bulk audit lead — ${company || email}`,
+      html: `
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Company:</strong> ${company || "—"}</p>
+        <p><strong>Sessions:</strong> ${audit?.sessionCount ?? "—"} (${audit?.pricedCount ?? "—"} priced)</p>
+        <p><strong>Total kWh:</strong> ${audit?.totalKwh?.toFixed?.(1) ?? "—"}</p>
+        <p><strong>Actual spend:</strong> €${audit?.totalActual?.toFixed?.(2) ?? "—"}</p>
+        <p><strong>EPEX-equivalent:</strong> €${audit?.totalEpex?.toFixed?.(2) ?? "—"}</p>
+        <p><strong>Overpayment:</strong> €${audit?.overpayment?.toFixed?.(2) ?? "—"} (${audit?.overpaymentPct ?? "—"}%)</p>
+        <p><strong>Peak-hour share:</strong> ${audit?.peakSharePct ?? "—"}%</p>
+      `,
+    }).catch(e => console.warn("[bulk-fleet-audit] admin email failed:", e.message));
+    res.json({ success: true });
+  } catch (e) {
+    console.error("[bulk-fleet-audit]", e.message);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 app.listen(PORT,()=>{
   console.log(`\n⚡ SmartPrice v2 on port ${PORT}`);
   console.log(`   DB: ${process.env.DATABASE_URL?"✅ Supabase":"❌ No DATABASE_URL"}\n`);

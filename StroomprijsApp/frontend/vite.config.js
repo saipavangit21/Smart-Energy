@@ -15,6 +15,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // Only ever loaded via dynamic import() (bulk fleet-audit upload) —
+          // excluded from the blanket vendor bucket so they split into their
+          // own lazy chunk instead of bloating every page's shared bundle.
+          if (id.includes("node_modules/xlsx") || id.includes("node_modules/papaparse")) return undefined;
           if (id.includes("node_modules/")) return "vendor";
           if (id.includes("/pages/AdminDashboard")) return "page-admin";
           if (id.includes("/pages/BusinessPage") || id.includes("/pages/FleetAuditPage") || id.includes("/pages/SessionCalcPage")) return "page-business";

@@ -16,6 +16,11 @@ const DYNAMIC_RATE_FALLBACK = 0.1920; // €/kWh fallback if API unavailable
 const AVG_KWH_PER_CAR       = 280;   // kWh/month average Belgian company EV home charging
 const PUBLIC_NETWORK_RATE   = 0.45;  // €/kWh conservative Belgian public network average (Velocity/DKV/UTA AC charging)
 
+const BULK_GRID_COST = 0.13;
+const BULK_VAT       = 1.21;
+const PEAK_HOURS      = [17, 18, 19, 20]; // evening peak window used for the breakdown suggestion
+const BULK_TEMPLATE_CSV = `date,hour,kwh_charged,amount_charged_eur,location_type\n2026-09-15,18,7.4,3.33,home\n2026-09-16,2,7.4,0.42,home\n`;
+
 const C = {
   bg:        "#F8FAFC",
   card:      "#FFFFFF",
@@ -51,6 +56,16 @@ export default function FleetAuditPage({ onNavigate }) {
   const [emailError, setEmailError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [liveRate, setLiveRate]   = useState(DYNAMIC_RATE_FALLBACK);
+
+  // ── Bulk upload (real session data, no PII) ──────────────────────────────
+  const [bulkFile, setBulkFile]       = useState(null);
+  const [bulkParsing, setBulkParsing] = useState(false);
+  const [bulkError, setBulkError]     = useState("");
+  const [bulkAudit, setBulkAudit]     = useState(null);
+  const [bulkEmail, setBulkEmail]     = useState("");
+  const [bulkCompany, setBulkCompany] = useState("");
+  const [bulkEmailError, setBulkEmailError] = useState("");
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
 
   // Fetch live EPEX average from SmartPrice API
   useEffect(() => {
@@ -177,6 +192,190 @@ export default function FleetAuditPage({ onNavigate }) {
     </body></html>`;
     const w = window.open("", "_blank");
     if (w) { w.document.write(html); w.document.close(); }
+  }
+
+  function downloadBulkTemplate() {
+    const blob = new Blob([BULK_TEMPLATE_CSV], { type: "text/csv" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url; a.download = "smartprice-charging-sessions-template.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // Normalises whatever header names the sheet/CSV/JSON used onto our canonical
+  // field names — real-world exports rarely match a template exactly.
+  function normaliseKey(k) {
+    const s = String(k || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (/^date$|sessiondate|chargedate/.test(s)) return "date";
+    if (/^hour$|starttime|time$|sessionhour/.test(s)) return "hour";
+    if (/kwh/.test(s)) return "kwh";
+    if (/amount|cost|price|charged|paid|eur/.test(s)) return "amount";
+    if (/location|type/.test(s)) return "location";
+    return s;
+  }
+
+  function normaliseRow(raw) {
+    const row = {};
+    for (const [k, v] of Object.entries(raw)) row[normaliseKey(k)] = v;
+    return row;
+  }
+
+  function coerceHour(v) {
+    if (v == null || v === "") return null;
+    const s = String(v).trim();
+    const hm = s.match(/^(\d{1,2})(:\d{2})?/);
+    const n = hm ? parseInt(hm[1], 10) : parseInt(s, 10);
+    return Number.isInteger(n) && n >= 0 && n <= 23 ? n : null;
+  }
+
+  // v can be an Excel serial date number (xlsxMod.SSF decodes it) or a string
+  function coerceDate(v, xlsxMod) {
+    if (v == null || v === "") return null;
+    if (typeof v === "number") {
+      if (!xlsxMod) return null;
+      const d = xlsxMod.SSF.parse_date_code(v);
+      if (!d) return null;
+      return `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
+    }
+    const s = String(v).trim();
+    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return iso[0];
+    const eu = s.match(/^(\d{1,2})[/.](\d{1,2})[/.](\d{4})/); // dd/mm/yyyy
+    if (eu) return `${eu[3]}-${eu[2].padStart(2, "0")}-${eu[1].padStart(2, "0")}`;
+    const d = new Date(s);
+    return isNaN(d) ? null : d.toISOString().slice(0, 10);
+  }
+
+  async function parseBulkFile(file) {
+    const ext = file.name.toLowerCase().split(".").pop();
+    if (["zip", "rar", "7z", "gz", "tar"].includes(ext)) {
+      throw new Error("Archive files (.zip etc.) aren't supported — please upload the CSV/Excel/JSON file directly.");
+    }
+    // Both parsing libraries are sizeable (esp. xlsx) and only needed by the
+    // handful of visitors who use this upload path — load on demand instead
+    // of bundling them into every page's shared vendor chunk.
+    let rawRows = [];
+    let xlsxMod = null;
+    if (ext === "json") {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      rawRows = Array.isArray(parsed) ? parsed : (parsed.sessions || parsed.data || []);
+    } else if (ext === "csv") {
+      const text = await file.text();
+      const { default: Papa } = await import("papaparse");
+      const { data } = Papa.parse(text, { header: true, skipEmptyLines: true });
+      rawRows = data;
+    } else if (["xlsx", "xls"].includes(ext)) {
+      const buf = await file.arrayBuffer();
+      xlsxMod = await import("xlsx");
+      const wb = xlsxMod.read(buf, { type: "array", cellDates: false });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      rawRows = xlsxMod.utils.sheet_to_json(sheet, { defval: "" });
+    } else {
+      throw new Error(`Unsupported file type ".${ext}" — use CSV, Excel (.xlsx/.xls), or JSON.`);
+    }
+    if (!rawRows.length) throw new Error("No rows found in that file.");
+
+    const rows = [];
+    let skipped = 0;
+    for (const raw of rawRows) {
+      const r = normaliseRow(raw);
+      const date = coerceDate(r.date, xlsxMod);
+      const hour = coerceHour(r.hour);
+      const kwh  = parseFloat(r.kwh);
+      const amount = parseFloat(r.amount);
+      if (!date || hour == null || !(kwh > 0) || !(amount >= 0)) { skipped++; continue; }
+      rows.push({ date, hour, kwh, amount, location: (r.location || "").toString().toLowerCase() || null });
+    }
+    if (!rows.length) throw new Error("No valid rows found. Check that your file has date, hour, kwh_charged and amount_charged_eur columns — download the template for the exact format.");
+    return { rows, skipped };
+  }
+
+  async function handleBulkFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBulkFile(file);
+    setBulkError("");
+    setBulkAudit(null);
+    setBulkParsing(true);
+    try {
+      const { rows, skipped } = await parseBulkFile(file);
+
+      // Reuse the same 90-day EPEX price history + all-in formula as the
+      // Session Calculator — sessions older than that can't be priced.
+      const histRes = await fetch(`${API}/api/prices/history?days=90`, { credentials: "include" });
+      const hist = await histRes.json();
+      const priceMap = {};
+      (hist?.days || []).forEach(day => {
+        if (!day.date) return;
+        priceMap[day.date] = {};
+        (day.prices || day.hourly || []).forEach(h => {
+          const hr  = h.hour ?? h.position ?? 0;
+          const mwh = h.price_eur_mwh ?? h.price ?? 0;
+          if (mwh > 0) priceMap[day.date][hr] = Math.max(0.04, (mwh / 1000) * BULK_VAT + BULK_GRID_COST);
+        });
+      });
+
+      let pricedKwh = 0, pricedActual = 0, pricedEpex = 0, peakKwh = 0, peakActual = 0;
+      let unpricedCount = 0, unpricedActual = 0;
+      const priced = [];
+      for (const row of rows) {
+        const rate = priceMap[row.date]?.[row.hour];
+        if (rate == null) { unpricedCount++; unpricedActual += row.amount; continue; }
+        const epexCost = row.kwh * rate;
+        pricedKwh += row.kwh; pricedActual += row.amount; pricedEpex += epexCost;
+        if (PEAK_HOURS.includes(row.hour)) { peakKwh += row.kwh; peakActual += row.amount; }
+        priced.push({ ...row, rate, epexCost });
+      }
+      if (!priced.length) {
+        throw new Error("None of the session dates fall within the last 90 days, so we can't price them against EPEX history. Upload more recent sessions.");
+      }
+
+      const overpayment = pricedActual - pricedEpex;
+      const peakSharePct = pricedKwh > 0 ? Math.round((peakKwh / pricedKwh) * 100) : 0;
+      // Potential saving if peak-hour sessions had instead landed at the
+      // overall average off-peak-inclusive rate across the priced sessions.
+      const avgRate = pricedEpex / pricedKwh;
+      const peakSavingIfShifted = Math.max(0, peakActual - peakKwh * avgRate);
+
+      setBulkAudit({
+        sessionCount: rows.length,
+        pricedCount: priced.length,
+        skippedCount: skipped,
+        unpricedCount,
+        unpricedActual,
+        totalKwh: pricedKwh,
+        totalActual: pricedActual,
+        totalEpex: pricedEpex,
+        overpayment,
+        overpaymentPct: pricedActual > 0 ? Math.round((overpayment / pricedActual) * 100) : 0,
+        peakSharePct,
+        peakSavingIfShifted,
+      });
+      setStep("bulk-results");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setBulkError(err.message || "Couldn't read that file.");
+    } finally {
+      setBulkParsing(false);
+    }
+  }
+
+  async function handleBulkDownload(e) {
+    e.preventDefault();
+    if (!bulkEmail.includes("@")) { setBulkEmailError("Please enter a valid email address."); return; }
+    setBulkEmailError("");
+    setBulkSubmitting(true);
+    try {
+      await fetch(`${API}/api/bulk-fleet-audit-lead`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: bulkEmail, company: bulkCompany, audit: bulkAudit }),
+      });
+    } catch (_) {}
+    setBulkSubmitting(false);
+    setStep("bulk-done");
   }
 
   return (
@@ -371,6 +570,151 @@ export default function FleetAuditPage({ onNavigate }) {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Bulk upload entry point */}
+            <div style={{ marginTop: 20, background: "rgba(22,163,74,0.05)", border: `1px dashed ${C.blueBorder}`, borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 26 }}>📁</div>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <div style={{ fontWeight: 800, fontSize: 15, color: C.text, marginBottom: 3 }}>Have real charging session data?</div>
+                <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>Upload your actual sessions (CSV, Excel, or JSON — no names or PII needed) for a real audit instead of an estimate.</div>
+              </div>
+              <button
+                onClick={() => { setStep("upload"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                style={{ padding: "11px 22px", borderRadius: 12, fontSize: 14, fontWeight: 700, background: C.card, color: C.blue, border: `1.5px solid ${C.blue}`, cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                Upload session data →
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── BULK UPLOAD STEP ── */}
+        {step === "upload" && (
+          <>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{ fontSize: 48, marginBottom: 8 }}>📁</div>
+              <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, marginBottom: 8 }}>Upload your real charging sessions</h1>
+              <p style={{ fontSize: 14, color: C.muted, maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
+                CSV, Excel, or JSON — one row per charging session. No employee names, emails, or plate numbers needed; just date, hour, kWh, and what was paid.
+              </p>
+            </div>
+
+            <div style={{ background: C.card, borderRadius: 20, border: `1px solid ${C.border}`, boxShadow: C.shadow, padding: "32px 36px", marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: C.blue, textTransform: "uppercase", letterSpacing: 1 }}>Required columns</div>
+                <button onClick={downloadBulkTemplate} style={{ fontSize: 13, fontWeight: 700, color: C.blue, background: "none", border: `1px solid ${C.blueBorder}`, borderRadius: 20, padding: "6px 16px", cursor: "pointer" }}>
+                  ⬇ Download CSV template
+                </button>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
+                {["date", "hour", "kwh_charged", "amount_charged_eur", "location_type (optional)"].map(c => (
+                  <span key={c} style={{ fontSize: 12, fontWeight: 700, color: C.muted, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "5px 10px", fontFamily: "monospace" }}>{c}</span>
+                ))}
+              </div>
+
+              <label style={{ display: "block", border: `2px dashed ${bulkFile ? C.teal : C.border}`, borderRadius: 14, padding: "36px 20px", textAlign: "center", cursor: "pointer", background: bulkFile ? "rgba(13,148,136,0.04)" : C.bg }}>
+                <input type="file" accept=".csv,.xlsx,.xls,.json" onChange={handleBulkFileChange} style={{ display: "none" }} />
+                <div style={{ fontSize: 32, marginBottom: 10 }}>{bulkParsing ? "⏳" : bulkFile ? "✅" : "📤"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
+                  {bulkParsing ? "Processing…" : bulkFile ? bulkFile.name : "Click to choose a file, or drag it here"}
+                </div>
+                <div style={{ fontSize: 12, color: C.light, marginTop: 6 }}>CSV, Excel (.xlsx/.xls), or JSON — max a few thousand rows</div>
+              </label>
+
+              {bulkError && (
+                <div style={{ marginTop: 16, background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: 10, padding: "12px 16px", fontSize: 13, color: C.red, fontWeight: 600 }}>
+                  ⚠ {bulkError}
+                </div>
+              )}
+            </div>
+
+            <div style={{ textAlign: "center" }}>
+              <button onClick={() => setStep("form")} style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, fontSize: 13, textDecoration: "underline" }}>← Back to the estimate tool</button>
+            </div>
+          </>
+        )}
+
+        {/* ── BULK RESULTS STEP ── */}
+        {(step === "bulk-results" || step === "bulk-done") && bulkAudit && (
+          <>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{ fontSize: 48, marginBottom: 8 }}>📊</div>
+              <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, marginBottom: 8 }}>Your real charging data, audited</h1>
+              <p style={{ fontSize: 14, color: C.muted }}>
+                {bulkAudit.pricedCount} of {bulkAudit.sessionCount} sessions priced against EPEX history
+                {bulkAudit.unpricedCount > 0 && ` (${bulkAudit.unpricedCount} older than 90 days excluded)`}
+                {bulkAudit.skippedCount > 0 && ` · ${bulkAudit.skippedCount} rows skipped (missing/invalid data)`}
+              </p>
+            </div>
+
+            <div style={{ background: "linear-gradient(135deg, #15803D, #16A34A)", borderRadius: 20, padding: "32px 36px", marginBottom: 20, color: "#fff", textAlign: "center" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.75, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Measured overpayment vs. EPEX</div>
+              <div style={{ fontSize: 56, fontWeight: 900, letterSpacing: -2, color: bulkAudit.overpayment >= 0 ? "#FCD34D" : "#86EFAC" }}>{fmtE(Math.abs(bulkAudit.overpayment))}</div>
+              <div style={{ fontSize: 15, opacity: 0.85, marginTop: 6 }}>{bulkAudit.overpayment >= 0 ? "more than EPEX-optimal cost" : "already below EPEX-optimal cost"} · {Math.abs(bulkAudit.overpaymentPct)}% of actual spend</div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+              {[
+                { label: "Actually paid", value: fmtE(bulkAudit.totalActual), sub: `${bulkAudit.pricedCount} priced sessions`, color: C.red, icon: "💳" },
+                { label: "EPEX-equivalent cost", value: fmtE(bulkAudit.totalEpex), sub: `${fmt(bulkAudit.totalKwh)} kWh total`, color: C.green, icon: "⚡" },
+                { label: "Charged during evening peak", value: `${bulkAudit.peakSharePct}%`, sub: "17:00–21:00 window", color: C.amber || "#D97706", icon: "🕕" },
+              ].map(c => (
+                <div key={c.label} style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, boxShadow: C.shadow, padding: "20px 18px", textAlign: "center" }}>
+                  <div style={{ fontSize: 24, marginBottom: 6 }}>{c.icon}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: c.color }}>{c.value}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginTop: 4 }}>{c.label}</div>
+                  <div style={{ fontSize: 11, color: C.light, marginTop: 4 }}>{c.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {bulkAudit.peakSharePct > 20 && (
+              <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 16, padding: "18px 22px", marginBottom: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#B45309", marginBottom: 6 }}>💡 Suggestion</div>
+                <div style={{ fontSize: 14, color: C.text, lineHeight: 1.7 }}>
+                  {bulkAudit.peakSharePct}% of charging happened during the 17:00–21:00 peak window. Shifting that charging to off-peak hours could save roughly <strong style={{ color: C.red }}>{fmtE(bulkAudit.peakSavingIfShifted)}</strong> across these sessions.
+                </div>
+              </div>
+            )}
+
+            {bulkAudit.unpricedCount > 0 && (
+              <div style={{ background: "rgba(100,116,139,0.06)", border: `1px solid ${C.border}`, borderRadius: 14, padding: "14px 20px", marginBottom: 20, fontSize: 12, color: C.muted, lineHeight: 1.7 }}>
+                {bulkAudit.unpricedCount} session(s) totalling {fmtE(bulkAudit.unpricedActual)} fell outside the 90-day EPEX price history window and were excluded from the comparison above (included in your total spend, not in the overpayment calculation).
+              </div>
+            )}
+
+            {step === "bulk-results" && (
+              <div style={{ background: C.card, borderRadius: 20, border: `2px solid ${C.blue}`, boxShadow: "0 4px 24px rgba(30,64,175,0.12)", padding: "32px 36px" }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: C.text, marginBottom: 6 }}>📄 Save this report</div>
+                <div style={{ fontSize: 14, color: C.muted, marginBottom: 24, lineHeight: 1.7 }}>
+                  Leave your email and we'll follow up with next steps — including ongoing automated reporting once you're ready. We only store the summary numbers above, never your uploaded file.
+                </div>
+                <form onSubmit={handleBulkDownload} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                    <input type="email" required value={bulkEmail} onChange={e => setBulkEmail(e.target.value)} placeholder="Corporate email address"
+                      style={{ flex: "1 1 220px", padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${bulkEmailError ? C.red : C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none" }} />
+                    <input type="text" value={bulkCompany} onChange={e => setBulkCompany(e.target.value)} placeholder="Company name (optional)"
+                      style={{ flex: "1 1 180px", padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: C.bg, outline: "none" }} />
+                  </div>
+                  {bulkEmailError && <div style={{ fontSize: 12, color: C.red, fontWeight: 600 }}>{bulkEmailError}</div>}
+                  <button type="submit" disabled={bulkSubmitting}
+                    style={{ padding: "14px 28px", borderRadius: 12, fontSize: 15, fontWeight: 800, background: `linear-gradient(135deg, ${C.blue}, #3B82F6)`, color: "#fff", border: "none", cursor: bulkSubmitting ? "wait" : "pointer", boxShadow: "0 4px 20px rgba(30,64,175,0.3)" }}>
+                    {bulkSubmitting ? "Saving…" : "Save report →"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {step === "bulk-done" && (
+              <div style={{ textAlign: "center", padding: "20px 20px 0" }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 8 }}>Saved — we'll follow up at {bulkEmail}</div>
+              </div>
+            )}
+
+            <div style={{ textAlign: "center", marginTop: 20 }}>
+              <button onClick={() => { setStep("upload"); setBulkFile(null); setBulkAudit(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, fontSize: 13, textDecoration: "underline" }}>← Upload a different file</button>
             </div>
           </>
         )}
