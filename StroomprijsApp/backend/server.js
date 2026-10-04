@@ -103,7 +103,15 @@ async function fetchENTSOE(s,e) {
     params:{securityToken:process.env.ENTSOE_API_KEY,documentType:"A44",in_Domain:"10YBE----------2",out_Domain:"10YBE----------2",periodStart:start,periodEnd:end},
     timeout:15000, responseType:"text",
   });
-  const prices=[];
+  // Keyed by timestamp, not pushed to an array — ENTSO-E's response for a
+  // multi-day query window frequently contains more than one <TimeSeries>
+  // covering the same market day (revisions/duplicate publications), and the
+  // <Period> regex below walks every Period in the whole document regardless
+  // of which TimeSeries it belongs to. Without dedup, that silently doubled
+  // (or worse) the returned prices for a day — confirmed live when a user's
+  // own API response showed every "tomorrow" row duplicated back-to-back.
+  // Last occurrence wins: later TimeSeries blocks are the more current revision.
+  const byTs = new Map();
   const periodRe=/<Period>([\s\S]*?)<\/Period>/g; let pm;
   while((pm=periodRe.exec(xml))!==null){
     const per=pm[1];
@@ -121,9 +129,10 @@ async function fetchENTSOE(s,e) {
       if(!posM||!prM) continue;
       const ts=new Date(pStart.getTime()+(parseInt(posM[1])-1)*stepMs);
       const mwh=parseFloat(prM[1]);
-      prices.push({timestamp:ts.toISOString(),price_eur_mwh:mwh,price_eur_kwh:+(mwh/1000).toFixed(6),source:"ENTSO-E"});
+      byTs.set(ts.toISOString(), {timestamp:ts.toISOString(),price_eur_mwh:mwh,price_eur_kwh:+(mwh/1000).toFixed(6),source:"ENTSO-E"});
     }
   }
+  const prices=[...byTs.values()].sort((a,b)=>a.timestamp.localeCompare(b.timestamp));
   if(!prices.length) throw new Error("ENTSO-E returned no prices");
   cache.set(k,prices); return prices;
 }
