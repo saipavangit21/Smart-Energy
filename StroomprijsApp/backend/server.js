@@ -137,7 +137,18 @@ async function fetchENTSOE(s,e) {
   cache.set(k,prices); return prices;
 }
 
-function enrich(prices) { const now=new Date(),ts=toISODate(now); return prices.map(p=>{ const d=new Date(p.timestamp); const localDate=toLocalISODate(d); const localHour=getLocalHour(d); const nowHour=getLocalHour(now); const it=localDate===ts; return{...p,day:it?"today":"tomorrow",hour:localHour,hour_label:`${String(localHour).padStart(2,"0")}:00`,is_current:it&&localHour===nowHour,is_negative:p.price_eur_mwh<0,price_category:getPriceCategory(p.price_eur_mwh)}; }); }
+// day must be computed against both today's AND tomorrow's date explicitly —
+// a prior version treated "not today" as "tomorrow" unconditionally, which
+// mislabeled yesterday's data (e.g. from an unfiltered ENTSO-E fallback
+// response spanning 3 days) as "tomorrow" instead of excluding it.
+function enrich(prices) {
+  const now=new Date(), todayStr=toISODate(now), tomorrowStr=toLocalISODate(new Date(now.getTime()+86400000));
+  return prices
+    .map(p=>{ const d=new Date(p.timestamp); const localDate=toLocalISODate(d); const localHour=getLocalHour(d); const nowHour=getLocalHour(now);
+      const isToday=localDate===todayStr, isTomorrow=localDate===tomorrowStr;
+      return{...p,day:isToday?"today":isTomorrow?"tomorrow":null,hour:localHour,hour_label:`${String(localHour).padStart(2,"0")}:00`,is_current:isToday&&localHour===nowHour,is_negative:p.price_eur_mwh<0,price_category:getPriceCategory(p.price_eur_mwh)}; })
+    .filter(p=>p.day!==null);
+}
 // EPEX/Belpex day-ahead auction results publish ~13:00 CET, but Energy-Charts
 // (a third-party aggregator, not the primary source) occasionally lags behind
 // that by hours on its own ingestion. Past this cutoff, treat "tomorrow still
@@ -178,7 +189,18 @@ async function getPrices(s,e) {
     ec = await fetchEC(s,e);
   } catch (e1) {
     console.warn("[prices] Energy-Charts failed:",e1.message);
-    try{return{prices:await fetchENTSOE(s,e),source:"ENTSO-E"};}catch(e2){
+    try{
+      // fetchENTSOE's query window intentionally pads a day on each side (to
+      // catch midnight-boundary points), so its raw response spans ~3
+      // calendar days, not just [s, e]. The merged fallback below already
+      // scopes itself correctly via .filter(); this full-fallback path (used
+      // when Energy-Charts is entirely down) didn't, so callers could get a
+      // stray 3rd day's worth of entries — confirmed live (288 vs the
+      // expected 192 for a today+tomorrow request).
+      const raw = await fetchENTSOE(s,e);
+      const scoped = raw.filter(p => { const d = toLocalISODate(new Date(p.timestamp)); return d === s || d === e; });
+      return{prices:scoped,source:"ENTSO-E"};
+    }catch(e2){
       console.warn("[prices] ENTSO-E failed:",e2.message);
       throw new Error("Price data temporarily unavailable. Energy-Charts is down"+(process.env.ENTSOE_API_KEY?"":" — add ENTSOE_API_KEY env var for a reliable fallback")+". Please retry in a few minutes.");
     }
