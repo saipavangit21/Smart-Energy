@@ -244,6 +244,22 @@ function uaClass(req) {
   return "desktop";
 }
 
+// A short, low-cardinality client label — e.g. "HomeAssistant/2026.10",
+// "python-requests/2.31", "curl/8.4", "Chrome/129" — not the full raw
+// User-Agent string (which carries far more fingerprinting detail than we
+// need). Built specifically to answer "what is actually calling us", since
+// the coarse bot/mobile/desktop bucket above couldn't distinguish a Home
+// Assistant automation from a generic script from a real browser.
+function uaSignature(req) {
+  const ua = req.headers["user-agent"] || "";
+  if (!ua) return "none";
+  const known = ua.match(/\b(HomeAssistant|python-requests|curl|wget|okhttp|node-fetch|axios|go-http-client|Googlebot|bingbot|facebookexternalhit|Java)\/?([\d.]+)?/i);
+  if (known) return known[2] ? `${known[1]}/${known[2]}` : known[1];
+  const browser = ua.match(/\b(Chrome|Firefox|Safari|Edg|OPR)\/([\d]+)/);
+  if (browser) return `${browser[1] === "Edg" ? "Edge" : browser[1]}/${browser[2]}`;
+  return "other";
+}
+
 async function track(pool, { event, method = null, userId = null, sessionId, path, ip, dedup = false, properties = null }) {
   if (dedup && !shouldTrackOnce(sessionId, event)) return;
   try {
@@ -449,7 +465,7 @@ module.exports = function attachAnalytics(app, pool) {
         path: req.originalUrl,
         ip: req._ip,
         dedup: true,
-        properties: { ua: uaClass(req) },
+        properties: { ua: uaClass(req), sig: uaSignature(req) },
       });
       trackPartnerCall(eventsDb, req);
     }
@@ -468,7 +484,7 @@ module.exports = function attachAnalytics(app, pool) {
         path: req.originalUrl,
         ip: req._ip,
         dedup: true,
-        properties: { ua: uaClass(req) },
+        properties: { ua: uaClass(req), sig: uaSignature(req) },
       });
       trackPartnerCall(eventsDb, req);
     }
@@ -487,7 +503,7 @@ module.exports = function attachAnalytics(app, pool) {
         path: req.originalUrl,
         ip: req._ip,
         dedup: true,
-        properties: { ua: uaClass(req) },
+        properties: { ua: uaClass(req), sig: uaSignature(req) },
       });
     }
     next();
@@ -543,6 +559,36 @@ module.exports = function attachAnalytics(app, pool) {
            GROUP BY 1, 2 ORDER BY 1 DESC, 3 DESC`, [String(days)]),
       ]);
       res.json({ success: true, days, visits_by_source: byRef.rows, page_events_by_device: byUa.rows, dashboard_views_by_day_device: byDay.rows });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  // What's actually calling us: client signatures (HomeAssistant/python-requests/
+  // curl/a real browser/etc. — not just the coarse bot/desktop/mobile bucket)
+  // plus distinct-caller counts (hashed IP), which is what actually separates
+  // "many different people" from "a handful of scripts polling hard".
+  app.get("/api/admin/traffic-diagnostics", async (req, res) => {
+    if (!process.env.ADMIN_SECRET || req.headers["x-admin-secret"] !== process.env.ADMIN_SECRET) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+    const days = Math.min(parseInt(req.query.days || 7, 10) || 7, RAW_RETENTION_DAYS);
+    try {
+      const [bySignature, callerCounts] = await Promise.all([
+        eventsDb.query(
+          `SELECT event, properties->>'sig' AS client, COUNT(*) AS calls, COUNT(DISTINCT ip) AS distinct_callers
+           FROM analytics_events
+           WHERE event IN ('seo_page_view','page_view','ev_page_view') AND created_at >= NOW() - ($1 || ' days')::interval
+           GROUP BY 1, 2 ORDER BY 1, calls DESC LIMIT 60`, [String(days)]),
+        eventsDb.query(
+          `SELECT DATE_TRUNC('day', created_at AT TIME ZONE 'Europe/Brussels')::date AS day,
+             event, COUNT(*) AS calls, COUNT(DISTINCT ip) AS distinct_callers,
+             ROUND(COUNT(*)::numeric / GREATEST(COUNT(DISTINCT ip), 1), 1) AS calls_per_caller
+           FROM analytics_events
+           WHERE event IN ('seo_page_view','page_view','ev_page_view') AND created_at >= NOW() - ($1 || ' days')::interval
+           GROUP BY 1, 2 ORDER BY 1 DESC, 2`, [String(days)]),
+      ]);
+      res.json({ success: true, days, by_client_signature: bySignature.rows, calls_vs_distinct_callers_by_day: callerCounts.rows });
     } catch (e) {
       res.status(500).json({ success: false, error: e.message });
     }
