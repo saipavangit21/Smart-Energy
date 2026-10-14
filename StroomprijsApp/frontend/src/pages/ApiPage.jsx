@@ -271,7 +271,7 @@ print(data["current"]["price_eur_mwh"])`}</Code>
         <Section title="⚡ Rate Limits & Usage">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12, marginBottom: 20 }}>
             {[
-              { label: "Rate limit", value: "No hard limit — please be reasonable", icon: "🔄" },
+              { label: "Rate limit", value: "1 request per endpoint per 15 min for direct API callers — prices don't update more often than that anyway. No limit when used from a browser on smartprice.be.", icon: "🔄" },
               { label: "Authentication", value: "None required", icon: "🔓" },
               { label: "Price updates", value: "Every 15 min", icon: "🕐" },
               { label: "Data license", value: "CC BY 4.0", icon: "📄" },

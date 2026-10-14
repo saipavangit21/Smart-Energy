@@ -56,6 +56,42 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+// ── Per-caller throttle for the public price endpoints ──────────────────
+// Diagnostics (GET /api/admin/traffic-diagnostics) found a handful of
+// direct API callers (not our own website) polling thousands of times/day —
+// far more often than EPEX prices actually change (every 15 min). Caps
+// each caller to one request per endpoint per 15 min. Our own frontend is
+// exempt (it sends an Origin header, since api.smartprice.be is a
+// cross-origin fetch from smartprice.be — this is NOT spoofable protection,
+// just a cheap way to separate "our site" from "a script/integration"; the
+// REST API itself stays open and keyless by design) — it already polls
+// /api/current every 5 min, which a blanket cap would otherwise break.
+const THROTTLED_PATHS = new Set(["/api/current", "/api/prices/today", "/api/cheapest"]);
+const CALLER_MIN_INTERVAL_MS = 15 * 60 * 1000;
+const _lastCallByIp = new Map();
+setInterval(() => {
+  const cutoff = Date.now() - CALLER_MIN_INTERVAL_MS * 2;
+  for (const [k, ts] of _lastCallByIp) if (ts < cutoff) _lastCallByIp.delete(k);
+}, 30 * 60 * 1000);
+
+app.use((req, res, next) => {
+  if (req.method !== "GET" || !THROTTLED_PATHS.has(req.path)) return next();
+  const origin = req.headers.origin || req.headers.referer || "";
+  if (/^https?:\/\/([\w-]+\.)?smartprice\.be/i.test(origin)) return next();
+  const ip = req.ip || req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
+  const key = `${ip}:${req.path}`;
+  const now = Date.now();
+  const last = _lastCallByIp.get(key);
+  if (last && now - last < CALLER_MIN_INTERVAL_MS) {
+    const retryAfterSec = Math.ceil((CALLER_MIN_INTERVAL_MS - (now - last)) / 1000);
+    res.set("Retry-After", String(retryAfterSec));
+    return res.status(429).json({ success: false, error: `Rate limited — please poll at most once every 15 minutes (prices don't update more often than that). Retry in ${retryAfterSec}s.` });
+  }
+  _lastCallByIp.set(key, now);
+  next();
+});
+
 // ── Analytics middleware — must be BEFORE route mounts ──────
 attachAnalytics(app, pool);
 app.use(trackHaPing(pool)); // no-op unless X-SmartPrice-Client: homeassistant header present
