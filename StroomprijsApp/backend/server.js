@@ -67,6 +67,19 @@ app.use(cookieParser());
 // just a cheap way to separate "our site" from "a script/integration"; the
 // REST API itself stays open and keyless by design) — it already polls
 // /api/current every 5 min, which a blanket cap would otherwise break.
+// api.smartprice.be is Cloudflare-proxied in front of Railway's own edge —
+// at least 2 hops, not the 1 `trust proxy` above assumes. That made req.ip
+// resolve to Cloudflare's edge IP, not the real client, collapsing many
+// unrelated visitors from the same region onto one rate-limit bucket
+// (confirmed live: a real user got blocked from two different networks).
+// X-Forwarded-For's FIRST entry is always the original client by convention,
+// regardless of how many proxies are actually in between — safer than
+// guessing the exact hop count for `trust proxy`.
+function realClientIp(req) {
+  const xff = req.headers["x-forwarded-for"];
+  if (xff) return xff.split(",")[0].trim();
+  return req.ip || "unknown";
+}
 const THROTTLED_PATHS = new Set(["/api/current", "/api/prices/today", "/api/cheapest"]);
 const CALLER_MIN_INTERVAL_MS = 15 * 60 * 1000;
 const _lastCallByIp = new Map();
@@ -79,7 +92,7 @@ app.use((req, res, next) => {
   if (req.method !== "GET" || !THROTTLED_PATHS.has(req.path)) return next();
   const origin = req.headers.origin || req.headers.referer || "";
   if (/^https?:\/\/([\w-]+\.)?smartprice\.be/i.test(origin)) return next();
-  const ip = req.ip || req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
+  const ip = realClientIp(req);
   const key = `${ip}:${req.path}`;
   const now = Date.now();
   const last = _lastCallByIp.get(key);

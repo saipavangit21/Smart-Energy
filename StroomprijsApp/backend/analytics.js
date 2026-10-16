@@ -351,7 +351,11 @@ module.exports = function attachAnalytics(app, pool) {
   app.use((req, res, next) => {
     const sid = getSession(req, res);
     req._sessionId = sid;
-    req._ip = req.ip || req.headers["x-forwarded-for"]?.split(",")[0]?.trim();
+    // X-Forwarded-For's first entry is the original client regardless of hop
+    // count — req.ip depends on `trust proxy` matching the real number of
+    // hops (Cloudflare + Railway's own edge = 2, not the 1 configured),
+    // which was silently collapsing many distinct visitors into one.
+    req._ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip;
     next();
   });
 
