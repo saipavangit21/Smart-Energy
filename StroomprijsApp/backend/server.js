@@ -76,8 +76,15 @@ app.use(cookieParser());
 // regardless of how many proxies are actually in between — safer than
 // guessing the exact hop count for `trust proxy`.
 function realClientIp(req) {
+  // CF-Connecting-IP is Cloudflare's own dedicated header for exactly this —
+  // authoritative, and Cloudflare strips any client-supplied version of it
+  // at the edge, so it can't be spoofed by the caller. Confirmed live that
+  // our X-Forwarded-For order here is [Cloudflare's edge IP, real client] —
+  // the reverse of the usual convention — so the earlier "take the first
+  // XFF entry" fix was still grabbing Cloudflare's address, not the client's.
+  if (req.headers["cf-connecting-ip"]) return req.headers["cf-connecting-ip"];
   const xff = req.headers["x-forwarded-for"];
-  if (xff) return xff.split(",")[0].trim();
+  if (xff) return xff.split(",").pop().trim();
   return req.ip || "unknown";
 }
 const THROTTLED_PATHS = new Set(["/api/current", "/api/prices/today", "/api/cheapest"]);
