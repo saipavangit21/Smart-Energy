@@ -420,6 +420,22 @@ app.get("/api/flows/today", async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
+// TEMPORARY — diagnosing a rate-limit false-positive report. Shows exactly
+// what IP/headers the server sees for a given request, so we can verify the
+// X-Forwarded-For fix actually works instead of reasoning about it blind.
+// Remove once the rate-limiter investigation is closed.
+app.get("/api/debug/my-ip", (req, res) => {
+  res.json({
+    resolved_ip: realClientIp(req),
+    req_ip: req.ip,
+    raw_x_forwarded_for: req.headers["x-forwarded-for"] || null,
+    raw_cf_connecting_ip: req.headers["cf-connecting-ip"] || null,
+    raw_true_client_ip: req.headers["true-client-ip"] || null,
+    origin: req.headers.origin || null,
+    referer: req.headers.referer || null,
+  });
+});
+
 // ── Health check (DB + EPEX + data freshness) ──────────────
 require("./health-route")(app, pool);
 app.get("/api/status-banner", (req, res) => res.json({ active: false }));
